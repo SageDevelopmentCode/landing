@@ -44,6 +44,7 @@ import { sendSummerWeekEightNewsletterEmail } from '../../actions/sendSummerWeek
 import { sendSummerWeekElevenNewsletterEmail } from '../../actions/sendSummerWeekElevenNewsletterEmail'
 import { sendSummerWeekTwelveNewsletterEmail } from '../../actions/sendSummerWeekTwelveNewsletterEmail'
 import { sendSchoolYearWeekOneNewsletterEmail } from '../../actions/sendSchoolYearWeekOneNewsletterEmail'
+import { sendSchoolYearWeekTwoNewsletterEmail } from '../../actions/sendSchoolYearWeekTwoNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -283,6 +284,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearWeekOneNewsletterSending, setSchoolYearWeekOneNewsletterSending] = useState(false)
   const [schoolYearWeekOneNewsletterSent, setSchoolYearWeekOneNewsletterSent] = useState(false)
   const [schoolYearWeekOneNewsletterError, setSchoolYearWeekOneNewsletterError] = useState<string | null>(null)
+  const [schoolYearWeekTwoNewsletterSending, setSchoolYearWeekTwoNewsletterSending] = useState(false)
+  const [schoolYearWeekTwoNewsletterSent, setSchoolYearWeekTwoNewsletterSent] = useState(false)
+  const [schoolYearWeekTwoNewsletterError, setSchoolYearWeekTwoNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -1475,6 +1479,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendSchoolYearWeekTwoNewsletter = async () => {
+    if (schoolYearWeekTwoNewsletterSending || !application.g1_email) return
+    setSchoolYearWeekTwoNewsletterSending(true)
+    setSchoolYearWeekTwoNewsletterError(null)
+    const result = await sendSchoolYearWeekTwoNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearWeekTwoNewsletterSending(false)
+    if (result.success) {
+      setSchoolYearWeekTwoNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSchoolYearWeekTwoNewsletterSent(false), 3000)
+    } else {
+      setSchoolYearWeekTwoNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendOpenHouseEnrollment = async () => {
     if (openHouseSending || !application.g1_email) return
     setOpenHouseSending(true)
@@ -2320,6 +2343,17 @@ export function ApplicationDetailSidebar({
                     {schoolYearWeekOneNewsletterSending ? 'Sending…' : schoolYearWeekOneNewsletterSent ? '✓ Sent!' : 'Send School Year Week One Newsletter'}
                   </button>
                   {schoolYearWeekOneNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekOneNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearWeekTwoNewsletter}
+                    disabled={schoolYearWeekTwoNewsletterSending || schoolYearWeekTwoNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearWeekTwoNewsletterSending ? 'Sending…' : schoolYearWeekTwoNewsletterSent ? '✓ Sent!' : 'Send School Year Week Two Newsletter'}
+                  </button>
+                  {schoolYearWeekTwoNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekTwoNewsletterError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button

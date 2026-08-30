@@ -131,6 +131,7 @@ interface Props {
   hasSubmittedTuitionFeedback: boolean;
   paidSchoolYearByStudent: PaidSchoolYearByStudent;
   paidSupplyFeeByStudent: Record<string, boolean>;
+  recentTuitionCodes: string[];
 }
 
 // --- Summer pricing ---
@@ -8945,10 +8946,12 @@ function UpgradeToFullTimeCard({ childNames }: { childNames: string[] }) {
 
 function TuitionCodeEntryModal({
   parentId,
+  recentTuitionCodes,
   onClose,
   onValidated,
 }: {
   parentId: string;
+  recentTuitionCodes: string[];
   onClose: () => void;
   onValidated: (result: {
     label: string;
@@ -9039,6 +9042,32 @@ function TuitionCodeEntryModal({
             style={{ "--tw-ring-color": "#0d9488" } as React.CSSProperties}
             autoFocus
           />
+          {recentTuitionCodes.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide font-body">
+                Recently used
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {recentTuitionCodes.map((recentCode) => (
+                  <button
+                    key={recentCode}
+                    type="button"
+                    onClick={() => {
+                      setCode(recentCode);
+                      setError(null);
+                    }}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold tracking-widest transition-colors hover:opacity-80"
+                    style={{
+                      backgroundColor: "#ccfbf1",
+                      color: "#0d9488",
+                    }}
+                  >
+                    {recentCode}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {error && <p className="text-sm text-red-600 font-body">{error}</p>}
           <button
             type="submit"
@@ -9426,6 +9455,7 @@ export default function BillingPage({
   hasSubmittedTuitionFeedback,
   paidSchoolYearByStudent,
   paidSupplyFeeByStudent,
+  recentTuitionCodes,
 }: Props) {
   const [selectedTx, setSelectedTx] = useState<StripeTransaction | null>(null);
   const [selectedPending, setSelectedPending] =
@@ -10996,6 +11026,7 @@ export default function BillingPage({
         {tuitionCodeModalOpen && !validatedTuitionResult && (
           <TuitionCodeEntryModal
             parentId={parentId}
+            recentTuitionCodes={recentTuitionCodes}
             onClose={() => setTuitionCodeModalOpen(false)}
             onValidated={(result) => setValidatedTuitionResult(result)}
           />

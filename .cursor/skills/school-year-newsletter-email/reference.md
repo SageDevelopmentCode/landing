@@ -82,7 +82,7 @@ Newsletter bodies use markdown. For Events and Reminders:
 - `[text](url)` → `<a href="url" style="color: #2C5F2E;">text</a>`
 - Escape HTML entities in email: `&` → `&amp;`
 
-For class teasers, summarize `teacher_body` to one line — do not render full markdown.
+For class teasers, summarize `teacher_body` to 1–2 readable sentences per teacher — do not render full markdown or keyword lists.
 
 ## Newsletter URL and password
 
@@ -118,13 +118,22 @@ Use this structure inside `buildSchoolYearWeek{N}NewsletterEmail`. Replace place
     </div>
   </div>
 
-  <!-- Classroom Highlights (teasers) -->
+  <!-- Tuition callout (optional — when payment deadline is imminent) -->
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 28px; font-size: 14px; color: #2c2c2c; text-align: center;">
+    <p style="margin: 0 0 8px 0; font-size: 15px; font-weight: bold; color: #b45309;">💳 {tuition_heading}</p>
+    <p style="margin: 0 0 12px 0;">If you've already paid {month} tuition — thank you, you're all set!</p>
+    <p style="margin: 0;">{tuition_reminder_body}</p>
+    <a href="https://sagefield.co/parent/billing" style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; margin-top: 16px;">Open Parent Billing Portal →</a>
+  </div>
+
+  <!-- Classroom Highlights (readable mini-sections per teacher) -->
   <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 Classroom Highlights</h2>
   <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
-    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
-      <!-- One <li> per teacher with content -->
-      <li>🌱 <strong>Joy's Class (Pre-K–K)</strong> — {teaser topics}</li>
-    </ul>
+    <div style="margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #e0dbd5;">
+      <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #2C5F2E;">Joy's Class (Pre-K–K)</p>
+      <p style="margin: 0; font-size: 14px; color: #2c2c2c;">{1-2 sentence teaser}</p>
+    </div>
+    <!-- Repeat per teacher; omit border-bottom on last block -->
     <p style="margin: 16px 0 0 0; font-size: 13px; color: #555;">Read the full classroom stories, photos, and details in the newsletter above.</p>
   </div>
 

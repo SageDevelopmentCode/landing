@@ -359,6 +359,19 @@ export default async function ImpersonateBillingPage({
     ),
   ] as string[];
 
+  const recentTuitionCodes: string[] = [];
+  const seenTuitionCodes = new Set<string>();
+  for (const tx of transactions) {
+    if (tx.payment_type !== "custom_tuition" || tx.status !== "completed") continue;
+    const code = ((tx.metadata ?? {}) as Record<string, string>).tuition_code
+      ?.trim()
+      .toUpperCase();
+    if (!code || code === "N/A" || seenTuitionCodes.has(code)) continue;
+    seenTuitionCodes.add(code);
+    recentTuitionCodes.push(code);
+    if (recentTuitionCodes.length >= 3) break;
+  }
+
   const studentMap: Record<string, StudentInfo> = {};
   if (studentIds.length > 0) {
     const { data: students } = await adminClient
@@ -407,6 +420,7 @@ export default async function ImpersonateBillingPage({
           hasSubmittedTuitionFeedback={false}
           paidSchoolYearByStudent={paidSchoolYearByStudent}
           paidSupplyFeeByStudent={paidSupplyFeeByStudent}
+          recentTuitionCodes={recentTuitionCodes}
         />
       </main>
     </div>
