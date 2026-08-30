@@ -191,6 +191,7 @@ export function CommunityGardenDayRSVPsView({
 
       {selectedRsvp && (
         <CommunityGardenDayRsvpDetailSidebar
+          key={selectedRsvp.id}
           rsvp={selectedRsvp}
           onClose={() => setSelectedRsvp(null)}
         />

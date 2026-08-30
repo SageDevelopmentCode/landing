@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { DetailSidebar } from '../components/DetailSidebar'
 import { SidebarField, SidebarSection } from '../../components/SidebarPrimitives'
 import { EmailThread } from '../components/EmailThread'
@@ -48,15 +48,6 @@ export function CommunityGardenDayRsvpDetailSidebar({
   const [newSending, setNewSending] = useState(false)
   const [newSent, setNewSent] = useState(false)
   const [newError, setNewError] = useState<string | null>(null)
-
-  useEffect(() => {
-    setExistingSending(false)
-    setExistingSent(false)
-    setExistingError(null)
-    setNewSending(false)
-    setNewSent(false)
-    setNewError(null)
-  }, [rsvp.id])
 
   async function handleSendExistingThankYou() {
     if (existingSending || existingSent) return
