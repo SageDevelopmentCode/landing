@@ -52,9 +52,20 @@ export function TuitionCodeSheet({
     setValidating(true);
     setError(null);
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setError("Your session expired. Please sign in again.");
+        return;
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/billing/validate-tuition-code`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({ code: code.trim(), parentId }),
       });
       const data = await res.json();
