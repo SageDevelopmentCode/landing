@@ -366,6 +366,7 @@ export function createHomeschoolDropInEmbed(data: {
   selectedDays?: string[];
   selectedWeeks?: number[];
   amountCents: number;
+  source?: "web" | "mobile";
 }): DiscordEmbed {
   const amountDollars = (data.amountCents / 100).toFixed(2);
   const PROGRAM_LABELS: Record<string, string> = {
@@ -383,10 +384,14 @@ export function createHomeschoolDropInEmbed(data: {
     data.selectedDays && data.selectedDays.length > 0
       ? data.selectedDays.map((d) => d.charAt(0).toUpperCase() + d.slice(1)).join(", ")
       : "Day Pass";
-  const weeksLabel =
+  const isSchoolYear = data.program === "school_year_26_27";
+  const periodLabel =
     data.selectedWeeks && data.selectedWeeks.length > 0
-      ? `Weeks ${data.selectedWeeks.join(", ")}`
+      ? isSchoolYear
+        ? data.selectedWeeks.map((w) => schoolYearMonthLabel(w)).join(", ")
+        : `Weeks ${data.selectedWeeks.join(", ")}`
       : "";
+  const periodFieldName = isSchoolYear ? "Months" : "Weeks";
 
   const planValue = data.tier === "dropin"
     ? tierLabel
@@ -398,12 +403,14 @@ export function createHomeschoolDropInEmbed(data: {
     { name: "Child", value: data.childName || "N/A", inline: true },
     { name: "Program", value: programLabel, inline: true },
     { name: "Plan", value: planValue, inline: true },
-    ...(weeksLabel ? [{ name: "Weeks", value: weeksLabel, inline: true }] : []),
+    ...(periodLabel ? [{ name: periodFieldName, value: periodLabel, inline: true }] : []),
     { name: "Amount Paid", value: `$${amountDollars}`, inline: true },
   ];
 
+  const sourceSuffix = data.source === "mobile" ? " (Mobile)" : "";
+
   return {
-    title: "🏡 Homeschool Drop-In Payment",
+    title: `🏡 Homeschool Drop-In Payment${sourceSuffix}`,
     color: 0x4a7c59,
     fields,
     timestamp: new Date().toISOString(),

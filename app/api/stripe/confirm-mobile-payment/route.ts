@@ -38,17 +38,19 @@ export async function POST(request: NextRequest) {
     const { data: existingTx } = await supabase
       .schema("billing")
       .from("stripe_transactions")
-      .select("id")
+      .select("id, notifications_sent_at")
       .eq("stripe_session_id", intent.id)
       .maybeSingle();
 
-    if (existingTx) {
-      return NextResponse.json({ ok: true, alreadyRecorded: true });
-    }
+    const skipNotifications = !!existingTx?.notifications_sent_at;
 
-    await recordMobilePaymentIntent(intent, supabase, { skipNotifications: false });
+    await recordMobilePaymentIntent(intent, supabase, { skipNotifications });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({
+      ok: true,
+      alreadyRecorded: !!existingTx,
+      notificationsSent: skipNotifications,
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

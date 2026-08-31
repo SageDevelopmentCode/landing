@@ -1864,15 +1864,19 @@ export async function POST(request: NextRequest) {
     const { data: existingMobileTx } = await supabase
       .schema("billing")
       .from("stripe_transactions")
-      .select("id")
+      .select("id, notifications_sent_at")
       .eq("stripe_session_id", intent.id)
       .maybeSingle();
 
-    if (event.type === "payment_intent.processing" && existingMobileTx) {
-      // Already recorded (e.g. webhook retry).
+    if (
+      event.type === "payment_intent.processing" &&
+      existingMobileTx?.notifications_sent_at
+    ) {
+      // Already recorded and notified (e.g. webhook retry).
     } else {
     const skipNotifications =
-      event.type === "payment_intent.succeeded" && !!existingMobileTx;
+      event.type === "payment_intent.succeeded" &&
+      !!existingMobileTx?.notifications_sent_at;
 
     await recordMobilePaymentIntent(intent, supabase, { skipNotifications });
     }
