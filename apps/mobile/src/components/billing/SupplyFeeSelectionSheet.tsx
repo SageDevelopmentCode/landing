@@ -1,4 +1,5 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
+import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import {
@@ -45,6 +46,7 @@ export function SupplyFeeSelectionSheet({
   paidSupplyFeeByStudent,
   studentMap,
   onSuccess,
+  readOnly = false,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   student: StudentInfo | null;
@@ -55,6 +57,7 @@ export function SupplyFeeSelectionSheet({
   paidSupplyFeeByStudent: Record<string, boolean>;
   studentMap: Record<string, StudentInfo>;
   onSuccess?: () => void;
+  readOnly?: boolean;
 }) {
   const { pay, loading, error } = useStripePayment();
   const [step, setStep] = useState<"sibling" | "plan" | "dropin" | "payment">(
@@ -151,6 +154,12 @@ export function SupplyFeeSelectionSheet({
   const requiredDays =
     selectedTier === "dropin" ? 1 : selectedTier === "2day" ? 2 : 3;
 
+  useEffect(() => {
+    if (readOnly && step === "payment") {
+      setStep(programType === "homeschool" && addBundle ? "dropin" : "plan");
+    }
+  }, [readOnly, step, programType, addBundle]);
+
   function reset() {
     setStep(siblingCandidates.length > 0 ? "sibling" : "plan");
     setSelectedSiblingIds(new Set(siblingCandidates.map((s) => s.studentId)));
@@ -244,7 +253,7 @@ export function SupplyFeeSelectionSheet({
         />
       )}
     >
-      {step === "payment" ? (
+      {step === "payment" && !readOnly ? (
         <BottomSheetScrollView
           contentContainerStyle={s.sheetContent}
           showsVerticalScrollIndicator={false}
@@ -273,6 +282,7 @@ export function SupplyFeeSelectionSheet({
           contentContainerStyle={s.sheetContent}
           showsVerticalScrollIndicator={false}
         >
+          {readOnly ? <BillingPreviewBanner /> : null}
           <Text style={s.title}>Annual Supply Fee</Text>
           {student ? (
             <Text style={s.subtitle}>{student.name.split(" ")[0]}</Text>
@@ -305,9 +315,11 @@ export function SupplyFeeSelectionSheet({
                   </Pressable>
                 );
               })}
-              <Pressable style={s.primaryBtn} onPress={() => setStep("plan")}>
-                <Text style={s.primaryBtnText}>Continue</Text>
-              </Pressable>
+              {!readOnly ? (
+                <Pressable style={s.primaryBtn} onPress={() => setStep("plan")}>
+                  <Text style={s.primaryBtnText}>Continue</Text>
+                </Pressable>
+              ) : null}
             </>
           )}
 
@@ -408,25 +420,27 @@ export function SupplyFeeSelectionSheet({
                 </>
               )}
 
-              <Pressable
-                style={[
-                  s.primaryBtn,
-                  addBundle &&
+              {!readOnly ? (
+                <Pressable
+                  style={[
+                    s.primaryBtn,
+                    addBundle &&
+                      programType === "homeschool" &&
+                      (!selectedTier || selectedMonthIndices.size < 1) &&
+                      s.primaryBtnDisabled,
+                  ]}
+                  disabled={
+                    addBundle &&
                     programType === "homeschool" &&
-                    (!selectedTier || selectedMonthIndices.size < 1) &&
-                    s.primaryBtnDisabled,
-                ]}
-                disabled={
-                  addBundle &&
-                  programType === "homeschool" &&
-                  (!selectedTier || selectedMonthIndices.size < 1)
-                }
-                onPress={() => setStep("payment")}
-              >
-                <Text style={s.primaryBtnText}>
-                  Continue · {formatCents(baseCents)}
-                </Text>
-              </Pressable>
+                    (!selectedTier || selectedMonthIndices.size < 1)
+                  }
+                  onPress={() => setStep("payment")}
+                >
+                  <Text style={s.primaryBtnText}>
+                    Continue · {formatCents(baseCents)}
+                  </Text>
+                </Pressable>
+              ) : null}
             </>
           )}
 

@@ -1,4 +1,5 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
+import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import type {
@@ -40,6 +41,7 @@ export function HomeschoolSchoolYearSelectionSheet({
   paidHomeschoolByStudent = {},
   siblingStudentMap = {},
   onSuccess,
+  readOnly = false,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   student: StudentInfo | null;
@@ -49,6 +51,7 @@ export function HomeschoolSchoolYearSelectionSheet({
   paidHomeschoolByStudent?: PaidHomeschoolByStudent;
   siblingStudentMap?: Record<string, StudentInfo>;
   onSuccess?: () => void;
+  readOnly?: boolean;
 }) {
   const { pay, loading, error } = useStripePayment();
   const [step, setStep] = useState<"plan" | "sibling" | "payment">("plan");
@@ -178,6 +181,12 @@ export function HomeschoolSchoolYearSelectionSheet({
     primaryCents +
     siblingPayloads.reduce((sum, s) => sum + s.intendedAmountCents, 0);
 
+  useEffect(() => {
+    if (readOnly && step !== "plan") {
+      setStep("plan");
+    }
+  }, [readOnly, step]);
+
   function reset() {
     setStep("plan");
     setSelectedTier(null);
@@ -246,7 +255,7 @@ export function HomeschoolSchoolYearSelectionSheet({
         />
       )}
     >
-      {step === "payment" ? (
+      {step === "payment" && !readOnly ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
           <PaymentMethodStep
             intendedAmountCents={combinedCents}
@@ -259,7 +268,7 @@ export function HomeschoolSchoolYearSelectionSheet({
             error={error}
           />
         </BottomSheetScrollView>
-      ) : step === "sibling" ? (
+      ) : step === "sibling" && !readOnly ? (
         <View style={s.flex}>
           <View style={s.header}>
             <Pressable onPress={() => setStep("plan")} hitSlop={12}>
@@ -391,6 +400,7 @@ export function HomeschoolSchoolYearSelectionSheet({
         </View>
       ) : (
         <BottomSheetScrollView contentContainerStyle={s.content}>
+          {readOnly ? <BillingPreviewBanner /> : null}
           <Text style={s.title}>Homeschool Drop-In</Text>
           {student ? (
             <Text style={s.subtitle}>
@@ -498,18 +508,20 @@ export function HomeschoolSchoolYearSelectionSheet({
             </Text>
           )}
 
-          <Pressable
-            style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
-            disabled={!canContinue}
-            onPress={() => {
-              if (eligibleSiblings.length > 0) setStep("sibling");
-              else setStep("payment");
-            }}
-          >
-            <Text style={s.primaryBtnText}>
-              Continue · {formatCents(primaryCents)}
-            </Text>
-          </Pressable>
+          {!readOnly ? (
+            <Pressable
+              style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
+              disabled={!canContinue}
+              onPress={() => {
+                if (eligibleSiblings.length > 0) setStep("sibling");
+                else setStep("payment");
+              }}
+            >
+              <Text style={s.primaryBtnText}>
+                Continue · {formatCents(primaryCents)}
+              </Text>
+            </Pressable>
+          ) : null}
         </BottomSheetScrollView>
       )}
     </BottomSheetModal>

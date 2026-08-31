@@ -697,6 +697,11 @@ export default function TuitionScreen() {
   const router = useRouter();
   const { effectiveParentId } = useAuth();
   const isReadOnlyPreview = useReadOnlyPreview();
+  const openBillingSheet =
+    <T extends unknown[]>(fn: (...args: T) => void) =>
+    (...args: T) => {
+      fn(...args);
+    };
   const guardPayment =
     <T extends unknown[]>(fn: (...args: T) => void) =>
     (...args: T) => {
@@ -1126,24 +1131,25 @@ export default function TuitionScreen() {
                       showMultiChildSchoolYearBanner={
                         showMultiChildSchoolYearBanner
                       }
-                      onSelectSupplyFee={guardPayment(() => {
+                      readOnlyPreview={isReadOnlyPreview}
+                      onSelectSupplyFee={openBillingSheet(() => {
                         setSelectionStudentId(activeChildId);
                         supplyFeeSheetRef.current?.present();
                       })}
-                      onSelectSchoolYearTuition={guardPayment(() => {
+                      onSelectSchoolYearTuition={openBillingSheet(() => {
                         setSelectionStudentId(activeChildId);
                         schoolYearTuitionSheetRef.current?.present();
                       })}
-                      onSelectHomeschool={guardPayment((app) => {
+                      onSelectHomeschool={openBillingSheet((app) => {
                         setSelectionStudentId(activeChildId);
                         setSelectionHomeschoolApp(app);
                         homeschoolSheetRef.current?.present();
                       })}
-                      onSelectAftercare={guardPayment(() => {
+                      onSelectAftercare={openBillingSheet(() => {
                         setSelectionStudentId(activeChildId);
                         aftercareSheetRef.current?.present();
                       })}
-                      onSelectFunFriday={guardPayment(() => {
+                      onSelectFunFriday={openBillingSheet(() => {
                         setSelectionStudentId(activeChildId);
                         funFridaySheetRef.current?.present();
                       })}
@@ -1196,6 +1202,7 @@ export default function TuitionScreen() {
 
       <SupplyFeeSelectionSheet
         sheetRef={supplyFeeSheetRef}
+        readOnly={isReadOnlyPreview}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
@@ -1217,6 +1224,7 @@ export default function TuitionScreen() {
 
       <SchoolYearTuitionSelectionSheet
         sheetRef={schoolYearTuitionSheetRef}
+        readOnly={isReadOnlyPreview}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
@@ -1244,6 +1252,7 @@ export default function TuitionScreen() {
 
       <HomeschoolSchoolYearSelectionSheet
         sheetRef={homeschoolSheetRef}
+        readOnly={isReadOnlyPreview}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
@@ -1265,6 +1274,7 @@ export default function TuitionScreen() {
 
       <SchoolYearAftercareSelectionSheet
         sheetRef={aftercareSheetRef}
+        readOnly={isReadOnlyPreview}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }
@@ -1275,6 +1285,7 @@ export default function TuitionScreen() {
 
       <SchoolYearFunFridaySelectionSheet
         sheetRef={funFridaySheetRef}
+        readOnly={isReadOnlyPreview}
         student={
           selectionStudentId ? (studentMap[selectionStudentId] ?? null) : null
         }

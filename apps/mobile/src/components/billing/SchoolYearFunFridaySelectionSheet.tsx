@@ -1,4 +1,5 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
+import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import {
   SchoolYearMonthlyMonthGrid,
   type SchoolYearMonthGridItem,
@@ -18,7 +19,7 @@ import {
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type StudentInfo = { id: string; name: string; profileImageUrl: string | null };
@@ -39,12 +40,14 @@ export function SchoolYearFunFridaySelectionSheet({
   application,
   paidFunFriday,
   onSuccess,
+  readOnly = false,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   student: StudentInfo | null;
   application: ApplicationRow | null;
   paidFunFriday: { months: string[]; fridays: string[] } | undefined;
   onSuccess?: () => void;
+  readOnly?: boolean;
 }) {
   const { pay, loading, error } = useStripePayment();
   const [tab, setTab] = useState<"monthly" | "dropin">("monthly");
@@ -123,6 +126,12 @@ export function SchoolYearFunFridaySelectionSheet({
         ? `Continue · ${formatCents(dropinTotal)}`
         : "Select Fridays to continue";
 
+  useEffect(() => {
+    if (readOnly && step !== "select") {
+      setStep("select");
+    }
+  }, [readOnly, step]);
+
   function reset() {
     setTab("monthly");
     setSelMonths(new Set());
@@ -175,7 +184,7 @@ export function SchoolYearFunFridaySelectionSheet({
         />
       )}
     >
-      {step === "payment" ? (
+      {step === "payment" && !readOnly ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
           <PaymentMethodStep
             intendedAmountCents={totalCents}
@@ -198,6 +207,11 @@ export function SchoolYearFunFridaySelectionSheet({
         </BottomSheetScrollView>
       ) : (
         <View style={s.flex}>
+          {readOnly ? (
+            <View style={{ paddingHorizontal: Spacing.three, paddingTop: 4 }}>
+              <BillingPreviewBanner />
+            </View>
+          ) : null}
           <View style={s.sheetHeader}>
             <Text style={s.title}>Friday Enrichment — School Year 26–27</Text>
             {student ? (
@@ -380,15 +394,17 @@ export function SchoolYearFunFridaySelectionSheet({
             )}
           </BottomSheetScrollView>
 
-          <View style={s.footer}>
-            <Pressable
-              style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
-              disabled={!canContinue}
-              onPress={() => setStep("payment")}
-            >
-              <Text style={s.primaryBtnText}>{continueLabel}</Text>
-            </Pressable>
-          </View>
+          {!readOnly ? (
+            <View style={s.footer}>
+              <Pressable
+                style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
+                disabled={!canContinue}
+                onPress={() => setStep("payment")}
+              >
+                <Text style={s.primaryBtnText}>{continueLabel}</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       )}
     </BottomSheetModal>
