@@ -78,6 +78,7 @@ function ProgramCard({
   badge,
   badgeGreen,
   ctaLabel,
+  ctaPaid,
   locked,
   disabled,
   previewMode,
@@ -89,6 +90,7 @@ function ProgramCard({
   badge?: string;
   badgeGreen?: boolean;
   ctaLabel: string;
+  ctaPaid?: boolean;
   locked?: boolean;
   disabled?: boolean;
   previewMode?: boolean;
@@ -139,6 +141,11 @@ function ProgramCard({
             <View style={styles.lockedCta}>
               <Ionicons name="lock-closed" size={11} color="#6B7280" />
               <Text style={styles.lockedCtaText}>{ctaLabel}</Text>
+            </View>
+          ) : ctaPaid ? (
+            <View style={styles.paidCta}>
+              <Ionicons name="checkmark-circle" size={12} color="#ffffff" />
+              <Text style={styles.paidCtaText}>{ctaLabel}</Text>
             </View>
           ) : (
             <View style={[styles.activeCta, previewMode && styles.previewCta]}>
@@ -250,14 +257,9 @@ export function SchoolYearBillingSection({
             title="Annual Supply Fee"
             badge="$300"
             ctaLabel={
-              readOnlyPreview
-                ? supplyFeePaid
-                  ? "View details"
-                  : "View plan"
-                : supplyFeePaid
-                  ? "Paid"
-                  : "Pay now"
+              supplyFeePaid ? "Paid" : readOnlyPreview ? "View plan" : "Pay now"
             }
+            ctaPaid={supplyFeePaid}
             disabled={supplyFeePaid}
             previewMode={readOnlyPreview}
             onPress={onSelectSupplyFee}
@@ -521,6 +523,20 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   activeCtaText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#ffffff",
+  },
+  paidCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Brand.sage700,
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  paidCtaText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
     color: "#ffffff",

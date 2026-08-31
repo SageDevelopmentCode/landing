@@ -83,6 +83,7 @@ export function SupplyFeeSelectionSheet({
   );
 
   const studentId = student?.id ?? "";
+  const supplyFeePaid = paidSupplyFeeByStudent[studentId] ?? false;
   const programType = resolveSupplyFeeProgramType(applications, studentId);
   const childGrade =
     applications.find((a) => a.student_id === studentId)?.child_grade ?? null;
@@ -253,7 +254,27 @@ export function SupplyFeeSelectionSheet({
         />
       )}
     >
-      {step === "payment" && !readOnly ? (
+      {readOnly && supplyFeePaid ? (
+        <BottomSheetScrollView
+          contentContainerStyle={s.sheetContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <BillingPreviewBanner />
+          <Text style={s.title}>Annual Supply Fee</Text>
+          {student ? (
+            <Text style={s.subtitle}>{student.name.split(" ")[0]}</Text>
+          ) : null}
+          <View style={s.feeCard}>
+            <Text style={s.feeLabel}>Supply fee</Text>
+            <Text style={s.feeAmount}>{formatCents(SUPPLY_FEE_CENTS)}</Text>
+            <Text style={s.feeNote}>School Year 26–27</Text>
+          </View>
+          <View style={s.paidStatusRow}>
+            <Ionicons name="checkmark-circle" size={18} color={Brand.sage700} />
+            <Text style={s.paidStatusText}>Paid</Text>
+          </View>
+        </BottomSheetScrollView>
+      ) : step === "payment" && !readOnly ? (
         <BottomSheetScrollView
           contentContainerStyle={s.sheetContent}
           showsVerticalScrollIndicator={false}
@@ -581,6 +602,22 @@ const s = StyleSheet.create({
     color: Brand.sage800,
   },
   feeNote: { fontFamily: FontFamilies.body, fontSize: 12, color: "#6B7280" },
+  paidStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 16,
+    alignSelf: "flex-start",
+    backgroundColor: "#dcfce7",
+    borderRadius: 9999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  paidStatusText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: Brand.sage700,
+  },
   bundleToggle: {
     flexDirection: "row",
     alignItems: "center",
