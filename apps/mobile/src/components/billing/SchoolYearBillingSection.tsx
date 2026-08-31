@@ -78,8 +78,10 @@ function ProgramCard({
   badge,
   badgeGreen,
   ctaLabel,
+  ctaPaid,
   locked,
   disabled,
+  previewMode,
   onPress,
 }: {
   bannerImage: number;
@@ -88,19 +90,24 @@ function ProgramCard({
   badge?: string;
   badgeGreen?: boolean;
   ctaLabel: string;
+  ctaPaid?: boolean;
   locked?: boolean;
   disabled?: boolean;
+  previewMode?: boolean;
   onPress?: () => void;
 }) {
+  const isPressable =
+    !!onPress && (previewMode || (!disabled && !locked));
+
   return (
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        (disabled || locked) && styles.cardDisabled,
-        pressed && !disabled && !locked && { opacity: 0.85 },
+        !previewMode && (disabled || locked) && styles.cardDisabled,
+        pressed && isPressable && { opacity: 0.85 },
       ]}
-      onPress={!disabled && !locked ? onPress : undefined}
-      disabled={disabled || locked || !onPress}
+      onPress={isPressable ? onPress : undefined}
+      disabled={!isPressable}
     >
       <View style={styles.cardBannerWrap}>
         <Image source={bannerImage} style={styles.cardBanner} contentFit="cover" />
@@ -130,13 +137,18 @@ function ProgramCard({
       <View style={styles.cardBody}>
         <Text style={styles.cardTitle}>{title}</Text>
         <View style={styles.cardCtaRow}>
-          {locked ? (
+          {!previewMode && locked ? (
             <View style={styles.lockedCta}>
               <Ionicons name="lock-closed" size={11} color="#6B7280" />
               <Text style={styles.lockedCtaText}>{ctaLabel}</Text>
             </View>
+          ) : ctaPaid ? (
+            <View style={styles.paidCta}>
+              <Ionicons name="checkmark-circle" size={12} color="#ffffff" />
+              <Text style={styles.paidCtaText}>{ctaLabel}</Text>
+            </View>
           ) : (
-            <View style={styles.activeCta}>
+            <View style={[styles.activeCta, previewMode && styles.previewCta]}>
               <Text style={styles.activeCtaText}>{ctaLabel}</Text>
               <Ionicons name="chevron-forward" size={12} color="#ffffff" />
             </View>
@@ -164,6 +176,7 @@ export function SchoolYearBillingSection({
   onSelectFunFriday,
   onTuitionCodePress,
   onCheckPress,
+  readOnlyPreview = false,
 }: {
   activeStudentId: string;
   applications: ApplicationRow[];
@@ -177,6 +190,7 @@ export function SchoolYearBillingSection({
     { months: string[]; fridays: string[] }
   >;
   showMultiChildSchoolYearBanner: boolean;
+  readOnlyPreview?: boolean;
   onSelectSupplyFee: () => void;
   onSelectSchoolYearTuition: () => void;
   onSelectHomeschool: (app: ApplicationRow) => void;
@@ -242,9 +256,13 @@ export function SchoolYearBillingSection({
             programLabel="School Year 26–27"
             title="Annual Supply Fee"
             badge="$300"
-            ctaLabel={supplyFeePaid ? "Paid" : "Pay now"}
+            ctaLabel={
+              supplyFeePaid ? "Paid" : readOnlyPreview ? "View plan" : "Pay now"
+            }
+            ctaPaid={supplyFeePaid}
             disabled={supplyFeePaid}
-            onPress={supplyFeePaid ? undefined : onSelectSupplyFee}
+            previewMode={readOnlyPreview}
+            onPress={onSelectSupplyFee}
           />
         </View>
 
@@ -268,18 +286,19 @@ export function SchoolYearBillingSection({
                   badge={hasPlan ? "Plan active" : "Select schedule & days"}
                   badgeGreen={hasPlan}
                   ctaLabel={
-                    supplyFeePaid
+                    readOnlyPreview
                       ? hasPlan
-                        ? "Add month"
-                        : "Set up plan"
-                      : "Pay supply fee first"
+                        ? "View plan"
+                        : "View options"
+                      : supplyFeePaid
+                        ? hasPlan
+                          ? "Add month"
+                          : "Set up plan"
+                        : "Pay supply fee first"
                   }
-                  locked={!supplyFeePaid}
-                  onPress={
-                    supplyFeePaid
-                      ? () => onSelectHomeschool(app)
-                      : undefined
-                  }
+                  locked={!readOnlyPreview && !supplyFeePaid}
+                  previewMode={readOnlyPreview}
+                  onPress={() => onSelectHomeschool(app)}
                 />
               );
             })}
@@ -295,12 +314,17 @@ export function SchoolYearBillingSection({
                 }
                 badgeGreen={paidMonthsCount > 0}
                 ctaLabel={
-                  supplyFeePaid ? "Pay tuition" : "Pay supply fee first"
+                  readOnlyPreview
+                    ? paidMonthsCount > 0
+                      ? "View plan"
+                      : "View options"
+                    : supplyFeePaid
+                      ? "Pay tuition"
+                      : "Pay supply fee first"
                 }
-                locked={!supplyFeePaid}
-                onPress={
-                  supplyFeePaid ? onSelectSchoolYearTuition : undefined
-                }
+                locked={!readOnlyPreview && !supplyFeePaid}
+                previewMode={readOnlyPreview}
+                onPress={onSelectSchoolYearTuition}
               />
             )}
             <Pressable onPress={onTuitionCodePress} hitSlop={8}>
@@ -327,7 +351,8 @@ export function SchoolYearBillingSection({
                   : `${formatDropinRate(FUN_FRIDAY_DROPIN_CENTS)}/session drop-in`
               }
               badgeGreen={paidFfMonths > 0}
-              ctaLabel="Select plan"
+              ctaLabel={readOnlyPreview ? "View plan" : "Select plan"}
+              previewMode={readOnlyPreview}
               onPress={onSelectFunFriday}
             />
             <ProgramCard
@@ -335,7 +360,8 @@ export function SchoolYearBillingSection({
               programLabel="School Year 26–27"
               title="Extended Learning (3:00–5:00pm)"
               badge="Optional"
-              ctaLabel="Select plan"
+              ctaLabel={readOnlyPreview ? "View plan" : "Select plan"}
+              previewMode={readOnlyPreview}
               onPress={onSelectAftercare}
             />
           </View>
@@ -500,6 +526,23 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
     color: "#ffffff",
+  },
+  paidCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Brand.sage700,
+    borderRadius: 9999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  paidCtaText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 11,
+    color: "#ffffff",
+  },
+  previewCta: {
+    backgroundColor: "#3b6cb7",
   },
   tuitionCodeLink: {
     fontFamily: FontFamilies.body,

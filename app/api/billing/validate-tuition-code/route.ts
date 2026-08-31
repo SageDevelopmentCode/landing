@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { createAdminClient } from "@/app/lib/supabase-server";
 import {
-  createServerSupabaseClient,
-  createAdminClient,
-} from "@/app/lib/supabase-server";
+  authenticateApiRequest,
+  canAccessParentDashboard,
+} from "@/app/lib/authenticate-api-request";
 
 const schema = z.object({
   code: z.string().min(1),
@@ -12,11 +13,10 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await authenticateApiRequest(request);
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   let validated: z.infer<typeof schema>;
   try {
@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (validated.parentId !== user.id) {
+  const allowed = await canAccessParentDashboard(user.id, validated.parentId);
+  if (!allowed) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

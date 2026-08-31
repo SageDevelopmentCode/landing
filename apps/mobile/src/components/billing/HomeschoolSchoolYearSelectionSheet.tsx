@@ -1,4 +1,5 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
+import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import type {
@@ -10,6 +11,8 @@ import {
   HOMESCHOOL_SCHOOL_YEAR_PRICING,
   HOMESCHOOL_TIERS,
   SCHOOL_YEAR_MONTHS,
+  buildPaidDaysByMonth,
+  formatWeekdayKeys,
   tierToDays,
   type HomeschoolTier,
 } from "@/lib/school-year";
@@ -40,6 +43,7 @@ export function HomeschoolSchoolYearSelectionSheet({
   paidHomeschoolByStudent = {},
   siblingStudentMap = {},
   onSuccess,
+  readOnly = false,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   student: StudentInfo | null;
@@ -49,6 +53,7 @@ export function HomeschoolSchoolYearSelectionSheet({
   paidHomeschoolByStudent?: PaidHomeschoolByStudent;
   siblingStudentMap?: Record<string, StudentInfo>;
   onSuccess?: () => void;
+  readOnly?: boolean;
 }) {
   const { pay, loading, error } = useStripePayment();
   const [step, setStep] = useState<"plan" | "sibling" | "payment">("plan");
@@ -71,6 +76,26 @@ export function HomeschoolSchoolYearSelectionSheet({
   >({});
 
   const paidSet = useMemo(() => new Set(paidMonthIndices), [paidMonthIndices]);
+  const schoolYearEntries = useMemo(
+    () =>
+      application?.student_id
+        ? (paidHomeschoolByStudent[application.student_id]?.schoolYear ?? [])
+        : [],
+    [application?.student_id, paidHomeschoolByStudent],
+  );
+  const paidDaysByMonth = useMemo(
+    () => buildPaidDaysByMonth(schoolYearEntries),
+    [schoolYearEntries],
+  );
+  const paidMonthsByTier = useMemo(
+    () =>
+      schoolYearEntries.reduce<Record<string, Set<number>>>((acc, entry) => {
+        if (!acc[entry.tier]) acc[entry.tier] = new Set();
+        entry.weeks.forEach((w) => acc[entry.tier].add(w));
+        return acc;
+      }, {}),
+    [schoolYearEntries],
+  );
   const gradeTier = getGradeTier(application?.child_grade ?? null);
   const pricePerMonth = selectedTier
     ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][gradeTier]
@@ -178,15 +203,61 @@ export function HomeschoolSchoolYearSelectionSheet({
     primaryCents +
     siblingPayloads.reduce((sum, s) => sum + s.intendedAmountCents, 0);
 
+  useEffect(() => {
+    if (readOnly && step !== "plan") {
+      setStep("plan");
+    }
+  }, [readOnly, step]);
+
+  useEffect(() => {
+    if (schoolYearEntries.length === 0) return;
+    const latest = [...schoolYearEntries].sort(
+      (a, b) => b.createdAt.localeCompare(a.createdAt),
+    )[0];
+    if (!latest) return;
+    setSelectedTier(latest.tier as HomeschoolTier);
+    const latestMonth = [...latest.weeks].sort((a, b) => b - a)[0];
+    const days =
+      (latestMonth != null && latest.weekDays[latestMonth]?.length > 0
+        ? latest.weekDays[latestMonth]
+        : latest.days) ?? [];
+    if (days.length > 0) {
+      setSelectedWeekdays(new Set(days));
+    } else {
+      setSelectedWeekdays(new Set(tierToDays(latest.tier as HomeschoolTier)));
+    }
+  }, [application?.student_id, schoolYearEntries]);
+
   function reset() {
     setStep("plan");
-    setSelectedTier(null);
     setSelectedMonths(new Set());
-    setSelectedWeekdays(new Set());
     setIncludedSiblings({});
     setSiblingMonthOverrides({});
     setSiblingEditorOpen({});
     setSiblingEditorDirty({});
+    if (schoolYearEntries.length > 0) {
+      const latest = [...schoolYearEntries].sort(
+        (a, b) => b.createdAt.localeCompare(a.createdAt),
+      )[0];
+      if (latest) {
+        setSelectedTier(latest.tier as HomeschoolTier);
+        const latestMonth = [...latest.weeks].sort((a, b) => b - a)[0];
+        const days =
+          (latestMonth != null && latest.weekDays[latestMonth]?.length > 0
+            ? latest.weekDays[latestMonth]
+            : latest.days) ?? [];
+        if (days.length > 0) {
+          setSelectedWeekdays(new Set(days));
+        } else {
+          setSelectedWeekdays(
+            new Set(tierToDays(latest.tier as HomeschoolTier)),
+          );
+        }
+        return;
+      }
+    }
+    setSelectedTier(null);
+    setSelectedWeekdays(new Set());
   }
 
   async function handlePay(coverFees: boolean, paymentMethod: "card" | "ach") {
@@ -246,7 +317,7 @@ export function HomeschoolSchoolYearSelectionSheet({
         />
       )}
     >
-      {step === "payment" ? (
+      {step === "payment" && !readOnly ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
           <PaymentMethodStep
             intendedAmountCents={combinedCents}
@@ -259,7 +330,7 @@ export function HomeschoolSchoolYearSelectionSheet({
             error={error}
           />
         </BottomSheetScrollView>
-      ) : step === "sibling" ? (
+      ) : step === "sibling" && !readOnly ? (
         <View style={s.flex}>
           <View style={s.header}>
             <Pressable onPress={() => setStep("plan")} hitSlop={12}>
@@ -391,6 +462,7 @@ export function HomeschoolSchoolYearSelectionSheet({
         </View>
       ) : (
         <BottomSheetScrollView contentContainerStyle={s.content}>
+          {readOnly ? <BillingPreviewBanner /> : null}
           <Text style={s.title}>Homeschool Drop-In</Text>
           {student ? (
             <Text style={s.subtitle}>
@@ -399,7 +471,12 @@ export function HomeschoolSchoolYearSelectionSheet({
           ) : null}
 
           <Text style={s.sectionLabel}>Plan</Text>
-          {HOMESCHOOL_TIERS.map((tier) => (
+          {HOMESCHOOL_TIERS.map((tier) => {
+            const paidSetForTier = paidMonthsByTier[tier.key];
+            const paidMonthsForTier = paidSetForTier
+              ? SCHOOL_YEAR_MONTHS.filter((m) => paidSetForTier.has(m.index))
+              : [];
+            return (
             <Pressable
               key={tier.key}
               style={[s.row, selectedTier === tier.key && s.rowSelected]}
@@ -408,27 +485,57 @@ export function HomeschoolSchoolYearSelectionSheet({
                 setSelectedWeekdays(new Set(tierToDays(tier.key)));
               }}
             >
-              <View>
-                <Text style={s.rowTitle}>{tier.label}</Text>
-                <Text style={s.rowSub}>{tier.sub}</Text>
+              <View style={s.rowContent}>
+                <View style={s.rowHeader}>
+                  <View>
+                    <Text style={s.rowTitle}>{tier.label}</Text>
+                    <Text style={s.rowSub}>{tier.sub}</Text>
+                  </View>
+                  <Ionicons
+                    name={
+                      selectedTier === tier.key
+                        ? "radio-button-on"
+                        : "radio-button-off"
+                    }
+                    size={20}
+                    color={selectedTier === tier.key ? Brand.sage700 : "#9CA3AF"}
+                  />
+                </View>
+                {paidMonthsForTier.length > 0 ? (
+                  <View style={s.paidChipRow}>
+                    {paidMonthsForTier.map((m) => {
+                      const dayLabel = formatWeekdayKeys(
+                        paidDaysByMonth[m.index] ?? [],
+                      );
+                      return (
+                        <View key={m.index} style={s.paidChip}>
+                          <Ionicons
+                            name="checkmark"
+                            size={10}
+                            color="#15803d"
+                          />
+                          <Text style={s.paidChipText}>
+                            {m.short}
+                            {dayLabel ? ` · ${dayLabel}` : ""}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                ) : null}
               </View>
-              <Ionicons
-                name={
-                  selectedTier === tier.key
-                    ? "radio-button-on"
-                    : "radio-button-off"
-                }
-                size={20}
-                color={selectedTier === tier.key ? Brand.sage700 : "#9CA3AF"}
-              />
             </Pressable>
-          ))}
+            );
+          })}
 
           <Text style={s.sectionLabel}>Months</Text>
           <View style={s.monthGrid}>
             {SCHOOL_YEAR_MONTHS.map((m) => {
               const isPaid = paidSet.has(m.index);
-              const isSelected = selectedMonths.has(m.index);
+              const isSelected = !isPaid && selectedMonths.has(m.index);
+              const paidDayLabel = isPaid
+                ? formatWeekdayKeys(paidDaysByMonth[m.index] ?? [])
+                : "";
               return (
                 <Pressable
                   key={m.index}
@@ -447,6 +554,9 @@ export function HomeschoolSchoolYearSelectionSheet({
                     })
                   }
                 >
+                  {isPaid ? (
+                    <Ionicons name="checkmark" size={12} color="#15803d" />
+                  ) : null}
                   <Text
                     style={[
                       s.monthChipText,
@@ -456,6 +566,9 @@ export function HomeschoolSchoolYearSelectionSheet({
                   >
                     {m.short}
                   </Text>
+                  {paidDayLabel ? (
+                    <Text style={s.monthChipDayLabel}>{paidDayLabel}</Text>
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -498,18 +611,20 @@ export function HomeschoolSchoolYearSelectionSheet({
             </Text>
           )}
 
-          <Pressable
-            style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
-            disabled={!canContinue}
-            onPress={() => {
-              if (eligibleSiblings.length > 0) setStep("sibling");
-              else setStep("payment");
-            }}
-          >
-            <Text style={s.primaryBtnText}>
-              Continue · {formatCents(primaryCents)}
-            </Text>
-          </Pressable>
+          {!readOnly ? (
+            <Pressable
+              style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
+              disabled={!canContinue}
+              onPress={() => {
+                if (eligibleSiblings.length > 0) setStep("sibling");
+                else setStep("payment");
+              }}
+            >
+              <Text style={s.primaryBtnText}>
+                Continue · {formatCents(primaryCents)}
+              </Text>
+            </Pressable>
+          ) : null}
         </BottomSheetScrollView>
       )}
     </BottomSheetModal>
@@ -554,9 +669,6 @@ const s = StyleSheet.create({
     marginBottom: 8,
   },
   row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     borderWidth: 1,
     borderColor: "#E5E7EB",
     borderRadius: 10,
@@ -567,12 +679,33 @@ const s = StyleSheet.create({
     borderColor: Brand.sage700,
     backgroundColor: "rgba(74,124,89,0.06)",
   },
+  rowContent: { flex: 1, gap: 8 },
+  rowHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   rowTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
     color: "#374151",
   },
   rowSub: { fontFamily: FontFamilies.body, fontSize: 12, color: "#9CA3AF" },
+  paidChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  paidChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#dcfce7",
+    borderRadius: 9999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  paidChipText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 10,
+    color: "#15803d",
+  },
   monthGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   monthChip: {
     paddingHorizontal: 10,
@@ -580,6 +713,8 @@ const s = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E5E7EB",
+    alignItems: "center",
+    minWidth: 56,
   },
   monthChipOn: { backgroundColor: Brand.sage700, borderColor: Brand.sage700 },
   monthChipPaid: { backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" },
@@ -590,6 +725,13 @@ const s = StyleSheet.create({
   },
   monthChipTextOn: { color: "#ffffff" },
   monthChipTextPaid: { color: "#15803d" },
+  monthChipDayLabel: {
+    fontFamily: FontFamilies.body,
+    fontSize: 9,
+    color: "#15803d",
+    marginTop: 2,
+    textAlign: "center",
+  },
   priceNote: {
     fontFamily: FontFamilies.body,
     fontSize: 13,

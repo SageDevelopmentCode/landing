@@ -1,4 +1,5 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
+import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import {
@@ -45,6 +46,7 @@ export function SupplyFeeSelectionSheet({
   paidSupplyFeeByStudent,
   studentMap,
   onSuccess,
+  readOnly = false,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   student: StudentInfo | null;
@@ -55,6 +57,7 @@ export function SupplyFeeSelectionSheet({
   paidSupplyFeeByStudent: Record<string, boolean>;
   studentMap: Record<string, StudentInfo>;
   onSuccess?: () => void;
+  readOnly?: boolean;
 }) {
   const { pay, loading, error } = useStripePayment();
   const [step, setStep] = useState<"sibling" | "plan" | "dropin" | "payment">(
@@ -80,6 +83,7 @@ export function SupplyFeeSelectionSheet({
   );
 
   const studentId = student?.id ?? "";
+  const supplyFeePaid = paidSupplyFeeByStudent[studentId] ?? false;
   const programType = resolveSupplyFeeProgramType(applications, studentId);
   const childGrade =
     applications.find((a) => a.student_id === studentId)?.child_grade ?? null;
@@ -150,6 +154,12 @@ export function SupplyFeeSelectionSheet({
 
   const requiredDays =
     selectedTier === "dropin" ? 1 : selectedTier === "2day" ? 2 : 3;
+
+  useEffect(() => {
+    if (readOnly && step === "payment") {
+      setStep(programType === "homeschool" && addBundle ? "dropin" : "plan");
+    }
+  }, [readOnly, step, programType, addBundle]);
 
   function reset() {
     setStep(siblingCandidates.length > 0 ? "sibling" : "plan");
@@ -244,7 +254,27 @@ export function SupplyFeeSelectionSheet({
         />
       )}
     >
-      {step === "payment" ? (
+      {readOnly && supplyFeePaid ? (
+        <BottomSheetScrollView
+          contentContainerStyle={s.sheetContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <BillingPreviewBanner />
+          <Text style={s.title}>Annual Supply Fee</Text>
+          {student ? (
+            <Text style={s.subtitle}>{student.name.split(" ")[0]}</Text>
+          ) : null}
+          <View style={s.feeCard}>
+            <Text style={s.feeLabel}>Supply fee</Text>
+            <Text style={s.feeAmount}>{formatCents(SUPPLY_FEE_CENTS)}</Text>
+            <Text style={s.feeNote}>School Year 26–27</Text>
+          </View>
+          <View style={s.paidStatusRow}>
+            <Ionicons name="checkmark-circle" size={18} color={Brand.sage700} />
+            <Text style={s.paidStatusText}>Paid</Text>
+          </View>
+        </BottomSheetScrollView>
+      ) : step === "payment" && !readOnly ? (
         <BottomSheetScrollView
           contentContainerStyle={s.sheetContent}
           showsVerticalScrollIndicator={false}
@@ -273,6 +303,7 @@ export function SupplyFeeSelectionSheet({
           contentContainerStyle={s.sheetContent}
           showsVerticalScrollIndicator={false}
         >
+          {readOnly ? <BillingPreviewBanner /> : null}
           <Text style={s.title}>Annual Supply Fee</Text>
           {student ? (
             <Text style={s.subtitle}>{student.name.split(" ")[0]}</Text>
@@ -305,9 +336,11 @@ export function SupplyFeeSelectionSheet({
                   </Pressable>
                 );
               })}
-              <Pressable style={s.primaryBtn} onPress={() => setStep("plan")}>
-                <Text style={s.primaryBtnText}>Continue</Text>
-              </Pressable>
+              {!readOnly ? (
+                <Pressable style={s.primaryBtn} onPress={() => setStep("plan")}>
+                  <Text style={s.primaryBtnText}>Continue</Text>
+                </Pressable>
+              ) : null}
             </>
           )}
 
@@ -408,25 +441,27 @@ export function SupplyFeeSelectionSheet({
                 </>
               )}
 
-              <Pressable
-                style={[
-                  s.primaryBtn,
-                  addBundle &&
+              {!readOnly ? (
+                <Pressable
+                  style={[
+                    s.primaryBtn,
+                    addBundle &&
+                      programType === "homeschool" &&
+                      (!selectedTier || selectedMonthIndices.size < 1) &&
+                      s.primaryBtnDisabled,
+                  ]}
+                  disabled={
+                    addBundle &&
                     programType === "homeschool" &&
-                    (!selectedTier || selectedMonthIndices.size < 1) &&
-                    s.primaryBtnDisabled,
-                ]}
-                disabled={
-                  addBundle &&
-                  programType === "homeschool" &&
-                  (!selectedTier || selectedMonthIndices.size < 1)
-                }
-                onPress={() => setStep("payment")}
-              >
-                <Text style={s.primaryBtnText}>
-                  Continue · {formatCents(baseCents)}
-                </Text>
-              </Pressable>
+                    (!selectedTier || selectedMonthIndices.size < 1)
+                  }
+                  onPress={() => setStep("payment")}
+                >
+                  <Text style={s.primaryBtnText}>
+                    Continue · {formatCents(baseCents)}
+                  </Text>
+                </Pressable>
+              ) : null}
             </>
           )}
 
@@ -567,6 +602,22 @@ const s = StyleSheet.create({
     color: Brand.sage800,
   },
   feeNote: { fontFamily: FontFamilies.body, fontSize: 12, color: "#6B7280" },
+  paidStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 16,
+    alignSelf: "flex-start",
+    backgroundColor: "#dcfce7",
+    borderRadius: 9999,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  paidStatusText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: Brand.sage700,
+  },
   bundleToggle: {
     flexDirection: "row",
     alignItems: "center",

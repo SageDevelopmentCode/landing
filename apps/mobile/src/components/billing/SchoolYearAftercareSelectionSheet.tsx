@@ -1,4 +1,5 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
+import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import {
   SchoolYearMonthlyMonthGrid,
   type SchoolYearMonthGridItem,
@@ -18,7 +19,7 @@ import {
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type StudentInfo = { id: string; name: string; profileImageUrl: string | null };
@@ -39,12 +40,14 @@ export function SchoolYearAftercareSelectionSheet({
   application,
   paidAftercare,
   onSuccess,
+  readOnly = false,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   student: StudentInfo | null;
   application: ApplicationRow | null;
   paidAftercare: { months: string[]; days: string[] } | undefined;
   onSuccess?: () => void;
+  readOnly?: boolean;
 }) {
   const { pay, loading, error } = useStripePayment();
   const [tab, setTab] = useState<"monthly" | "daily">("monthly");
@@ -126,6 +129,12 @@ export function SchoolYearAftercareSelectionSheet({
         ? `Continue · ${formatCents(dailyTotal)}`
         : "Select days to continue";
 
+  useEffect(() => {
+    if (readOnly && step !== "select") {
+      setStep("select");
+    }
+  }, [readOnly, step]);
+
   function reset() {
     setTab("monthly");
     setSelMonths(new Set());
@@ -178,7 +187,7 @@ export function SchoolYearAftercareSelectionSheet({
         />
       )}
     >
-      {step === "payment" ? (
+      {step === "payment" && !readOnly ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
           <PaymentMethodStep
             intendedAmountCents={totalCents}
@@ -201,6 +210,11 @@ export function SchoolYearAftercareSelectionSheet({
         </BottomSheetScrollView>
       ) : (
         <View style={s.flex}>
+          {readOnly ? (
+            <View style={{ paddingHorizontal: Spacing.three, paddingTop: 4 }}>
+              <BillingPreviewBanner />
+            </View>
+          ) : null}
           <View style={s.sheetHeader}>
             <Text style={s.title}>Extended Learning — School Year 26–27</Text>
             {student ? (
@@ -378,15 +392,17 @@ export function SchoolYearAftercareSelectionSheet({
             )}
           </BottomSheetScrollView>
 
-          <View style={s.footer}>
-            <Pressable
-              style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
-              disabled={!canContinue}
-              onPress={() => setStep("payment")}
-            >
-              <Text style={s.primaryBtnText}>{continueLabel}</Text>
-            </Pressable>
-          </View>
+          {!readOnly ? (
+            <View style={s.footer}>
+              <Pressable
+                style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
+                disabled={!canContinue}
+                onPress={() => setStep("payment")}
+              >
+                <Text style={s.primaryBtnText}>{continueLabel}</Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       )}
     </BottomSheetModal>

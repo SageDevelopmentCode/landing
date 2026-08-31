@@ -54,7 +54,7 @@ export async function notifySchoolYearTuitionPayment(opts: {
     .map(Number)
     .filter((n) => !isNaN(n) && n > 0);
 
-  sendDiscordNotification(
+  await sendDiscordNotification(
     createSchoolYearTuitionEmbed({
       parentName,
       parentEmail: parentEmailAddr,
@@ -63,8 +63,6 @@ export async function notifySchoolYearTuitionPayment(opts: {
       selectedMonthIndices,
       source,
     }),
-  ).catch((err) =>
-    console.error("School year tuition Discord notification failed:", err),
   );
 
   const toAddress = parentEmailAddr !== "N/A" ? parentEmailAddr : "";

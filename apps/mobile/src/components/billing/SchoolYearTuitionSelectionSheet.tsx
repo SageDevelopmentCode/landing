@@ -1,4 +1,5 @@
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
+import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import type { ApplicationRow } from "@/lib/school-year-billing";
@@ -42,6 +43,7 @@ export function SchoolYearTuitionSelectionSheet({
   paidSupplyFeeByStudent = {},
   siblingStudentMap = {},
   onSuccess,
+  readOnly = false,
 }: {
   sheetRef: React.RefObject<BottomSheetModal | null>;
   student: StudentInfo | null;
@@ -52,6 +54,7 @@ export function SchoolYearTuitionSelectionSheet({
   paidSupplyFeeByStudent?: Record<string, boolean>;
   siblingStudentMap?: Record<string, StudentInfo>;
   onSuccess?: () => void;
+  readOnly?: boolean;
 }) {
   const { pay, loading, error } = useStripePayment();
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -119,6 +122,12 @@ export function SchoolYearTuitionSelectionSheet({
     .reduce((sum, s) => sum + getSiblingCents(s), 0);
 
   const combinedCents = primaryCents + includedSiblingCents;
+
+  useEffect(() => {
+    if (readOnly && step !== "select") {
+      setStep("select");
+    }
+  }, [readOnly, step]);
 
   function reset() {
     setSelected(new Set());
@@ -218,7 +227,7 @@ export function SchoolYearTuitionSelectionSheet({
         />
       )}
     >
-      {step === "payment" ? (
+      {step === "payment" && !readOnly ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
           <PaymentMethodStep
             intendedAmountCents={combinedCents}
@@ -231,7 +240,7 @@ export function SchoolYearTuitionSelectionSheet({
             error={error}
           />
         </BottomSheetScrollView>
-      ) : step === "sibling" ? (
+      ) : step === "sibling" && !readOnly ? (
         <View style={s.flex}>
           <View style={s.header}>
             <Pressable onPress={() => setStep("select")} hitSlop={12}>
@@ -350,6 +359,7 @@ export function SchoolYearTuitionSelectionSheet({
         </View>
       ) : (
         <BottomSheetScrollView contentContainerStyle={s.content}>
+          {readOnly ? <BillingPreviewBanner /> : null}
           <Text style={s.title}>School Year Tuition</Text>
           {student ? (
             <Text style={s.subtitle}>{student.name.split(" ")[0]}</Text>
@@ -393,18 +403,20 @@ export function SchoolYearTuitionSelectionSheet({
               );
             })}
           </View>
-          <Pressable
-            style={[s.primaryBtn, selected.size === 0 && s.primaryBtnDisabled]}
-            disabled={selected.size === 0}
-            onPress={() => {
-              if (eligibleSiblings.length > 0) setStep("sibling");
-              else setStep("payment");
-            }}
-          >
-            <Text style={s.primaryBtnText}>
-              Continue · {formatCents(primaryCents)}
-            </Text>
-          </Pressable>
+          {!readOnly ? (
+            <Pressable
+              style={[s.primaryBtn, selected.size === 0 && s.primaryBtnDisabled]}
+              disabled={selected.size === 0}
+              onPress={() => {
+                if (eligibleSiblings.length > 0) setStep("sibling");
+                else setStep("payment");
+              }}
+            >
+              <Text style={s.primaryBtnText}>
+                Continue · {formatCents(primaryCents)}
+              </Text>
+            </Pressable>
+          ) : null}
         </BottomSheetScrollView>
       )}
     </BottomSheetModal>
