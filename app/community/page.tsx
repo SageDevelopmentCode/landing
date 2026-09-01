@@ -628,7 +628,7 @@ export default function CommunityGardenPage() {
               See What Life at Sage Field Looks Like
             </h2>
             <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
-              Our school year is underway — community, routines, and hands-on learning from week one.
+              Our school year is underway — gardening, place value, and hands-on learning from week two.
             </p>
           </motion.div>
 

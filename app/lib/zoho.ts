@@ -5420,9 +5420,49 @@ export async function buildSchoolYearTuitionDueDateTodayReminderEmail(opts: {
 function buildSchoolYearSeptemberReminderEmailContent(
   opts: { g1FullName?: string; childLegalName?: string; email: string },
   subject: string,
-  pricingTableHtml: string,
+  variant: "school-year" | "drop-in",
 ): { subject: string; content: string } {
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const productLabel =
+    variant === "school-year" ? "September tuition" : "September homeschool drop-in";
+  const pricingTableHtml =
+    variant === "school-year"
+      ? schoolYearTuitionByGradeTableHtml("24px")
+      : homeschoolDropInPricingTableHtml("24px");
+  const billingPolicyHtml =
+    variant === "school-year"
+      ? `<p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
+    Both grade bands are billed in <strong>10 equal monthly payments</strong> (August through May).
+    Payments are due on the <strong>1st of each month</strong>.
+    A <strong>$50 late fee</strong> applies to any payment not received by the <strong>4th of the month</strong>.
+  </p>`
+      : `<p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
+    Homeschool drop-in is billed <strong>month by month</strong> — pay only for the months you enroll.
+    Payments are due on the <strong>1st of each month</strong>.
+    A <strong>$50 late fee</strong> applies to any payment not received by the <strong>4th of the month</strong>.
+  </p>`;
+  const portalCtaHtml =
+    variant === "school-year"
+      ? `<div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Your parent billing portal reflects the correct tuition for your child's grade</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page and click the <strong>"School Year"</strong> tab.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Pay Tuition Now →
+    </a>
+  </div>`
+      : `<div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Your parent billing portal has everything you need.</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page → <strong>"School Year"</strong> tab → <strong>"Homeschool Drop-In"</strong> to select your schedule and pay.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Pay Now →
+    </a>
+  </div>`;
+  const helpText =
+    variant === "school-year"
+      ? "If you have any questions about your specific tuition or billing, please don't hesitate to reach out. We are happy to help!"
+      : "If you have any questions about homeschool drop-in pricing or scheduling, please don't hesitate to reach out. We are happy to help!";
 
   const content = `
 <!DOCTYPE html>
@@ -5433,54 +5473,26 @@ function buildSchoolYearSeptemberReminderEmailContent(
   <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
 
   <p style="margin-bottom: 16px;">
-    If you've already paid September tuition — thank you, you're all set! 🎉
+    If you've already paid ${productLabel} — thank you, you're all set! 🎉
   </p>
 
   <p style="margin-bottom: 16px;">
-    If you haven't yet — a quick reminder that <strong>September tuition is due next Tuesday, September 1</strong>.
-    You can pay through your parent billing portal under the <strong>"School Year"</strong> tab.
+    If you haven't yet — a quick reminder that <strong>${productLabel} is due tomorrow, September 1</strong>.
+    Please submit payment through your parent billing portal under the <strong>"School Year"</strong> tab.
   </p>
+
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0; color: #b45309;">⚠️ A <strong>$50 late fee</strong> applies if payment is not received by <strong>September 4</strong>.</p>
+  </div>
 
   ${pricingTableHtml}
 
-  <p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
-    Both grade bands are billed in <strong>10 equal monthly payments</strong> (August through May).
-    Payments are due on the <strong>1st of each month</strong>.
-    A <strong>$50 late fee</strong> applies to any payment not received by the <strong>4th of the month</strong>.
-  </p>
+  ${billingPolicyHtml}
 
   <!-- Portal CTA -->
-  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
-    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Your parent billing portal reflects the correct tuition for your child's grade</p>
-    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page and click the <strong>"School Year"</strong> tab.</p>
-    <a href="https://sagefield.co/parent/billing"
-       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
-      Open Parent Billing Portal →
-    </a>
-  </div>
+  ${portalCtaHtml}
 
-  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🚧 This Friday: Construction Zone — August 28</h2>
-  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
-    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
-      <li><strong>Build a tower</strong> — place tape against the wall at different lengths for kids to build a tower with LEGOs</li>
-      <li><strong>Brick by brick</strong> — show kids a photo of a building and have them replicate it using blocks</li>
-      <li><strong>Excavator dig</strong> — use bowls, make oobleck, and leave small construction toys to dry for 3 days; let kids dig up using small shovels or knives</li>
-      <li><strong>Construction hats &amp; vests</strong> — print and decorate construction hats; make vests out of brown plastic bags for kids to decorate</li>
-    </ul>
-  </div>
-
-  <h2 style="font-size: 17px; color: #7c3aed; margin-top: 32px; margin-bottom: 14px;">🌿 Field Friday — Save 33%</h2>
-  <div style="background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
-    <p style="margin: 0 0 12px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Pay for the full month and save 33% — just $40 per session</p>
-    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Drop-in sessions are $60 each. When you pay for an entire month of Field Fridays, it works out to <strong>$40 per session</strong>.</p>
-    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Sign up on the <strong>Billing</strong> page → <strong>"School Year"</strong> tab → <strong>"Friday Enrichment"</strong>.</p>
-    <a href="https://sagefield.co/parent/billing"
-       style="display: inline-block; background: #7c3aed; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
-      Sign Up for Field Friday →
-    </a>
-  </div>
-
-  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about your specific tuition or billing, please don't hesitate to reach out. We are happy to help!</p>
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">${helpText}</p>
 
   <p style="margin-top: 32px;">With warmth,</p>
   <p style="margin-top: 4px;">
@@ -5503,8 +5515,8 @@ export async function buildSchoolYearSeptemberTuitionReminderEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   return buildSchoolYearSeptemberReminderEmailContent(
     opts,
-    `Reminder: September Tuition Due September 1 + Field Friday — 2026–2027`,
-    schoolYearTuitionByGradeTableHtml("24px"),
+    `September Tuition Due Tomorrow (September 1) — 2026–2027`,
+    "school-year",
   );
 }
 
@@ -5515,8 +5527,8 @@ export async function buildSchoolYearSeptemberDropInTuitionReminderEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   return buildSchoolYearSeptemberReminderEmailContent(
     opts,
-    `Reminder: September Homeschool Drop-In Due September 1 + Field Friday — 2026–2027`,
-    homeschoolDropInPricingTableHtml("24px"),
+    `September Homeschool Drop-In Due Tomorrow (September 1) — 2026–2027`,
+    "drop-in",
   );
 }
 
