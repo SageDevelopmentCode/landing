@@ -51,7 +51,9 @@ Copy this checklist and track progress:
 - [ ] Step 7: Update rolling preview module
 - [ ] Step 8: Update highlights index
 - [ ] Step 9: Update homepage + community grids
-- [ ] Step 10: Build and verify
+- [ ] Step 9b: Update inline recap pages (homeschool, etc.)
+- [ ] Step 10: Add photos to gallery
+- [ ] Step 11: Build and verify
 ```
 
 ### Step 1: Identify newsletter
@@ -170,7 +172,30 @@ Update section intro copy in [`app/page.tsx`](../../../app/page.tsx) and [`app/c
 
 `WeekRecapPreview` on [`app/apply/page.tsx`](../../../app/apply/page.tsx) and tour page inherit the update automatically.
 
-### Step 10: Build and verify
+### Step 9b: Update inline recap pages
+
+Some pages have **duplicated inline recap sections** with hardcoded summer-week constants instead of `WeekRecapPreview`. These go stale every school year.
+
+**Required:** [`app/homeschool/page.tsx`](../../../app/homeschool/page.tsx) — replace the inline recap block with `<WeekRecapPreview className="bg-sage-50" />` and remove `WEEK*_PREVIEW_IMAGES` / highlight constants plus any `previewGalleryRef` scroll animation.
+
+**Optional checks** (still on summer recaps unless user asks):
+
+- [`app/free/page.tsx`](../../../app/free/page.tsx)
+- [`app/shadow/page.tsx`](../../../app/shadow/page.tsx)
+
+Prefer `WeekRecapPreview` over duplicating preview constants — it auto-updates when Step 7 is done.
+
+### Step 10: Add photos to gallery
+
+In [`app/gallery/page.tsx`](../../../app/gallery/page.tsx):
+
+1. Add `SCHOOL_YEAR_WEEK_N` array with all filenames from the compressed folder
+2. Prepend to `ALL_IMAGES` (newest first)
+3. Update hero badge if needed (e.g. `School Year & Summer 2026` when school-year photos are included)
+
+Use alt text like `School Year Week N — {filename}`.
+
+### Step 11: Build and verify
 
 ```bash
 npm run build
@@ -183,6 +208,8 @@ Spot-check routes:
 - `/` — WeekRecapPreview marquee + grade cards + CTA
 - `/apply` — WeekRecapPreview section
 - `/community` — highlights grid card
+- `/homeschool` — WeekRecapPreview (not stale summer inline recap)
+- `/gallery` — new week's photos appear at top of grid
 
 ## Copy rules
 
@@ -221,7 +248,9 @@ Agent actions:
 6. Overwrite `school-year-latest-preview.ts`
 7. Prepend to `SCHOOL_YEAR_WEEKS` in highlights index
 8. Update homepage section copy if needed
-9. `npm run build`
+9. Replace homeschool inline recap with `WeekRecapPreview`
+10. Add photos to `app/gallery/page.tsx`
+11. `npm run build`
 
 ## Out of scope
 
@@ -238,6 +267,8 @@ Agent actions:
 - [ ] Highlights page created at correct route with all photos captioned
 - [ ] `school-year-latest-preview.ts` updated with new week data
 - [ ] Highlights index prepended with new week card
+- [ ] Homeschool page uses `WeekRecapPreview` (no stale inline summer recap)
+- [ ] Gallery updated with new week's photos
 - [ ] No teacher names or community names in public copy
 - [ ] Field Friday section included when applicable
 - [ ] `npm run build` passes

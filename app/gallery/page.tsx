@@ -15,6 +15,42 @@ const ImageLightbox = dynamic(() => import("@/app/components/ImageLightbox"), {
 
 type GalleryImage = { src: string; alt: string; week: number };
 
+const SCHOOL_YEAR_WEEK_TWO: GalleryImage[] = [
+  "026E8AEA-C44F-4246-A9F9-AF45B8C3289B.JPG",
+  "0692B9CB-AF89-4CC3-99C9-C3797795D04A.JPG",
+  "074E1AE7-4DA4-4D03-935C-47E4AEF7B279.JPG",
+  "09FAA73A-CA85-4102-80F9-46B1C37D95C8.JPG",
+  "21B55D40-53C5-4106-99A1-8E71CA1B6875.JPG",
+  "28DE4C5C-2A83-44E2-80A5-EFF344A8F277.JPG",
+  "384DD291-FF63-42C8-BA02-404BD4F4A920.JPG",
+  "3BAB944C-5EBB-4147-BA3B-BA7EE61079C8.JPG",
+  "50FE921A-9B54-4862-8B27-6719EC23FA1E.JPG",
+  "5C76F9A0-69BB-459A-A74E-3F3ABE317D3D.JPG",
+  "74160CB8-12DB-49C1-BF5D-873BECCA182C.JPG",
+  "7A908B6B-CBDD-4FD5-B452-DDE91EB07BA5.JPG",
+  "80E5673A-9F91-449A-900C-4D3A86B7B4E7.JPG",
+  "82794259-4C23-43AE-8706-E5EDF34F05FA.JPG",
+  "95C71CF1-9A7A-4D73-A80E-981044348D01.JPG",
+  "A791AF61-0CB3-4287-9132-177755B18010.JPG",
+  "B348E338-44E0-44AC-842F-DBED49294864.JPG",
+  "B7149464-D795-4207-94FB-74F90D319DC4.JPG",
+  "B8409633-2A82-4A18-95FF-7BC65FDA8898.JPG",
+  "C2440A5D-713E-44B4-82D6-A59AC8EDB294.JPG",
+  "C27EE9B7-D9A8-4DC6-8127-682E6DEB16F3.JPG",
+  "C789A2F8-D5D0-48AE-9C6C-153410CB374F.JPG",
+  "D69B578C-7F6B-4F85-A7AB-C86C0BE8BD33.JPG",
+  "D7EC0B6B-4515-4C88-BBEE-447FB46572B3.JPG",
+  "DD50BC8D-7A05-4C98-B0EE-FCD27061FEBC.JPG",
+  "E4BE89E9-7A5D-4DE4-A445-39DC1DDC0C9B.JPG",
+  "F221FC0F-31C1-45DB-846D-7286FE7CC199.JPG",
+  "IMG_1991.JPG",
+  "IMG_1992.JPG",
+].map((f) => ({
+  src: `/assets/highlights/school_week_two/${f}`,
+  alt: `School Year Week 2 — ${f}`,
+  week: 2,
+}));
+
 const WEEK_ONE: GalleryImage[] = [
   "0D75EB5E-FE8D-405E-AF5D-6457DDF7473A.JPG",
   "1A5F716C-6189-450B-8F8C-61E71621C2B9.JPG",
@@ -235,7 +271,7 @@ const WEEK_SIX: GalleryImage[] = [
   "sagefield_1783398462180.jpg",
 ].map((f) => ({ src: `/assets/highlights/summer_week_six/${f}`, alt: `Week 6 — ${f}`, week: 6 }));
 
-const ALL_IMAGES: GalleryImage[] = [...WEEK_TWELVE, ...WEEK_ELEVEN, ...WEEK_SIX, ...WEEK_FIVE, ...WEEK_FOUR, ...WEEK_THREE, ...WEEK_TWO, ...WEEK_ONE];
+const ALL_IMAGES: GalleryImage[] = [...SCHOOL_YEAR_WEEK_TWO, ...WEEK_TWELVE, ...WEEK_ELEVEN, ...WEEK_SIX, ...WEEK_FIVE, ...WEEK_FOUR, ...WEEK_THREE, ...WEEK_TWO, ...WEEK_ONE];
 
 // ─── Skeleton card ─────────────────────────────────────────────────────────────
 
@@ -325,7 +361,7 @@ export default function GalleryPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              Summer 2026
+              School Year &amp; Summer 2026
             </span>
             <h1 className="text-4xl md:text-5xl font-bold font-heading text-gray-800 mb-3">
               Gallery

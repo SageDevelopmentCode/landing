@@ -116,7 +116,7 @@ export default function WeekRecapPreview({ className = "", variant = "light" }: 
             >
               <Image
                 src={src}
-                alt="School year week 1 highlight"
+                alt="School year week highlight"
                 fill
                 className="object-cover"
                 sizes="256px"

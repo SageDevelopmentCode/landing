@@ -84,12 +84,19 @@ Map `teacher_name` → public label. Update when staff changes.
 | `app/highlights/page.tsx` | **Prepend** to `SCHOOL_YEAR_WEEKS` array |
 | `app/page.tsx` | Update section intro copy if week/theme changed |
 | `app/community/page.tsx` | Update section intro copy if week/theme changed |
+| `app/homeschool/page.tsx` | Replace inline recap with `WeekRecapPreview` (or update constants) |
+| `app/gallery/page.tsx` | Add `SCHOOL_YEAR_WEEK_N` array + prepend to `ALL_IMAGES` |
 
 **Auto-updated via imports (no edit needed if preview module is correct):**
 
 - `app/components/WeekRecapPreview.tsx` — imports `SCHOOL_YEAR_LATEST_*`
 - `app/apply/page.tsx` — renders `WeekRecapPreview`
 - `app/page.tsx` / `app/community/page.tsx` — `PREVIEW_WEEKS = [SCHOOL_YEAR_LATEST_CARD]`
+
+**Optional checks for stale inline recaps:**
+
+- `app/free/page.tsx` — summer Week 1 inline recap
+- `app/shadow/page.tsx` — mixed summer recap content
 
 **Out of scope (do not edit unless user asks):**
 
@@ -225,8 +232,20 @@ Default to school-year unless user specifies summer.
 | Week range | August 17–21 |
 | Photo folder | `public/assets/highlights/school_week_one` |
 | Page | `app/highlights/school-year/week-1/page.tsx` |
-| Preview module | `app/lib/highlights/school-year-latest-preview.ts` (currently Week 1 data) |
+| Preview module | `app/lib/highlights/school-year-latest-preview.ts` (Week 1 archival data) |
 | Field Friday | Wild Safari — animal silhouettes, safari binoculars, safari bingo, animal hide-and-seek |
+
+## Canonical example — Week 2 School Year '26–'27
+
+| Item | Value |
+| ---- | ----- |
+| Newsletter ID | `7aa820ee-0538-4707-a3cd-16a2b74bb0b0` |
+| Week range | August 24–28 |
+| Photo folder | `public/assets/highlights/school_week_two` |
+| Page | `app/highlights/school-year/week-2/page.tsx` |
+| Preview module | `app/lib/highlights/school-year-latest-preview.ts` (currently latest week) |
+| Field Friday | Construction Zone — oobleck cement dig, hard-hat decorating, LEGO building |
+| Community event | Sage Field Community Garden Event (Thursday) |
 
 Use Week 1 as the gold standard for page structure, copy tone, and image handling.
 
