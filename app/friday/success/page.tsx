@@ -5,25 +5,25 @@ import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 
-export default function ConstructionZoneSuccessPage() {
+export default function WildWestSuccessPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Navbar darkStyle={true} />
       <div className="flex-1 flex items-center justify-center px-8 py-24">
-        <div className="max-w-md w-full bg-white rounded-3xl p-10 shadow-sm border border-yellow-100 text-center">
-          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-5">
-            <CheckCircle className="w-8 h-8 text-yellow-600" />
+        <div className="max-w-md w-full bg-white rounded-3xl p-10 shadow-sm border border-[#f5e6c8] text-center">
+          <div className="w-16 h-16 bg-[#f5e6c8] rounded-full flex items-center justify-center mx-auto mb-5">
+            <CheckCircle className="w-8 h-8 text-[#8b3a1a]" />
           </div>
           <h1 className="font-heading font-bold text-2xl text-slate-800 mb-2">
             You&apos;re registered!
           </h1>
           <p className="text-slate-500 font-body mb-2 leading-relaxed">
-            We&apos;ll see you Friday, August 28th for Construction Zone at Sage
-            Field. Get ready for tower building, excavator digs, brick-by-brick
-            challenges, and hard hat decorating!
+            We&apos;ll see you Friday, September 4th for Wild West at Sage
+            Field. Get ready for wanted posters, sheriff badges,
+            stick horses, and The Great Robbery!
           </p>
           <p className="text-sm text-primary font-semibold font-body mt-4 mb-8">
-            👟 Closed-toe shoes · 👕 Old clothes · 💧 Water bottle — check your email for
+            👢 Boots or closed-toe shoes · 🤠 Bandana · 💧 Water canteen — check your email for
             the full packing list.
           </p>
           <Link

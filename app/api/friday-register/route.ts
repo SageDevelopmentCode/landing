@@ -101,8 +101,8 @@ export async function POST(request: NextRequest) {
               ? Math.round(finalAmountCents / data.children.length)
               : PRICE_PER_CHILD_CENTS,
             product_data: {
-              name: "Construction Zone — August 28",
-              description: `Sage Field Private School · $${FUN_FRIDAY_DROPIN_CENTS / 100} per child · August 28, 2026`,
+              name: "Wild West — September 4",
+              description: `Sage Field Private School · $${FUN_FRIDAY_DROPIN_CENTS / 100} per child · September 4, 2026`,
             },
           },
         },
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         intended_amount_cents: String(BASE_AMOUNT_CENTS),
         cover_fees: String(data.coverFees),
         payment_method: data.paymentMethod,
-        description: "Construction Zone Field Day Fee",
+        description: "Wild West Field Day Fee",
       },
       success_url: `${baseUrl}/friday/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/friday#reserve`,

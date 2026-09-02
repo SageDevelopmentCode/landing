@@ -173,9 +173,9 @@ export default function Home() {
 
       {/* ── Field Day Friday Preview ── */}
       <style>{`
-        @keyframes fdf-crane-swing {
-          0%, 100% { transform: rotate(-3deg); transform-origin: top center; }
-          50%       { transform: rotate(3deg); transform-origin: top center; }
+        @keyframes fdf-tumbleweed-roll {
+          0%, 100% { transform: rotate(-5deg) translateX(0); transform-origin: center center; }
+          50%       { transform: rotate(5deg) translateX(12px); transform-origin: center center; }
         }
         @keyframes fdf-dust-drift {
           0%   { transform: translate(0, 0) scale(1);      opacity: 0.5; }
@@ -184,26 +184,26 @@ export default function Home() {
           75%  { transform: translate(12px, -14px) scale(1.05); opacity: 0.7; }
           100% { transform: translate(0, 0) scale(1);      opacity: 0.5; }
         }
-        @keyframes fdf-beacon-blink {
+        @keyframes fdf-badge-gleam {
           0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
+          50%       { opacity: 0.5; }
         }
         @keyframes fdf-letter-drop {
           0%   { opacity: 0; transform: translateY(-24px) scale(0.85); filter: blur(4px); }
           60%  { opacity: 1; transform: translateY(4px) scale(1.04); filter: blur(0); }
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
-        .fdf-construction-headline {
-          color: #facc15;
-          -webkit-text-stroke: 2px #1c1917;
+        .fdf-wanted-headline {
+          color: #c9a227;
+          -webkit-text-stroke: 2px #2d1b0e;
           paint-order: stroke fill;
           text-shadow:
-            0 2px 0 #1c1917,
-            0 0 24px rgba(250, 204, 21, 0.15);
+            0 2px 0 #2d1b0e,
+            0 0 24px rgba(201, 162, 39, 0.2);
         }
         @media (max-width: 640px) {
-          .fdf-construction-headline {
-            -webkit-text-stroke: 1.5px #1c1917;
+          .fdf-wanted-headline {
+            -webkit-text-stroke: 1.5px #2d1b0e;
           }
         }
         .fdf-letter-drop span {
@@ -211,33 +211,32 @@ export default function Home() {
           opacity: 0;
           animation: fdf-letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
-        .fdf-crane-swing { animation: fdf-crane-swing 6s ease-in-out infinite; }
+        .fdf-tumbleweed-roll { animation: fdf-tumbleweed-roll 8s ease-in-out infinite; }
         .fdf-dust-drift  { animation: fdf-dust-drift 5s ease-in-out infinite; }
-        .fdf-beacon-blink { animation: fdf-beacon-blink 1.2s ease-in-out infinite; }
+        .fdf-badge-gleam { animation: fdf-badge-gleam 1.2s ease-in-out infinite; }
       `}</style>
 
       {/* Top wave: cream → dark */}
       <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#1c1917" />
+          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#2d1b0e" />
         </svg>
       </div>
 
       <section
         className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16"
-        style={{ background: "linear-gradient(180deg, #1c1917 0%, #292524 40%, #1c1917 100%)" }}
+        style={{ background: "linear-gradient(180deg, #2d1b0e 0%, #5c3d2e 40%, #2d1b0e 100%)" }}
       >
-        {/* Left traffic cone */}
-        <div className="fdf-crane-swing absolute bottom-0 left-4 sm:left-8 w-12 sm:w-16 pointer-events-none opacity-70" style={{ zIndex: 1 }}>
-          <svg viewBox="0 0 40 60" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <polygon points="20,2 36,52 4,52" fill="#f97316" />
-            <rect x="4" y="52" width="32" height="6" rx="1" fill="#44403c" />
-            <rect x="8" y="18" width="24" height="5" fill="#fef9c3" opacity="0.9" />
-            <rect x="10" y="30" width="20" height="4" fill="#fef9c3" opacity="0.9" />
+        {/* Left tumbleweed */}
+        <div className="fdf-tumbleweed-roll absolute bottom-0 left-4 sm:left-8 w-10 sm:w-14 pointer-events-none opacity-50" style={{ zIndex: 1 }}>
+          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
+            <circle cx="24" cy="24" r="14" fill="none" stroke="#8b6914" strokeWidth="2" />
+            <line x1="24" y1="10" x2="24" y2="38" stroke="#8b6914" strokeWidth="1.5" />
+            <line x1="10" y1="24" x2="38" y2="24" stroke="#8b6914" strokeWidth="1.5" />
           </svg>
         </div>
 
-        {/* Concrete dust particles */}
+        {/* Desert dust particles */}
         {[
           { top: "18%", right: "15%", size: 4, delay: "0s"   },
           { top: "55%", right: "5%",  size: 3, delay: "1.2s" },
@@ -251,7 +250,7 @@ export default function Home() {
               right: f.right,
               width: f.size,
               height: f.size,
-              background: "radial-gradient(circle, #d6d3d1 0%, #a8a29e 60%, transparent 100%)",
+              background: "radial-gradient(circle, #d4a574 0%, #8b6914 60%, transparent 100%)",
               animationDelay: f.delay,
               zIndex: 1,
             }}
@@ -267,8 +266,8 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-yellow-200 font-body uppercase tracking-wide">
-              🚧 This Friday · Aug 28 · Limited Spots
+            <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-[#d4a574] font-body uppercase tracking-wide">
+              🤠 This Friday · Sept 4 · Limited Spots
             </span>
           </motion.div>
 
@@ -280,25 +279,25 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="fdf-beacon-blink text-4xl mb-4 inline-block">🚧</div>
+              <div className="fdf-badge-gleam text-4xl mb-4 inline-block">🤠</div>
               <h2
                 className="font-heading font-bold leading-tight mb-3"
                 style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
               >
                 <span
-                  className="block fdf-construction-headline"
+                  className="block fdf-wanted-headline"
                   style={{
                     fontFamily: "var(--font-bebas-neue), sans-serif",
                     letterSpacing: "0.04em",
                   }}
                 >
-                  Construction Zone
+                  Wild West
                 </span>
                 <span className="fdf-letter-drop block">
-                  {Array.from("Field Day 🚧").map((ch, i) => (
+                  {Array.from("Field Day 🤠").map((ch, i) => (
                     <span
                       key={i}
-                      style={{ animationDelay: `${0.3 + i * 0.06}s`, color: "#facc15" }}
+                      style={{ animationDelay: `${0.3 + i * 0.06}s`, color: "#c9a227" }}
                     >
                       {ch === " " ? " " : ch}
                     </span>
@@ -306,13 +305,13 @@ export default function Home() {
                 </span>
               </h2>
               <p className="text-stone-300 font-body text-base leading-relaxed mb-6 max-w-md">
-                One hands-on Friday at Sage Field. Build LEGO towers, replicate buildings brick by brick, dig through oobleck like a real excavator, and decorate your own hard hat & vest!
+                One adventure-packed Friday at Sage Field. Design wanted posters, craft sheriff badges, build stick horses, and join The Great Robbery across the range!
               </p>
 
               {/* Event detail pills */}
               <div className="flex flex-wrap gap-2 mb-7">
                 {[
-                  { icon: "📅", text: "Aug 28, 2026" },
+                  { icon: "📅", text: "Sept 4, 2026" },
                   { icon: "🕗", text: "8:30 AM – 1:30 PM" },
                   { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} / child` },
                   { icon: "👧", text: "Ages 4–11" },
@@ -329,11 +328,11 @@ export default function Home() {
               <Link
                 href="/friday"
                 className="inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                style={{ background: "linear-gradient(135deg, #ca8a04 0%, #f97316 100%)" }}
+                style={{ background: "linear-gradient(135deg, #c9a227 0%, #8b3a1a 100%)" }}
               >
-                🚧 Reserve Your Spot →
+                🤠 Saddle Up & Reserve →
               </Link>
-              <p className="text-xs text-yellow-400 font-body mt-3">
+              <p className="text-xs text-[#d4a574] font-body mt-3">
                 No enrollment required · One-time drop-in
               </p>
             </motion.div>
@@ -347,10 +346,10 @@ export default function Home() {
             >
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { emoji: "🏗️", title: "Build a Tower",     accent: "#fef9c3" },
-                  { emoji: "🧱", title: "Brick by Brick",    accent: "#fff7ed" },
-                  { emoji: "🚜", title: "Excavator Dig",     accent: "#f0f9ff" },
-                  { emoji: "🦺", title: "Hard Hats & Vests", accent: "#fef3c7" },
+                  { emoji: "📜", title: "Wanted Posters",    accent: "#f5e6c8" },
+                  { emoji: "⭐", title: "Sheriff Badges",    accent: "#fef3c7" },
+                  { emoji: "🐴", title: "Stick Horses",      accent: "#fff7ed" },
+                  { emoji: "💰", title: "The Great Robbery", accent: "#f0f9ff" },
                 ].map((act, i) => (
                   <motion.div
                     key={act.title}
@@ -371,13 +370,13 @@ export default function Home() {
                 ))}
               </div>
               <motion.p
-                className="text-center text-xs text-yellow-300 font-body mt-4"
+                className="text-center text-xs text-[#d4a574] font-body mt-4"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.45 }}
               >
-                All activities included · Take home your hat & vest!
+                All activities included · Take home your badge & creations!
               </motion.p>
             </motion.div>
           </div>
@@ -385,7 +384,7 @@ export default function Home() {
       </section>
 
       {/* Bottom wave: dark → cream */}
-      <div style={{ background: "#1c1917", marginBottom: "-1px" }}>
+      <div style={{ background: "#2d1b0e", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
           <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
         </svg>
