@@ -2409,10 +2409,10 @@ export async function buildTourThankYouEmail(opts: {
   <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">Ready for Next Steps?</h2>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Twelve weeks of themed adventures, hands-on projects, nature play, art, music, and academic enrichment in a small, nurturing group setting.</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/summer-2026" style="color: #5a7a5a;">Learn more about Summer 2026 →</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Book a Shadow Day</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Mon–Thu &nbsp;·&nbsp; Full Day 9 AM–3 PM &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; $20 per child</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Let your child experience a full school day at Sage Field — real lessons, outdoor time, and lunch with classmates. Not a tour. An experience.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/shadow" style="color: #5a7a5a;">Book a Shadow Day →</a></p>
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
@@ -2424,8 +2424,8 @@ export async function buildTourThankYouEmail(opts: {
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–3 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 3 days per week with ability-based grouping and all enrichments included every day.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
