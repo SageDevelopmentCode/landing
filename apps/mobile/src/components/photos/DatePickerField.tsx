@@ -101,11 +101,29 @@ const wheel = StyleSheet.create({
 type Props = {
   value: string;
   onChange: (v: string) => void;
+  modalTitle?: string;
+  placeholder?: string;
+  allowClear?: boolean;
+  minYear?: number;
+  maxYear?: number;
 };
 
-export function DatePickerField({ value, onChange }: Props) {
+export function DatePickerField({
+  value,
+  onChange,
+  modalTitle = "Date taken",
+  placeholder = "Select date",
+  allowClear = false,
+  minYear,
+  maxYear,
+}: Props) {
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - i);
+  const resolvedMinYear = minYear ?? currentYear - 9;
+  const resolvedMaxYear = maxYear ?? currentYear;
+  const years = Array.from(
+    { length: resolvedMaxYear - resolvedMinYear + 1 },
+    (_, i) => resolvedMaxYear - i
+  );
 
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(() => parseDate(value));
@@ -122,6 +140,11 @@ export function DatePickerField({ value, onChange }: Props) {
     setOpen(false);
   }
 
+  function clear() {
+    onChange("");
+    setOpen(false);
+  }
+
   const days = Array.from(
     { length: daysInMonth(draft.month, draft.year) },
     (_, i) => String(i + 1)
@@ -133,7 +156,7 @@ export function DatePickerField({ value, onChange }: Props) {
     <>
       <Pressable style={styles.field} onPress={openPicker}>
         <Text style={value ? styles.fieldText : styles.placeholder}>
-          {value ? formatDisplay(value) : "Select date"}
+          {value ? formatDisplay(value) : placeholder}
         </Text>
         <Ionicons name="calendar-outline" size={16} color="#9ca3af" />
       </Pressable>
@@ -150,11 +173,19 @@ export function DatePickerField({ value, onChange }: Props) {
             <Pressable onPress={() => setOpen(false)} hitSlop={8}>
               <Text style={styles.cancelBtn}>Cancel</Text>
             </Pressable>
-            <Text style={styles.title}>Date taken</Text>
+            <Text style={styles.title}>{modalTitle}</Text>
             <Pressable onPress={commit} hitSlop={8}>
               <Text style={styles.doneBtn}>Done</Text>
             </Pressable>
           </View>
+
+          {allowClear && value && (
+            <View style={styles.clearRow}>
+              <Pressable onPress={clear} hitSlop={8}>
+                <Text style={styles.clearBtn}>Clear</Text>
+              </Pressable>
+            </View>
+          )}
 
           <View style={styles.wheelsRow}>
             {/* Selection indicator */}
@@ -253,6 +284,18 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 15,
     color: Brand.sage700,
+  },
+  clearRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  clearBtn: {
+    fontFamily: FontFamilies.body,
+    fontSize: 14,
+    color: "#6b7280",
   },
   wheelsRow: {
     flexDirection: "row",

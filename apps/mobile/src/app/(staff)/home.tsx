@@ -122,6 +122,34 @@ function shiftDay(dateStr: string, delta: 1 | -1): string {
   return toYMD(dt);
 }
 
+type StudentDayStatus = "unmarked" | "present" | "picked_up" | "absent";
+type StudentStatusFilter = StudentDayStatus | "all";
+
+function getStudentDayStatus(
+  student: SchoolYearTodayStudent,
+  isFriday: boolean,
+): StudentDayStatus {
+  const record = isFriday
+    ? student.schoolYearFieldFridayRecord
+    : student.schoolYearRecord;
+  if (!record) return "unmarked";
+  if (record.marked_absent) return "absent";
+  if (record.picked_up_by_name) return "picked_up";
+  return "present";
+}
+
+const STATUS_FILTER_CHIPS: {
+  key: StudentStatusFilter;
+  label: string;
+  tone?: "unmarked" | "present" | "picked_up" | "absent";
+}[] = [
+  { key: "all", label: "All" },
+  { key: "unmarked", label: "Unmarked", tone: "unmarked" },
+  { key: "present", label: "Present", tone: "present" },
+  { key: "picked_up", label: "Picked Up", tone: "picked_up" },
+  { key: "absent", label: "Absent", tone: "absent" },
+];
+
 // ─── Avatar helpers (mirrored from attendance.tsx) ───────────────────────────
 
 const AVATAR_PALETTE = [
@@ -358,7 +386,7 @@ export default function StaffHomeScreen() {
   const [todayStudents, setTodayStudents] = useState<SchoolYearTodayStudent[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StudentStatusFilter>("all");
 
   // Quick action sheet
   const studentActionSheetRef = useRef<BottomSheetModal>(null);
@@ -463,6 +491,10 @@ export default function StaffHomeScreen() {
     }, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    setStatusFilter("all");
+  }, [selectedDate]);
 
   // ── Load user profile ────────────────────────────────────────────────────────
 
@@ -1500,12 +1532,21 @@ export default function StaffHomeScreen() {
     return 1;
   }
 
-  const filteredStudents =
-    search.length > 0
-      ? todayStudents.filter((s) =>
-          (s.name ?? "").toLowerCase().includes(search.toLowerCase()),
-        )
-      : todayStudents;
+  const statusCounts = useMemo(() => {
+    const counts = { unmarked: 0, present: 0, picked_up: 0, absent: 0 };
+    for (const student of todayStudents) {
+      counts[getStudentDayStatus(student, selectedIsFriday)]++;
+    }
+    return counts;
+  }, [todayStudents, selectedIsFriday]);
+
+  const filteredStudents = useMemo(() => {
+    if (statusFilter === "all") return todayStudents;
+    return todayStudents.filter(
+      (student) =>
+        getStudentDayStatus(student, selectedIsFriday) === statusFilter,
+    );
+  }, [todayStudents, statusFilter, selectedIsFriday]);
 
   const teacherSections = groupStudentsByTeacher(
     filteredStudents,
@@ -1535,12 +1576,22 @@ export default function StaffHomeScreen() {
     const dow = new Date().getDay();
     const isWeekend = dow === 0 || dow === 6;
 
-    if (search) {
+    if (statusFilter !== "all") {
+      const filterLabels: Record<StudentDayStatus, string> = {
+        unmarked: "unmarked",
+        present: "present",
+        picked_up: "picked up",
+        absent: "absent",
+      };
       return (
         <View style={styles.emptyState}>
-          <Ionicons name="search-outline" size={36} color="#d1d5db" />
-          <Text style={styles.emptyStateTitle}>No students match</Text>
-          <Text style={styles.emptyStateSub}>Try a different name.</Text>
+          <Ionicons name="filter-outline" size={36} color="#d1d5db" />
+          <Text style={styles.emptyStateTitle}>
+            No {filterLabels[statusFilter]} students
+          </Text>
+          <Text style={styles.emptyStateSub}>
+            Try selecting a different filter.
+          </Text>
         </View>
       );
     }
@@ -1867,24 +1918,76 @@ export default function StaffHomeScreen() {
             </Pressable>
           )}
 
-          {/* Search bar */}
-          <View style={styles.searchRow}>
-            <Ionicons name="search-outline" size={16} color="#9ca3af" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search students…"
-              placeholderTextColor="#9ca3af"
-              value={search}
-              onChangeText={setSearch}
-              autoCorrect={false}
-              returnKeyType="search"
-            />
-            {search ? (
-              <Pressable onPress={() => setSearch("")} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color="#9ca3af" />
-              </Pressable>
-            ) : null}
-          </View>
+          {/* Status filter chips */}
+          {!studentsLoading && todayStudents.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.statusFilterRow}
+              style={styles.statusFilterScroll}
+            >
+              {STATUS_FILTER_CHIPS.map(({ key, label, tone }) => {
+                const isActive = statusFilter === key;
+                const count =
+                  key === "all"
+                    ? todayStudents.length
+                    : statusCounts[key];
+                return (
+                  <Pressable
+                    key={key}
+                    style={[
+                      styles.statusFilterChip,
+                      tone === "unmarked" && styles.statusFilterChipUnmarked,
+                      tone === "present" && styles.statusFilterChipPresent,
+                      tone === "picked_up" && styles.statusFilterChipPickedUp,
+                      tone === "absent" && styles.statusFilterChipAbsent,
+                      isActive && !tone && styles.statusFilterChipActive,
+                      isActive &&
+                        tone === "unmarked" &&
+                        styles.statusFilterChipUnmarkedActive,
+                      isActive &&
+                        tone === "present" &&
+                        styles.statusFilterChipPresentActive,
+                      isActive &&
+                        tone === "picked_up" &&
+                        styles.statusFilterChipPickedUpActive,
+                      isActive &&
+                        tone === "absent" &&
+                        styles.statusFilterChipAbsentActive,
+                    ]}
+                    onPress={() => setStatusFilter(key)}
+                  >
+                    <Text
+                      style={[
+                        styles.statusFilterChipText,
+                        tone === "unmarked" &&
+                          styles.statusFilterChipTextUnmarked,
+                        tone === "present" && styles.statusFilterChipTextPresent,
+                        tone === "picked_up" &&
+                          styles.statusFilterChipTextPickedUp,
+                        tone === "absent" && styles.statusFilterChipTextAbsent,
+                        isActive && !tone && styles.statusFilterChipTextActive,
+                        isActive &&
+                          tone === "unmarked" &&
+                          styles.statusFilterChipTextUnmarkedActive,
+                        isActive &&
+                          tone === "present" &&
+                          styles.statusFilterChipTextPresentActive,
+                        isActive &&
+                          tone === "picked_up" &&
+                          styles.statusFilterChipTextPickedUpActive,
+                        isActive &&
+                          tone === "absent" &&
+                          styles.statusFilterChipTextAbsentActive,
+                      ]}
+                    >
+                      {label} · {count}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
 
           {/* Student list */}
           <ScrollView
@@ -3212,7 +3315,94 @@ const styles = StyleSheet.create({
     color: "#d97706",
   },
 
-  // Search
+  // Status filter
+  statusFilterScroll: {
+    flexGrow: 0,
+    marginBottom: 8,
+  },
+  statusFilterRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 16,
+  },
+  statusFilterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 9999,
+    backgroundColor: "#f3f4f6",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  statusFilterChipActive: {
+    backgroundColor: Brand.sage700 + "18",
+    borderColor: Brand.sage700 + "50",
+  },
+  statusFilterChipUnmarked: {
+    backgroundColor: "#fffbeb",
+    borderColor: "#fde68a",
+  },
+  statusFilterChipUnmarkedActive: {
+    backgroundColor: "#fef3c7",
+    borderColor: "#fcd34d",
+  },
+  statusFilterChipPresent: {
+    backgroundColor: "#f0fdf4",
+    borderColor: "#bbf7d0",
+  },
+  statusFilterChipPresentActive: {
+    backgroundColor: "#dcfce7",
+    borderColor: "#86efac",
+  },
+  statusFilterChipPickedUp: {
+    backgroundColor: "#eff6ff",
+    borderColor: "#bfdbfe",
+  },
+  statusFilterChipPickedUpActive: {
+    backgroundColor: "#dbeafe",
+    borderColor: "#93c5fd",
+  },
+  statusFilterChipAbsent: {
+    backgroundColor: "#fef2f2",
+    borderColor: "#fecaca",
+  },
+  statusFilterChipAbsentActive: {
+    backgroundColor: "#fee2e2",
+    borderColor: "#fca5a5",
+  },
+  statusFilterChipText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  statusFilterChipTextActive: {
+    color: Brand.sage700,
+  },
+  statusFilterChipTextUnmarked: {
+    color: "#b45309",
+  },
+  statusFilterChipTextUnmarkedActive: {
+    color: "#92400e",
+  },
+  statusFilterChipTextPresent: {
+    color: "#15803d",
+  },
+  statusFilterChipTextPresentActive: {
+    color: "#14532d",
+  },
+  statusFilterChipTextPickedUp: {
+    color: "#1d4ed8",
+  },
+  statusFilterChipTextPickedUpActive: {
+    color: "#1e3a8a",
+  },
+  statusFilterChipTextAbsent: {
+    color: "#b91c1c",
+  },
+  statusFilterChipTextAbsentActive: {
+    color: "#991b1b",
+  },
+
+  // Search (Add Student sheet)
   searchRow: {
     flexDirection: "row",
     alignItems: "center",

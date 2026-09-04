@@ -29,6 +29,7 @@ import {
   getActivities,
   updateActivity,
 } from "@/lib/activities-actions";
+import { DatePickerField } from "@/components/photos/DatePickerField";
 
 // ---------------------------------------------------------------------------
 // Local draft types
@@ -53,6 +54,8 @@ type FoodDraft = {
 function genId() {
   return Math.random().toString(36).slice(2);
 }
+
+const currentYear = new Date().getFullYear();
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -184,6 +187,7 @@ export default function ActivityFormScreen() {
   // Form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [activityDate, setActivityDate] = useState("");
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [visibility, setVisibility] = useState<"public" | "private">("private");
   const [includesFood, setIncludesFood] = useState(false);
@@ -205,6 +209,7 @@ export default function ActivityFormScreen() {
           setOriginalActivity(found);
           setTitle(found.title);
           setDescription(found.description ?? "");
+          setActivityDate(found.activity_date ?? "");
           setStatus(found.status);
           setVisibility(found.visibility);
           setIncludesFood(found.includes_food);
@@ -433,6 +438,7 @@ export default function ActivityFormScreen() {
         title: title.trim(),
         description: description.trim() || null,
         includes_food: includesFood,
+        activity_date: activityDate.trim() || null,
         status,
         visibility,
         newImageUris,
@@ -456,6 +462,7 @@ export default function ActivityFormScreen() {
   }, [
     title,
     description,
+    activityDate,
     status,
     visibility,
     includesFood,
@@ -526,6 +533,23 @@ export default function ActivityFormScreen() {
             images={images}
             onAdd={handleAddActivityImage}
             onRemove={handleRemoveActivityImage}
+          />
+        </View>
+
+        {/* Section 2.5: Activity Date */}
+        <SectionHeader title="Activity Date" />
+        <View style={styles.card}>
+          <DatePickerField
+            value={activityDate}
+            onChange={(v) => {
+              setActivityDate(v);
+              markDirty();
+            }}
+            modalTitle="Activity date"
+            placeholder="Select a date"
+            allowClear
+            minYear={currentYear - 1}
+            maxYear={currentYear + 2}
           />
         </View>
 
