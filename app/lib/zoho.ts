@@ -9,6 +9,7 @@ import {
   formatSchoolYearMonthIndices,
 } from "@/shared/billing/school-year";
 import { createServerSupabaseClient } from "./supabase-server";
+import { HOLIDAYS } from "./academic-calendar-data";
 
 // Zoho API Types
 interface ZohoTokenResponse {
@@ -5772,6 +5773,44 @@ export async function buildActivityPreferenceReminderEmail(opts: {
   <p style="margin-bottom: 8px; font-size: 14px; color: #555;">You can also set preferences in the <strong>Sage Field mobile app</strong> from your home screen.</p>
 
   <p style="margin-top: 32px; margin-bottom: 4px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildLaborDayReminderEmail(opts: {
+  g1FullName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] ?? "there";
+  const laborDay = HOLIDAYS.find((h) => h.name === "Labor Day");
+  const holidayDate = laborDay?.dates ?? "September 7, 2026";
+  const subject = `Reminder: No School Monday, September 7 (Labor Day) 🌿`;
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">Just a friendly reminder that there is <strong>no school on Monday, ${holidayDate}</strong> in observance of <strong>Labor Day</strong>. We hope your family enjoys the long weekend!</p>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <p style="margin: 0 0 6px 0;"><strong>Date:</strong> Monday, ${holidayDate}</p>
+    <p style="margin: 0;"><strong>Status:</strong> School closed</p>
+  </div>
+
+  <p style="margin-bottom: 16px; font-size: 14px; color: #555;">You can view all school holidays and closed days for the year on our academic calendar.</p>
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="https://sagefield.co/academic-calendar" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">View Full Academic Calendar →</a>
+  </div>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
 
 </body>
