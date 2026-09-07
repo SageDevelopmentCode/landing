@@ -229,3 +229,35 @@ Add to `outreachTab === 'schoolYear'` block in `app/admin/components/Application
 - State: `schoolYearWeek{N}NewsletterSending | Sent | Error`
 - Handler: mirror `handleSendSchoolYearWeekOneNewsletter`
 - Button label: `Send School Year Week {N} Newsletter`
+
+## Bulk Outreach sidebar
+
+Bulk outreach reads from a catalog + sender registry — no changes to `ApplicationsBulkOutreachSidebar.tsx` needed.
+
+### Catalog entry (`outreachEmails.ts`)
+
+Insert after the previous week's entry, before tuition reminders:
+
+```ts
+{
+  id: "school-year-week-{n}-newsletter",
+  label: "Send School Year Week {N} Newsletter",
+  category: "schoolYear",
+},
+```
+
+### Sender map (`outreachEmailSenders.ts`)
+
+```ts
+import { sendSchoolYearWeek{N}NewsletterEmail } from "@/app/actions/sendSchoolYearWeek{N}NewsletterEmail";
+
+// inside OUTREACH_EMAIL_SENDERS:
+"school-year-week-{n}-newsletter": (app) =>
+  withEmail(app, (email) =>
+    sendSchoolYearWeek{N}NewsletterEmail({
+      g1FullName: app.g1_full_name ?? "",
+      childLegalName: app.child_legal_name ?? "",
+      email,
+    }),
+  ),
+```

@@ -126,8 +126,8 @@ function parseAmexActivityCsv(csvPath, category, includePayments) {
   const descriptionIdx = idx('Description')
   const accountIdx = idx('Account #')
   const amountIdx = idx('Amount')
-  const extendedIdx = idx('Extended Details')
-  const categoryIdx = idx('Category')
+  const extendedIdx = headers.indexOf('Extended Details')
+  const categoryIdx = headers.indexOf('Category')
 
   const rows = []
 
@@ -142,7 +142,10 @@ function parseAmexActivityCsv(csvPath, category, includePayments) {
       expense_date: parseExpenseDate(cols[dateIdx]),
       payment_method: `AMEX ${cols[accountIdx]}`,
       category,
-      notes: buildNotes(cols[extendedIdx], cols[categoryIdx]),
+      notes: buildNotes(
+        extendedIdx >= 0 ? cols[extendedIdx] : '',
+        categoryIdx >= 0 ? cols[categoryIdx] : '',
+      ),
     })
   }
 

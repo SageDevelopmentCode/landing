@@ -15,7 +15,9 @@ Import Amex monthly `activity.csv` exports into `budget.expenses` for the Admin 
 
 ## Prerequisites
 
-- Attached CSV is an Amex activity report export (columns: `Date`, `Description`, `Account #`, `Amount`, `Extended Details`, `Category`)
+- Attached CSV is an Amex activity export in one of two formats:
+  - **Full**: `Date`, `Description`, `Account #`, `Amount`, `Extended Details`, `Category`
+  - **Simplified**: `Date`, `Description`, `Account #`, `Amount` (extra columns like `Receipt`, `Card Member` are ignored)
 - Supabase MCP available (`user-supabase`)
 - Sage Field project ID: `vonuwpzepwrbdlectspd`
 
@@ -58,7 +60,7 @@ The script:
 | `expense_date` | CSV `Date` → `YYYY-MM-DD` |
 | `payment_method` | `AMEX {Account #}` (e.g. `AMEX -31009`) |
 | `category` | `Supplies & Materials` (default) |
-| `notes` | `{Extended Details}` + blank line + `Category: {Category}` |
+| `notes` | `{Extended Details}` + blank line + `Category: {Category}` (empty for simplified exports) |
 
 Capture `count`, `total`, `minDate`, `maxDate`, `sql`, `batches`, and `duplicateCheckSql` from `--json` output.
 
@@ -105,7 +107,8 @@ Tell the user:
 - Month/date range covered
 - Reminders:
   - Payment/credit rows (`MOBILE PAYMENT - THANK YOU`, negative amounts) are excluded by default
-  - All rows use `Supplies & Materials`; Amex category is preserved in `notes` for manual recategorization
+  - All rows use `Supplies & Materials`; Amex category is preserved in `notes` when the full export includes it
+  - Simplified exports leave `notes` empty; recategorize manually in the budget admin if needed
   - Category uses `&` to match `CATEGORIES` in `app/admin/budget/page.tsx`
 
 ## Example usage

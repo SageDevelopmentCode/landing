@@ -28,6 +28,8 @@ import {
 import { getStripeTransactions } from "@/app/actions/getStripeTransactions";
 import { Upload, Trash2, FileText, Download, X } from "lucide-react";
 import { ForecastTab } from "./ForecastTab";
+import { ProfitAndLossTab } from "./ProfitAndLossTab";
+import { CashSnapshotTab } from "./CashSnapshotTab";
 import { uploadExpenseReceipt } from "@/app/actions/uploadExpenseReceipt";
 import { deleteExpenseReceipt } from "@/app/actions/deleteExpenseReceipt";
 import { listExpenseReceipts } from "@/app/actions/listExpenseReceipts";
@@ -100,6 +102,8 @@ const TABS = [
   "Forecast",
   "Expenses",
   "Revenue",
+  "Profit & Loss",
+  "Cash Snapshot",
   "Taxes",
   "Analysis",
   "Summer Program Analysis",
@@ -7417,6 +7421,13 @@ export default function BudgetPage() {
                   onRefresh={() => fetchAll({ showLoading: true })}
                 />
               )}
+              {activeTab === "Profit & Loss" && (
+                <ProfitAndLossTab
+                  stripeTransactions={stripeTransactions}
+                  expenses={expenses}
+                />
+              )}
+              {activeTab === "Cash Snapshot" && <CashSnapshotTab />}
               {activeTab === "Taxes" && (
                 <TaxesTab expenses={expenses} income={income} />
               )}
