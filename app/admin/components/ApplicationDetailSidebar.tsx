@@ -45,6 +45,7 @@ import { sendSummerWeekElevenNewsletterEmail } from '../../actions/sendSummerWee
 import { sendSummerWeekTwelveNewsletterEmail } from '../../actions/sendSummerWeekTwelveNewsletterEmail'
 import { sendSchoolYearWeekOneNewsletterEmail } from '../../actions/sendSchoolYearWeekOneNewsletterEmail'
 import { sendSchoolYearWeekTwoNewsletterEmail } from '../../actions/sendSchoolYearWeekTwoNewsletterEmail'
+import { sendSchoolYearWeekThreeNewsletterEmail } from '../../actions/sendSchoolYearWeekThreeNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -61,6 +62,7 @@ import { sendSchoolYearSeptemberDropInTuitionReminderEmail } from '../../actions
 import { sendSchoolYearTuitionDueDateTodayReminderEmail } from '../../actions/sendSchoolYearTuitionDueDateTodayReminderEmail'
 import { sendHomeschoolDropInTuitionReminderEmail } from '../../actions/sendHomeschoolDropInTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
+import { sendLaborDayReminderEmail } from '../../actions/sendLaborDayReminderEmail'
 import { sendActivityPreferenceReminderPreview } from '../../actions/sendActivityPreferenceReminderEmail'
 import { sendParentTeacherConferenceRescheduleEmail } from '../../actions/sendParentTeacherConferenceRescheduleEmail'
 import { enrollApplication } from '../../actions/enrollApplication'
@@ -287,6 +289,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearWeekTwoNewsletterSending, setSchoolYearWeekTwoNewsletterSending] = useState(false)
   const [schoolYearWeekTwoNewsletterSent, setSchoolYearWeekTwoNewsletterSent] = useState(false)
   const [schoolYearWeekTwoNewsletterError, setSchoolYearWeekTwoNewsletterError] = useState<string | null>(null)
+  const [schoolYearWeekThreeNewsletterSending, setSchoolYearWeekThreeNewsletterSending] = useState(false)
+  const [schoolYearWeekThreeNewsletterSent, setSchoolYearWeekThreeNewsletterSent] = useState(false)
+  const [schoolYearWeekThreeNewsletterError, setSchoolYearWeekThreeNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -326,6 +331,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearSeptemberDropInTuitionReminderSending, setSchoolYearSeptemberDropInTuitionReminderSending] = useState(false)
   const [schoolYearSeptemberDropInTuitionReminderSent, setSchoolYearSeptemberDropInTuitionReminderSent] = useState(false)
   const [schoolYearSeptemberDropInTuitionReminderError, setSchoolYearSeptemberDropInTuitionReminderError] = useState<string | null>(null)
+  const [laborDayReminderSending, setLaborDayReminderSending] = useState(false)
+  const [laborDayReminderSent, setLaborDayReminderSent] = useState(false)
+  const [laborDayReminderError, setLaborDayReminderError] = useState<string | null>(null)
   const [schoolYearTuitionDueTodayReminderSending, setSchoolYearTuitionDueTodayReminderSending] = useState(false)
   const [schoolYearTuitionDueTodayReminderSent, setSchoolYearTuitionDueTodayReminderSent] = useState(false)
   const [schoolYearTuitionDueTodayReminderError, setSchoolYearTuitionDueTodayReminderError] = useState<string | null>(null)
@@ -1234,6 +1242,24 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendLaborDayReminder = async () => {
+    if (laborDayReminderSending || !application.g1_email) return
+    setLaborDayReminderSending(true)
+    setLaborDayReminderError(null)
+    const result = await sendLaborDayReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      email: application.g1_email,
+    })
+    setLaborDayReminderSending(false)
+    if (result.success) {
+      setLaborDayReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setLaborDayReminderSent(false), 3000)
+    } else {
+      setLaborDayReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendSchoolYearTuitionDueTodayReminder = async () => {
     if (schoolYearTuitionDueTodayReminderSending || !application.g1_email) return
     setSchoolYearTuitionDueTodayReminderSending(true)
@@ -1495,6 +1521,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setSchoolYearWeekTwoNewsletterSent(false), 3000)
     } else {
       setSchoolYearWeekTwoNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearWeekThreeNewsletter = async () => {
+    if (schoolYearWeekThreeNewsletterSending || !application.g1_email) return
+    setSchoolYearWeekThreeNewsletterSending(true)
+    setSchoolYearWeekThreeNewsletterError(null)
+    const result = await sendSchoolYearWeekThreeNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearWeekThreeNewsletterSending(false)
+    if (result.success) {
+      setSchoolYearWeekThreeNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSchoolYearWeekThreeNewsletterSent(false), 3000)
+    } else {
+      setSchoolYearWeekThreeNewsletterError(result.error ?? 'Failed to send')
     }
   }
 
@@ -2357,6 +2402,17 @@ export function ApplicationDetailSidebar({
                 </div>
                 <div className="flex items-center gap-3">
                   <button
+                    onClick={handleSendSchoolYearWeekThreeNewsletter}
+                    disabled={schoolYearWeekThreeNewsletterSending || schoolYearWeekThreeNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearWeekThreeNewsletterSending ? 'Sending…' : schoolYearWeekThreeNewsletterSent ? '✓ Sent!' : 'Send School Year Week Three Newsletter'}
+                  </button>
+                  {schoolYearWeekThreeNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekThreeNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
                     onClick={handleSendSchoolYearSeptemberTuitionReminder}
                     disabled={schoolYearSeptemberTuitionReminderSending || schoolYearSeptemberTuitionReminderSent}
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -2376,6 +2432,17 @@ export function ApplicationDetailSidebar({
                     {schoolYearSeptemberDropInTuitionReminderSending ? 'Sending…' : schoolYearSeptemberDropInTuitionReminderSent ? '✓ Sent!' : 'Send September Tuition Reminder (Homeschool Drop-In)'}
                   </button>
                   {schoolYearSeptemberDropInTuitionReminderError && <span className="text-xs text-red-600">{schoolYearSeptemberDropInTuitionReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendLaborDayReminder}
+                    disabled={laborDayReminderSending || laborDayReminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {laborDayReminderSending ? 'Sending…' : laborDayReminderSent ? '✓ Sent!' : 'Send Labor Day Reminder'}
+                  </button>
+                  {laborDayReminderError && <span className="text-xs text-red-600">{laborDayReminderError}</span>}
                 </div>
               </>}
 

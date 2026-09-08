@@ -27,6 +27,7 @@ type PipelineApplication = {
   child_legal_name: string | null
   preferred_name: string | null
   g1_full_name: string | null
+  g1_email: string | null
   program: string | null
   status: string
   [key: string]: unknown
@@ -35,6 +36,8 @@ type PipelineApplication = {
 interface EnrollmentPipelineViewProps {
   applications: PipelineApplication[]
   setSelectedApp: (app: PipelineApplication) => void
+  selectedAppIds?: Set<string>
+  onToggleSelection?: (id: string) => void
 }
 
 // The 8 required items and how to compute their completion
@@ -92,10 +95,14 @@ function PipelineCard({
   app,
   enrollmentData,
   onClick,
+  selected,
+  onToggleSelection,
 }: {
   app: PipelineApplication
   enrollmentData: AdminEnrollmentData | null
   onClick: () => void
+  selected?: boolean
+  onToggleSelection?: (id: string) => void
 }) {
   const studentId = app.student_id ?? ''
   const signatureMap = enrollmentData?.signaturesByStudent[studentId] ?? {}
@@ -112,9 +119,25 @@ function PipelineCard({
   return (
     <div
       onClick={onClick}
-      className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:shadow-md transition-shadow"
+      className="bg-white rounded-xl border border-gray-100 p-4 cursor-pointer hover:shadow-md transition-shadow relative"
     >
-      <div className={`text-sm font-bold text-gray-900 leading-snug ${merriweather.className}`}>
+      {onToggleSelection && (
+        <div
+          className="absolute top-3 right-3"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="checkbox"
+            checked={selected ?? false}
+            onChange={() => onToggleSelection(app.id)}
+            disabled={!app.g1_email}
+            title={app.g1_email ? 'Select application' : 'No parent email'}
+            className="rounded border-gray-300 disabled:opacity-40"
+            aria-label={`Select ${app.child_legal_name ?? 'application'}`}
+          />
+        </div>
+      )}
+      <div className={`text-sm font-bold text-gray-900 leading-snug ${onToggleSelection ? 'pr-6' : ''} ${merriweather.className}`}>
         {app.child_legal_name ?? '—'}
       </div>
       {app.preferred_name && (
@@ -185,7 +208,12 @@ function SkeletonCard() {
   )
 }
 
-export function EnrollmentPipelineView({ applications, setSelectedApp }: EnrollmentPipelineViewProps) {
+export function EnrollmentPipelineView({
+  applications,
+  setSelectedApp,
+  selectedAppIds,
+  onToggleSelection,
+}: EnrollmentPipelineViewProps) {
   const [enrollmentData, setEnrollmentData] = useState<AdminEnrollmentData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -262,6 +290,8 @@ export function EnrollmentPipelineView({ applications, setSelectedApp }: Enrollm
                   app={app}
                   enrollmentData={enrollmentData}
                   onClick={() => setSelectedApp(app)}
+                  selected={selectedAppIds?.has(app.id)}
+                  onToggleSelection={onToggleSelection}
                 />
               ))
             )}

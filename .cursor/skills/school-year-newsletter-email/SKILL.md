@@ -34,7 +34,7 @@ Copy this checklist and track progress:
 - [ ] Step 3: Map sections to email blocks
 - [ ] Step 4: Condense class updates to teasers
 - [ ] Step 5: Build HTML in zoho.ts
-- [ ] Step 6: Add server action + admin button
+- [ ] Step 6: Add server action + admin buttons (per-app + bulk outreach)
 - [ ] Step 7: Verify link, password, section order
 ```
 
@@ -137,17 +137,21 @@ HTML skeleton and static blocks: [reference.md](reference.md).
 
 ### Step 6: Wire up send path
 
-Per week, add three files/changes (match summer newsletter pattern):
+Per week, add five files/changes (match summer newsletter pattern):
 
 | File | Action |
 | ---- | ------ |
 | `app/lib/zoho.ts` | `buildSchoolYearWeek{N}NewsletterEmail` |
 | `app/actions/sendSchoolYearWeek{N}NewsletterEmail.ts` | Thin `"use server"` wrapper calling `build*` + `sendZohoEmail` |
-| `app/admin/components/ApplicationDetailSidebar.tsx` | Button on **School Year** Outreach tab |
+| `app/admin/components/ApplicationDetailSidebar.tsx` | Per-app button on **School Year** Outreach tab |
+| `app/admin/constants/outreachEmails.ts` | Catalog entry (`category: "schoolYear"`) |
+| `app/admin/constants/outreachEmailSenders.ts` | Sender map entry keyed by catalog `id` |
 
 Copy `sendSchoolYearWeekOneNewsletterEmail.ts` as the action template.
 
-Admin handler pattern: state (`sending` / `sent` / `error`), `handleSendSchoolYearWeek{N}Newsletter`, refresh email thread on success.
+**Per-application sidebar:** state (`sending` / `sent` / `error`), `handleSendSchoolYearWeek{N}Newsletter`, refresh email thread on success.
+
+**Bulk outreach sidebar:** add catalog + sender entries only — `ApplicationsBulkOutreachSidebar.tsx` auto-renders all `schoolYear` catalog entries. See [reference.md](reference.md).
 
 Prefer separate `buildSchoolYearWeek{N}NewsletterEmail` functions per week (matches summer newsletters). A shared parameterized builder is optional only if the user requests it.
 
@@ -158,6 +162,7 @@ Prefer separate `buildSchoolYearWeek{N}NewsletterEmail` functions per week (matc
 - CTA appears before teaser bullets
 - Events/reminders bullets match newsletter section content (condensed, not omitted)
 - App download, referral, and testimonial blocks present
+- Bulk outreach **School Year** tab shows the new button after the previous week's entry
 
 ## Example usage
 
@@ -170,7 +175,7 @@ Agent actions:
 1. Read this skill
 2. MCP `execute_sql` — fetch newsletter + sections
 3. Map Welcome / Class / Events / Reminders
-4. Add `buildSchoolYearWeekTwoNewsletterEmail` + action + admin button
+4. Add `buildSchoolYearWeekTwoNewsletterEmail` + action + both admin buttons (per-app + bulk outreach)
 5. Report newsletter link and subject line
 
 ## Out of scope

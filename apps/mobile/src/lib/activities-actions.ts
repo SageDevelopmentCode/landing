@@ -82,6 +82,7 @@ export type ActivityUpsertPayload = {
   title: string;
   description: string | null;
   includes_food: boolean;
+  activity_date: string | null;
   status: "draft" | "published";
   visibility: "public" | "private";
   newImageUris: string[];
@@ -279,6 +280,7 @@ export async function createActivity(
       title: payload.title,
       description: payload.description,
       includes_food: payload.includes_food,
+      activity_date: payload.activity_date?.trim() || null,
       status: payload.status,
       visibility: payload.visibility,
       created_by: userId,
@@ -377,6 +379,7 @@ export async function updateActivity(
       title: payload.title,
       description: payload.description,
       includes_food: payload.includes_food,
+      activity_date: payload.activity_date?.trim() || null,
       status: payload.status,
       visibility: payload.visibility,
     })
@@ -459,6 +462,8 @@ export async function updateActivity(
   const summary: string[] = [];
   if (payload.title !== original.title) summary.push(`Updated title to "${payload.title}"`);
   if (payload.description !== original.description) summary.push("Updated description");
+  if ((payload.activity_date ?? "") !== (original.activity_date ?? ""))
+    summary.push(`Activity date set to ${payload.activity_date || "none"}`);
   if (payload.status !== original.status) summary.push(`Status changed to ${payload.status}`);
   if (payload.visibility !== original.visibility) summary.push(`Visibility changed to ${payload.visibility}`);
   if (payload.includes_food !== original.includes_food)

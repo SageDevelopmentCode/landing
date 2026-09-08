@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import path from 'path'
 import {
   E2E_STUDENT_IDS,
@@ -13,6 +13,8 @@ test('household teacher group thread is shared between owner and grantee', async
   browser,
 }) => {
   const uniqueBody = `household-e2e-${Date.now()}`
+  const messageInChat = (page: Page) =>
+    page.locator('p.break-words', { hasText: uniqueBody })
 
   const ownerContext = await browser.newContext({
     storageState: path.join(AUTH_DIR, 'parent-enrolled.json'),
@@ -31,14 +33,14 @@ test('household teacher group thread is shared between owner and grantee', async
   await messageInput.fill(uniqueBody)
   await messageInput.press('Enter')
 
-  await expect(ownerPage.getByText(uniqueBody)).toBeVisible({ timeout: 15_000 })
+  await expect(messageInChat(ownerPage)).toBeVisible({ timeout: 15_000 })
 
   const granteePage = await granteeContext.newPage()
   await granteePage.goto(householdMessageUrl)
   await expect(granteePage.getByPlaceholder('Type a message...')).toBeVisible({
     timeout: 30_000,
   })
-  await expect(granteePage.getByText(uniqueBody)).toBeVisible({
+  await expect(messageInChat(granteePage)).toBeVisible({
     timeout: 15_000,
   })
 
