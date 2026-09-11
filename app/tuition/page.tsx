@@ -162,11 +162,11 @@ export default function TuitionPage() {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-gray-600">2nd–4th</span>
-                  <span className="font-semibold text-black">$520/mo</span>
+                  <span className="font-semibold text-black">$600/mo</span>
                 </div>
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-gray-600">Pre-K–1st</span>
-                  <span className="font-semibold text-black">$560/mo</span>
+                  <span className="font-semibold text-black">$640/mo</span>
                 </div>
               </div>
             </motion.div>
@@ -192,11 +192,11 @@ export default function TuitionPage() {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-gray-600">2nd–4th</span>
-                  <span className="font-semibold text-black">$720/mo</span>
+                  <span className="font-semibold text-black">$850/mo</span>
                 </div>
                 <div className="flex justify-between text-sm font-body">
                   <span className="text-gray-600">Pre-K–1st</span>
-                  <span className="font-semibold text-black">$780/mo</span>
+                  <span className="font-semibold text-black">$920/mo</span>
                 </div>
               </div>
             </motion.div>
