@@ -16,7 +16,7 @@ export default function AfterCareCard() {
     >
       <div className="relative h-[30vh] md:h-[35vh]">
         <Image
-          src="/assets/ImageSeven.jpg"
+          src="/assets/Stock5.jpg"
           alt="Extended Learning Program"
           fill
           className="object-cover"
@@ -43,20 +43,6 @@ export default function AfterCareCard() {
               <span className="text-base text-text-gray font-normal">
                 /daily
               </span>
-            </p>
-          </div>
-          <div className="p-4 bg-welcome-bg rounded-lg border-l-4 border-primary">
-            <p className="text-sm font-semibold text-black mb-1 font-heading">
-              Monthly (Enrolled Student)
-            </p>
-            <p className="text-2xl font-bold text-primary font-heading">
-              $299
-              <span className="text-base text-text-gray font-normal">
-                /month
-              </span>
-            </p>
-            <p className="text-xs text-text-gray mt-1 font-body">
-              ~$18 per day per student
             </p>
           </div>
         </div>

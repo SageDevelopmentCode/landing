@@ -262,12 +262,6 @@ const NAV_TABS: NavTab[] = [
 
 const ANNOUNCEMENTS = [
   {
-    short: "🌱 Community Garden Day — Aug 27!",
-    full: "🌱 Join us Thursday, August 27 for planting, painting, and creating together — 5:30–7:00 PM!",
-    buttonLabel: "Save the Date",
-    href: "/community",
-  },
-  {
     short: "🗺️ Book a Private Tour!",
     full: "🗺️ Schedule a tour of our campus!",
     buttonLabel: "Book a Tour",

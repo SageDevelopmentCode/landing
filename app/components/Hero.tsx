@@ -16,20 +16,12 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/highlights/summer_week_four/1B8DAE7D-4D49-4865-97C8-593B4F74D996.JPG",
-    title: "Sage Field Community Garden Day",
+    image: "/assets/highlights/school_week_three/CEF8BE2C-4D30-46C1-B160-A35398EECBA5.JPG",
+    title: "School Year Week 3 Highlights Are Live!",
     description:
-      "Join us for a cozy evening of planting, painting, connecting, and creating a garden that will bloom with memories — Thursday, August 27, 5:30–7:00 PM.",
-    buttonLabel: "Save the Date",
-    buttonHref: "/community",
-  },
-  {
-    image: "/assets/highlights/summer_week_twelve/8C3B1791-0B49-4B7E-B069-C746C7CF6F65.JPG",
-    title: "Week 12 Highlights Are Live!",
-    description:
-      "The last week of camp — Miss Joy, friendship building, classroom redesign, chocolate chip cookies, and a 12-week summer in review.",
-    buttonLabel: "View Week 12 Recap →",
-    buttonHref: "/highlights/summer/week-12",
+      "Homemade making, science investigations, pattern art, and a Wild West Field Friday to close the week.",
+    buttonLabel: "View Week 3 Recap →",
+    buttonHref: "/highlights/school-year/week-3",
   },
   {
     image: "/assets/Stock4.jpg",
@@ -54,6 +46,14 @@ const slides = [
       "Walk the campus, meet Ms. Sabrina, and see Sage Field in person — free, private, 45 minutes.",
     buttonLabel: "Schedule a Tour",
     buttonHref: "/tour",
+  },
+  {
+    image: "/assets/highlights/school_week_three/5DADF1CF-46A4-4F2E-95E6-FD0C5178DDDB.JPG",
+    title: "Let Your Child Live a Day Here.",
+    description:
+      "A Shadow Day is a full school day at Sage Field — real lessons, outdoor time, and lunch with classmates. Not a tour. An experience. Mon–Thu, ages 4–11, $20.",
+    buttonLabel: "Book a Shadow Day →",
+    buttonHref: "/shadow",
   },
   {
     image: "/assets/Stock8.jpg",

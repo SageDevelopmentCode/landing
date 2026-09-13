@@ -2321,7 +2321,6 @@ export async function buildShadowDayPaymentConfirmationEmail(opts: {
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What to Pack</h2>
   <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
     <tr><td style="padding: 5px 0; width: 28px;">🧴</td><td style="padding: 5px 0;">Sunscreen <span style="color:#777;">(applied before drop-off)</span></td></tr>
-    <tr><td style="padding: 5px 0;">🩱</td><td style="padding: 5px 0;">Swimsuit + towel</td></tr>
     <tr><td style="padding: 5px 0;">👕</td><td style="padding: 5px 0;">Change of clothes</td></tr>
     <tr><td style="padding: 5px 0;">💧</td><td style="padding: 5px 0;">Water bottle, labeled with your child&apos;s name</td></tr>
     <tr><td style="padding: 5px 0;">🦟</td><td style="padding: 5px 0;">Bug spray</td></tr>
