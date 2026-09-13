@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -580,16 +581,34 @@ export default function StaffComposeScreen() {
           </Pressable>
           <Text style={styles.heading}>New Message</Text>
           <Pressable
-            onPress={handleClose}
-            style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+            onPress={handleSend}
+            disabled={!canSend}
+            style={({ pressed }) => [
+              styles.headerSendBtn,
+              !canSend && styles.headerSendBtnDisabled,
+              pressed && canSend && styles.pressed,
+            ]}
             hitSlop={8}
           >
-            <Ionicons name="close" size={24} color="#6b7280" />
+            {sending || creatingConvo ? (
+              <ActivityIndicator size="small" color={Brand.sage700} />
+            ) : (
+              <Text
+                style={[
+                  styles.headerSendText,
+                  !canSend && styles.headerSendTextDisabled,
+                ]}
+              >
+                {selectedRecipients.length > 1
+                  ? `Send to ${selectedRecipients.length}`
+                  : "Send"}
+              </Text>
+            )}
           </Pressable>
         </View>
 
         {/* To: row */}
-        <View style={styles.toRow}>
+        <Pressable style={styles.toRow} onPress={Keyboard.dismiss}>
           <Text style={styles.toLabel}>To:</Text>
           <View style={styles.toPillsWrap}>
             {selectedRecipients.map((r) => (
@@ -607,7 +626,7 @@ export default function StaffComposeScreen() {
               </View>
             ))}
           </View>
-        </View>
+        </Pressable>
 
         <View style={styles.divider} />
 
@@ -616,6 +635,7 @@ export default function StaffComposeScreen() {
           style={styles.flex}
           contentContainerStyle={styles.composeContent}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           {imagePreview && (
             <View style={styles.imagePreviewWrap}>
@@ -664,26 +684,6 @@ export default function StaffComposeScreen() {
             hitSlop={8}
           >
             <Ionicons name="image-outline" size={24} color="#6b7280" />
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.sendBtn,
-              !canSend && styles.disabledBtn,
-              pressed && canSend && styles.pressed,
-            ]}
-            onPress={handleSend}
-            disabled={!canSend}
-          >
-            {sending || creatingConvo ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.sendBtnText}>
-                {selectedRecipients.length > 1
-                  ? `Send to ${selectedRecipients.length}`
-                  : "Send"}
-              </Text>
-            )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -878,6 +878,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   iconButton: { padding: 4, width: 36 },
+  headerSendBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+    minWidth: 56,
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  headerSendBtnDisabled: { opacity: 0.4 },
+  headerSendText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 16,
+    color: Brand.sage700,
+  },
+  headerSendTextDisabled: { color: "#9ca3af" },
   pressed: { opacity: 0.6 },
 
   pillsRow: {
@@ -1149,18 +1163,4 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   toolbarIcon: { padding: 4 },
-  sendBtn: {
-    marginLeft: "auto",
-    backgroundColor: Brand.sage700,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    minWidth: 80,
-    alignItems: "center",
-  },
-  sendBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
-    color: "#fff",
-  },
 });

@@ -17,6 +17,14 @@ interface WeekEntry {
 
 const SCHOOL_YEAR_WEEKS: WeekEntry[] = [
   {
+    week: 3,
+    dates: "Aug 31–Sep 4",
+    theme: "Making, Science & Wild West Friday",
+    href: "/highlights/school-year/week-3",
+    coverImage:
+      "/assets/highlights/school_week_three/BC3C9DF3-4ECB-4F82-B635-FA1455F6A791.JPG",
+  },
+  {
     week: 2,
     dates: "Aug 24–28",
     theme: "Gardening, Growing & Construction Zone",
