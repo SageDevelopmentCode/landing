@@ -39,6 +39,18 @@ type RawReaction = { message_id: string; user_id: string; emoji: string };
 
 const DONT_INCLUDE_TAG = "Don't Include";
 
+async function resolveEnrollmentUserId(userId: string): Promise<string> {
+  const { data: grant } = await supabase
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return (grant as { owner_id?: string } | null)?.owner_id ?? userId;
+}
+
 async function isEligibleForDefaultChannel(userId: string): Promise<boolean> {
   const { data: profile } = await supabase
     .schema("admin")
@@ -49,11 +61,13 @@ async function isEligibleForDefaultChannel(userId: string): Promise<boolean> {
 
   if ((profile as { role?: string } | null)?.role !== "parent") return true;
 
+  const enrollmentUserId = await resolveEnrollmentUserId(userId);
+
   const { data: enrolled } = await supabase
     .schema("parent_app")
     .from("applications")
     .select("admin_tags")
-    .eq("user_id", userId)
+    .eq("user_id", enrollmentUserId)
     .eq("status", "enrolled");
 
   if (!enrolled?.length) return false;

@@ -1304,17 +1304,6 @@ export default function TourPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Users className="w-4 h-4 text-sage-600 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide font-body">
-                    Your Host
-                  </p>
-                  <p className="text-sm font-bold text-gray-800 font-body">
-                    Ms. Sabrina · Lead Teacher & Director
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
                 <MapPin className="w-4 h-4 text-sage-600 flex-shrink-0" />
                 <div>
                   <p className="text-xs text-gray-400 uppercase tracking-wide font-body">
@@ -1479,28 +1468,6 @@ export default function TourPage() {
               className="object-cover"
               priority
             />
-            {/* Floating educator chip */}
-            <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <Image
-                  src="/assets/team/sabrina.jpg"
-                  alt="Ms. Sabrina"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-800 font-body">
-                  Ms. Sabrina
-                </p>
-                <p className="text-[10px] text-gray-500 font-body">
-                  Lead Teacher & Director
-                </p>
-              </div>
-              <span className="ml-1 bg-sage-100 text-sage-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-body">
-                Your Host
-              </span>
-            </div>
           </motion.div>
         </div>
       </section>

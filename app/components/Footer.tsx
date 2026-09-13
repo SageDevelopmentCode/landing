@@ -29,7 +29,6 @@ const FOOTER_COLUMNS: NavColumn[] = [
       { label: "About Us", action: { kind: "link", href: "/about" } },
       { label: "Our Team", action: { kind: "link", href: "/team" } },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
-      { label: "Our Vision", action: { kind: "link", href: "/vision" } },
       {
         label: "What We Offer",
         action: { kind: "smooth-scroll", href: "/#what-we-offer" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { Check, CheckCircle, PenLine, X } from "lucide-react";
@@ -9,6 +9,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import WeekRecapPreview from "../components/WeekRecapPreview";
+import DesertHeroScene, { DESERT_THEME } from "./components/DesertHeroScene";
 import { formatPhone } from "../utils/formatPhone";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
 
@@ -32,61 +33,66 @@ const rye = Rye({
 });
 
 const HERO_IMAGES = [
-  "/assets/highlights/summer_week_three/4C53798C-920D-4497-B46C-1037E6FF21E4.JPG",
-  "/assets/highlights/summer_week_five/0C6AE07E-0553-4A7F-A9F8-9D8B02C3803C.JPG",
-  "/assets/highlights/summer_week_four/1B8DAE7D-4D49-4865-97C8-593B4F74D996.JPG",
+  "/assets/highlights/school_week_four/818F2757-ACE1-41D0-A62F-52F47C9C59E2.JPG",
+  "/assets/highlights/school_week_four/189F9697-2F44-41CB-BF88-F45CFBDCD90A.JPG",
+  "/assets/highlights/school_week_four/9C5DFF55-97C6-4FEE-A82C-44A4BFB9BF5D.JPG",
 ];
 
 const CAROUSEL_IMAGES = [
-  "/assets/highlights/summer_week_three/5DD49FD0-D35F-4411-8171-65D816CA4934.JPG",
-  "/assets/highlights/summer_week_five/9190B0AA-8EB6-409D-ABC2-737B7BD129B0.JPG",
-  "/assets/highlights/summer_week_four/8B8A8CAF-47F1-415E-B12D-0C1E2B5942FC.JPG",
-  "/assets/highlights/summer_week_three/B6F3BF45-573E-4C9E-90C7-DF0802E13E0E.JPG",
-  "/assets/highlights/summer_week_five/D5C814F8-8BBF-48B5-8A7D-9C7C53512FAB.JPG",
-  "/assets/highlights/summer_week_one/341400BF-486B-43A0-912E-84623B6299D6.JPG",
-  "/assets/highlights/summer_week_four/27B3519F-6BEB-4620-83AC-99F82ACEA5C2.JPG",
-  "/assets/highlights/summer_week_three/4591E194-779B-46AC-A893-B9E75B6D64A7.JPG",
+  "/assets/highlights/school_week_four/070B83EA-9BF5-4BAA-8818-544F74A17D7D.JPG",
+  "/assets/highlights/school_week_four/264087A9-CBD5-4099-95FC-1B49CC9517E7.JPG",
+  "/assets/highlights/school_week_four/43B558AD-2EDC-4E8F-B1ED-7CCFD765F730.JPG",
+  "/assets/highlights/school_week_four/6F80F35B-3B69-4D26-8868-92A93A382AE1.JPG",
+  "/assets/highlights/school_week_four/A6DB1350-9D81-456C-87DE-8FF7C4727661.JPG",
+  "/assets/highlights/school_week_four/B52828BB-4A7E-4F36-A133-1172281D5E59.JPG",
+  "/assets/highlights/school_week_four/C1390CB2-0CD0-4B86-8360-32B658D5E5E2.JPG",
+  "/assets/highlights/school_week_four/E10B5084-3A5E-44CC-B113-2CD6FD96A460.JPG",
 ];
 
-const WILD_WEST_ACTIVITIES = [
+const DESERT_DISCOVERY_ACTIVITIES = [
   {
-    emoji: "📜",
-    title: "Wanted Posters",
-    desc: "Design your own old-west wanted poster — pick your outlaw alias, add your mugshot, and set the reward!",
+    emoji: "🦎",
+    title: "Desert Animal Scavenger Hunt",
+    waypoint: "Track Station",
+    desc: "Follow tracks and clues across Sage Field to discover hidden desert creatures — lizards, jackrabbits, roadrunners, and more!",
     accent: "#f5e6c8",
-    accentText: "#8b3a1a",
+    accentText: "#5C7A3A",
   },
   {
-    emoji: "⭐",
-    title: "Sheriff Badges",
-    desc: "Craft and decorate a shiny sheriff badge, then pin it on for the rest of the day.",
+    emoji: "🌵",
+    title: "Cactus Painting",
+    waypoint: "Art Oasis",
+    desc: "Paint your own saguaro or prickly pear masterpiece with bold desert colors and textures to take home.",
     accent: "#fef3c7",
-    accentText: "#c9a227",
+    accentText: "#C4603C",
   },
   {
-    emoji: "🐴",
-    title: "Stick Horses",
-    desc: "Build and decorate stick horses, then gallop around the Sage Gulch range.",
+    emoji: "🎯",
+    title: "Desert Bingo",
+    waypoint: "Bingo Camp",
+    desc: "Play bingo with desert plants, animals, and landmarks — first to shout \"Desert!\" wins a prize.",
     accent: "#fff7ed",
-    accentText: "#6b3a2a",
+    accentText: "#E07A5F",
   },
   {
-    emoji: "💰",
-    title: "The Great Robbery",
-    desc: "Team game across the field — plan the heist, chase the bandits, and recover the treasure chest!",
+    emoji: "🏜️",
+    title: "Sand Dune Adventures",
+    waypoint: "Dune Valley",
+    desc: "Build the tallest sand castle, erupt desert volcanoes, and sculpt dunes in our sand pit.",
     accent: "#f0f9ff",
-    accentText: "#4a6741",
+    accentText: "#C4603C",
   },
 ];
 
 const PACKING_LIST = [
-  { emoji: "👢", item: "Closed-toe shoes or boots for ranch trails" },
-  { emoji: "👕", item: "Old clothes + optional bandana" },
+  { emoji: "👟", item: "Closed-toe shoes for sandy trails" },
+  { emoji: "🧢", item: "Sun hat or cap" },
   { emoji: "🧴", item: "Sunscreen (applied before drop-off)" },
   { emoji: "💧", item: "Water bottle, labeled" },
   { emoji: "🥪", item: "Snack + lunch from home" },
-  { emoji: "🎒", item: "Small backpack for badge & creations" },
-  { emoji: "🤠", item: "Optional cowboy hat" },
+  { emoji: "👕", item: "Old clothes — sand play gets messy!" },
+  { emoji: "🎒", item: "Small backpack for paintings & creations" },
+  { emoji: "🧣", item: "Optional bandana or explorer vest" },
 ];
 
 const ACTIVITIES = [
@@ -117,11 +123,11 @@ const RISKS = [
 ];
 
 const inputClass =
-  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#c9a227] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
+  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#C4603C] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-bold text-[#8b3a1a]/70 uppercase tracking-wider mt-6 mb-3 font-body">
+    <p className="text-xs font-bold text-[#C4603C]/70 uppercase tracking-wider mt-6 mb-3 font-body">
       {children}
     </p>
   );
@@ -182,19 +188,9 @@ export default function FieldDayFridayPage() {
     });
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, mins: 0 });
 
-  // Enhancement: sheriff badge tap
-  const [badgePinned, setBadgePinned] = useState(false);
-  // Enhancement: cursor trail
-  const [cursorTrail, setCursorTrail] = useState<{ id: number; x: number; y: number }[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
-  const cursorTrailId = useRef(0);
-  // Enhancement: card shake
-  const [shakingCards, setShakingCards] = useState<Set<number>>(new Set());
-  // Enhancement: mesa scroll parallax
   const heroRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll();
-  const mesaX = useTransform(scrollY, [0, 400], ["0%", "-60%"]);
-  const mesaOpacity = useTransform(scrollY, [0, 300], [0.35, 0]);
+  const duneParallaxX = useTransform(scrollY, [0, 400], ["0%", "-3%"]);
 
   const [formData, setFormData] = useState({
     parentName: "",
@@ -252,7 +248,7 @@ export default function FieldDayFridayPage() {
   }, []);
 
   useEffect(() => {
-    const target = new Date("2026-09-04T08:30:00-05:00");
+    const target = new Date("2026-09-18T08:30:00-05:00");
     const tick = () => {
       const diff = target.getTime() - Date.now();
       if (diff <= 0) return;
@@ -281,37 +277,7 @@ export default function FieldDayFridayPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agreementOpen]);
 
-  useEffect(() => {
-    setIsMobile(window.innerWidth <= 768);
-  }, []);
-
-  const handleHeroMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
-    if (isMobile) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const id = ++cursorTrailId.current;
-    setCursorTrail((prev) => [...prev.slice(-7), { id, x, y }]);
-    setTimeout(() => {
-      setCursorTrail((prev) => prev.filter((p) => p.id !== id));
-    }, 1000);
-  }, [isMobile]);
-
-  const handleCardFlip = useCallback((i: number) => {
-    toggleCard(i);
-    setShakingCards((prev) => {
-      const n = new Set(prev);
-      n.add(i);
-      return n;
-    });
-    setTimeout(() => {
-      setShakingCards((prev) => {
-        const n = new Set(prev);
-        n.delete(i);
-        return n;
-      });
-    }, 400);
-  }, []);
+  const handleCardFlip = (i: number) => toggleCard(i);
 
   const scrollToForm = () =>
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -397,500 +363,264 @@ export default function FieldDayFridayPage() {
   return (
     <>
       <style>{`
-        @keyframes tumbleweed-roll {
-          0%, 100% { transform: rotate(-5deg) translateX(0); transform-origin: center center; }
-          50%       { transform: rotate(5deg) translateX(12px); transform-origin: center center; }
-        }
-        @keyframes tumbleweed-roll-reverse {
-          0%, 100% { transform: rotate(3deg) translateX(0); transform-origin: center center; }
-          50%       { transform: rotate(-6deg) translateX(-10px); transform-origin: center center; }
-        }
-        @keyframes dust-drift {
-          0%   { transform: translate(0, 0) scale(1);      opacity: 0.5; }
-          25%  { transform: translate(8px, -18px) scale(1.1); opacity: 0.8; }
-          50%  { transform: translate(-5px, -30px) scale(0.9); opacity: 0.3; }
-          75%  { transform: translate(12px, -14px) scale(1.05); opacity: 0.7; }
-          100% { transform: translate(0, 0) scale(1);      opacity: 0.5; }
-        }
-        @keyframes badge-gleam {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.5; }
-        }
         @keyframes letter-drop {
-          0%   { opacity: 0; transform: translateY(-24px) scale(0.85); filter: blur(4px); }
-          60%  { opacity: 1; transform: translateY(4px) scale(1.04); filter: blur(0); }
+          0%   { opacity: 0; transform: translateY(-16px) scale(0.92); filter: blur(3px); }
+          60%  { opacity: 1; transform: translateY(2px) scale(1.02); filter: blur(0); }
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
-        @keyframes badge-pulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(201,162,39,0.6), 0 0 0 0 rgba(139,58,26,0.3); }
-          50%       { box-shadow: 0 0 0 14px rgba(201,162,39,0.15), 0 0 0 28px rgba(139,58,26,0.06); }
+        .desert-headline {
+          color: ${DESERT_THEME.inkBrown};
+          text-shadow: 0 2px 16px rgba(255, 200, 140, 0.45);
         }
-        @keyframes badge-bounce {
-          0%, 100% { transform: translateY(0) rotate(-2deg); }
-          50%       { transform: translateY(-6px) rotate(2deg); }
-        }
-        @keyframes stampede-rumble {
-          0%   { transform: translateX(0); }
-          20%  { transform: translateX(-2px); }
-          40%  { transform: translateX(2px); }
-          60%  { transform: translateX(-1px); }
-          80%  { transform: translateX(1px); }
-          100% { transform: translateX(0); }
-        }
-        .wanted-headline {
-          color: #c9a227;
-          -webkit-text-stroke: 2px #2d1b0e;
-          paint-order: stroke fill;
-          text-shadow:
-            0 2px 0 #2d1b0e,
-            0 0 24px rgba(201, 162, 39, 0.2);
-        }
-        @media (max-width: 640px) {
-          .wanted-headline {
-            -webkit-text-stroke: 1.5px #2d1b0e;
-          }
-        }
-        .tumbleweed-roll         { animation: tumbleweed-roll 8s ease-in-out infinite; }
-        .tumbleweed-roll-reverse { animation: tumbleweed-roll-reverse 9s ease-in-out infinite; }
-        .dust-drift              { animation: dust-drift 5s ease-in-out infinite; }
-        .badge-gleam             { animation: badge-gleam 1.2s ease-in-out infinite; }
-        .badge-pulse             { animation: badge-pulse 3s ease-in-out infinite; }
-        .badge-bounce            { animation: badge-bounce 2.5s ease-in-out infinite; }
         .letter-drop span {
           display: inline-block;
           opacity: 0;
           animation: letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
-        /* Flip card */
         .flip-card-inner { transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); }
         .flip-card:hover .flip-card-inner,
         .flip-card-inner.flipped { transform: rotateY(180deg); }
         .flip-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
         .flip-back { transform: rotateY(180deg); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-        @keyframes horseshoe-stamp {
-          from { opacity: 0; transform: scale(0) rotate(var(--rot)); }
-          to   { opacity: 0.4; transform: scale(1) rotate(var(--rot)); }
+        .expedition-trail-desktop {
+          position: relative;
         }
-        @keyframes digit-pop {
-          0%   { opacity: 0; transform: translateY(-10px) scale(0.8); }
-          60%  { opacity: 1; transform: translateY(2px) scale(1.05); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
+        .expedition-trail-desktop::before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 8%;
+          right: 8%;
+          height: 2px;
+          background: repeating-linear-gradient(
+            90deg,
+            ${DESERT_THEME.terracotta} 0,
+            ${DESERT_THEME.terracotta} 8px,
+            transparent 8px,
+            transparent 16px
+          );
+          opacity: 0.25;
+          transform: translateY(-50%);
+          pointer-events: none;
         }
-        @keyframes star-fade {
-          0%   { opacity: 0.7; transform: scale(1); }
-          100% { opacity: 0; transform: scale(0.3); }
+        .expedition-trail-mobile {
+          position: relative;
         }
-        .digit-pop { animation: digit-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-        .parchment-texture {
-          background-color: #f5e6c8;
-          background-image:
-            radial-gradient(ellipse at 20% 50%, rgba(212,165,116,0.15) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 20%, rgba(139,58,26,0.06) 0%, transparent 40%),
-            linear-gradient(rgba(139,58,26,0.04) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(139,58,26,0.04) 1px, transparent 1px);
-          background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+        .expedition-trail-mobile::before {
+          content: "";
+          position: absolute;
+          top: 5%;
+          bottom: 5%;
+          left: 50%;
+          width: 2px;
+          background: repeating-linear-gradient(
+            180deg,
+            ${DESERT_THEME.terracotta} 0,
+            ${DESERT_THEME.terracotta} 8px,
+            transparent 8px,
+            transparent 16px
+          );
+          opacity: 0.25;
+          transform: translateX(-50%);
+          pointer-events: none;
         }
         @media (prefers-reduced-motion: reduce) {
-          .tumbleweed-roll,
-          .tumbleweed-roll-reverse,
-          .dust-drift,
-          .badge-gleam,
-          .badge-pulse,
-          .badge-bounce,
           .letter-drop span { animation: none !important; opacity: 1 !important; transform: none !important; }
         }
       `}</style>
 
-      <div className={`${bebasNeue.variable} ${rye.variable} min-h-screen bg-white overflow-x-hidden`}>
-        <Navbar darkStyle={true} lightText={true} />
+      <div
+        className={`${bebasNeue.variable} ${rye.variable} min-h-screen overflow-x-hidden`}
+        style={{ background: DESERT_THEME.skyPeach }}
+      >
+        <Navbar />
 
         {/* ─── HERO ─────────────────────────────────────────────────────────── */}
         <section
           ref={heroRef}
-          className="relative pt-20 overflow-hidden"
-          style={{
-            background:
-              "linear-gradient(180deg, #2d1b0e 0%, #5c3d2e 35%, #3d2914 65%, #2d1b0e 100%)",
-          }}
-          onMouseMove={handleHeroMouseMove}
+          className="relative pt-20 overflow-hidden min-h-[620px] sm:min-h-[680px] lg:min-h-[720px]"
         >
-          {/* Left tumbleweed */}
-          <div
-            className="tumbleweed-roll absolute bottom-8 left-4 sm:left-12 w-10 sm:w-14 pointer-events-none opacity-50"
-            style={{ zIndex: 1 }}
-          >
-            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-              <circle cx="24" cy="24" r="14" fill="none" stroke="#8b6914" strokeWidth="2" />
-              <line x1="24" y1="10" x2="24" y2="38" stroke="#8b6914" strokeWidth="1.5" />
-              <line x1="10" y1="24" x2="38" y2="24" stroke="#8b6914" strokeWidth="1.5" />
-              <line x1="14" y1="14" x2="34" y2="34" stroke="#8b6914" strokeWidth="1" />
-              <line x1="34" y1="14" x2="14" y2="34" stroke="#8b6914" strokeWidth="1" />
-            </svg>
-          </div>
+          <DesertHeroScene duneParallaxX={duneParallaxX} />
 
-          {/* Right mesa silhouette — scroll parallax */}
-          <motion.div
-            className="absolute bottom-0 right-0 w-48 sm:w-72 pointer-events-none"
-            style={{ zIndex: 1, x: mesaX, opacity: mesaOpacity }}
-          >
-            <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-              <path d="M0,80 L0,55 L30,40 L55,50 L80,25 L110,35 L140,15 L170,30 L200,20 L200,80 Z" fill="#1a0f08" opacity="0.6" />
-              <path d="M0,80 L0,60 L40,48 L70,55 L100,38 L130,45 L160,32 L200,40 L200,80 Z" fill="#2d1b0e" opacity="0.4" />
-            </svg>
-          </motion.div>
-
-          {/* Desert dust particles */}
-          {[
-            { top: "20%", left: "8%",  right: undefined, size: 4, delay: "0s",   dur: "4.5s" },
-            { top: "45%", left: "5%",  right: undefined, size: 3, delay: "1.2s", dur: "6s"   },
-            { top: "30%", left: undefined, right: "12%", size: 4, delay: "0.5s", dur: "5s"   },
-            { top: "65%", left: undefined, right: "8%",  size: 3, delay: "2s",   dur: "7s"   },
-            { top: "15%", left: undefined, right: "20%", size: 3, delay: "3s",   dur: "5.5s" },
-          ].map((f, i) => (
-            <div
-              key={i}
-              className="dust-drift absolute rounded-full pointer-events-none"
-              style={{
-                top: f.top,
-                left: f.left,
-                right: f.right,
-                width: f.size,
-                height: f.size,
-                background: "radial-gradient(circle, #d4a574 0%, #8b6914 60%, transparent 100%)",
-                boxShadow: `0 0 ${f.size * 2}px rgba(212,165,116,0.5)`,
-                animationDelay: f.delay,
-                animationDuration: f.dur,
-                zIndex: 1,
-              }}
-            />
-          ))}
-
-          {/* Rope border — top left */}
-          <div
-            className="absolute top-4 left-4 w-20 h-1 pointer-events-none opacity-40 rounded-full"
-            style={{ background: "linear-gradient(90deg, #d4a574, #8b6914)", zIndex: 1 }}
-          />
-
-          {/* Horseshoe trail stamps */}
-          {[
-            { bottom: "12%", left: "8%",  rot: "-12deg", delay: "0.3s" },
-            { bottom: "10%", left: "18%", rot: "8deg",   delay: "0.7s" },
-            { bottom: "14%", left: "29%", rot: "-6deg",  delay: "1.1s" },
-            { bottom: "9%",  left: "40%", rot: "10deg",  delay: "1.5s" },
-            { bottom: "13%", left: "51%", rot: "-4deg",  delay: "1.9s" },
-            { bottom: "10%", left: "62%", rot: "7deg",   delay: "2.3s" },
-          ].map((fp, i) => (
-            <div
-              key={i}
-              className="absolute pointer-events-none text-lg select-none"
-              style={{
-                bottom: fp.bottom,
-                left: fp.left,
-                ["--rot" as string]: fp.rot,
-                opacity: 0,
-                animation: `horseshoe-stamp 0.4s ease-out ${fp.delay} forwards`,
-                zIndex: 1,
-              }}
-            >
-              🐴
-            </div>
-          ))}
-
-          {/* Star cursor trail */}
-          {!isMobile && cursorTrail.map((pt) => (
-            <div
-              key={pt.id}
-              className="absolute pointer-events-none text-sm select-none"
-              style={{
-                left: pt.x,
-                top: pt.y,
-                zIndex: 5,
-                animation: "star-fade 1s ease-out forwards",
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              ⭐
-            </div>
-          ))}
-
-          {/* Sheriff star badge — gleam pulse */}
-          <div
-            className="badge-pulse absolute top-12 right-8 sm:right-16 lg:right-24 w-14 h-14 sm:w-16 sm:h-16 pointer-events-none flex items-center justify-center"
-            style={{ zIndex: 1 }}
-          >
-            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-full h-full badge-gleam">
-              <polygon points="24,2 29,17 45,17 32,27 37,43 24,34 11,43 16,27 3,17 19,17" fill="#c9a227" stroke="#8b6914" strokeWidth="1.5" />
-            </svg>
-          </div>
-
-          {/* Cactus silhouette */}
-          <div
-            className="tumbleweed-roll-reverse absolute top-6 right-2 w-10 sm:w-12 pointer-events-none opacity-30"
-            style={{ zIndex: 1 }}
-          >
-            <svg viewBox="0 0 40 60" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-              <rect x="16" y="20" width="8" height="35" rx="4" fill="#4a6741" />
-              <rect x="8" y="28" width="8" height="6" rx="3" fill="#4a6741" />
-              <rect x="6" y="22" width="6" height="14" rx="3" fill="#4a6741" />
-              <rect x="24" y="32" width="8" height="6" rx="3" fill="#4a6741" />
-              <rect x="28" y="26" width="6" height="14" rx="3" fill="#4a6741" />
-            </svg>
-          </div>
-
-          <div
-            className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-14 lg:py-20 flex flex-col lg:flex-row items-center gap-10 lg:gap-16"
-            style={{ zIndex: 2 }}
-          >
-            {/* Left — content */}
+          <div className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-10 lg:py-14 flex flex-col lg:flex-row items-center gap-10 lg:gap-12 z-10">
             <motion.div
-              className="flex-1 text-center lg:text-left"
+              className="flex-1 w-full max-w-xl"
               initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              {/* Headline */}
-              <motion.h1
-                className="font-heading font-bold leading-[1.05] mb-3"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15, duration: 0.55 }}
-              >
-                <span
-                  className="block wanted-headline"
-                  style={{
-                    fontSize: "clamp(3rem, 8vw, 5.5rem)",
-                    fontFamily: "var(--font-bebas-neue), sans-serif",
-                    letterSpacing: "0.04em",
-                  }}
+              <div className="rounded-3xl border border-white/60 bg-white/75 backdrop-blur-md shadow-xl px-6 sm:px-8 py-8 sm:py-10">
+                <motion.h1
+                  className="font-heading font-bold leading-[1.05] mb-3 text-center lg:text-left"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15, duration: 0.55 }}
                 >
-                  Wild West
-                </span>
-                <span
-                  className="letter-drop block"
-                  style={{ fontSize: "clamp(2.4rem, 6vw, 4.5rem)" }}
+                  <span
+                    className="block desert-headline"
+                    style={{
+                      fontSize: "clamp(2.8rem, 7vw, 4.8rem)",
+                      fontFamily: "var(--font-bebas-neue), sans-serif",
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    Desert Discovery
+                  </span>
+                  <span
+                    className="letter-drop block"
+                    style={{
+                      fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                      color: DESERT_THEME.duneDeep,
+                    }}
+                  >
+                    {Array.from("Field Day").map((ch, i) => (
+                      <span key={i} style={{ animationDelay: `${0.55 + i * 0.06}s` }}>
+                        {ch === " " ? " " : ch}
+                      </span>
+                    ))}
+                  </span>
+                </motion.h1>
+
+                <motion.p
+                  className="text-base sm:text-lg font-body leading-relaxed mb-6 max-w-md mx-auto lg:mx-0"
+                  style={{ color: DESERT_THEME.inkBrown }}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25, duration: 0.5 }}
                 >
-                  {Array.from("Field Day 🤠").map((ch, i) => (
+                  One adventure-packed Friday at Sage Field. Track desert animals on a scavenger hunt, paint cactus masterpieces, play desert bingo, and sculpt sand dunes — volcanoes, castles, and all!
+                </motion.p>
+
+                <motion.div
+                  className="flex flex-wrap gap-2 justify-center lg:justify-start mb-5"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.45 }}
+                >
+                  {[
+                    { icon: "📅", text: "Sept 18, 2026" },
+                    { icon: "🕗", text: "Drop-off 8:30 AM" },
+                    { icon: "🕒", text: "Pick-up 1:30 PM" },
+                    { icon: "👧", text: "Ages 4–11" },
+                    { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} per child` },
+                  ].map((pill) => (
                     <span
-                      key={i}
-                      style={{
-                        animationDelay: `${0.55 + i * 0.06}s`,
-                        color: "#c9a227",
-                      }}
+                      key={pill.text}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#F2A65A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
+                      style={{ color: DESERT_THEME.inkBrown }}
                     >
-                      {ch === " " ? " " : ch}
+                      {pill.icon} {pill.text}
                     </span>
                   ))}
-                </span>
-              </motion.h1>
+                </motion.div>
 
-              <motion.p
-                className="text-base sm:text-lg text-stone-300 font-body leading-relaxed mb-7 max-w-md mx-auto lg:mx-0"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.5 }}
-              >
-                One adventure-packed Friday at Sage Field. Design wanted posters, craft sheriff badges, build stick horses, and join The Great Robbery — a team game across the range!
-              </motion.p>
-
-              {/* Quick-detail pills */}
-              <motion.div
-                className="flex flex-wrap gap-2 justify-center lg:justify-start mb-5"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.45 }}
-              >
-                {[
-                  { icon: "📅", text: "Sept 4, 2026" },
-                  { icon: "🕗", text: "Drop-off 8:30 AM" },
-                  { icon: "🕒", text: "Pick-up 1:30 PM" },
-                  { icon: "👧", text: "Ages 4–11" },
-                  { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} per child` },
-                ].map((pill) => (
-                  <span
-                    key={pill.text}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-white/90 font-body shadow-sm"
-                  >
-                    {pill.icon} {pill.text}
-                  </span>
-                ))}
-              </motion.div>
-
-              {/* Countdown timer */}
-              <motion.div
-                className="flex gap-2 justify-center lg:justify-start mb-8 items-center"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35, duration: 0.45 }}
-              >
-                {[
-                  { val: countdown.days, label: "days" },
-                  { val: countdown.hours, label: "hrs" },
-                  { val: countdown.mins, label: "min" },
-                ].map(({ val, label }) => (
-                  <div
-                    key={label}
-                    className="flex flex-col items-center px-3 py-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-xl min-w-[48px]"
-                  >
-                    <AnimatePresence mode="popLayout">
-                      <motion.span
-                        key={`${label}-${val}`}
-                        className="text-xl font-bold text-white font-heading tabular-nums"
-                        initial={{ opacity: 0, y: -10, scale: 0.8 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.25, type: "spring", stiffness: 300, damping: 20 }}
-                      >
-                        {String(val).padStart(2, "0")}
-                      </motion.span>
-                    </AnimatePresence>
-                    <span className="text-[10px] text-[#d4a574] font-body uppercase tracking-wide">
-                      {label}
-                    </span>
-                  </div>
-                ))}
-                <span className="text-xs text-[#d4a574] font-body pl-1">
-                  until the wagon rolls out 🤠
-                </span>
-              </motion.div>
-
-              {/* CTAs */}
-              <motion.div
-                className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.42, duration: 0.45 }}
-              >
-                <button
-                  onClick={scrollToForm}
-                  className="px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #c9a227 0%, #8b3a1a 100%)",
-                  }}
+                <motion.div
+                  className="flex gap-2 justify-center lg:justify-start mb-6 items-center flex-wrap"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35, duration: 0.45 }}
                 >
-                  🤠 Saddle Up & Reserve →
-                </button>
-                <a
-                  href="#what-we-do"
-                  className="px-7 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white font-bold rounded-2xl hover:bg-white/20 transition-all duration-200 font-body text-sm text-center"
-                >
-                  See the Activities ↓
-                </a>
-              </motion.div>
-
-              {/* Interactive sheriff badge */}
-              <motion.div
-                className="mt-6 flex flex-col items-center lg:items-start gap-1"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.45 }}
-              >
-                <button
-                  onClick={() => setBadgePinned((v) => !v)}
-                  className="relative text-5xl cursor-pointer select-none focus:outline-none"
-                  style={{
-                    animation: badgePinned ? "none" : "badge-bounce 2.5s ease-in-out infinite",
-                    display: "inline-block",
-                  }}
-                  aria-label="Pin sheriff badge"
-                >
-                  {badgePinned ? "🤠" : "⭐"}
-                </button>
-                <AnimatePresence>
-                  {badgePinned && (
-                    <motion.span
-                      className="text-sm font-bold text-[#c9a227] font-body"
-                      initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                      animate={{ opacity: 1, y: 0, scale: 1, transition: { type: "spring", damping: 12, stiffness: 200 } }}
-                      exit={{ opacity: 0, scale: 0.8 }}
+                  {[
+                    { val: countdown.days, label: "days" },
+                    { val: countdown.hours, label: "hrs" },
+                    { val: countdown.mins, label: "min" },
+                  ].map(({ val, label }) => (
+                    <div
+                      key={label}
+                      className="flex flex-col items-center px-3 py-2 bg-white/90 border border-[#F2A65A]/30 rounded-xl min-w-12"
                     >
-                      You&apos;re the sheriff of Sage Gulch! ⭐
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-                <p className="text-[11px] text-[#d4a574]/80 font-body">
-                  {badgePinned ? "Badge pinned!" : "tap to pin your badge ⭐"}
-                </p>
-              </motion.div>
+                      <AnimatePresence mode="popLayout">
+                        <motion.span
+                          key={`${label}-${val}`}
+                          className="text-xl font-bold font-heading tabular-nums"
+                          style={{ color: DESERT_THEME.inkBrown }}
+                          initial={{ opacity: 0, y: -10, scale: 0.8 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{ duration: 0.25, type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                          {String(val).padStart(2, "0")}
+                        </motion.span>
+                      </AnimatePresence>
+                      <span className="text-[10px] font-body uppercase tracking-wide" style={{ color: DESERT_THEME.duneDeep }}>
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                  <span className="text-xs font-body pl-1" style={{ color: DESERT_THEME.duneDeep }}>
+                    until expedition day
+                  </span>
+                </motion.div>
+
+                <motion.div
+                  className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.42, duration: 0.45 }}
+                >
+                  <button
+                    onClick={scrollToForm}
+                    className="px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
+                    style={{
+                      background: `linear-gradient(135deg, ${DESERT_THEME.duneDeep} 0%, ${DESERT_THEME.terracotta} 100%)`,
+                    }}
+                  >
+                    Join the Expedition →
+                  </button>
+                  <a
+                    href="#what-we-do"
+                    className="px-7 py-4 bg-white border-2 font-bold rounded-2xl hover:bg-[#FFF9F0] transition-all duration-200 font-body text-sm text-center"
+                    style={{ borderColor: DESERT_THEME.duneMid, color: DESERT_THEME.inkBrown }}
+                  >
+                    See the Activities ↓
+                  </a>
+                </motion.div>
+              </div>
             </motion.div>
 
-            {/* Right — Polaroid-style stacked photos */}
             <motion.div
-              className="w-full lg:w-auto flex-1 max-w-xs sm:max-w-sm lg:max-w-none relative"
-              initial={{ opacity: 0, scale: 0.94, y: 16 }}
+              className="w-full lg:w-auto flex-1 max-w-xs sm:max-w-sm lg:max-w-none relative hidden sm:block"
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.2 }}
             >
-              <div className="relative h-72 sm:h-80 lg:h-96 flex items-center justify-center">
-                {/* Back photo */}
+              <div className="relative h-64 sm:h-72 lg:h-80 flex items-center justify-center">
                 <div
-                  className="absolute w-44 sm:w-52 lg:w-56 bg-[#f5e6c8] p-2.5 pb-10 shadow-2xl rounded-sm"
-                  style={{
-                    transform:
-                      "rotate(10deg) translateX(110px) translateY(-10px)",
-                    zIndex: 1,
-                  }}
+                  className="absolute w-40 sm:w-48 lg:w-52 bg-white p-2 pb-8 shadow-xl rounded-sm"
+                  style={{ transform: "rotate(6deg) translateX(90px)", zIndex: 1 }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <Image
-                      src={HERO_IMAGES[2]}
-                      alt="Students at Sage Field"
-                      fill
-                      className="object-cover"
-                      sizes="256px"
-                      loading="lazy"
-                    />
+                    <Image src={HERO_IMAGES[2]} alt="Students at Sage Field" fill className="object-cover" sizes="208px" loading="lazy" />
                   </div>
                 </div>
-                {/* Mid photo */}
                 <div
-                  className="absolute w-44 sm:w-52 lg:w-56 bg-[#f5e6c8] p-2.5 pb-10 shadow-2xl rounded-sm hover:-translate-y-2 hover:rotate-0 transition-all duration-300 cursor-pointer"
-                  style={{
-                    transform:
-                      "rotate(-8deg) translateX(-110px) translateY(8px)",
-                    zIndex: 2,
-                  }}
+                  className="absolute w-40 sm:w-48 lg:w-52 bg-white p-2 pb-8 shadow-xl rounded-sm"
+                  style={{ transform: "rotate(-5deg) translateX(-90px) translateY(6px)", zIndex: 2 }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <Image
-                      src={HERO_IMAGES[1]}
-                      alt="Students at Sage Field"
-                      fill
-                      className="object-cover"
-                      sizes="256px"
-                      priority
-                    />
+                    <Image src={HERO_IMAGES[1]} alt="Students at Sage Field" fill className="object-cover" sizes="208px" priority />
                   </div>
                 </div>
-                {/* Front photo */}
                 <div
-                  className="absolute w-44 sm:w-52 lg:w-56 bg-[#f5e6c8] p-2.5 pb-10 shadow-2xl rounded-sm hover:-translate-y-3 hover:rotate-0 transition-all duration-300 cursor-pointer"
-                  style={{ transform: "rotate(2deg)", zIndex: 3 }}
+                  className="absolute w-40 sm:w-48 lg:w-52 bg-white p-2 pb-8 shadow-xl rounded-sm"
+                  style={{ transform: "rotate(1deg)", zIndex: 3 }}
                 >
                   <div className="relative w-full aspect-square overflow-hidden">
-                    <Image
-                      src={HERO_IMAGES[0]}
-                      alt="Students at Sage Field"
-                      fill
-                      className="object-cover"
-                      sizes="256px"
-                      priority
-                    />
+                    <Image src={HERO_IMAGES[0]} alt="Students at Sage Field" fill className="object-cover" sizes="208px" priority />
                   </div>
-                  <p className="text-center text-[10px] font-body text-[#8b3a1a] mt-1 tracking-wide uppercase">
-                    Wild West ✦ Sept 4
+                  <p className="text-center text-[10px] font-body mt-1 tracking-wide uppercase" style={{ color: DESERT_THEME.terracotta }}>
+                    Desert Discovery · Sept 18
                   </p>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          {/* Wave divider at bottom of hero → white */}
-          <WaveDivider fill="white" fromColor="#2d1b0e" />
+          <WaveDivider fill={DESERT_THEME.skyPeach} fromColor="transparent" />
         </section>
 
         {/* ─── PHOTO STRIP ──────────────────────────────────────────────────── */}
-        <div className="bg-white pb-2">
+        <div className="pb-2" style={{ background: DESERT_THEME.skyPeach }}>
           <div
             ref={galleryRef}
             className="overflow-x-auto flex gap-3 px-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] py-4"
@@ -916,7 +646,8 @@ export default function FieldDayFridayPage() {
         {/* ─── WHAT'S HAPPENING ─────────────────────────────────────────────── */}
         <section
           id="what-we-do"
-          className="py-20 px-6 sm:px-12 lg:px-16 parchment-texture"
+          className="py-20 px-6 sm:px-12 lg:px-16"
+          style={{ background: "#FFF9F0" }}
         >
           <div className="max-w-4xl mx-auto">
             {/* Header */}
@@ -928,29 +659,29 @@ export default function FieldDayFridayPage() {
               transition={{ duration: 0.5 }}
             >
               <span
-                className="inline-block px-5 py-2 bg-[#8b3a1a]/10 text-[#8b3a1a] text-sm font-bold rounded-full mb-5 font-body"
+                className="inline-block px-5 py-2 bg-[#C4603C]/10 text-[#C4603C] text-sm font-bold rounded-full mb-5 font-body"
                 style={{ fontFamily: "var(--font-rye), serif" }}
               >
-                🤠 This Friday&apos;s Theme
+                🌵 This Friday&apos;s Theme
               </span>
               <h2
                 className="font-heading font-bold text-slate-800 mb-3 leading-tight"
                 style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
               >
-                Five Hours in Sage Gulch
+                Five Hours in the Sonoran
               </h2>
               <p className="text-base text-slate-500 font-body max-w-xl mx-auto">
-                Wanted Posters · Sheriff Badges · Stick Horses · The Great Robbery
+                Scavenger Hunt · Cactus Painting · Desert Bingo · Sand Dune Adventures
               </p>
             </motion.div>
 
-            {/* Activity cards — flip on hover */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mb-12">
-              {WILD_WEST_ACTIVITIES.map((activity, i) => (
+            {/* Activity cards — expedition trail + flip on hover */}
+            <div className="expedition-trail-desktop hidden sm:grid grid-cols-2 sm:grid-cols-4 gap-5 mb-12">
+              {DESERT_DISCOVERY_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={activity.title}
                   className="flip-card relative cursor-pointer"
-                  style={{ perspective: "800px", minHeight: "180px" }}
+                  style={{ perspective: "800px", minHeight: "200px" }}
                   initial={{ opacity: 0, y: 20, x: i % 2 === 0 ? -20 : 20 }}
                   whileInView={{ opacity: 1, y: 0, x: 0 }}
                   viewport={{ once: true }}
@@ -958,7 +689,10 @@ export default function FieldDayFridayPage() {
                   whileTap={{ scale: [1, 1.08, 1] }}
                   onClick={() => handleCardFlip(i)}
                 >
-                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}${shakingCards.has(i) ? " stampede-rumble" : ""}`} style={{ minHeight: "180px", animation: shakingCards.has(i) ? "stampede-rumble 0.4s ease" : undefined }}>
+                  <p className="text-[10px] font-bold text-[#C4603C]/80 uppercase tracking-wider text-center mb-2 font-body">
+                    {activity.waypoint}
+                  </p>
+                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "180px" }}>
                     {/* Front face */}
                     <div
                       className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col"
@@ -979,16 +713,54 @@ export default function FieldDayFridayPage() {
                     </div>
                     {/* Back face */}
                     <div
-                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#8b6914]/30"
-                      style={{ background: "#3d2914" }}
+                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#C4603C]/30"
+                      style={{ background: DESERT_THEME.inkBrown }}
                     >
                       <span className="text-4xl">{activity.emoji}</span>
                       <h3 className="font-heading font-bold text-[#f5e6c8] text-base leading-tight">
                         {activity.title}
                       </h3>
-                      <p className="text-sm text-[#d4a574]/90 font-body leading-relaxed">
+                      <p className="text-sm text-[#D4A574]/90 font-body leading-relaxed">
                         {activity.desc}
                       </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Mobile: vertical expedition trail */}
+            <div className="expedition-trail-mobile sm:hidden grid grid-cols-1 gap-8 mb-12 px-4">
+              {DESERT_DISCOVERY_ACTIVITIES.map((activity, i) => (
+                <motion.div
+                  key={`mobile-${activity.title}`}
+                  className="flip-card relative cursor-pointer"
+                  style={{ perspective: "800px", minHeight: "200px" }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.45, delay: 0.1 * i }}
+                  whileTap={{ scale: [1, 1.08, 1] }}
+                  onClick={() => handleCardFlip(i)}
+                >
+                  <p className="text-[10px] font-bold text-[#C4603C]/80 uppercase tracking-wider text-center mb-2 font-body">
+                    {activity.waypoint}
+                  </p>
+                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "180px" }}>
+                    <div className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col">
+                      <div className="h-2 w-full" style={{ background: activity.accentText }} />
+                      <div className="flex-1 flex flex-col items-center justify-center p-6 gap-3 text-center">
+                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm" style={{ background: activity.accent }}>
+                          {activity.emoji}
+                        </div>
+                        <h3 className="font-heading font-bold text-slate-800 text-base leading-tight">{activity.title}</h3>
+                        <p className="text-[11px] text-slate-400 font-body">tap to learn more ✦</p>
+                      </div>
+                    </div>
+                    <div className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#C4603C]/30" style={{ background: DESERT_THEME.inkBrown }}>
+                      <span className="text-4xl">{activity.emoji}</span>
+                      <h3 className="font-heading font-bold text-[#f5e6c8] text-base leading-tight">{activity.title}</h3>
+                      <p className="text-sm text-[#D4A574]/90 font-body leading-relaxed">{activity.desc}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -1025,7 +797,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave into recap */}
-        <div style={{ background: "#f5e6c8", marginBottom: "-1px" }}>
+        <div style={{ background: "#FFF9F0", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1035,16 +807,16 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
-              fill="#2d1b0e"
+              fill={DESERT_THEME.duneLight}
             />
           </svg>
         </div>
 
         {/* ─── WEEK RECAP ───────────────────────────────────────────────────── */}
-        <WeekRecapPreview className="bg-[#2d1b0e]" variant="dark" />
+        <WeekRecapPreview className="bg-[#FFF9F0]" variant="light" />
 
         {/* Wave out of recap */}
-        <div style={{ background: "#2d1b0e", marginTop: "-1px", marginBottom: "-1px" }}>
+        <div style={{ background: "#FFF9F0", marginTop: "-1px", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1054,7 +826,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill="#3d2914"
+              fill={DESERT_THEME.skyPeach}
             />
           </svg>
         </div>
@@ -1064,8 +836,7 @@ export default function FieldDayFridayPage() {
           id="reserve"
           className="py-20 px-3 sm:px-12 lg:px-16"
           style={{
-            background:
-              "linear-gradient(180deg, #3d2914 0%, #5c3d2e 40%, #2d1b0e 100%)",
+            background: `linear-gradient(180deg, ${DESERT_THEME.skyPeach} 0%, ${DESERT_THEME.duneLight} 100%)`,
           }}
         >
           <div ref={formRef} className="max-w-xl mx-auto">
@@ -1077,23 +848,23 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-5xl mb-3">🤠</div>
+              <div className="text-5xl mb-3">🌵</div>
               <h2
-                className="font-heading font-bold text-white mb-2"
-                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)" }}
+                className="font-heading font-bold mb-2"
+                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)", color: DESERT_THEME.inkBrown }}
               >
                 Reserve Your Spot
               </h2>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#f5e6c8] rounded-full mb-3">
-                <span className="text-[#8b3a1a] font-bold font-body text-sm">
+                <span className="text-[#C4603C] font-bold font-body text-sm">
                   {`$${FRIDAY_DROPIN_DOLLARS} per child`}
                 </span>
-                <span className="text-[#c9a227]">·</span>
-                <span className="text-[#6b3a2a] font-body text-sm">
+                <span className="text-[#E07A5F]">·</span>
+                <span className="text-[#2A2018] font-body text-sm">
                   No enrollment required
                 </span>
-                <span className="text-[#c9a227]">·</span>
-                <span className="text-[#6b3a2a] font-body text-sm">
+                <span className="text-[#E07A5F]">·</span>
+                <span className="text-[#2A2018] font-body text-sm">
                   Limited spots
                 </span>
               </div>
@@ -1105,7 +876,7 @@ export default function FieldDayFridayPage() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#f5e6c8]"
-                  style={{ borderTop: "4px solid #c9a227" }}
+                  style={{ borderTop: "4px solid #C4603C" }}
                 >
                   <SectionLabel>Your Info</SectionLabel>
                   <div className="space-y-4">
@@ -1165,7 +936,7 @@ export default function FieldDayFridayPage() {
                         className="rounded-2xl border border-stone-200 bg-stone-50/50 p-4 space-y-3"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-bold text-[#8b3a1a]/70 font-body uppercase tracking-wide">
+                          <p className="text-xs font-bold text-[#C4603C]/70 font-body uppercase tracking-wide">
                             Child {i + 1}
                           </p>
                           {children.length > 1 && (
@@ -1220,7 +991,7 @@ export default function FieldDayFridayPage() {
 
                     {children.length > 1 && (
                       <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#f5e6c8] rounded-xl">
-                        <span className="text-sm font-bold text-[#8b3a1a] font-body">
+                        <span className="text-sm font-bold text-[#C4603C] font-body">
                           {children.length} children · ${totalBase} total
                         </span>
                       </div>
@@ -1321,7 +1092,7 @@ export default function FieldDayFridayPage() {
                         <div
                           className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                             checked
-                              ? "bg-[#c9a227] border-[#c9a227]"
+                              ? "bg-[#C4603C] border-[#C4603C]"
                               : "border-stone-300 bg-white"
                           }`}
                         >
@@ -1357,7 +1128,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("card")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "card"
-                            ? "border-[#c9a227] bg-[#f5e6c8] text-[#8b3a1a]"
+                            ? "border-[#C4603C] bg-[#f5e6c8] text-[#C4603C]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1368,7 +1139,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("ach")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "ach"
-                            ? "border-[#c9a227] bg-[#f5e6c8] text-[#8b3a1a]"
+                            ? "border-[#C4603C] bg-[#f5e6c8] text-[#C4603C]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1384,7 +1155,7 @@ export default function FieldDayFridayPage() {
                       <div
                         className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                           coverFees
-                            ? "bg-[#c9a227] border-[#c9a227]"
+                            ? "bg-[#C4603C] border-[#C4603C]"
                             : "border-stone-300 bg-white"
                         }`}
                         onClick={() => setCoverFees((v) => !v)}
@@ -1424,7 +1195,7 @@ export default function FieldDayFridayPage() {
                         {agreementSigned ? (
                           <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         ) : (
-                          <PenLine className="w-5 h-5 text-[#c9a227] flex-shrink-0" />
+                          <PenLine className="w-5 h-5 text-[#C4603C] flex-shrink-0" />
                         )}
                         <div>
                           <p className="text-sm font-bold font-heading text-slate-800">
@@ -1463,12 +1234,12 @@ export default function FieldDayFridayPage() {
                       className="w-full px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
                       style={{
                         background:
-                          "linear-gradient(135deg, #c9a227 0%, #8b3a1a 100%)",
+                          "linear-gradient(135deg, #E07A5F 0%, #C4603C 100%)",
                       }}
                     >
                       {submitting
                         ? "Submitting…"
-                        : `🤠 Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
+                        : `🌵 Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
                     </button>
                   </motion.div>
                 </motion.div>
@@ -1477,7 +1248,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave before packing list */}
-        <div style={{ background: "#2d1b0e", marginBottom: "-1px" }}>
+        <div style={{ background: DESERT_THEME.skyPeach, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1487,7 +1258,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
-              fill="#3d2914"
+              fill={DESERT_THEME.duneMid}
             />
           </svg>
         </div>
@@ -1495,7 +1266,7 @@ export default function FieldDayFridayPage() {
         {/* ─── PACKING LIST ─────────────────────────────────────────────────── */}
         <section
           className="py-16 px-6 sm:px-12 lg:px-16"
-          style={{ background: "#3d2914" }}
+          style={{ background: DESERT_THEME.duneLight }}
         >
           <div className="max-w-3xl mx-auto">
             <motion.div
@@ -1505,15 +1276,15 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-4xl mb-3">🤠</div>
+              <div className="text-4xl mb-3">🧭</div>
               <h2
-                className="font-heading font-bold text-white"
-                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)" }}
+                className="font-heading font-bold"
+                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", color: DESERT_THEME.inkBrown }}
               >
-                Saddle Up Checklist
+                Expedition Checklist
               </h2>
-              <p className="text-sm text-[#d4a574]/70 font-body mt-1">
-                Tap each item to check it off — don&apos;t forget anything for Wild West!
+              <p className="text-sm font-body mt-1" style={{ color: `${DESERT_THEME.inkBrown}99` }}>
+                Tap each item to check it off — don&apos;t forget anything for Desert Discovery!
               </p>
             </motion.div>
 
@@ -1527,7 +1298,7 @@ export default function FieldDayFridayPage() {
                     onClick={() => togglePacking(i)}
                     className={`flex items-center gap-4 rounded-2xl px-5 py-4 shadow-sm border transition-all duration-200 cursor-pointer select-none ${
                       isChecked
-                        ? "bg-[#f5e6c8] border-[#c9a227] opacity-70"
+                        ? "bg-[#f5e6c8] border-[#C4603C] opacity-70"
                         : "bg-white border-[#f5e6c8] hover:shadow-md hover:-translate-y-0.5"
                     }`}
                     initial={{ opacity: 0, x: -12 }}
@@ -1541,10 +1312,10 @@ export default function FieldDayFridayPage() {
                       className="w-1 h-8 rounded-full flex-shrink-0 transition-all duration-300"
                       style={{
                         background: isChecked
-                          ? "#8b3a1a"
+                          ? "#C4603C"
                           : i % 2 === 0
-                          ? "#c9a227"
-                          : "#8b6914",
+                          ? "#E07A5F"
+                          : "#5C7A3A",
                       }}
                     />
                     <span className="text-2xl flex-shrink-0 transition-all duration-200">
@@ -1562,25 +1333,24 @@ export default function FieldDayFridayPage() {
               })}
             </div>
 
-            {/* Trail Readiness Progress Bar */}
+            {/* Expedition Ready Progress Bar */}
             <div className="mt-6 mb-2">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold text-[#d4a574] font-body uppercase tracking-wide">
-                  Trail Readiness
+                <span className="text-xs font-bold font-body uppercase tracking-wide" style={{ color: DESERT_THEME.inkBrown }}>
+                  Expedition Ready
                 </span>
-                <span className="text-xs text-[#d4a574]/60 font-body">
+                <span className="text-xs font-body" style={{ color: `${DESERT_THEME.inkBrown}99` }}>
                   {packingChecked.size} / {PACKING_LIST.length} packed
                 </span>
               </div>
               <div
-                className="relative w-full h-5 rounded-full overflow-visible"
-                style={{ background: "#2d1b0e" }}
+                className="relative w-full h-5 rounded-full overflow-visible bg-white/50"
               >
                 <div
                   className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{
                     width: `${(packingChecked.size / PACKING_LIST.length) * 100}%`,
-                    background: "linear-gradient(90deg, #8b3a1a 0%, #c9a227 50%, #d4a574 100%)",
+                    background: `linear-gradient(90deg, ${DESERT_THEME.terracotta} 0%, ${DESERT_THEME.duneDeep} 50%, ${DESERT_THEME.duneMid} 100%)`,
                     minWidth: packingChecked.size > 0 ? "20px" : "0px",
                   }}
                 />
@@ -1591,7 +1361,7 @@ export default function FieldDayFridayPage() {
                       left: `calc(${(packingChecked.size / PACKING_LIST.length) * 100}% - 12px)`,
                     }}
                   >
-                    🤠
+                    🌵
                   </span>
                 )}
               </div>
@@ -1600,24 +1370,25 @@ export default function FieldDayFridayPage() {
             <AnimatePresence>
               {packingChecked.size === PACKING_LIST.length && (
                 <motion.p
-                  className="text-center text-[#d4a574] text-sm font-body mt-5 font-semibold"
+                  className="text-center text-sm font-body mt-5 font-semibold"
+                  style={{ color: DESERT_THEME.inkBrown }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                 >
-                  🤠 All saddled up! See you at high noon.
+                  🌵 All packed! See you on the expedition.
                 </motion.p>
               )}
             </AnimatePresence>
 
-            <p className="text-sm text-[#d4a574]/50 font-body text-center mt-6">
+            <p className="text-sm font-body text-center mt-6" style={{ color: `${DESERT_THEME.inkBrown}80` }}>
               Questions? Text or call us: (512) 677-5872
             </p>
           </div>
         </section>
 
         {/* Wave before bottom CTA */}
-        <div style={{ background: "#3d2914", marginBottom: "-1px" }}>
+        <div style={{ background: DESERT_THEME.duneLight, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1627,7 +1398,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill="#2d1b0e"
+              fill={DESERT_THEME.duneMid}
             />
           </svg>
         </div>
@@ -1636,31 +1407,9 @@ export default function FieldDayFridayPage() {
         <section
           className="py-24 px-6 sm:px-12 lg:px-16 relative overflow-hidden"
           style={{
-            background:
-              "linear-gradient(160deg, #2d1b0e 0%, #3d2914 50%, #2d1b0e 100%)",
+            background: `linear-gradient(160deg, ${DESERT_THEME.duneMid} 0%, ${DESERT_THEME.duneDeep} 50%, ${DESERT_THEME.duneMid} 100%)`,
           }}
         >
-          {/* Decorative dust particles */}
-          {[
-            { top: "15%", left: "10%",  right: undefined, size: 4, delay: "0s"   },
-            { top: "70%", left: undefined, right: "12%",  size: 3, delay: "1.8s" },
-            { top: "40%", left: "4%",   right: undefined, size: 3, delay: "0.8s" },
-          ].map((f, i) => (
-            <div
-              key={i}
-              className="dust-drift absolute rounded-full pointer-events-none"
-              style={{
-                top: f.top,
-                left: f.left,
-                right: f.right,
-                width: f.size,
-                height: f.size,
-                background: "radial-gradient(circle, #d4a574 0%, #8b6914 60%, transparent 100%)",
-                animationDelay: f.delay,
-              }}
-            />
-          ))}
-
           <div className="max-w-2xl mx-auto text-center relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -1668,30 +1417,31 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="badge-gleam text-5xl mb-6 inline-block">🤠</div>
-              <div className="inline-block px-4 py-1.5 bg-white/20 rounded-full mb-6">
-                <span className="text-white/90 text-xs font-semibold font-body uppercase tracking-wider">
-                  This Friday Only · Sept 4
+              <div className="text-5xl mb-6 inline-block">🌵</div>
+              <div className="inline-block px-4 py-1.5 bg-white/60 rounded-full mb-6">
+                <span className="text-xs font-semibold font-body uppercase tracking-wider" style={{ color: DESERT_THEME.inkBrown }}>
+                  This Friday Only · Sept 18
                 </span>
               </div>
               <h2
-                className="font-heading font-bold text-white mb-4 leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
+                className="font-heading font-bold mb-4 leading-tight"
+                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: DESERT_THEME.inkBrown }}
               >
-                Don&apos;t miss Wild West.
+                Don&apos;t miss Desert Discovery.
               </h2>
-              <p className="text-white/80 font-body text-base mb-8 leading-relaxed max-w-md mx-auto">
-                September 4 is one day. Spots are limited. Reserve your child&apos;s
-                spot now and join us for wanted posters, sheriff badges,
-                stick horses, and The Great Robbery at Sage Field.
+              <p className="font-body text-base mb-8 leading-relaxed max-w-md mx-auto" style={{ color: `${DESERT_THEME.inkBrown}CC` }}>
+                September 18 is one day. Spots are limited. Reserve your child&apos;s
+                spot now and join us for a desert animal scavenger hunt, cactus
+                painting, desert bingo, and sand dune adventures at Sage Field.
               </p>
               <button
                 onClick={scrollToForm}
-                className="px-10 py-4 bg-white text-[#8b3a1a] font-bold rounded-2xl hover:bg-[#f5e6c8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
+                className="px-10 py-4 bg-white font-bold rounded-2xl hover:bg-[#FFF9F0] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
+                style={{ color: DESERT_THEME.terracotta }}
               >
                 {`Reserve Spot · $${FRIDAY_DROPIN_DOLLARS} →`}
               </button>
-              <p className="text-white/50 font-body text-xs mt-5">
+              <p className="font-body text-xs mt-5" style={{ color: `${DESERT_THEME.inkBrown}99` }}>
                 {`One Friday. $${FRIDAY_DROPIN_DOLLARS}. No commitment.`}
               </p>
             </motion.div>
@@ -1710,12 +1460,12 @@ export default function FieldDayFridayPage() {
           <div
             className="rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3"
             style={{
-              background: "linear-gradient(135deg, #c9a227 0%, #8b3a1a 100%)",
+              background: "linear-gradient(135deg, #E07A5F 0%, #C4603C 100%)",
             }}
           >
             <div>
               <p className="text-white font-heading font-bold text-sm leading-tight">
-                🤠 Wild West · Sept 4
+                🌵 Desert Discovery · Sept 18
               </p>
               <p className="text-white/80 font-body text-xs">
                 {`$${FRIDAY_DROPIN_DOLLARS} drop-in — limited spots`}
@@ -1723,7 +1473,7 @@ export default function FieldDayFridayPage() {
             </div>
             <button
               onClick={scrollToForm}
-              className="flex-shrink-0 bg-white text-[#8b3a1a] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#f5e6c8] transition-colors duration-200 cursor-pointer"
+              className="flex-shrink-0 bg-white text-[#C4603C] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#f5e6c8] transition-colors duration-200 cursor-pointer"
             >
               Reserve →
             </button>
@@ -1757,7 +1507,7 @@ export default function FieldDayFridayPage() {
                 <div className="flex-shrink-0 sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
                   <div>
                     <h2 className="text-base font-bold font-heading text-gray-800">
-                      Wild West Participant Agreement
+                      Desert Discovery Participant Agreement
                     </h2>
                     <p className="text-xs text-gray-400 font-body mt-0.5">
                       {agreementSigned ? "1" : "0"} of 1 sections signed
@@ -1780,7 +1530,7 @@ export default function FieldDayFridayPage() {
                         Sage Field Private Microschool
                       </p>
                       <p className="text-xs text-gray-500 font-body">
-                        Location: Round Rock, Texas · Wild West: September 4,
+                        Location: Round Rock, Texas · Desert Discovery: September 18,
                         2026
                       </p>
                     </div>
@@ -1834,7 +1584,7 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-3">
                       <AgreementSectionHeader title="1. Acknowledgment of Program Activities" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        I understand that my child is participating in a Wild West
+                        I understand that my child is participating in a Desert Discovery
                         Field Day at an outdoor education program where
                         children learn through active exploration, hands-on
                         experiences, and supervised outdoor activities.
@@ -1865,7 +1615,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="2. Assumption of Risk" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         I knowingly and voluntarily assume all risks associated
-                        with my child&apos;s participation in the Wild West
+                        with my child&apos;s participation in the Desert Discovery
                         Field Day, including but not limited to:
                       </p>
                       <ul className="flex flex-col gap-1.5">
@@ -1891,7 +1641,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="3. Release of Liability" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         In consideration of my child&apos;s participation in the
-                        Wild West Field Day, I release and hold harmless the
+                        Desert Discovery Field Day, I release and hold harmless the
                         School, its owners, directors, employees, contractors,
                         volunteers, agents, and representatives from any claims,
                         demands, causes of action, damages, losses, costs, or
@@ -2113,7 +1863,7 @@ export default function FieldDayFridayPage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <PenLine className="w-4 h-4 text-[#c9a227]" />
+                      <PenLine className="w-4 h-4 text-[#C4603C]" />
                       <span className="text-sm text-gray-500 font-body">
                         Signature required to continue
                       </span>

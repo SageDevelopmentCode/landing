@@ -1,23 +1,17 @@
 export default function WeeklySchedule() {
   const timeBlocks = [
     {
-      time: "Morning",
       label: "Core learning & foundational subjects",
       bgColor: "bg-primary/10",
-      textColor: "text-primary",
     },
     {
-      time: "Afternoon",
       label: "Enrichment block (STEAM, art, nature studies, movement)",
       bgColor: "bg-primary/20",
-      textColor: "text-primary",
     },
     {
-      time: "Extended Learning",
       label:
         "Structured academic support block that provides additional instruction, guided practice, and individualized support",
       bgColor: "bg-gray-50",
-      textColor: "text-gray-600",
     },
   ];
 
@@ -39,20 +33,7 @@ export default function WeeklySchedule() {
               key={blockIndex}
               className={`${block.bgColor} rounded-lg p-4 border-l-4 border-primary`}
             >
-              <div className="flex items-start gap-3">
-                <div className="min-w-[100px]">
-                  <span
-                    className={`text-sm font-semibold ${block.textColor} font-body`}
-                  >
-                    {block.time}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-text-gray font-body">
-                    {block.label}
-                  </p>
-                </div>
-              </div>
+              <p className="text-sm text-text-gray font-body">{block.label}</p>
             </div>
           ))}
         </div>
