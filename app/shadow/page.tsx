@@ -161,7 +161,6 @@ const WHO_ITS_FOR = [
 
 const PACKING_LIST = [
   { emoji: "🧴", item: "Sunscreen (applied before drop-off)" },
-  { emoji: "🩱", item: "Swimsuit + towel" },
   { emoji: "👕", item: "Change of clothes" },
   { emoji: "💧", item: "Water bottle, labeled" },
   { emoji: "🦟", item: "Bug spray" },
@@ -282,7 +281,7 @@ const SHADOW_FAQS = [
   {
     question: "What should my child bring?",
     answer:
-      "Comfortable clothes they can get dirty in, closed-toe shoes (they'll be outdoors), a swimsuit and towel, a water bottle, a packed lunch, sunscreen already applied, and bug spray. We'll confirm specifics when we confirm your booking.",
+      "Comfortable clothes they can get dirty in, closed-toe shoes (they'll be outdoors), a water bottle, a packed lunch, sunscreen already applied, and bug spray. We'll confirm specifics when we confirm your booking.",
     highlight: false,
   },
   {

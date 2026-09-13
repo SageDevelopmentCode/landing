@@ -76,7 +76,7 @@ const DonationsSection = () => {
               {/* Image */}
               <div className="relative h-[40vh] md:h-[50vh]">
                 <Image
-                  src="/assets/ImageTen.jpg"
+                  src="/assets/Stock7.jpg"
                   alt="Full Enrollment"
                   fill
                   className="object-cover"

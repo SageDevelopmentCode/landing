@@ -16,7 +16,7 @@ export default function FieldDayFridayCard() {
     >
       <div className="relative h-[30vh] md:h-[35vh]">
         <Image
-          src="/assets/ImageEight.jpg"
+          src="/assets/Stock11.jpg"
           alt="Fun Friday Activities"
           fill
           className="object-cover"

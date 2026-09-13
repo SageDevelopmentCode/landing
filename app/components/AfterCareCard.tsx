@@ -16,7 +16,7 @@ export default function AfterCareCard() {
     >
       <div className="relative h-[30vh] md:h-[35vh]">
         <Image
-          src="/assets/ImageSeven.jpg"
+          src="/assets/Stock5.jpg"
           alt="Extended Learning Program"
           fill
           className="object-cover"

@@ -11,7 +11,7 @@ export default function ContinuitySection() {
     {
       id: "structure",
       icon: "🏫",
-      image: "/assets/juliane-liebermann-hGNMJB7A33Q-unsplash.jpg",
+      image: "/assets/Kid1.png",
       title: "Familiar Structure",
       description: "Same daily rhythm & routines",
       outcome: "lower-stress",
@@ -19,7 +19,7 @@ export default function ContinuitySection() {
     {
       id: "friendships",
       icon: "👥",
-      image: "/assets/serap-butun-QpWDK7D2Q4Q-unsplash.jpg",
+      image: "/assets/Stock4.jpg",
       title: "Consistent Friendships",
       description: "Same peer community",
       outcome: "social-bonds",
@@ -27,7 +27,7 @@ export default function ContinuitySection() {
     {
       id: "educators",
       icon: "👨‍🏫",
-      image: "/assets/team/Paige.webp",
+      image: "/assets/Stock1.jpg",
       title: "Trusted Educators",
       description: "Same caring teachers",
       outcome: "emotional-safety",
@@ -35,7 +35,7 @@ export default function ContinuitySection() {
     {
       id: "rhythm",
       icon: "📚",
-      image: "/assets/vitolda-klein-OD1_HupXwxI-unsplash.jpg",
+      image: "/assets/Stock2.jpg",
       title: "Same Learning Flow",
       description: "Familiar learning approach",
       outcome: "confidence",

@@ -25,7 +25,11 @@ import WaitlistDialog from "./components/WaitlistDialog";
 import FloatingSMSButton from "./components/FloatingSMSButton";
 import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 import WeekRecapPreview from "./components/WeekRecapPreview";
-import { SCHOOL_YEAR_LATEST_CARD } from "@/app/lib/highlights/school-year-latest-preview";
+import WeekCardsGrid from "./components/WeekCardsGrid";
+import {
+  LIVE_SUMMER_WEEKS,
+  SCHOOL_YEAR_WEEKS,
+} from "@/app/lib/highlights/weeks";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
 
 const bebasNeue = Bebas_Neue({
@@ -45,8 +49,6 @@ interface LatestPost {
   published_at: string | null;
   cover_image_signed_url: string | null;
 }
-
-const PREVIEW_WEEKS = [SCHOOL_YEAR_LATEST_CARD];
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -575,53 +577,39 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-5 font-body">
-              School Year 2026–27
+              Highlights
             </span>
             <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
               See What Kids Are Doing Here
             </h2>
             <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
-              Our school year is underway — hands-on making, science investigations, and a Wild West Field Friday from week three.
+              Weekly recaps from our school year and summer programs — photos,
+              lessons, and memories from life at Sage Field.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 max-w-sm mx-auto gap-6 mb-8">
-            {PREVIEW_WEEKS.map((week, i) => (
-              <motion.div
-                key={week.week}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-              >
-                <Link
-                  href={week.href}
-                  className="group block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md hover:scale-[1.02] transition-all duration-200"
-                >
-                  <div className="relative w-full aspect-[4/3] bg-gray-100">
-                    <Image
-                      src={week.coverImage}
-                      alt={`Week ${week.week} — ${week.theme}`}
-                      fill
-                      className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                    <span className="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full font-body shadow-sm">
-                      Week {week.week} · Live
-                    </span>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-xs text-gray-400 font-body mb-1">{week.dates}</p>
-                    <h3 className="text-sm font-bold font-heading text-gray-800 leading-snug mb-2">
-                      {week.theme}
-                    </h3>
-                    <span className="text-xs font-semibold text-primary font-body group-hover:underline">
-                      View Recap →
-                    </span>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+          <div className="mb-12">
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold font-heading text-gray-800 mb-1">
+                School Year 2026–27
+              </h3>
+              <p className="text-sm text-gray-500 font-body">
+                Weekly recaps from our school year program.
+              </p>
+            </div>
+            <WeekCardsGrid weeks={SCHOOL_YEAR_WEEKS} sectionKey="home-school-year" />
+          </div>
+
+          <div className="mb-8">
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold font-heading text-gray-800 mb-1">
+                Summer 2026
+              </h3>
+              <p className="text-sm text-gray-500 font-body">
+                Weekly recaps from our summer program.
+              </p>
+            </div>
+            <WeekCardsGrid weeks={LIVE_SUMMER_WEEKS} sectionKey="home-summer" />
           </div>
 
           <motion.div
