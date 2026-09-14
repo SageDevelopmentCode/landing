@@ -113,6 +113,11 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     category: "schoolYear",
   },
   {
+    id: "school-year-week-four-newsletter",
+    label: "Send School Year Week Four Newsletter",
+    category: "schoolYear",
+  },
+  {
     id: "september-tuition-reminder-school-year",
     label: "Send September Tuition Reminder (School Year)",
     category: "schoolYear",

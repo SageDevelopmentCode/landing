@@ -34,7 +34,7 @@ Ask if not provided:
 | ----- | ------- | ----- |
 | Newsletter | UUID, "Week 2", title fragment | Same lookup as carousel skill |
 | Photo folder | `public/assets/highlights/school_week_two` | Must be under `public/assets/highlights/` |
-| Field Friday | theme + activities | Ask if not in newsletter DB |
+| Field Friday | theme + activities | Ask if not in newsletter DB. For live signup page + Stripe + homepage promo, use [friday-field-day-page](../friday-field-day-page/SKILL.md) |
 | Program | `school-year` (default) | Summer paths in [reference.md](reference.md) |
 
 ## Workflow
@@ -226,7 +226,7 @@ Same voice as [newsletter-carousel-highlights](../newsletter-carousel-highlights
 
 **No generic opener** explaining what Sage Field is — identity emerges from activities described.
 
-**Field Friday:** Dedicated section when user provides theme/activities or newsletter mentions Field Day Friday. Ask user if unknown.
+**Field Friday:** Dedicated section when user provides theme/activities or newsletter mentions Field Day Friday. Ask user if unknown. For the live `/friday` signup page, Stripe labels, and homepage promo, use [friday-field-day-page](../friday-field-day-page/SKILL.md).
 
 **Photo captions:** Short, specific, outcome-oriented (what students are doing + grade band or activity when visible).
 

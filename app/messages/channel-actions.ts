@@ -33,6 +33,21 @@ export type ChannelMessageRow = {
 
 const DONT_INCLUDE_TAG = "Don't Include";
 
+async function resolveEnrollmentUserId(
+  adminClient: ReturnType<typeof createAdminClient>,
+  userId: string
+): Promise<string> {
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", userId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return grant?.owner_id ?? userId;
+}
+
 async function isEligibleForDefaultChannel(
   adminClient: ReturnType<typeof createAdminClient>,
   userId: string
@@ -46,11 +61,13 @@ async function isEligibleForDefaultChannel(
 
   if (profile?.role !== "parent") return true;
 
+  const enrollmentUserId = await resolveEnrollmentUserId(adminClient, userId);
+
   const { data: enrolled } = await adminClient
     .schema("parent_app")
     .from("applications")
     .select("admin_tags")
-    .eq("user_id", userId)
+    .eq("user_id", enrollmentUserId)
     .eq("status", "enrolled");
 
   if (!enrolled?.length) return false;

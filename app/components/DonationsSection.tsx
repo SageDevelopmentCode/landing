@@ -157,25 +157,110 @@ const DonationsSection = () => {
                       </Link>
                     </div>
 
-                    <p className="text-xs text-text-gray italic font-body mt-3">
-                      For drop-in options, please email us at{" "}
-                      <a
-                        href="mailto:sabrina@sagefield.co"
-                        className="text-primary hover:underline"
-                      >
-                        sabrina@sagefield.co
-                      </a>
-                    </p>
                   </div>
                 </div>
               </div>
             </motion.div>
 
             {/* Package Cards Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
               <AfterCareCard />
               <FieldDayFridayCard />
             </div>
+
+            {/* Homeschool Drop-In Pricing */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
+              className="max-w-4xl mx-auto"
+            >
+              <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
+                Homeschool Drop-In
+              </span>
+              <h3 className="text-2xl md:text-3xl font-bold text-black font-heading mb-2">
+                Flexible Enrollment Options
+              </h3>
+              <p className="text-lg font-semibold text-primary font-heading mb-8">
+                Join our community 1-3 days/week
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                  <h4 className="text-base font-bold text-black font-heading mb-1">
+                    1 Day / Week
+                  </h4>
+                  <p className="text-xs text-gray-400 font-body mb-4">Part-Time</p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm font-body">
+                      <span className="text-gray-600">2nd–4th</span>
+                      <span className="font-semibold text-black">$440/mo</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-body">
+                      <span className="text-gray-600">Pre-K–1st</span>
+                      <span className="font-semibold text-black">$480/mo</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 font-body mt-auto">
+                    Attend one consistent day each week, paid monthly
+                  </p>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                  <h4 className="text-base font-bold text-black font-heading mb-1">
+                    2-Day/Week
+                  </h4>
+                  <p className="text-xs text-gray-400 font-body mb-4">Part-Time</p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm font-body">
+                      <span className="text-gray-600">2nd–4th</span>
+                      <span className="font-semibold text-black">$600/mo</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-body">
+                      <span className="text-gray-600">Pre-K–1st</span>
+                      <span className="font-semibold text-black">$640/mo</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col">
+                  <h4 className="text-base font-bold text-black font-heading mb-1">
+                    3-Day/Week
+                  </h4>
+                  <p className="text-xs text-gray-400 font-body mb-4">Part-Time</p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm font-body">
+                      <span className="text-gray-600">2nd–4th</span>
+                      <span className="font-semibold text-black">$850/mo</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-body">
+                      <span className="text-gray-600">Pre-K–1st</span>
+                      <span className="font-semibold text-black">$920/mo</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center mt-10">
+                <Link
+                  href="/apply"
+                  className="px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-center"
+                >
+                  Get Started
+                </Link>
+                <Link
+                  href="/homeschool"
+                  className="px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-primary hover:text-primary transition-colors duration-200 font-body text-center"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>

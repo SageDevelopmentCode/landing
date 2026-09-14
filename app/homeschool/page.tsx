@@ -642,11 +642,8 @@ export default function HomeschoolDropInPage() {
                 delay: 0.2,
                 ease: "easeOut" as const,
               }}
-              className="bg-white rounded-xl p-6 shadow-sm border border-primary/30 flex flex-col relative"
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex flex-col"
             >
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-xs font-semibold rounded-full">
-                Most Popular
-              </span>
               <h3 className="text-base font-bold text-black font-heading mb-1">
                 2-Day/Week
               </h3>

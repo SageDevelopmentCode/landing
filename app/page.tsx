@@ -25,6 +25,7 @@ import WaitlistDialog from "./components/WaitlistDialog";
 import FloatingSMSButton from "./components/FloatingSMSButton";
 import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 import WeekRecapPreview from "./components/WeekRecapPreview";
+import DesertHeroScene, { DESERT_THEME } from "./friday/components/DesertHeroScene";
 import WeekCardsGrid from "./components/WeekCardsGrid";
 import {
   LIVE_SUMMER_WEEKS,
@@ -175,92 +176,35 @@ export default function Home() {
 
       {/* ── Field Day Friday Preview ── */}
       <style>{`
-        @keyframes fdf-tumbleweed-roll {
-          0%, 100% { transform: rotate(-5deg) translateX(0); transform-origin: center center; }
-          50%       { transform: rotate(5deg) translateX(12px); transform-origin: center center; }
-        }
-        @keyframes fdf-dust-drift {
-          0%   { transform: translate(0, 0) scale(1);      opacity: 0.5; }
-          25%  { transform: translate(8px, -18px) scale(1.1); opacity: 0.8; }
-          50%  { transform: translate(-5px, -30px) scale(0.9); opacity: 0.3; }
-          75%  { transform: translate(12px, -14px) scale(1.05); opacity: 0.7; }
-          100% { transform: translate(0, 0) scale(1);      opacity: 0.5; }
-        }
-        @keyframes fdf-badge-gleam {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.5; }
-        }
         @keyframes fdf-letter-drop {
-          0%   { opacity: 0; transform: translateY(-24px) scale(0.85); filter: blur(4px); }
-          60%  { opacity: 1; transform: translateY(4px) scale(1.04); filter: blur(0); }
+          0%   { opacity: 0; transform: translateY(-16px) scale(0.92); filter: blur(3px); }
+          60%  { opacity: 1; transform: translateY(2px) scale(1.02); filter: blur(0); }
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
-        .fdf-wanted-headline {
-          color: #c9a227;
-          -webkit-text-stroke: 2px #2d1b0e;
-          paint-order: stroke fill;
-          text-shadow:
-            0 2px 0 #2d1b0e,
-            0 0 24px rgba(201, 162, 39, 0.2);
-        }
-        @media (max-width: 640px) {
-          .fdf-wanted-headline {
-            -webkit-text-stroke: 1.5px #2d1b0e;
-          }
+        .fdf-desert-headline {
+          color: ${DESERT_THEME.inkBrown};
+          text-shadow: 0 2px 16px rgba(255, 200, 140, 0.45);
         }
         .fdf-letter-drop span {
           display: inline-block;
           opacity: 0;
           animation: fdf-letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
-        .fdf-tumbleweed-roll { animation: fdf-tumbleweed-roll 8s ease-in-out infinite; }
-        .fdf-dust-drift  { animation: fdf-dust-drift 5s ease-in-out infinite; }
-        .fdf-badge-gleam { animation: fdf-badge-gleam 1.2s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .fdf-letter-drop span { animation: none !important; opacity: 1 !important; transform: none !important; }
+        }
       `}</style>
 
-      {/* Top wave: cream → dark */}
       <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill="#2d1b0e" />
+          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill={DESERT_THEME.skyPeach} />
         </svg>
       </div>
 
-      <section
-        className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16"
-        style={{ background: "linear-gradient(180deg, #2d1b0e 0%, #5c3d2e 40%, #2d1b0e 100%)" }}
-      >
-        {/* Left tumbleweed */}
-        <div className="fdf-tumbleweed-roll absolute bottom-0 left-4 sm:left-8 w-10 sm:w-14 pointer-events-none opacity-50" style={{ zIndex: 1 }}>
-          <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
-            <circle cx="24" cy="24" r="14" fill="none" stroke="#8b6914" strokeWidth="2" />
-            <line x1="24" y1="10" x2="24" y2="38" stroke="#8b6914" strokeWidth="1.5" />
-            <line x1="10" y1="24" x2="38" y2="24" stroke="#8b6914" strokeWidth="1.5" />
-          </svg>
-        </div>
+      <section className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16 min-h-[420px]">
+        <DesertHeroScene compact />
 
-        {/* Desert dust particles */}
-        {[
-          { top: "18%", right: "15%", size: 4, delay: "0s"   },
-          { top: "55%", right: "5%",  size: 3, delay: "1.2s" },
-          { top: "30%", right: "28%", size: 3, delay: "2.4s" },
-        ].map((f, i) => (
-          <div
-            key={i}
-            className="fdf-dust-drift absolute rounded-full pointer-events-none"
-            style={{
-              top: f.top,
-              right: f.right,
-              width: f.size,
-              height: f.size,
-              background: "radial-gradient(circle, #d4a574 0%, #8b6914 60%, transparent 100%)",
-              animationDelay: f.delay,
-              zIndex: 1,
-            }}
-          />
-        ))}
-
-        <div className="relative max-w-5xl mx-auto" style={{ zIndex: 2 }}>
-          {/* Urgency badge */}
+        <div className="relative max-w-5xl mx-auto z-10">
           <motion.div
             className="text-center mb-8"
             initial={{ opacity: 0, y: 20 }}
@@ -268,59 +212,58 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-[#d4a574] font-body uppercase tracking-wide">
-              🤠 This Friday · Sept 4 · Limited Spots
+            <span
+              className="inline-flex items-center gap-2 px-5 py-2 bg-white/80 backdrop-blur-sm border border-[#F2A65A]/40 rounded-full text-xs font-semibold font-body uppercase tracking-wide"
+              style={{ color: DESERT_THEME.inkBrown }}
+            >
+              This Friday · Sept 18 · Limited Spots
             </span>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            {/* Left — headline + CTA */}
             <motion.div
               initial={{ opacity: 0, x: -24 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
+              className="rounded-3xl border border-white/60 bg-white/75 backdrop-blur-md shadow-xl px-6 sm:px-8 py-8"
             >
-              <div className="fdf-badge-gleam text-4xl mb-4 inline-block">🤠</div>
               <h2
                 className="font-heading font-bold leading-tight mb-3"
                 style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
               >
                 <span
-                  className="block fdf-wanted-headline"
+                  className="block fdf-desert-headline"
                   style={{
                     fontFamily: "var(--font-bebas-neue), sans-serif",
                     letterSpacing: "0.04em",
                   }}
                 >
-                  Wild West
+                  Desert Discovery
                 </span>
-                <span className="fdf-letter-drop block">
-                  {Array.from("Field Day 🤠").map((ch, i) => (
-                    <span
-                      key={i}
-                      style={{ animationDelay: `${0.3 + i * 0.06}s`, color: "#c9a227" }}
-                    >
+                <span className="fdf-letter-drop block" style={{ color: DESERT_THEME.duneDeep }}>
+                  {Array.from("Field Day").map((ch, i) => (
+                    <span key={i} style={{ animationDelay: `${0.3 + i * 0.06}s` }}>
                       {ch === " " ? " " : ch}
                     </span>
                   ))}
                 </span>
               </h2>
-              <p className="text-stone-300 font-body text-base leading-relaxed mb-6 max-w-md">
-                One adventure-packed Friday at Sage Field. Design wanted posters, craft sheriff badges, build stick horses, and join The Great Robbery across the range!
+              <p className="font-body text-base leading-relaxed mb-6 max-w-md" style={{ color: DESERT_THEME.inkBrown }}>
+                One adventure-packed Friday at Sage Field. Track desert animals on a scavenger hunt, paint cactus masterpieces, play desert bingo, and sculpt sand dunes!
               </p>
 
-              {/* Event detail pills */}
               <div className="flex flex-wrap gap-2 mb-7">
                 {[
-                  { icon: "📅", text: "Sept 4, 2026" },
+                  { icon: "📅", text: "Sept 18, 2026" },
                   { icon: "🕗", text: "8:30 AM – 1:30 PM" },
                   { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} / child` },
                   { icon: "👧", text: "Ages 4–11" },
                 ].map((pill) => (
                   <span
                     key={pill.text}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-xs font-semibold text-white/90 font-body shadow-sm"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#F2A65A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
+                    style={{ color: DESERT_THEME.inkBrown }}
                   >
                     {pill.icon} {pill.text}
                   </span>
@@ -330,16 +273,15 @@ export default function Home() {
               <Link
                 href="/friday"
                 className="inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                style={{ background: "linear-gradient(135deg, #c9a227 0%, #8b3a1a 100%)" }}
+                style={{ background: `linear-gradient(135deg, ${DESERT_THEME.duneDeep} 0%, ${DESERT_THEME.terracotta} 100%)` }}
               >
-                🤠 Saddle Up & Reserve →
+                Join the Expedition →
               </Link>
-              <p className="text-xs text-[#d4a574] font-body mt-3">
+              <p className="text-xs font-body mt-3" style={{ color: DESERT_THEME.duneDeep }}>
                 No enrollment required · One-time drop-in
               </p>
             </motion.div>
 
-            {/* Right — activity cards */}
             <motion.div
               initial={{ opacity: 0, x: 24 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -348,14 +290,14 @@ export default function Home() {
             >
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { emoji: "📜", title: "Wanted Posters",    accent: "#f5e6c8" },
-                  { emoji: "⭐", title: "Sheriff Badges",    accent: "#fef3c7" },
-                  { emoji: "🐴", title: "Stick Horses",      accent: "#fff7ed" },
-                  { emoji: "💰", title: "The Great Robbery", accent: "#f0f9ff" },
+                  { emoji: "🦎", title: "Scavenger Hunt", accent: "#FFF9F0" },
+                  { emoji: "🌵", title: "Cactus Painting", accent: "#FFF9F0" },
+                  { emoji: "🎯", title: "Desert Bingo", accent: "#FFF9F0" },
+                  { emoji: "🏜️", title: "Sand Dune Adventures", accent: "#FFF9F0" },
                 ].map((act, i) => (
                   <motion.div
                     key={act.title}
-                    className="bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl p-4 flex flex-col items-center text-center gap-2"
+                    className="bg-white/85 backdrop-blur-sm border border-[#F2A65A]/30 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm"
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -367,26 +309,28 @@ export default function Home() {
                     >
                       {act.emoji}
                     </div>
-                    <p className="text-xs font-bold text-white font-body leading-tight">{act.title}</p>
+                    <p className="text-xs font-bold font-body leading-tight" style={{ color: DESERT_THEME.inkBrown }}>
+                      {act.title}
+                    </p>
                   </motion.div>
                 ))}
               </div>
               <motion.p
-                className="text-center text-xs text-[#d4a574] font-body mt-4"
+                className="text-center text-xs font-body mt-4"
+                style={{ color: DESERT_THEME.inkBrown }}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.45 }}
               >
-                All activities included · Take home your badge & creations!
+                All activities included · Take home your paintings & creations!
               </motion.p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Bottom wave: dark → cream */}
-      <div style={{ background: "#2d1b0e", marginBottom: "-1px" }}>
+      <div style={{ background: DESERT_THEME.skyPeach, marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
           <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
         </svg>

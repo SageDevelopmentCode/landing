@@ -11,7 +11,6 @@ import {
   BookOpen,
   Users,
   HelpCircle,
-  Eye,
   Sparkles,
   GraduationCap,
   School,
@@ -93,12 +92,6 @@ const NAV_TABS: NavTab[] = [
         action: { kind: "link", href: "/faq" },
         icon: HelpCircle,
         iconClass: "text-slate-400",
-      },
-      {
-        label: "Our Vision",
-        action: { kind: "link", href: "/vision" },
-        icon: Eye,
-        iconClass: "text-teal-500",
       },
       {
         label: "What We Offer",

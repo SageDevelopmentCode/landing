@@ -92,6 +92,8 @@ export default function ConversationListScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
+  const channelUserIdRef = useRef<string | null>(null);
+  const [channelUserId, setChannelUserId] = useState<string | null>(null);
   const [teachers, setTeachers] = useState<TeacherSuggestion[]>([]);
   const [startingConv, setStartingConv] = useState(false);
 
@@ -117,6 +119,10 @@ export default function ConversationListScreen() {
 
     const { data: { user } } = await supabase.auth.getUser();
     const messagingUserId = parentViewUserId ?? user?.id ?? null;
+    if (user?.id) {
+      channelUserIdRef.current = user.id;
+      setChannelUserId(user.id);
+    }
     if (messagingUserId) {
       setCurrentUserId(messagingUserId);
       currentUserIdRef.current = messagingUserId;
@@ -135,7 +141,7 @@ export default function ConversationListScreen() {
   }, [parentViewUserId, isReadOnlyPreview]);
 
   const loadChannelsList = useCallback(async (isRefresh = false) => {
-    const uid = currentUserIdRef.current;
+    const uid = channelUserIdRef.current;
     if (!uid) return;
     if (isRefresh) setChannelsRefreshing(true);
     else setChannelsLoading(true);
@@ -178,13 +184,13 @@ export default function ConversationListScreen() {
 
   useFocusEffect(useCallback(() => { loadDMs(); }, [loadDMs]));
 
-  // Load channels as soon as we have a user ID so the unread badge is available on the DM tab
+  // Load channels as soon as we have the auth user ID so the unread badge is available on the DM tab
   useEffect(() => {
-    if (currentUserId && !channelsLoadedRef.current) {
+    if (channelUserId && !channelsLoadedRef.current) {
       channelsLoadedRef.current = true;
       loadChannelsList();
     }
-  }, [currentUserId, loadChannelsList]);
+  }, [channelUserId, loadChannelsList]);
 
   // DM real-time subscription
   useEffect(() => {
@@ -228,7 +234,7 @@ export default function ConversationListScreen() {
 
   // Community tab real-time subscription
   useEffect(() => {
-    if (activeTab !== "community" || !currentUserId) return;
+    if (activeTab !== "community" || !channelUserId) return;
 
     const sub = supabase
       .channel("community-tab-updates")
@@ -248,7 +254,7 @@ export default function ConversationListScreen() {
                 ...ch,
                 lastMessage: { body: msg.body, created_at: msg.created_at, sender_id: msg.sender_id },
                 unreadCount:
-                  ch.isMember && msg.sender_id !== currentUserId
+                  ch.isMember && msg.sender_id !== channelUserId
                     ? ch.unreadCount + 1
                     : ch.unreadCount,
               };
@@ -259,7 +265,7 @@ export default function ConversationListScreen() {
       .subscribe();
 
     return () => { supabase.removeChannel(sub); };
-  }, [activeTab, currentUserId]);
+  }, [activeTab, channelUserId]);
 
   const filtered = searchQuery.trim()
     ? rows.filter((r) => r.otherUserName.toLowerCase().includes(searchQuery.toLowerCase()))

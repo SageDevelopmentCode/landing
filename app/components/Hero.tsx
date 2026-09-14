@@ -16,12 +16,12 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/highlights/school_week_three/CEF8BE2C-4D30-46C1-B160-A35398EECBA5.JPG",
-    title: "School Year Week 3 Highlights Are Live!",
+    image: "/assets/highlights/school_week_four/01C20017-202A-4B7C-ADA0-34086EC915F2.JPG",
+    title: "School Year Week 4 Highlights Are Live!",
     description:
-      "Homemade making, science investigations, pattern art, and a Wild West Field Friday to close the week.",
-    buttonLabel: "View Week 3 Recap →",
-    buttonHref: "/highlights/school-year/week-3",
+      "Chicken investigations, tornado engineering, Dot Day art, and a Dragons & Mythical Creatures Field Friday.",
+    buttonLabel: "View Week 4 Recap →",
+    buttonHref: "/highlights/school-year/week-4",
   },
   {
     image: "/assets/Stock4.jpg",
@@ -70,14 +70,6 @@ const slides = [
       "Montessori, Waldorf, and Reggio Emilia methods woven together with TEKS-aligned academics.",
     buttonLabel: "Our Philosophy",
     buttonHref: "/educational-philosophy",
-  },
-  {
-    image: "/assets/Kid1.png",
-    title: "Our Vision",
-    description:
-      "We've secured our LLC and our property. Come see what we're building for the children of Round Rock.",
-    buttonLabel: "See Our Vision",
-    buttonHref: "/vision",
   },
   {
     image: "/assets/Kid2.jpg",
