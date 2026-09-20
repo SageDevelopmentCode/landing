@@ -29,11 +29,13 @@ import * as Haptics from "expo-haptics";
 import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import type { Activity } from "@/lib/activities-actions";
 import {
+  ACTIVITY_PREF_BADGE_LABELS,
   ALLERGEN_DISCLAIMER,
   LEVEL_OPTIONS,
   LEVEL_SHORT_LABEL,
   buildInitialPrefsForActivity,
   fetchPreferencesForActivity,
+  getActivityPrefBadgeState,
   saveActivityPreferencesBatch,
   type ActivityPref,
   type ParticipationLevel,
@@ -119,6 +121,9 @@ export const ParentActivityPreferenceSheet = forwardRef<BottomSheetModal, Props>
     const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
     const [prefsByStudent, setPrefsByStudent] = useState<Record<string, ActivityPref>>({});
     const [savedStudentIds, setSavedStudentIds] = useState<Set<string>>(new Set());
+    const [defaultsByStudent, setDefaultsByStudent] = useState<
+      Record<string, ParticipationLevel>
+    >({});
     const [snapshotByStudent, setSnapshotByStudent] = useState<Record<string, ActivityPref>>({});
     const [expandedFoods, setExpandedFoods] = useState(false);
     const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -142,6 +147,7 @@ export const ParentActivityPreferenceSheet = forwardRef<BottomSheetModal, Props>
 
         setPrefsByStudent(prefs);
         setSavedStudentIds(initialSavedIds);
+        setDefaultsByStudent(defaultsByStudent);
         setSnapshotByStudent(snapshots);
         setSelectedChildId((prev) =>
           prev && studentIds.includes(prev) ? prev : studentIds[0] ?? null,
@@ -182,10 +188,14 @@ export const ParentActivityPreferenceSheet = forwardRef<BottomSheetModal, Props>
       ? (prefsByStudent[selectedChildId] ?? { level: null, notes: "" })
       : { level: null, notes: "" };
 
-    const isPreFilled =
-      !!selectedChildId &&
-      !savedStudentIds.has(selectedChildId) &&
-      currentPref.level !== null;
+    const badgeState = selectedChildId
+      ? getActivityPrefBadgeState(
+          currentPref,
+          snapshotByStudent[selectedChildId] ?? { level: null, notes: "" },
+          savedStudentIds.has(selectedChildId),
+          defaultsByStudent[selectedChildId] ?? null,
+        )
+      : "not_set";
 
     const hasUnsavedChanges = studentIds.some((id) => {
       const current = prefsByStudent[id] ?? { level: null, notes: "" };
@@ -207,7 +217,6 @@ export const ParentActivityPreferenceSheet = forwardRef<BottomSheetModal, Props>
       !!activity?.includes_food && (activity.foods?.length ?? 0) > 0;
 
     const setPref = (studentId: string, update: Partial<ActivityPref>) => {
-      setSavedStudentIds((prev) => new Set(prev).add(studentId));
       setPrefsByStudent((prev) => ({
         ...prev,
         [studentId]: {
@@ -411,28 +420,28 @@ export const ParentActivityPreferenceSheet = forwardRef<BottomSheetModal, Props>
                         <View
                           style={[
                             styles.statusBadge,
-                            currentPref.level === null
+                            badgeState === "not_set"
                               ? styles.statusBadgeUnset
-                              : isPreFilled
+                              : badgeState === "pre_filled"
                                 ? styles.statusBadgeDefault
-                                : styles.statusBadgeSaved,
+                                : badgeState === "selected"
+                                  ? styles.statusBadgeSelected
+                                  : styles.statusBadgeSaved,
                           ]}
                         >
                           <Text
                             style={[
                               styles.statusBadgeText,
-                              currentPref.level === null
+                              badgeState === "not_set"
                                 ? styles.statusBadgeTextUnset
-                                : isPreFilled
+                                : badgeState === "pre_filled"
                                   ? styles.statusBadgeTextDefault
-                                  : styles.statusBadgeTextSaved,
+                                  : badgeState === "selected"
+                                    ? styles.statusBadgeTextSelected
+                                    : styles.statusBadgeTextSaved,
                             ]}
                           >
-                            {currentPref.level === null
-                              ? "Not set"
-                              : isPreFilled
-                                ? "Pre-filled"
-                                : "Saved"}
+                            {ACTIVITY_PREF_BADGE_LABELS[badgeState]}
                           </Text>
                         </View>
                       </View>
@@ -509,6 +518,21 @@ export const ParentActivityPreferenceSheet = forwardRef<BottomSheetModal, Props>
                         onChangeText={(text) => setPref(selectedChildId, { notes: text })}
                         editable={!readOnly}
                       />
+                    ) : null}
+
+                    {canSave ? (
+                      <View style={styles.unsavedBanner}>
+                        <Ionicons
+                          name="information-circle-outline"
+                          size={16}
+                          color="#b45309"
+                        />
+                        <Text style={styles.unsavedBannerText}>
+                          {showFoods
+                            ? "Tap Save Preference below, then Confirm and Save on the review sheet."
+                            : "Tap Save Preference below to keep your selection."}
+                        </Text>
+                      </View>
                     ) : null}
 
                     {saveStatus === "error" ? (
@@ -697,6 +721,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${Brand.sage700}40`,
   },
+  statusBadgeSelected: {
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#fde68a",
+  },
   statusBadgeSaved: {
     backgroundColor: "#f0fdf4",
     borderWidth: 1,
@@ -708,7 +737,27 @@ const styles = StyleSheet.create({
   },
   statusBadgeTextUnset: { color: "#6b7280" },
   statusBadgeTextDefault: { color: Brand.sage700 },
+  statusBadgeTextSelected: { color: "#b45309" },
   statusBadgeTextSaved: { color: "#16a34a" },
+  unsavedBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  unsavedBannerText: {
+    flex: 1,
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#92400e",
+    lineHeight: 18,
+  },
   foodSection: { gap: 8 },
   foodToggle: {
     flexDirection: "row",

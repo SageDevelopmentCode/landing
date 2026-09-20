@@ -66,13 +66,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   getSchoolYearTuitionStudentIds,
   getTuitionActionSubtext,
-  needsConferenceScheduling,
   needsSchoolYearTuitionAction,
   type PaidSchoolYearByStudent,
 } from "@/lib/action-needed";
 import { fetchConferenceContext } from "@/lib/conference-actions";
 import {
-  getPtcBannerSubtext,
   type ConferenceBookingRecord,
   type ConferenceStudentContext,
   type ConferenceTeacherDisplay,
@@ -3369,22 +3367,11 @@ export default function HomeScreen() {
     }));
   }, [conferenceStudents, students]);
 
-  const showActionPtc =
-    ptcStudentsForBanner.length > 0 &&
-    needsConferenceScheduling(
-      ptcStudentsForBanner.map((s) => s.studentId),
-      conferenceBookingsByStudent,
-    );
   const showActionActivity = hasActivityForPaidDay;
-  const showActionNeededCard =
-    showActionTuition || showActionPtc || showActionActivity;
+  const showActionNeededCard = showActionTuition || showActionActivity;
   const tuitionActionSubtext = getTuitionActionSubtext(
     schoolYearTuitionStudentIds,
     paidSupplyFeeByStudent,
-  );
-  const ptcActionSubtext = getPtcBannerSubtext(
-    ptcStudentsForBanner,
-    conferenceBookingsByStudent,
   );
 
   return (
@@ -3471,42 +3458,6 @@ export default function HomeScreen() {
                           name="chevron-forward"
                           size={16}
                           color="#1e40af"
-                        />
-                      </Pressable>
-                    )}
-
-                    {showActionPtc && (
-                      <Pressable
-                        onPress={openPtcSheet}
-                        style={({ pressed }) => [
-                          actPrefStyles.row,
-                          actPrefStyles.rowPtc,
-                          pressed && { opacity: 0.85 },
-                        ]}
-                      >
-                        <Text style={actPrefStyles.rowEmoji}>📅</Text>
-                        <View style={actPrefStyles.rowBody}>
-                          <Text
-                            style={[
-                              actPrefStyles.rowTitle,
-                              actPrefStyles.rowTitlePtc,
-                            ]}
-                          >
-                            Schedule your parent-teacher conference
-                          </Text>
-                          <Text
-                            style={[
-                              actPrefStyles.rowSub,
-                              actPrefStyles.rowSubPtc,
-                            ]}
-                          >
-                            {ptcActionSubtext}
-                          </Text>
-                        </View>
-                        <Ionicons
-                          name="chevron-forward"
-                          size={16}
-                          color="#047857"
                         />
                       </Pressable>
                     )}
