@@ -39,5 +39,5 @@ export function getTuitionActionSubtext(
   );
   return anySupplyFeeUnpaid
     ? "Pay supply fee first"
-    : "Due Sept. 1 · Tap to pay now";
+    : "Due Oct. 1 · Tap to pay now";
 }

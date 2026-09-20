@@ -33,7 +33,9 @@ import {
 } from "@/components/SchoolDayFoodPreferencesSheet";
 import { computePaidDates, SUMMER_FIRST_DATE, SUMMER_LAST_DATE, type TxRow } from "@/lib/compute-paid-dates";
 import {
+  ACTIVITY_PREF_BADGE_LABELS,
   LEVEL_OPTIONS,
+  getActivityPrefBadgeState,
   type ParticipationLevel,
 } from "@/lib/activity-preferences";
 import { persistStudentDefaultPreference } from "@/lib/default-preferences";
@@ -296,6 +298,8 @@ export default function PreferencesScreen() {
   const canSave =
     hasUnsavedChanges && hasAnySelection && saveStatus !== "saving";
 
+  const hasUnsavedSelections = canSave;
+
   const renderConfirmBackdrop = useCallback(
     (props: React.ComponentProps<typeof BottomSheetBackdrop>) => (
       <BottomSheetBackdrop
@@ -491,7 +495,6 @@ export default function PreferencesScreen() {
 
   const setPref = (activityId: string, update: Partial<Pref>) => {
     if (!selectedChildId) return;
-    setSavedActivityIds((prev) => new Set(prev).add(activityId));
     setPreferences((prev) => ({
       ...prev,
       [selectedChildId]: {
@@ -880,9 +883,15 @@ export default function PreferencesScreen() {
           }
           renderItem={({ item: act }) => {
             const pref = preferences[selectedChildId ?? ""]?.[act.id] ?? { level: null, notes: "" };
+            const snapshot = savedSnapshot.current[act.id] ?? { level: null, notes: "" };
             const foodsExpanded = expandedFoods.has(act.id);
             const showFoods = act.includes_food && act.activity_foods.length > 0;
-            const isPreFilled = !savedActivityIds.has(act.id) && pref.level !== null;
+            const badgeState = getActivityPrefBadgeState(
+              pref,
+              snapshot,
+              savedActivityIds.has(act.id),
+              currentDefault,
+            );
             const selectedOption = LEVEL_OPTIONS.find((o) => o.level === pref.level);
 
             return (
@@ -916,24 +925,28 @@ export default function PreferencesScreen() {
                   <View
                     style={[
                       styles.cardBadge,
-                      pref.level === null
+                      badgeState === "not_set"
                         ? styles.cardBadgeUnset
-                        : isPreFilled
+                        : badgeState === "pre_filled"
                           ? styles.cardBadgeDefault
-                          : styles.cardBadgeSaved,
+                          : badgeState === "selected"
+                            ? styles.cardBadgeSelected
+                            : styles.cardBadgeSaved,
                     ]}
                   >
                     <Text
                       style={[
                         styles.cardBadgeText,
-                        pref.level === null
+                        badgeState === "not_set"
                           ? styles.cardBadgeTextUnset
-                          : isPreFilled
+                          : badgeState === "pre_filled"
                             ? styles.cardBadgeTextDefault
-                            : styles.cardBadgeTextSaved,
+                            : badgeState === "selected"
+                              ? styles.cardBadgeTextSelected
+                              : styles.cardBadgeTextSaved,
                       ]}
                     >
-                      {pref.level === null ? "Not set" : isPreFilled ? "Pre-filled" : "Saved"}
+                      {ACTIVITY_PREF_BADGE_LABELS[badgeState]}
                     </Text>
                   </View>
                 </View>
@@ -1015,6 +1028,16 @@ export default function PreferencesScreen() {
 
         {visibleActivities.length > 0 && (
           <View style={styles.footer}>
+            {hasUnsavedSelections ? (
+              <View style={styles.unsavedBanner}>
+                <Ionicons name="information-circle-outline" size={16} color="#b45309" />
+                <Text style={styles.unsavedBannerText}>
+                  {hasFoodActivities
+                    ? "Tap Save Preferences below, then Confirm and Save on the review sheet."
+                    : "Tap Save Preferences below to keep your selections."}
+                </Text>
+              </View>
+            ) : null}
             {saveStatus === "error" ? (
               <Text style={styles.saveErrorText}>Something went wrong. Please try again.</Text>
             ) : null}
@@ -1483,6 +1506,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${Brand.sage700}40`,
   },
+  cardBadgeSelected: {
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#fde68a",
+  },
   cardBadgeSaved: {
     backgroundColor: "#f0fdf4",
     borderWidth: 1,
@@ -1494,7 +1522,27 @@ const styles = StyleSheet.create({
   },
   cardBadgeTextUnset: { color: "#6b7280" },
   cardBadgeTextDefault: { color: Brand.sage700 },
+  cardBadgeTextSelected: { color: "#b45309" },
   cardBadgeTextSaved: { color: "#16a34a" },
+  unsavedBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  unsavedBannerText: {
+    flex: 1,
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#92400e",
+    lineHeight: 18,
+  },
 
   autoFillCard: {
     backgroundColor: "#f0f4f1",

@@ -40,6 +40,43 @@ export const LEVEL_SHORT_LABEL: Record<ParticipationLevel, string> = {
 export const ALLERGEN_DISCLAIMER =
   "I have reviewed the ingredients and allergens listed above. I understand and acknowledge that Sage Field is not responsible for any allergic reactions, dietary sensitivities, or adverse responses related to food items consumed during activities.";
 
+export type ActivityPrefBadgeState = "not_set" | "pre_filled" | "selected" | "saved";
+
+export const ACTIVITY_PREF_BADGE_LABELS: Record<ActivityPrefBadgeState, string> = {
+  not_set: "Not set",
+  pre_filled: "Pre-filled",
+  selected: "Selected",
+  saved: "Saved",
+};
+
+export function getActivityPrefBadgeState(
+  pref: ActivityPref,
+  snapshot: ActivityPref,
+  isPersistedInDb: boolean,
+  defaultLevel: ParticipationLevel | null,
+): ActivityPrefBadgeState {
+  if (pref.level === null) return "not_set";
+
+  const matchesSnapshot =
+    pref.level === snapshot.level && pref.notes === snapshot.notes;
+
+  if (matchesSnapshot && isPersistedInDb) return "saved";
+
+  if (
+    matchesSnapshot &&
+    !isPersistedInDb &&
+    defaultLevel !== null &&
+    pref.level === defaultLevel &&
+    pref.notes === ""
+  ) {
+    return "pre_filled";
+  }
+
+  if (!matchesSnapshot) return "selected";
+
+  return isPersistedInDb ? "saved" : "pre_filled";
+}
+
 export function buildInitialPrefsForActivity(
   studentIds: string[],
   savedByStudent: Record<string, ActivityPref>,
@@ -78,12 +115,31 @@ export type SaveActivityPrefEntry = {
 
 type ActivityRow = { id: string; activity_date: string | null };
 
+/** Summer program window — activities outside this range skip paid-date eligibility. */
+export const SUMMER_FIRST_DATE = "2026-05-26";
+export const SUMMER_LAST_DATE = "2026-08-14";
+
+function isActivityEligibleForStudent(
+  activityDate: string,
+  studentId: string,
+  paidSets: Record<string, Set<string>>,
+): boolean {
+  if (
+    activityDate < SUMMER_FIRST_DATE ||
+    activityDate > SUMMER_LAST_DATE
+  ) {
+    return true;
+  }
+  return paidSets[studentId]?.has(activityDate) ?? false;
+}
+
 export function computeHasUnsetActivityPreference(
   activities: ActivityRow[],
   activityPrefs: { student_id: string; activity_id: string }[],
   defaultPrefStudentIds: Set<string>,
   students: { id: string }[],
   paidSets: Record<string, Set<string>>,
+  today = new Date().toISOString().slice(0, 10),
 ): boolean {
   const prefSet = new Set(
     activityPrefs.map((p) => `${p.student_id}:${p.activity_id}`),
@@ -92,9 +148,10 @@ export function computeHasUnsetActivityPreference(
   return activities.some(
     (act) =>
       act.activity_date != null &&
+      act.activity_date >= today &&
       students.some(
         (s) =>
-          paidSets[s.id]?.has(act.activity_date!) &&
+          isActivityEligibleForStudent(act.activity_date!, s.id, paidSets) &&
           !defaultPrefStudentIds.has(s.id) &&
           !prefSet.has(`${s.id}:${act.id}`),
       ),
@@ -107,16 +164,17 @@ export function findFirstUnsetActivity(
   defaultPrefStudentIds: Set<string>,
   students: { id: string }[],
   paidSets: Record<string, Set<string>>,
+  today = new Date().toISOString().slice(0, 10),
 ): string | null {
   const prefSet = new Set(
     activityPrefs.map((p) => `${p.student_id}:${p.activity_id}`),
   );
 
   for (const act of activities) {
-    if (act.activity_date == null) continue;
+    if (act.activity_date == null || act.activity_date < today) continue;
     const needsPref = students.some(
       (s) =>
-        paidSets[s.id]?.has(act.activity_date!) &&
+        isActivityEligibleForStudent(act.activity_date!, s.id, paidSets) &&
         !defaultPrefStudentIds.has(s.id) &&
         !prefSet.has(`${s.id}:${act.id}`),
     );
@@ -125,10 +183,6 @@ export function findFirstUnsetActivity(
 
   return null;
 }
-
-/** Summer program window — activities outside this range skip paid-date eligibility. */
-export const SUMMER_FIRST_DATE = "2026-05-26";
-export const SUMMER_LAST_DATE = "2026-08-14";
 
 /** Matches filterVisibleActivities: school-year dates bypass paid-day check. */
 export function childHasVisibleUpcomingActivity(

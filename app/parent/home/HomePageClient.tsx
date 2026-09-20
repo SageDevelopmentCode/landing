@@ -1169,18 +1169,12 @@ export default function HomePageClient({
               readOnly={readOnlyPreview}
             />
             <ActionNeededCard
-              parentId={parentId}
               hasActivityForPaidDay={hasActivityForPaidDayLive}
               onOpenActivityPrefs={() => openActivityPreferenceSheet()}
               schoolYearOnlyApps={schoolYearOnlyApps}
               summerEnrollments={summerEnrollments}
               paidSchoolYearByStudent={paidSchoolYearByStudent}
               paidSupplyFeeByStudent={paidSupplyFeeByStudent}
-              conferenceTeachers={conferenceTeachers}
-              conferenceStudents={conferenceStudents}
-              conferenceBookingsByStudent={conferenceBookingsByStudent}
-              conferenceTakenSlotKeys={conferenceTakenSlotKeys}
-              readOnly={readOnlyPreview}
             />
           </div>
 

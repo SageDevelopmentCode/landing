@@ -338,7 +338,7 @@ async function seedDashboardGrant(ownerId, granteeId, granteeEmail) {
   }
 }
 
-async function seedConferenceTeacherAssignment() {
+async function seedConferenceTeacherAssignment(parentId) {
   const { error: clearError } = await db
     .schema('teachers')
     .from('parent_teacher_conference_bookings')
@@ -346,6 +346,24 @@ async function seedConferenceTeacherAssignment() {
     .in('student_id', [E2E_ENROLLED_STUDENT_ID, E2E_GRANT_CHILD_ID])
   if (clearError) {
     throw new Error(`conference booking clear failed: ${clearError.message}`)
+  }
+
+  const { error: bookingError } = await db
+    .schema('teachers')
+    .from('parent_teacher_conference_bookings')
+    .insert({
+      parent_id: parentId,
+      student_id: E2E_ENROLLED_STUDENT_ID,
+      teacher_id: E2E_CONFERENCE_TEACHER_ID,
+      season: 'school_year_26_27',
+      week_start: '2026-08-24',
+      conference_date: '2026-08-24',
+      time_slot: '3:10 – 3:40pm',
+      format: 'in_person',
+      status: 'confirmed',
+    })
+  if (bookingError) {
+    throw new Error(`conference booking seed failed: ${bookingError.message}`)
   }
 
   const { error } = await db.schema('teachers').from('teacher_students').upsert([
@@ -381,7 +399,9 @@ async function main() {
   )
   await seedConferenceTeachers()
   await seedTeacherIdCards()
-  await seedConferenceTeacherAssignment()
+  await seedConferenceTeacherAssignment(
+    userIds['parent-enrolled@e2e.sagefield.test'],
+  )
   console.log('E2E seed complete (local Supabase only)')
 }
 
