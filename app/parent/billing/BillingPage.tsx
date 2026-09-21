@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Receipt,
@@ -73,7 +73,7 @@ import {
   FUN_FRIDAY_DROPIN_CENTS,
   FUN_FRIDAY_MONTHLY_CENTS,
   FUN_FRIDAY_SESSION_MONTHLY_CENTS,
-  HOMESCHOOL_SCHOOL_YEAR_PRICING,
+  getHomeschoolSchoolYearPricing,
   HOMESCHOOL_TIERS,
   type HomeschoolTier,
   SCHOOL_YEAR_AFTERCARE_MONTHS,
@@ -1065,6 +1065,7 @@ function HomeschoolSchoolYearModal({
   siblingStudentMap?: Record<string, StudentInfo>;
 }) {
   const gradeTier = getGradeTier(app.child_grade);
+  const pricing = getHomeschoolSchoolYearPricing(app.use_updated_homeschool_pricing);
   const [selectedTier, setSelectedTier] = useState<HomeschoolTier | null>(null);
   const [selectedMonthIndices, setSelectedMonthIndices] = useState<Set<number>>(
     new Set(),
@@ -1112,7 +1113,7 @@ function HomeschoolSchoolYearModal({
 
   const unitCount = selectedMonthIndices.size;
   const pricePerUnit = selectedTier
-    ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][gradeTier]
+    ? pricing[selectedTier][gradeTier]
     : 0;
   const baseAmountCents = pricePerUnit * unitCount;
 
@@ -1193,9 +1194,11 @@ function HomeschoolSchoolYearModal({
                   .sort((a, b) => a - b);
             const sibDays = Array.from(selectedWeekdays);
             const tier = selectedTier;
+            const sibPricing = getHomeschoolSchoolYearPricing(
+              sib.use_updated_homeschool_pricing,
+            );
             const sibAmount =
-              HOMESCHOOL_SCHOOL_YEAR_PRICING[tier][sibGradeTier] *
-              sibMonths.length;
+              sibPricing[tier][sibGradeTier] * sibMonths.length;
             const weekSelectionsJson = JSON.stringify(
               sibMonths.map((w) => ({ week: w, days: sibDays })),
             );
@@ -1361,8 +1364,7 @@ function HomeschoolSchoolYearModal({
                 </div>
                 <div className="space-y-2">
                   {HOMESCHOOL_TIERS.map((tier) => {
-                    const price =
-                      HOMESCHOOL_SCHOOL_YEAR_PRICING[tier.key][gradeTier];
+                    const price = pricing[tier.key][gradeTier];
                     const isSelected = selectedTier === tier.key;
                     return (
                       <button
@@ -1616,11 +1618,12 @@ function HomeschoolSchoolYearModal({
                       : Array.from(selectedMonthIndices)
                           .filter((m) => !paidMonths.has(m))
                           .sort((a, b) => a - b);
+                    const sibPricing = getHomeschoolSchoolYearPricing(
+                      sib.use_updated_homeschool_pricing,
+                    );
                     const sibAmount =
                       selectedTier
-                        ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][
-                            sibGradeTier
-                          ] * sibMonths.length
+                        ? sibPricing[selectedTier][sibGradeTier] * sibMonths.length
                         : 0;
                     const sibName =
                       siblingStudentMap[sib.student_id]?.name ?? "Sibling";
@@ -2709,6 +2712,7 @@ function SupplyFeeModal({
   siblingStudents,
   applicationId,
   paidHomeschoolByStudent = {},
+  homeschoolPricingByStudentId = {},
 }: {
   studentId: string;
   studentName: string | null;
@@ -2728,6 +2732,7 @@ function SupplyFeeModal({
   }>;
   applicationId?: string;
   paidHomeschoolByStudent?: PaidHomeschoolByStudent;
+  homeschoolPricingByStudentId?: Record<string, boolean>;
 }) {
   const hasSiblings = siblingStudents && siblingStudents.length > 0;
   const allStudents = hasSiblings
@@ -2782,8 +2787,11 @@ function SupplyFeeModal({
   const [selectedWeekdays, setSelectedWeekdays] = useState<Set<string>>(new Set());
 
   const homeschoolGradeTier = getGradeTier(childGrade);
+  const primaryHomeschoolPricing = getHomeschoolSchoolYearPricing(
+    homeschoolPricingByStudentId[studentId] ?? false,
+  );
   const dropinPricePerDay = selectedTier
-    ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][homeschoolGradeTier]
+    ? primaryHomeschoolPricing[selectedTier][homeschoolGradeTier]
     : 0;
   const dropinUnitCount = selectedMonthIndices.size;
   const homeschoolBundleCents =
@@ -2809,11 +2817,16 @@ function SupplyFeeModal({
     return getGradeTier(grade) === "primary" ? 119500 : 109500;
   };
 
-  const getHomeschoolBundleCents = (grade: string | null) => {
+  const getHomeschoolBundleCents = (
+    grade: string | null,
+    sid: string = studentId,
+  ) => {
     if (!selectedTier || dropinUnitCount < 1) return 0;
+    const studentPricing = getHomeschoolSchoolYearPricing(
+      homeschoolPricingByStudentId[sid] ?? false,
+    );
     return (
-      HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][getGradeTier(grade)] *
-      dropinUnitCount
+      studentPricing[selectedTier][getGradeTier(grade)] * dropinUnitCount
     );
   };
 
@@ -2838,7 +2851,10 @@ function SupplyFeeModal({
       );
     const homeschoolBundleTotal = allStudents
       .filter((s) => selectedHomeschoolBundleIds.has(s.studentId))
-      .reduce((sum, s) => sum + getHomeschoolBundleCents(s.childGrade), 0);
+      .reduce(
+        (sum, s) => sum + getHomeschoolBundleCents(s.childGrade, s.studentId),
+        0,
+      );
     BASE_CENTS = supplyTotal + schoolYearBundleTotal + homeschoolBundleTotal;
   } else {
     const bundleAmountCents =
@@ -2934,7 +2950,7 @@ function SupplyFeeModal({
               (s) => s.studentId,
             );
             body.siblingHomeschoolBundleAmounts = hsSiblingBundles.map((s) =>
-              getHomeschoolBundleCents(s.childGrade),
+              getHomeschoolBundleCents(s.childGrade, s.studentId),
             );
             body.siblingHomeschoolApplicationIds = hsSiblingBundles.map(
               (s) => s.applicationId ?? "",
@@ -3073,9 +3089,7 @@ function SupplyFeeModal({
                 <div className="space-y-2">
                   {HOMESCHOOL_TIERS.map((tier) => {
                     const price =
-                      HOMESCHOOL_SCHOOL_YEAR_PRICING[tier.key][
-                        homeschoolGradeTier
-                      ];
+                      primaryHomeschoolPricing[tier.key][homeschoolGradeTier];
                     const isSelected = selectedTier === tier.key;
                     const unitSuffix = "/mo";
                     return (
@@ -3403,6 +3417,7 @@ function SupplyFeeModal({
                                   : "Child";
                                 const amt = getHomeschoolBundleCents(
                                   s.childGrade,
+                                  s.studentId,
                                 );
                                 const checked = selectedHomeschoolBundleIds.has(
                                   s.studentId,
@@ -9545,6 +9560,17 @@ export default function BillingPage({
 
   const nonEnrolledMap = new Map(nonEnrolledApps.map((a) => [a.student_id, a]));
 
+  const homeschoolPricingByStudentId = useMemo(
+    () =>
+      Object.fromEntries(
+        homeschoolDropInApps.map((a) => [
+          a.student_id,
+          a.use_updated_homeschool_pricing,
+        ]),
+      ),
+    [homeschoolDropInApps],
+  );
+
   const studentProgramMap = new Map<string, string>();
   for (const e of summerEnrollments) {
     if (e.program) studentProgramMap.set(e.student_id, e.program);
@@ -10795,6 +10821,7 @@ export default function BillingPage({
             siblingStudents={supplyFeeTarget.siblingStudents}
             applicationId={supplyFeeTarget.applicationId}
             paidHomeschoolByStudent={paidHomeschoolByStudent}
+            homeschoolPricingByStudentId={homeschoolPricingByStudentId}
           />
         )}
         {schoolYearTuitionTarget && (

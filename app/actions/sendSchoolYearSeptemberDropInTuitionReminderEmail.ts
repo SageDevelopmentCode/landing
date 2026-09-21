@@ -8,6 +8,7 @@ export async function sendSchoolYearSeptemberDropInTuitionReminderEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
   email: string;
+  useUpdatedHomeschoolPricing?: boolean;
 }): Promise<{ success: boolean; error?: string }> {
   const { subject, content } =
     await buildSchoolYearSeptemberDropInTuitionReminderEmail(opts);

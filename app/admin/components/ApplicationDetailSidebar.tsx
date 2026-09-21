@@ -72,6 +72,7 @@ import { PaymentHistory } from './PaymentHistory'
 import { updateApplicationProgram } from '../../actions/updateApplicationProgram'
 import { updateApplicationTags } from '../../actions/updateApplicationTags'
 import { updateApplicationDropInProgram } from '../../actions/updateApplicationDropInProgram'
+import { updateApplicationHomeschoolPricing } from '../../actions/updateApplicationHomeschoolPricing'
 import { PRESET_TAGS } from '../constants/applicationTags'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
@@ -158,6 +159,7 @@ type Application = {
   student_id: string | null
   admin_notes: string | null
   admin_tags: string[] | null
+  use_updated_homeschool_pricing?: boolean | null
   status: string
   approved: boolean
   approved_at: string | null
@@ -179,6 +181,7 @@ interface ApplicationDetailSidebarProps {
   onEnrolled: (id: string) => void
   onProgramChanged?: (id: string, program: string) => void
   onDropInChanged?: (id: string, dropInProgram: string) => void
+  onHomeschoolPricingChanged?: (id: string, useUpdated: boolean) => void
   onTagsChanged?: (id: string, tags: string[]) => void
 }
 
@@ -194,6 +197,7 @@ export function ApplicationDetailSidebar({
   onEnrolled,
   onProgramChanged,
   onDropInChanged,
+  onHomeschoolPricingChanged,
   onTagsChanged,
 }: ApplicationDetailSidebarProps) {
   const [notes, setNotes] = useState<{ id: string; content: string; created_at: string }[]>([])
@@ -351,6 +355,21 @@ export function ApplicationDetailSidebar({
   const [homeschoolDropInClarificationSending, setHomeschoolDropInClarificationSending] = useState(false)
   const [homeschoolDropInClarificationSent, setHomeschoolDropInClarificationSent] = useState(false)
   const [homeschoolDropInClarificationError, setHomeschoolDropInClarificationError] = useState<string | null>(null)
+  const [homeschoolDropInClarificationUpdatedSending, setHomeschoolDropInClarificationUpdatedSending] = useState(false)
+  const [homeschoolDropInClarificationUpdatedSent, setHomeschoolDropInClarificationUpdatedSent] = useState(false)
+  const [homeschoolDropInClarificationUpdatedError, setHomeschoolDropInClarificationUpdatedError] = useState<string | null>(null)
+  const [schoolYearTuitionInfoUpdatedSending, setSchoolYearTuitionInfoUpdatedSending] = useState(false)
+  const [schoolYearTuitionInfoUpdatedSent, setSchoolYearTuitionInfoUpdatedSent] = useState(false)
+  const [schoolYearTuitionInfoUpdatedError, setSchoolYearTuitionInfoUpdatedError] = useState<string | null>(null)
+  const [schoolYearTuitionClarificationUpdatedSending, setSchoolYearTuitionClarificationUpdatedSending] = useState(false)
+  const [schoolYearTuitionClarificationUpdatedSent, setSchoolYearTuitionClarificationUpdatedSent] = useState(false)
+  const [schoolYearTuitionClarificationUpdatedError, setSchoolYearTuitionClarificationUpdatedError] = useState<string | null>(null)
+  const [homeschoolDropInTuitionReminderUpdatedSending, setHomeschoolDropInTuitionReminderUpdatedSending] = useState(false)
+  const [homeschoolDropInTuitionReminderUpdatedSent, setHomeschoolDropInTuitionReminderUpdatedSent] = useState(false)
+  const [homeschoolDropInTuitionReminderUpdatedError, setHomeschoolDropInTuitionReminderUpdatedError] = useState<string | null>(null)
+  const [schoolYearSeptemberDropInTuitionReminderUpdatedSending, setSchoolYearSeptemberDropInTuitionReminderUpdatedSending] = useState(false)
+  const [schoolYearSeptemberDropInTuitionReminderUpdatedSent, setSchoolYearSeptemberDropInTuitionReminderUpdatedSent] = useState(false)
+  const [schoolYearSeptemberDropInTuitionReminderUpdatedError, setSchoolYearSeptemberDropInTuitionReminderUpdatedError] = useState<string | null>(null)
   const [activityPrefReminderSending, setActivityPrefReminderSending] = useState(false)
   const [activityPrefReminderSent, setActivityPrefReminderSent] = useState(false)
   const [activityPrefReminderError, setActivityPrefReminderError] = useState<string | null>(null)
@@ -375,6 +394,8 @@ export function ApplicationDetailSidebar({
   const [selectedDropIn, setSelectedDropIn] = useState<string>(application?.drop_in_program ?? '')
   const [isUpdatingDropIn, setIsUpdatingDropIn] = useState(false)
   const [dropInUpdateError, setDropInUpdateError] = useState<string | null>(null)
+  const [isUpdatingHomeschoolPricing, setIsUpdatingHomeschoolPricing] = useState(false)
+  const [homeschoolPricingUpdateError, setHomeschoolPricingUpdateError] = useState<string | null>(null)
 
   const [healthForms, setHealthForms] = useState<FileObject[]>([])
   const [isLoadingHealthForms, setIsLoadingHealthForms] = useState(false)
@@ -656,6 +677,19 @@ export function ApplicationDetailSidebar({
       onDropInChanged?.(application.id, selectedDropIn)
     } else {
       setDropInUpdateError(result.error ?? 'Failed to update drop-in program')
+    }
+  }
+
+  const handleHomeschoolPricingToggle = async () => {
+    const nextValue = !application.use_updated_homeschool_pricing
+    setIsUpdatingHomeschoolPricing(true)
+    setHomeschoolPricingUpdateError(null)
+    const result = await updateApplicationHomeschoolPricing(application.id, nextValue)
+    setIsUpdatingHomeschoolPricing(false)
+    if (result.success) {
+      onHomeschoolPricingChanged?.(application.id, nextValue)
+    } else {
+      setHomeschoolPricingUpdateError(result.error ?? 'Failed to update pricing')
     }
   }
 
@@ -1160,6 +1194,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendSchoolYearTuitionInfoUpdated = async () => {
+    if (schoolYearTuitionInfoUpdatedSending || !application.g1_email) return
+    setSchoolYearTuitionInfoUpdatedSending(true)
+    setSchoolYearTuitionInfoUpdatedError(null)
+    const result = await sendSchoolYearTuitionInfoEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      useUpdatedHomeschoolPricing: true,
+    })
+    setSchoolYearTuitionInfoUpdatedSending(false)
+    if (result.success) {
+      setSchoolYearTuitionInfoUpdatedSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearTuitionInfoUpdatedError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendHomeschoolDropInClarification = async () => {
     if (homeschoolDropInClarificationSending || !application.g1_email) return
     setHomeschoolDropInClarificationSending(true)
@@ -1178,6 +1231,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendHomeschoolDropInClarificationUpdated = async () => {
+    if (homeschoolDropInClarificationUpdatedSending || !application.g1_email) return
+    setHomeschoolDropInClarificationUpdatedSending(true)
+    setHomeschoolDropInClarificationUpdatedError(null)
+    const result = await sendHomeschoolDropInClarificationEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      useUpdatedHomeschoolPricing: true,
+    })
+    setHomeschoolDropInClarificationUpdatedSending(false)
+    if (result.success) {
+      setHomeschoolDropInClarificationUpdatedSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setHomeschoolDropInClarificationUpdatedError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendSchoolYearTuitionClarification = async () => {
     if (schoolYearTuitionClarificationSending || !application.g1_email) return
     setSchoolYearTuitionClarificationSending(true)
@@ -1193,6 +1265,25 @@ export function ApplicationDetailSidebar({
       setEmailThreadKey(k => k + 1)
     } else {
       setSchoolYearTuitionClarificationError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearTuitionClarificationUpdated = async () => {
+    if (schoolYearTuitionClarificationUpdatedSending || !application.g1_email) return
+    setSchoolYearTuitionClarificationUpdatedSending(true)
+    setSchoolYearTuitionClarificationUpdatedError(null)
+    const result = await sendSchoolYearTuitionClarificationEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      useUpdatedHomeschoolPricing: true,
+    })
+    setSchoolYearTuitionClarificationUpdatedSending(false)
+    if (result.success) {
+      setSchoolYearTuitionClarificationUpdatedSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearTuitionClarificationUpdatedError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1250,6 +1341,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendSchoolYearSeptemberDropInTuitionReminderUpdated = async () => {
+    if (schoolYearSeptemberDropInTuitionReminderUpdatedSending || !application.g1_email) return
+    setSchoolYearSeptemberDropInTuitionReminderUpdatedSending(true)
+    setSchoolYearSeptemberDropInTuitionReminderUpdatedError(null)
+    const result = await sendSchoolYearSeptemberDropInTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      useUpdatedHomeschoolPricing: true,
+    })
+    setSchoolYearSeptemberDropInTuitionReminderUpdatedSending(false)
+    if (result.success) {
+      setSchoolYearSeptemberDropInTuitionReminderUpdatedSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearSeptemberDropInTuitionReminderUpdatedError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendLaborDayReminder = async () => {
     if (laborDayReminderSending || !application.g1_email) return
     setLaborDayReminderSending(true)
@@ -1301,6 +1411,25 @@ export function ApplicationDetailSidebar({
       setEmailThreadKey(k => k + 1)
     } else {
       setHomeschoolDropInTuitionReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendHomeschoolDropInTuitionReminderUpdated = async () => {
+    if (homeschoolDropInTuitionReminderUpdatedSending || !application.g1_email) return
+    setHomeschoolDropInTuitionReminderUpdatedSending(true)
+    setHomeschoolDropInTuitionReminderUpdatedError(null)
+    const result = await sendHomeschoolDropInTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      useUpdatedHomeschoolPricing: true,
+    })
+    setHomeschoolDropInTuitionReminderUpdatedSending(false)
+    if (result.success) {
+      setHomeschoolDropInTuitionReminderUpdatedSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setHomeschoolDropInTuitionReminderUpdatedError(result.error ?? 'Failed to send')
     }
   }
 
@@ -1774,6 +1903,30 @@ export function ApplicationDetailSidebar({
                   </div>
                 </div>
               )}
+              <div className="flex flex-col gap-1.5 pt-1">
+                <span className="text-xs text-gray-500">
+                  School-year pricing:{' '}
+                  <span className="font-semibold text-gray-700">
+                    {application.use_updated_homeschool_pricing
+                      ? 'Updated (tuition page)'
+                      : 'Founding family'}
+                  </span>
+                </span>
+                <button
+                  onClick={handleHomeschoolPricingToggle}
+                  disabled={isUpdatingHomeschoolPricing}
+                  className="self-start text-xs text-[#2C5F2E] border border-[#2C5F2E]/30 rounded-lg px-2.5 py-1 hover:bg-[#2C5F2E]/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUpdatingHomeschoolPricing
+                    ? 'Saving…'
+                    : application.use_updated_homeschool_pricing
+                      ? 'Revert to founding pricing'
+                      : 'Use updated homeschool pricing'}
+                </button>
+                {homeschoolPricingUpdateError && (
+                  <span className="text-xs text-red-600">{homeschoolPricingUpdateError}</span>
+                )}
+              </div>
             </div>
           )}
           <div className="flex flex-col gap-2">
@@ -2199,9 +2352,20 @@ export function ApplicationDetailSidebar({
                       className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
                     >
-                      {homeschoolDropInClarificationSending ? 'Sending…' : homeschoolDropInClarificationSent ? '✓ Sent!' : 'Send Drop-In Clarification'}
+                      {homeschoolDropInClarificationSending ? 'Sending…' : homeschoolDropInClarificationSent ? '✓ Sent!' : 'Send Drop-In Clarification (Founding Rate)'}
                     </button>
                     {homeschoolDropInClarificationError && <span className="text-xs text-red-600">{homeschoolDropInClarificationError}</span>}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSendHomeschoolDropInClarificationUpdated}
+                      disabled={homeschoolDropInClarificationUpdatedSending || homeschoolDropInClarificationUpdatedSent}
+                      className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                    >
+                      {homeschoolDropInClarificationUpdatedSending ? 'Sending…' : homeschoolDropInClarificationUpdatedSent ? '✓ Sent!' : 'Send Drop-In Clarification (Updated Rate)'}
+                    </button>
+                    {homeschoolDropInClarificationUpdatedError && <span className="text-xs text-red-600">{homeschoolDropInClarificationUpdatedError}</span>}
                   </div>
                 </>)}
               </>}
@@ -2497,9 +2661,20 @@ export function ApplicationDetailSidebar({
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
                   >
-                    {schoolYearSeptemberDropInTuitionReminderSending ? 'Sending…' : schoolYearSeptemberDropInTuitionReminderSent ? '✓ Sent!' : 'Send September Tuition Reminder (Homeschool Drop-In)'}
+                    {schoolYearSeptemberDropInTuitionReminderSending ? 'Sending…' : schoolYearSeptemberDropInTuitionReminderSent ? '✓ Sent!' : 'Send September Tuition Reminder (Homeschool Drop-In, Founding Rate)'}
                   </button>
                   {schoolYearSeptemberDropInTuitionReminderError && <span className="text-xs text-red-600">{schoolYearSeptemberDropInTuitionReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearSeptemberDropInTuitionReminderUpdated}
+                    disabled={schoolYearSeptemberDropInTuitionReminderUpdatedSending || schoolYearSeptemberDropInTuitionReminderUpdatedSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearSeptemberDropInTuitionReminderUpdatedSending ? 'Sending…' : schoolYearSeptemberDropInTuitionReminderUpdatedSent ? '✓ Sent!' : 'Send September Tuition Reminder (Homeschool Drop-In, Updated Rate)'}
+                  </button>
+                  {schoolYearSeptemberDropInTuitionReminderUpdatedError && <span className="text-xs text-red-600">{schoolYearSeptemberDropInTuitionReminderUpdatedError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -2627,9 +2802,20 @@ export function ApplicationDetailSidebar({
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
                   >
-                    {schoolYearTuitionInfoSending ? 'Sending…' : schoolYearTuitionInfoSent ? '✓ Sent!' : 'Send School Year Tuition Info'}
+                    {schoolYearTuitionInfoSending ? 'Sending…' : schoolYearTuitionInfoSent ? '✓ Sent!' : 'Send School Year Tuition Info (Founding Rate)'}
                   </button>
                   {schoolYearTuitionInfoError && <span className="text-xs text-red-600">{schoolYearTuitionInfoError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearTuitionInfoUpdated}
+                    disabled={schoolYearTuitionInfoUpdatedSending || schoolYearTuitionInfoUpdatedSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearTuitionInfoUpdatedSending ? 'Sending…' : schoolYearTuitionInfoUpdatedSent ? '✓ Sent!' : 'Send School Year Tuition Info (Updated Rate)'}
+                  </button>
+                  {schoolYearTuitionInfoUpdatedError && <span className="text-xs text-red-600">{schoolYearTuitionInfoUpdatedError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -2638,9 +2824,20 @@ export function ApplicationDetailSidebar({
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
                   >
-                    {schoolYearTuitionClarificationSending ? 'Sending…' : schoolYearTuitionClarificationSent ? '✓ Sent!' : 'Send Tuition Clarification (2nd–4th Grade)'}
+                    {schoolYearTuitionClarificationSending ? 'Sending…' : schoolYearTuitionClarificationSent ? '✓ Sent!' : 'Send Tuition Clarification (2nd–4th Grade, Founding Rate)'}
                   </button>
                   {schoolYearTuitionClarificationError && <span className="text-xs text-red-600">{schoolYearTuitionClarificationError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearTuitionClarificationUpdated}
+                    disabled={schoolYearTuitionClarificationUpdatedSending || schoolYearTuitionClarificationUpdatedSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearTuitionClarificationUpdatedSending ? 'Sending…' : schoolYearTuitionClarificationUpdatedSent ? '✓ Sent!' : 'Send Tuition Clarification (2nd–4th Grade, Updated Rate)'}
+                  </button>
+                  {schoolYearTuitionClarificationUpdatedError && <span className="text-xs text-red-600">{schoolYearTuitionClarificationUpdatedError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -2671,9 +2868,20 @@ export function ApplicationDetailSidebar({
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
                   >
-                    {homeschoolDropInTuitionReminderSending ? 'Sending…' : homeschoolDropInTuitionReminderSent ? '✓ Sent!' : 'Send August Tuition Reminder (Homeschool Drop-In)'}
+                    {homeschoolDropInTuitionReminderSending ? 'Sending…' : homeschoolDropInTuitionReminderSent ? '✓ Sent!' : 'Send August Tuition Reminder (Homeschool Drop-In, Founding Rate)'}
                   </button>
                   {homeschoolDropInTuitionReminderError && <span className="text-xs text-red-600">{homeschoolDropInTuitionReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendHomeschoolDropInTuitionReminderUpdated}
+                    disabled={homeschoolDropInTuitionReminderUpdatedSending || homeschoolDropInTuitionReminderUpdatedSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {homeschoolDropInTuitionReminderUpdatedSending ? 'Sending…' : homeschoolDropInTuitionReminderUpdatedSent ? '✓ Sent!' : 'Send August Tuition Reminder (Homeschool Drop-In, Updated Rate)'}
+                  </button>
+                  {homeschoolDropInTuitionReminderUpdatedError && <span className="text-xs text-red-600">{homeschoolDropInTuitionReminderUpdatedError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <a

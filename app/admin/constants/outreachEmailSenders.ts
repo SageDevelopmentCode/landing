@@ -171,6 +171,15 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         email,
       }),
     ),
+  "drop-in-clarification-updated": (app) =>
+    withEmail(app, (email) =>
+      sendHomeschoolDropInClarificationEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
+      }),
+    ),
   "school-year-commitment": (app) =>
     withEmail(app, (email) =>
       sendSchoolYearCommitmentEmail({
@@ -382,6 +391,15 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         email,
       }),
     ),
+  "september-tuition-reminder-drop-in-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearSeptemberDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
+      }),
+    ),
   "labor-day-reminder": (app) =>
     withEmail(app, (email) =>
       sendLaborDayReminderEmail({
@@ -464,12 +482,30 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         email,
       }),
     ),
+  "school-year-tuition-info-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearTuitionInfoEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
+      }),
+    ),
   "tuition-clarification-2nd-4th": (app) =>
     withEmail(app, (email) =>
       sendSchoolYearTuitionClarificationEmail({
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,
+      }),
+    ),
+  "tuition-clarification-2nd-4th-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearTuitionClarificationEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
       }),
     ),
   "august-tuition-reminder-school-year": (app) =>
@@ -494,6 +530,15 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,
+      }),
+    ),
+  "august-tuition-reminder-drop-in-updated": (app) =>
+    withEmail(app, (email) =>
+      sendHomeschoolDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
       }),
     ),
 };

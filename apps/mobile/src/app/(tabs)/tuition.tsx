@@ -760,7 +760,7 @@ export default function TuitionScreen() {
           .schema("parent_app")
           .from("applications")
           .select(
-            "id, student_id, status, program, drop_in_program, child_legal_name, child_grade",
+            "id, student_id, status, program, drop_in_program, child_legal_name, child_grade, use_updated_homeschool_pricing",
           )
           .eq("user_id", effectiveParentId)
           .eq("approved", true)
@@ -773,7 +773,10 @@ export default function TuitionScreen() {
       ]);
 
       const txData: StripeTransaction[] = txResult.data ?? [];
-      const appData: ApplicationRow[] = appResult.data ?? [];
+      const appData: ApplicationRow[] = (appResult.data ?? []).map((a) => ({
+        ...a,
+        use_updated_homeschool_pricing: a.use_updated_homeschool_pricing ?? false,
+      }));
 
       setTransactions(txData);
       setApplications(appData);

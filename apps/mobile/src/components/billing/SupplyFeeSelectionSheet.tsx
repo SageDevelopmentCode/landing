@@ -10,7 +10,7 @@ import {
 import {
   BUNDLE_MONTH_INDEX,
   getGradeTier,
-  HOMESCHOOL_SCHOOL_YEAR_PRICING,
+  getHomeschoolSchoolYearPricing,
   HOMESCHOOL_TIERS,
   SCHOOL_YEAR_MONTHS,
   SUPPLY_FEE_CENTS,
@@ -85,8 +85,12 @@ export function SupplyFeeSelectionSheet({
   const studentId = student?.id ?? "";
   const supplyFeePaid = paidSupplyFeeByStudent[studentId] ?? false;
   const programType = resolveSupplyFeeProgramType(applications, studentId);
-  const childGrade =
-    applications.find((a) => a.student_id === studentId)?.child_grade ?? null;
+  const primaryApplication =
+    applications.find((a) => a.student_id === studentId) ?? null;
+  const childGrade = primaryApplication?.child_grade ?? null;
+  const primaryHomeschoolPricing = getHomeschoolSchoolYearPricing(
+    primaryApplication?.use_updated_homeschool_pricing ?? false,
+  );
   const paidSchoolYearMonths = paidSchoolYearByStudent[studentId] ?? [];
 
   const siblingCandidates = useMemo(() => {
@@ -125,7 +129,7 @@ export function SupplyFeeSelectionSheet({
     programType === "school_year" && addBundle
       ? schoolYearTuitionCents(childGrade)
       : programType === "homeschool" && addBundle && selectedTier
-        ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][getGradeTier(childGrade)] *
+        ? primaryHomeschoolPricing[selectedTier][getGradeTier(childGrade)] *
           selectedMonthIndices.size
         : 0;
 
@@ -138,10 +142,13 @@ export function SupplyFeeSelectionSheet({
   });
   const siblingHomeschoolBundleAmounts = siblingSupplyIds.map((id) => {
     if (!selectedHomeschoolBundleIds.has(id) || !selectedTier) return 0;
-    const grade =
-      allApplications.find((a) => a.student_id === id)?.child_grade ?? null;
+    const app = allApplications.find((a) => a.student_id === id);
+    const grade = app?.child_grade ?? null;
+    const studentPricing = getHomeschoolSchoolYearPricing(
+      app?.use_updated_homeschool_pricing ?? false,
+    );
     return (
-      HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][getGradeTier(grade)] *
+      studentPricing[selectedTier][getGradeTier(grade)] *
       selectedMonthIndices.size
     );
   });

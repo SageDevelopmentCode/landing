@@ -1068,6 +1068,7 @@ export type Database = {
           strengths_interests: string | null;
           student_id: string | null;
           updated_at: string | null;
+          use_updated_homeschool_pricing: boolean;
           user_id: string;
         };
         Insert: {
@@ -1146,6 +1147,7 @@ export type Database = {
           strengths_interests?: string | null;
           student_id?: string | null;
           updated_at?: string | null;
+          use_updated_homeschool_pricing?: boolean;
           user_id: string;
         };
         Update: {
@@ -1224,6 +1226,7 @@ export type Database = {
           strengths_interests?: string | null;
           student_id?: string | null;
           updated_at?: string | null;
+          use_updated_homeschool_pricing?: boolean;
           user_id?: string;
         };
         Relationships: [];

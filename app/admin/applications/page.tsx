@@ -473,6 +473,17 @@ export default function ApplicationsPage() {
     )
   }
 
+  const handleHomeschoolPricingChanged = (id: string, useUpdated: boolean) => {
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id === id ? { ...app, use_updated_homeschool_pricing: useUpdated } : app,
+      ),
+    )
+    setSelectedApp((prev) =>
+      prev?.id === id ? { ...prev, use_updated_homeschool_pricing: useUpdated } : prev,
+    )
+  }
+
   function handleItemClick(itemId: number, studentId: string, data: CachedEnrollmentData | null) {
     pendingApp.current = selectedApp
     setSelectedApp(null)
@@ -1173,6 +1184,7 @@ export default function ApplicationsPage() {
           onEnrolled={handleEnrolled}
           onItemClick={handleItemClick}
           onProgramChanged={handleProgramChanged}
+          onHomeschoolPricingChanged={handleHomeschoolPricingChanged}
           onTagsChanged={handleTagsChanged}
         />
       )}

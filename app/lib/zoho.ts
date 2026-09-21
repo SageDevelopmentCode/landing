@@ -2,7 +2,7 @@
 
 import {
   formatCents,
-  HOMESCHOOL_SCHOOL_YEAR_PRICING,
+  getHomeschoolSchoolYearPricing,
   HOMESCHOOL_TIERS,
   SCHOOL_YEAR_TUITION_PRIMARY_CENTS,
   SCHOOL_YEAR_TUITION_UPPER_CENTS,
@@ -5405,9 +5405,13 @@ function schoolYearTuitionByGradeTableHtml(marginBottom = "28px"): string {
   </table>`;
 }
 
-function homeschoolDropInPricingTableHtml(marginBottom = "28px"): string {
+function homeschoolDropInPricingTableHtml(
+  useUpdatedHomeschoolPricing = false,
+  marginBottom = "28px",
+): string {
+  const pricingTable = getHomeschoolSchoolYearPricing(useUpdatedHomeschoolPricing);
   const rows = HOMESCHOOL_TIERS.map((tier, i) => {
-    const pricing = HOMESCHOOL_SCHOOL_YEAR_PRICING[tier.key];
+    const pricing = pricingTable[tier.key];
     const rowStyle = i % 2 === 1 ? ' style="background: #fafaf8;"' : "";
     return `
       <tr${rowStyle}>
@@ -5436,8 +5440,10 @@ export async function buildSchoolYearTuitionInfoEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
   email: string;
+  useUpdatedHomeschoolPricing?: boolean;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
 
   const subject = `School Year Tuition & Billing Info — 2026–2027`;
 
@@ -5537,7 +5543,7 @@ export async function buildSchoolYearTuitionInfoEmail(opts: {
   </div>
 
   <p style="margin-bottom: 10px; font-size: 14px; color: #555;">For homeschool drop-in families, monthly pricing varies by schedule:</p>
-  ${homeschoolDropInPricingTableHtml()}
+  ${homeschoolDropInPricingTableHtml(useUpdatedHomeschoolPricing)}
 
   <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about billing, please don't hesitate to reach out. We are happy to help!</p>
 
@@ -5559,8 +5565,10 @@ export async function buildSchoolYearTuitionClarificationEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
   email: string;
+  useUpdatedHomeschoolPricing?: boolean;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
 
   const subject = `A Follow-Up on Your Tuition Info — 2026–2027`;
 
@@ -5579,7 +5587,7 @@ export async function buildSchoolYearTuitionClarificationEmail(opts: {
 
   <!-- Grade Comparison Table -->
   ${schoolYearTuitionByGradeTableHtml()}
-  ${homeschoolDropInPricingTableHtml()}
+  ${homeschoolDropInPricingTableHtml(useUpdatedHomeschoolPricing)}
 
   <p style="margin-bottom: 16px;">
     Both grade bands are billed in <strong>10 equal monthly payments</strong> — one per month from August through May.
@@ -5757,17 +5765,23 @@ export async function buildSchoolYearTuitionDueDateTodayReminderEmail(opts: {
 }
 
 function buildSchoolYearSeptemberReminderEmailContent(
-  opts: { g1FullName?: string; childLegalName?: string; email: string },
+  opts: {
+    g1FullName?: string;
+    childLegalName?: string;
+    email: string;
+    useUpdatedHomeschoolPricing?: boolean;
+  },
   subject: string,
   variant: "school-year" | "drop-in",
 ): { subject: string; content: string } {
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
   const productLabel =
     variant === "school-year" ? "September tuition" : "September homeschool drop-in";
   const pricingTableHtml =
     variant === "school-year"
       ? schoolYearTuitionByGradeTableHtml("24px")
-      : homeschoolDropInPricingTableHtml("24px");
+      : homeschoolDropInPricingTableHtml(useUpdatedHomeschoolPricing, "24px");
   const billingPolicyHtml =
     variant === "school-year"
       ? `<p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
@@ -5863,6 +5877,7 @@ export async function buildSchoolYearSeptemberDropInTuitionReminderEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
   email: string;
+  useUpdatedHomeschoolPricing?: boolean;
 }): Promise<{ subject: string; content: string }> {
   return buildSchoolYearSeptemberReminderEmailContent(
     opts,
@@ -5875,8 +5890,10 @@ export async function buildHomeschoolDropInTuitionReminderEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
   email: string;
+  useUpdatedHomeschoolPricing?: boolean;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
 
   const subject = `Reminder: August Homeschool Drop-In Due August 10 — 2026–2027`;
 
@@ -5898,7 +5915,7 @@ export async function buildHomeschoolDropInTuitionReminderEmail(opts: {
   </p>
 
   <!-- Pricing Table -->
-  ${homeschoolDropInPricingTableHtml("24px")}
+  ${homeschoolDropInPricingTableHtml(useUpdatedHomeschoolPricing, "24px")}
 
   <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">How It Works</p>
   <ul style="margin: 0 0 24px 0; padding-left: 20px; font-size: 15px;">
@@ -5937,8 +5954,10 @@ export async function buildHomeschoolDropInClarificationEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
   email: string;
+  useUpdatedHomeschoolPricing?: boolean;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
 
   const subject = `A Follow-Up on Your Homeschool Drop-In Info — 2026–2027`;
 
@@ -5956,7 +5975,7 @@ export async function buildHomeschoolDropInClarificationEmail(opts: {
   </p>
 
   <!-- Pricing Table -->
-  ${homeschoolDropInPricingTableHtml()}
+  ${homeschoolDropInPricingTableHtml(useUpdatedHomeschoolPricing)}
 
   <p style="margin-bottom: 10px; font-weight: bold; color: #2C5F2E; font-size: 16px;">How It Works</p>
   <ul style="margin: 0 0 24px 0; padding-left: 20px; font-size: 15px;">

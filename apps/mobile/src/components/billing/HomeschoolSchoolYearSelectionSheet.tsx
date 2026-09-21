@@ -8,7 +8,7 @@ import type {
 } from "@/lib/school-year-billing";
 import {
   getGradeTier,
-  HOMESCHOOL_SCHOOL_YEAR_PRICING,
+  getHomeschoolSchoolYearPricing,
   HOMESCHOOL_TIERS,
   SCHOOL_YEAR_MONTHS,
   buildPaidDaysByMonth,
@@ -97,9 +97,10 @@ export function HomeschoolSchoolYearSelectionSheet({
     [schoolYearEntries],
   );
   const gradeTier = getGradeTier(application?.child_grade ?? null);
-  const pricePerMonth = selectedTier
-    ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][gradeTier]
-    : 0;
+  const pricing = getHomeschoolSchoolYearPricing(
+    application?.use_updated_homeschool_pricing ?? false,
+  );
+  const pricePerMonth = selectedTier ? pricing[selectedTier][gradeTier] : 0;
   const primaryCents = pricePerMonth * selectedMonths.size;
   const requiredDays =
     selectedTier === "dropin" ? 1 : selectedTier === "2day" ? 2 : 3;
@@ -193,8 +194,9 @@ export function HomeschoolSchoolYearSelectionSheet({
                 sibMonths.map((w) => ({ week: w, days: sibDays })),
               ),
               intendedAmountCents:
-                HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][sibGradeTier] *
-                sibMonths.length,
+                getHomeschoolSchoolYearPricing(
+                  sib.use_updated_homeschool_pricing,
+                )[selectedTier][sibGradeTier] * sibMonths.length,
               studentName: siblingStudentMap[sib.student_id]?.name,
             };
           });
@@ -357,8 +359,9 @@ export function HomeschoolSchoolYearSelectionSheet({
                     .sort((a, b) => a - b);
               const sibGradeTier = getGradeTier(sib.child_grade);
               const sibAmount = selectedTier
-                ? HOMESCHOOL_SCHOOL_YEAR_PRICING[selectedTier][sibGradeTier] *
-                  sibMonths.length
+                ? getHomeschoolSchoolYearPricing(
+                    sib.use_updated_homeschool_pricing,
+                  )[selectedTier][sibGradeTier] * sibMonths.length
                 : 0;
               const name = siblingStudentMap[sib.student_id]?.name ?? "Sibling";
               const isIncluded = includedSiblings[sib.student_id] ?? true;
