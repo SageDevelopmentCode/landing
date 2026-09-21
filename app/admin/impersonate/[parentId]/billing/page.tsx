@@ -66,7 +66,7 @@ export default async function ImpersonateBillingPage({
       .schema("parent_app")
       .from("applications")
       .select(
-        "id, student_id, child_grade, status, child_legal_name, program, drop_in_program"
+        "id, student_id, child_grade, status, child_legal_name, program, drop_in_program, use_updated_homeschool_pricing"
       )
       .eq("user_id", effectiveParentId)
       .eq("approved", true)
@@ -99,6 +99,7 @@ export default async function ImpersonateBillingPage({
       child_legal_name: string | null;
       program: string | null;
       drop_in_program: string | null;
+      use_updated_homeschool_pricing: boolean | null;
     }[]
   ).filter((e) => !!e.student_id && !!e.id);
 
@@ -133,6 +134,7 @@ export default async function ImpersonateBillingPage({
         e.program === "homeschool_drop_in" ? e.drop_in_program : "summer_26",
       child_grade: e.child_grade,
       name: e.child_legal_name,
+      use_updated_homeschool_pricing: e.use_updated_homeschool_pricing ?? false,
     }));
 
   const paidWeeksByStudent: PaidWeeksByStudent = {};

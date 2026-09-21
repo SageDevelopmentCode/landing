@@ -11,6 +11,7 @@ export type ApplicationRow = {
   drop_in_program: string | null;
   child_legal_name: string | null;
   child_grade: string | null;
+  use_updated_homeschool_pricing: boolean;
 };
 
 export type PaidHomeschoolEntry = {

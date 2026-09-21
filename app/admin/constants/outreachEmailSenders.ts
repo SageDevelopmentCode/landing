@@ -31,6 +31,7 @@ import { sendSchoolYearWeekOneNewsletterEmail } from "@/app/actions/sendSchoolYe
 import { sendSchoolYearWeekTwoNewsletterEmail } from "@/app/actions/sendSchoolYearWeekTwoNewsletterEmail";
 import { sendSchoolYearWeekThreeNewsletterEmail } from "@/app/actions/sendSchoolYearWeekThreeNewsletterEmail";
 import { sendSchoolYearWeekFourNewsletterEmail } from "@/app/actions/sendSchoolYearWeekFourNewsletterEmail";
+import { sendSchoolYearWeekFiveNewsletterEmail } from "@/app/actions/sendSchoolYearWeekFiveNewsletterEmail";
 import { sendSummerFirstDayEmail } from "@/app/actions/sendSummerFirstDayEmail";
 import { sendSummerStartingEmail } from "@/app/actions/sendSummerStartingEmail";
 import { sendSummerTuitionConfirmationEmail } from "@/app/actions/sendSummerTuitionConfirmationEmail";
@@ -168,6 +169,15 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,
+      }),
+    ),
+  "drop-in-clarification-updated": (app) =>
+    withEmail(app, (email) =>
+      sendHomeschoolDropInClarificationEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
       }),
     ),
   "school-year-commitment": (app) =>
@@ -357,6 +367,14 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         email,
       }),
     ),
+  "school-year-week-five-newsletter": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearWeekFiveNewsletterEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
   "september-tuition-reminder-school-year": (app) =>
     withEmail(app, (email) =>
       sendSchoolYearSeptemberTuitionReminderEmail({
@@ -371,6 +389,15 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,
+      }),
+    ),
+  "september-tuition-reminder-drop-in-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearSeptemberDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
       }),
     ),
   "labor-day-reminder": (app) =>
@@ -455,12 +482,30 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         email,
       }),
     ),
+  "school-year-tuition-info-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearTuitionInfoEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
+      }),
+    ),
   "tuition-clarification-2nd-4th": (app) =>
     withEmail(app, (email) =>
       sendSchoolYearTuitionClarificationEmail({
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,
+      }),
+    ),
+  "tuition-clarification-2nd-4th-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearTuitionClarificationEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
       }),
     ),
   "august-tuition-reminder-school-year": (app) =>
@@ -485,6 +530,15 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,
+      }),
+    ),
+  "august-tuition-reminder-drop-in-updated": (app) =>
+    withEmail(app, (email) =>
+      sendHomeschoolDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
       }),
     ),
 };

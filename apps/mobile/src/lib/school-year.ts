@@ -14,11 +14,36 @@ export const FUN_FRIDAY_DROPIN_CENTS = 5000;
 
 export type HomeschoolTier = "dropin" | "2day" | "3day";
 
-export const HOMESCHOOL_SCHOOL_YEAR_PRICING = {
+export type HomeschoolSchoolYearPricing = {
+  dropin: { primary: number; upper: number };
+  "2day": { primary: number; upper: number };
+  "3day": { primary: number; upper: number };
+};
+
+/** Founding-family rates (legacy enrolled families). */
+export const HOMESCHOOL_SCHOOL_YEAR_PRICING_FOUNDING = {
   dropin: { primary: 48000, upper: 44000 },
   "2day": { primary: 56000, upper: 52000 },
   "3day": { primary: 78000, upper: 72000 },
 } as const;
+
+/** Current public tuition-page rates for new/selected families. */
+export const HOMESCHOOL_SCHOOL_YEAR_PRICING_UPDATED = {
+  dropin: { primary: 48000, upper: 44000 },
+  "2day": { primary: 64000, upper: 60000 },
+  "3day": { primary: 92000, upper: 85000 },
+} as const;
+
+/** @deprecated Use getHomeschoolSchoolYearPricing() for per-family billing. */
+export const HOMESCHOOL_SCHOOL_YEAR_PRICING = HOMESCHOOL_SCHOOL_YEAR_PRICING_FOUNDING;
+
+export function getHomeschoolSchoolYearPricing(
+  useUpdated: boolean,
+): HomeschoolSchoolYearPricing {
+  return useUpdated
+    ? HOMESCHOOL_SCHOOL_YEAR_PRICING_UPDATED
+    : HOMESCHOOL_SCHOOL_YEAR_PRICING_FOUNDING;
+}
 
 export const HOMESCHOOL_TIERS = [
   { key: "dropin" as const, label: "1 Day / Week", sub: "Part-Time", days: 1 },

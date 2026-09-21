@@ -38,7 +38,16 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     label: "Send Drop-In Payment Confirmation",
     category: "enrollment",
   },
-  { id: "drop-in-clarification", label: "Send Drop-In Clarification", category: "enrollment" },
+  {
+    id: "drop-in-clarification",
+    label: "Send Drop-In Clarification (Founding Rate)",
+    category: "enrollment",
+  },
+  {
+    id: "drop-in-clarification-updated",
+    label: "Send Drop-In Clarification (Updated Rate)",
+    category: "enrollment",
+  },
   // Summer
   {
     id: "school-year-commitment",
@@ -118,13 +127,23 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     category: "schoolYear",
   },
   {
+    id: "school-year-week-five-newsletter",
+    label: "Send School Year Week Five Newsletter",
+    category: "schoolYear",
+  },
+  {
     id: "september-tuition-reminder-school-year",
     label: "Send September Tuition Reminder (School Year)",
     category: "schoolYear",
   },
   {
     id: "september-tuition-reminder-drop-in",
-    label: "Send September Tuition Reminder (Homeschool Drop-In)",
+    label: "Send September Tuition Reminder (Homeschool Drop-In, Founding Rate)",
+    category: "schoolYear",
+  },
+  {
+    id: "september-tuition-reminder-drop-in-updated",
+    label: "Send September Tuition Reminder (Homeschool Drop-In, Updated Rate)",
     category: "schoolYear",
   },
   { id: "labor-day-reminder", label: "Send Labor Day Reminder", category: "schoolYear" },
@@ -145,10 +164,24 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     label: "Send Community Garden Day Invite",
     category: "other",
   },
-  { id: "school-year-tuition-info", label: "Send School Year Tuition Info", category: "other" },
+  {
+    id: "school-year-tuition-info",
+    label: "Send School Year Tuition Info (Founding Rate)",
+    category: "other",
+  },
+  {
+    id: "school-year-tuition-info-updated",
+    label: "Send School Year Tuition Info (Updated Rate)",
+    category: "other",
+  },
   {
     id: "tuition-clarification-2nd-4th",
-    label: "Send Tuition Clarification (2nd–4th Grade)",
+    label: "Send Tuition Clarification (2nd–4th Grade, Founding Rate)",
+    category: "other",
+  },
+  {
+    id: "tuition-clarification-2nd-4th-updated",
+    label: "Send Tuition Clarification (2nd–4th Grade, Updated Rate)",
     category: "other",
   },
   {
@@ -163,7 +196,12 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
   },
   {
     id: "august-tuition-reminder-drop-in",
-    label: "Send August Tuition Reminder (Homeschool Drop-In)",
+    label: "Send August Tuition Reminder (Homeschool Drop-In, Founding Rate)",
+    category: "other",
+  },
+  {
+    id: "august-tuition-reminder-drop-in-updated",
+    label: "Send August Tuition Reminder (Homeschool Drop-In, Updated Rate)",
     category: "other",
   },
 ];
