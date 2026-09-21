@@ -124,7 +124,7 @@ export default async function ImpersonateHomePage({
     adminClient
       .schema("parent_app")
       .from("applications")
-      .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program")
+      .select("id, student_id, child_grade, status, child_legal_name, program, drop_in_program, use_updated_homeschool_pricing")
       .eq("user_id", effectiveParentId)
       .eq("approved", true)
       .in("program", ["summer_26", "both", "homeschool_drop_in", "school_year_26_27"]),
@@ -190,6 +190,7 @@ export default async function ImpersonateHomePage({
     child_legal_name: string | null;
     program: string | null;
     drop_in_program: string | null;
+    use_updated_homeschool_pricing: boolean | null;
   }[]).filter((e) => !!e.student_id && !!e.id);
 
   const summerEnrollments: SummerEnrollment[] = allSummerApps
@@ -209,6 +210,7 @@ export default async function ImpersonateHomePage({
         e.program === "homeschool_drop_in" ? e.drop_in_program : "summer_26",
       child_grade: e.child_grade,
       name: e.child_legal_name,
+      use_updated_homeschool_pricing: e.use_updated_homeschool_pricing ?? false,
     }));
 
   const schoolYearOnlyApps: SchoolYearOnlyApp[] = allSummerApps
