@@ -36,99 +36,198 @@ const dancingScript = Dancing_Script({
 
 // ─── Image Arrays ─────────────────────────────────────────────────────────────
 
-const WEEK1_IMAGES = [
-  "/assets/highlights/summer_week_one/C8EAD2FA-0FB2-4D59-A079-493C09298ABF.JPG",
-  "/assets/highlights/summer_week_one/79C28EF4-D1A6-4874-AA73-CCA66F04BDEF.JPG",
-  "/assets/highlights/summer_week_one/2B9964FA-0047-4590-880C-095C315B7DE8.JPG",
-  "/assets/highlights/summer_week_one/AB176A40-3DE2-4856-8E87-2D169FB3F41A.JPG",
-  "/assets/highlights/summer_week_one/341400BF-486B-43A0-912E-84623B6299D6.JPG",
-  "/assets/highlights/summer_week_one/DDDA3AA2-CDF9-42CF-B8FF-AD61CED60065 2.JPG",
-  "/assets/highlights/summer_week_one/1D2BF4A6-5081-4D51-B1E8-F6E0E3D820B3.JPG",
-  "/assets/highlights/summer_week_one/B10368B0-5344-4D70-8C0C-C091A086D6B2.JPG",
-  "/assets/highlights/summer_week_one/8018F647-AC55-4EE0-9D25-0F326D805ED8 4.jpg",
-  "/assets/highlights/summer_week_one/58982292-CDE7-4E77-B528-0F01DB604DF7 2.JPG",
-  "/assets/highlights/summer_week_one/E96A3688-D421-43A9-B8CA-93D6B881E555.JPG",
+const WEEK4_IMAGES = [
+  "/assets/highlights/school_week_four/01C20017-202A-4B7C-ADA0-34086EC915F2.JPG",
+  "/assets/highlights/school_week_four/9A368F27-0C4F-4DD7-995B-98CC5DB2BE52.JPG",
+  "/assets/highlights/school_week_four/C1390CB2-0CD0-4B86-8360-32B658D5E5E2.JPG",
+  "/assets/highlights/school_week_four/818F2757-ACE1-41D0-A62F-52F47C9C59E2.JPG",
+  "/assets/highlights/school_week_four/B3A30FDD-AAB6-496E-802A-B30FA7CB4446.JPG",
+  "/assets/highlights/school_week_four/6F80F35B-3B69-4D26-8868-92A93A382AE1.JPG",
+  "/assets/highlights/school_week_four/264087A9-CBD5-4099-95FC-1B49CC9517E7.JPG",
+  "/assets/highlights/school_week_four/070B83EA-9BF5-4BAA-8818-544F74A17D7D.JPG",
+  "/assets/highlights/school_week_four/0CB1B88B-28F6-40D0-932B-74464F657179.JPG",
+  "/assets/highlights/school_week_four/0F828667-233A-47E9-938E-4F8408DB305B.JPG",
+  "/assets/highlights/school_week_four/14F261B7-D0EE-4B9F-A7BD-4AD46DF24F97.JPG",
+  "/assets/highlights/school_week_four/189F9697-2F44-41CB-BF88-F45CFBDCD90A.JPG",
+  "/assets/highlights/school_week_four/1E3974E9-2C4E-4DF4-BF67-A340818CA09F.JPG",
+  "/assets/highlights/school_week_four/43B558AD-2EDC-4E8F-B1ED-7CCFD765F730.JPG",
+  "/assets/highlights/school_week_four/5E785DE4-8552-4D0B-A96D-85754832B6F0.JPG",
+  "/assets/highlights/school_week_four/84055570-13D0-4A73-95E2-84BFA0387408.JPG",
+  "/assets/highlights/school_week_four/9C5DFF55-97C6-4FEE-A82C-44A4BFB9BF5D.JPG",
+  "/assets/highlights/school_week_four/9E8CD956-4831-42F7-AAA0-F2D94DBF1C1D.JPG",
+  "/assets/highlights/school_week_four/A6DB1350-9D81-456C-87DE-8FF7C4727661.JPG",
+  "/assets/highlights/school_week_four/B52828BB-4A7E-4F36-A133-1172281D5E59.JPG",
+  "/assets/highlights/school_week_four/B75BE347-443C-4635-B998-6FE3C16B2E5E.JPG",
+  "/assets/highlights/school_week_four/C7FBC6F6-803F-4663-AF3A-B18941AA7373.JPG",
+  "/assets/highlights/school_week_four/E10B5084-3A5E-44CC-B113-2CD6FD96A460.JPG",
+  "/assets/highlights/school_week_four/E80B575A-31D0-4051-9685-1E058790F1D2.JPG",
+  "/assets/highlights/school_week_four/F90D4E80-7C91-4DEE-98F4-67F7FFB3F66B.JPG",
 ];
 
-const WEEK2_IMAGES = [
-  "/assets/highlights/summer_week_two/A0AA3C22-7657-4E63-A3FD-7AB6CD3B85E0.JPG",
-  "/assets/highlights/summer_week_two/24E4F2AF-5C30-4C23-9B09-8EA71093A1FD.JPG",
-  "/assets/highlights/summer_week_two/570FEA28-D009-4038-B966-EAF9E0C9EE73.JPG",
-  "/assets/highlights/summer_week_two/6B95C9E4-E145-49CA-8818-7AFC9B3B8353.JPG",
-  "/assets/highlights/summer_week_two/E3AE964D-CC01-41A0-B040-35DCCB27CD4C.JPG",
-  "/assets/highlights/summer_week_two/8DC65D50-316D-44DA-88AA-128F72DF019B.JPG",
-  "/assets/highlights/summer_week_two/DC1D10EF-768E-48E1-AFA9-B935172FA14B.JPG",
-  "/assets/highlights/summer_week_two/5B961697-D097-476C-9D47-09F547042841.JPG",
+const WEEK5_IMAGES = [
+  "/assets/highlights/school_week_five/96D93AFA-3B3B-4959-A75F-DD9624B41C29.JPG",
+  "/assets/highlights/school_week_five/5246214C-00FC-4ED2-8369-7FD5DDCF29D3.JPG",
+  "/assets/highlights/school_week_five/29AB0AD4-AEDD-4145-A6A9-5FA6D8FD605E.JPG",
+  "/assets/highlights/school_week_five/89C4E0CC-3A0E-479B-8DE9-2FA03D891A80.JPG",
+  "/assets/highlights/school_week_five/7A2E475F-76BD-4718-A484-854DA4FC48B5.JPG",
+  "/assets/highlights/school_week_five/FC66AAAA-7A33-4614-B36B-B553F5EAEF6D.JPG",
+  "/assets/highlights/school_week_five/9965B812-C19C-45DF-97DF-031DDDF9381E.JPG",
+  "/assets/highlights/school_week_five/DEFE850C-99B6-4015-B419-89FDE3617DA0.JPG",
+  "/assets/highlights/school_week_five/4182F696-085D-47CB-9021-8F8F5DC1BD9D.JPG",
+  "/assets/highlights/school_week_five/6F5B4460-BFF1-486C-9DAB-B7B1BB4C2FFD.JPG",
+  "/assets/highlights/school_week_five/1BDB4106-7495-45A8-9391-3BED523FA5C1.JPG",
+  "/assets/highlights/school_week_five/F47AC380-A0C2-4C05-80B3-C3FC804976EF.JPG",
+  "/assets/highlights/school_week_five/F232DFAA-059D-4705-80AC-EDB763175364.JPG",
+  "/assets/highlights/school_week_five/F157BD53-B669-429C-8613-5634FA945599.JPG",
+  "/assets/highlights/school_week_five/F855F2DE-4407-4A85-8F6A-52F5C8EAA910.JPG",
+  "/assets/highlights/school_week_five/03B0FFDA-ACC9-4F70-B82C-B16EBACD5636.JPG",
+  "/assets/highlights/school_week_five/05A3BE7A-1DE2-4C9E-91EC-769F1888C0AD.JPG",
+  "/assets/highlights/school_week_five/CCACC24E-0E7A-4442-99F4-F0596DCB4134.JPG",
+  "/assets/highlights/school_week_five/BFF44DC7-3510-46E9-8D96-6DB9C96E90C5.JPG",
 ];
 
-const CAROUSEL_IMAGES = [...WEEK1_IMAGES, ...WEEK2_IMAGES];
+const CAROUSEL_IMAGES = [...WEEK4_IMAGES, ...WEEK5_IMAGES];
 const GALLERY_INITIAL_COUNT = 9;
 
-// ─── Week 2 Highlights ────────────────────────────────────────────────────────
+// ─── Week 4 Highlights ────────────────────────────────────────────────────────
 
-const WEEK2_PRIMARY_HIGHLIGHTS = [
+const WEEK4_PRIMARY_HIGHLIGHTS = [
   {
-    emoji: "📖",
-    label: "CVC Words & Phonemic Awareness",
-    desc: "Listening for sounds, identifying letters, building emerging reader confidence",
+    emoji: "🐔",
+    label: "Chicken Egg Investigation",
+    desc: "Theories about why the chickens haven't laid yet — exploring life cycle science",
   },
   {
-    emoji: "🔠",
-    label: "Capital & Lowercase Letters",
-    desc: "Practicing letter associations and recognition every day",
+    emoji: "📹",
+    label: "Chicken Cam",
+    desc: "Observing chicken behavior and gathering evidence from the coop",
   },
+  {
+    emoji: "🔢",
+    label: "Math Through Observation",
+    desc: "Counting, sorting pumpkin seeds, and comparing quantities",
+  },
+  {
+    emoji: "✍️",
+    label: "Collaborative Documentation",
+    desc: "Combining science, math, art, and writing into a shared piece",
+  },
+];
+
+const WEEK4_LOWER_ELEM_HIGHLIGHTS = [
   {
     emoji: "➕",
-    label: "Addition: Counting On",
-    desc: "Hands-on games and group work to build number sense",
+    label: "Addition Foundations",
+    desc: "Number bonds, base-10 blocks, and the 120 chart",
+  },
+  {
+    emoji: "🌍",
+    label: "Globe Geography",
+    desc: "Seven continents, oceans, hemispheres, latitude and longitude",
   },
   {
     emoji: "🎨",
-    label: "Color Mixing & Sensory Art",
-    desc: "Mud kitchen experiments exploring what happens when colors combine",
+    label: "Dot Day Art",
+    desc: "Painted paper plates with oil pastels for Dot Day",
   },
   {
-    emoji: "🍝",
-    label: "Homemade Pasta",
-    desc: "Measuring, mixing, and learning from a beautifully flopped batch",
-  },
-  {
-    emoji: "🧃",
-    label: "Strawberry Limeade Popsicles",
-    desc: "Experimenting with flavors and taking pride in the result",
-  },
-  {
-    emoji: "🌱",
-    label: "Growing Independence",
-    desc: "More initiative and confidence than Week 1",
+    emoji: "🐉",
+    label: "Dragons & Mythical Creatures",
+    desc: "Watercolor dragons, mermaid slime, and dragon eggs on Field Friday",
   },
 ];
 
-const WEEK2_ELEM_HIGHLIGHTS = [
+const WEEK4_UPPER_ELEM_HIGHLIGHTS = [
+  {
+    emoji: "✖️",
+    label: "Multiplication Unit",
+    desc: "Array City, visual models, and building groups with cubes",
+  },
+  {
+    emoji: "🌪️",
+    label: "Tornado Engineering",
+    desc: "Designing and building tornado-resistant structures",
+  },
+  {
+    emoji: "🎨",
+    label: "Dot Day Ombré Art",
+    desc: "Dot patterns and ombré painting on plates for a mural",
+  },
+  {
+    emoji: "🍓",
+    label: "Cooking & Writing",
+    desc: "Strawberry apple yogurt parfaits and Story of Me personal writing",
+  },
+];
+
+// ─── Week 5 Highlights ────────────────────────────────────────────────────────
+
+const WEEK5_PRIMARY_HIGHLIGHTS = [
+  {
+    emoji: "🥚",
+    label: "First Chicken Eggs",
+    desc: "Student-led research on what chickens need — and our first eggs arrived",
+  },
+  {
+    emoji: "📹",
+    label: "Chicken Cam",
+    desc: "Recycled-materials camera to observe coop behavior and gather evidence",
+  },
+  {
+    emoji: "🐜",
+    label: "Ant Investigation",
+    desc: "Dot-art ants and new questions about where ants live and what they need",
+  },
+  {
+    emoji: "🔢",
+    label: "Counting Toward 100",
+    desc: "Number recognition, writing bigger numbers, and math through observation",
+  },
+];
+
+const WEEK5_LOWER_ELEM_HIGHLIGHTS = [
   {
     emoji: "➕",
-    label: "Addition & Subtraction with Regrouping",
-    desc: "Carrying over and borrowing across multiple digits",
+    label: "Addition Practice",
+    desc: "Two-digit plus single-digit numbers and addition with regrouping",
   },
   {
-    emoji: "📝",
-    label: "Main Idea & Supporting Details",
-    desc: "Cone = main idea, ice cream scoops = supporting details",
+    emoji: "📖",
+    label: "Sight Word Reading",
+    desc: "Blending short vowels, consonants, and syllables while reading",
   },
   {
-    emoji: "🦁",
-    label: "Animal Research Project",
-    desc: "National Geographic books → rough draft → revised banner",
+    emoji: "🗺️",
+    label: "Map Skills Booklet",
+    desc: "Interactive booklet breaking down continents, oceans, and map features",
   },
   {
-    emoji: "✏️",
-    label: "Revise & Edit",
-    desc: "Rough draft Tuesday, revised and transferred to banner Thursday",
+    emoji: "🎨",
+    label: "Color Theory & Dot Day",
+    desc: "Color wheel lions, color mixing, and a collaborative Dot Day mural",
+  },
+];
+
+const WEEK5_UPPER_ELEM_HIGHLIGHTS = [
+  {
+    emoji: "✖️",
+    label: "Multiplication Milestones",
+    desc: "Facts for multiples 0–10 and multi-digit multiplication with regrouping",
   },
   {
-    emoji: "📚",
-    label: "Differentiated Groups",
-    desc: "Same focus, split by academic level to meet each learner's needs",
+    emoji: "🌋",
+    label: "Volcano Science",
+    desc: "Survival guides, town design, and eruption experiments with data collection",
+  },
+  {
+    emoji: "✍️",
+    label: "Persuasive Writing",
+    desc: "Stating opinions with reasons, examples, and CUPS editing practice",
+  },
+  {
+    emoji: "🍲",
+    label: "Cooking & Nature Art",
+    desc: "Potato and rice chicken bone broth soup and dried-flower creations",
   },
 ];
 
@@ -165,79 +264,6 @@ const PACKING_LIST = [
   { emoji: "💧", item: "Water bottle, labeled" },
   { emoji: "🦟", item: "Bug spray" },
   { emoji: "🥪", item: "Snack + lunch from home" },
-];
-
-// ─── Week 1 Highlights ────────────────────────────────────────────────────────
-
-const WEEK1_EARLY_HIGHLIGHTS = [
-  {
-    emoji: "📖",
-    label: "Letter Sounds & CVC Reading",
-    desc: "Building phonics foundations through hands-on practice",
-  },
-  {
-    emoji: "✏️",
-    label: "Handwriting & Number Sense",
-    desc: "Fine motor skills and early numeracy side by side",
-  },
-  {
-    emoji: "➕",
-    label: "Early Addition",
-    desc: "Introducing addition concepts through play and manipulatives",
-  },
-  {
-    emoji: "💧",
-    label: "Water Cycle & Filtration",
-    desc: "Science exploration that sparked curiosity all week",
-  },
-  {
-    emoji: "🎨",
-    label: "Art Creation",
-    desc: "Self-expression through color, texture, and imagination",
-  },
-  {
-    emoji: "🐥",
-    label: "Caring for Our Chicks",
-    desc: "Responsibility and empathy through animal care",
-  },
-  {
-    emoji: "🎵",
-    label: "Rhythm & Note Recognition",
-    desc: "Music foundations woven into every morning",
-  },
-];
-
-const WEEK1_ELEM_HIGHLIGHTS = [
-  {
-    emoji: "🔢",
-    label: "Place Value Mastery",
-    desc: "Expanded, word, and model forms — plus comparing numbers",
-  },
-  {
-    emoji: "🎲",
-    label: "Collaborative Math Game",
-    desc: "Wrapped up the week by applying what we learned together",
-  },
-  {
-    emoji: "📚",
-    label: "SWBST Comprehension",
-    desc: "Somebody, Wanted, But, So, Then — a framework for deep reading",
-  },
-  {
-    emoji: "✍️",
-    label: "Vocabulary & Sentence Structure",
-    desc: "Building strong writing skills from the ground up",
-  },
-  {
-    emoji: "🔄",
-    label: "Synonyms & Antonyms",
-    desc: "Expanding word knowledge through exploration",
-  },
-  {
-    emoji: "📝",
-    label: "Recipe Card Writing",
-    desc: "Real experiences turned into structured, creative writing",
-  },
 ];
 
 // ─── Activities & Risks (for Agreement) ──────────────────────────────────────
@@ -599,15 +625,17 @@ export default function ShadowPage() {
     });
     let pos = 0;
     const tick = () => {
+      pos += 0.6;
       refs.forEach((r) => {
         const el = r.current;
         if (el) {
           el.scrollLeft = Math.round(pos);
         }
       });
-      pos += 0.6;
-      const first = refs.find((r) => r.current)?.current;
-      if (first && first.scrollLeft >= first.scrollWidth / 2) {
+      const activeEl = refs
+        .map((r) => r.current)
+        .find((el) => el && el.scrollWidth > el.clientWidth);
+      if (activeEl && activeEl.scrollLeft >= activeEl.scrollWidth / 2) {
         pos = 0;
         refs.forEach((r) => {
           if (r.current) r.current.scrollLeft = 0;
@@ -814,7 +842,7 @@ export default function ShadowPage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md">
                 <Image
-                  src="/assets/highlights/summer_week_two/570FEA28-D009-4038-B966-EAF9E0C9EE73.JPG"
+                  src="/assets/highlights/school_week_five/96D93AFA-3B3B-4959-A75F-DD9624B41C29.JPG"
                   alt="Students at Sage Field"
                   fill
                   className="object-cover"
@@ -825,7 +853,7 @@ export default function ShadowPage() {
               <div className="flex flex-col gap-2">
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
                   <Image
-                    src="/assets/highlights/summer_week_one/79C28EF4-D1A6-4874-AA73-CCA66F04BDEF.JPG"
+                    src="/assets/highlights/school_week_four/01C20017-202A-4B7C-ADA0-34086EC915F2.JPG"
                     alt="Students at Sage Field"
                     fill
                     className="object-cover"
@@ -835,7 +863,7 @@ export default function ShadowPage() {
                 </div>
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
                   <Image
-                    src="/assets/highlights/summer_week_one/58982292-CDE7-4E77-B528-0F01DB604DF7 2.JPG"
+                    src="/assets/highlights/school_week_five/29AB0AD4-AEDD-4145-A6A9-5FA6D8FD605E.JPG"
                     alt="Students at Sage Field"
                     fill
                     className="object-cover"
@@ -884,14 +912,14 @@ export default function ShadowPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              Weeks 1 &amp; 2 in Review
+              Weeks 4 &amp; 5 in Review
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
               A Glimpse of What Kids Do Here
             </h2>
             <p className="text-base text-gray-500 font-body leading-relaxed max-w-2xl">
-              Two weeks in — here&apos;s a real look at what your child would
-              experience at Sage Field. Real academics, real cooking, real
+              Weeks four and five — here&apos;s a real look at what your child
+              would experience at Sage Field. Real academics, real cooking, real
               community.
             </p>
           </motion.div>
@@ -961,165 +989,108 @@ export default function ShadowPage() {
           </div>
         </motion.div>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <motion.div
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-6"
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.12 }}
           >
-            {/* Left panel — Primary / Early Learners */}
-            <div className="bg-sage-50 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">🌱</span>
+            {[
+              {
+                emoji: "🌱",
+                title: "Primary",
+                subtitle: "Pre-K & Kindergarten",
+                iconBg: "bg-primary/10",
+                week4: WEEK4_PRIMARY_HIGHLIGHTS,
+                week5: WEEK5_PRIMARY_HIGHLIGHTS,
+              },
+              {
+                emoji: "✨",
+                title: "Lower Elementary",
+                subtitle: "1st & 2nd Grade",
+                iconBg: "bg-sage-100",
+                week4: WEEK4_LOWER_ELEM_HIGHLIGHTS,
+                week5: WEEK5_LOWER_ELEM_HIGHLIGHTS,
+              },
+              {
+                emoji: "📐",
+                title: "Upper Elementary",
+                subtitle: "3rd & 4th Grade",
+                iconBg: "bg-sky-100",
+                week4: WEEK4_UPPER_ELEM_HIGHLIGHTS,
+                week5: WEEK5_UPPER_ELEM_HIGHLIGHTS,
+              },
+            ].map((band) => (
+              <div key={band.title} className="bg-sage-50 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div
+                    className={`w-7 h-7 ${band.iconBg} rounded-full flex items-center justify-center flex-shrink-0`}
+                  >
+                    <span className="text-xs">{band.emoji}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold font-heading text-gray-800 leading-tight">
+                      {band.title}
+                    </h3>
+                    <p className="text-[11px] text-gray-400 font-body">
+                      {band.subtitle}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold font-heading text-gray-800 leading-tight">
-                    Primary / Early Learners
-                  </h3>
-                  <p className="text-[11px] text-gray-400 font-body">
-                    Ages 4–7
-                  </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <div className="mb-2">
+                      <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full font-body">
+                        Week 4
+                      </span>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {band.week4.map((item) => (
+                        <li key={item.label} className="flex items-start gap-2">
+                          <span className="text-sm leading-none mt-0.5 flex-shrink-0">
+                            {item.emoji}
+                          </span>
+                          <div>
+                            <p className="text-xs font-bold text-gray-800 font-body leading-tight">
+                              {item.label}
+                            </p>
+                            <p className="text-[11px] text-gray-400 font-body">
+                              {item.desc}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                    <div className="mb-2">
+                      <span className="inline-block px-2 py-0.5 bg-sage-100 text-sage-700 text-[10px] font-bold rounded-full font-body">
+                        Week 5
+                      </span>
+                    </div>
+                    <ul className="space-y-1.5">
+                      {band.week5.map((item) => (
+                        <li key={item.label} className="flex items-start gap-2">
+                          <span className="text-sm leading-none mt-0.5 flex-shrink-0">
+                            {item.emoji}
+                          </span>
+                          <div>
+                            <p className="text-xs font-bold text-gray-800 font-body leading-tight">
+                              {item.label}
+                            </p>
+                            <p className="text-[11px] text-gray-400 font-body">
+                              {item.desc}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Week 1 — Early Learners */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                  <div className="mb-2">
-                    <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full font-body">
-                      Week 1
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold font-heading text-gray-700 mb-2">
-                    Early Learners
-                  </h4>
-                  <ul className="space-y-1.5">
-                    {WEEK1_EARLY_HIGHLIGHTS.map((item) => (
-                      <li key={item.label} className="flex items-start gap-2">
-                        <span className="text-sm leading-none mt-0.5 flex-shrink-0">
-                          {item.emoji}
-                        </span>
-                        <div>
-                          <p className="text-xs font-bold text-gray-800 font-body leading-tight">
-                            {item.label}
-                          </p>
-                          <p className="text-[11px] text-gray-400 font-body">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Week 2 — Primary */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                  <div className="mb-2">
-                    <span className="inline-block px-2 py-0.5 bg-sage-100 text-sage-700 text-[10px] font-bold rounded-full font-body">
-                      Week 2
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold font-heading text-gray-700 mb-2">
-                    Primary
-                  </h4>
-                  <ul className="space-y-1.5">
-                    {WEEK2_PRIMARY_HIGHLIGHTS.map((item) => (
-                      <li key={item.label} className="flex items-start gap-2">
-                        <span className="text-sm leading-none mt-0.5 flex-shrink-0">
-                          {item.emoji}
-                        </span>
-                        <div>
-                          <p className="text-xs font-bold text-gray-800 font-body leading-tight">
-                            {item.label}
-                          </p>
-                          <p className="text-[11px] text-gray-400 font-body">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Right panel — Elementary */}
-            <div className="bg-sage-50 rounded-2xl p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-sage-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs">📐</span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold font-heading text-gray-800 leading-tight">
-                    Elementary
-                  </h3>
-                  <p className="text-[11px] text-gray-400 font-body">
-                    Ages 8–11
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Week 1 — Elementary */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                  <div className="mb-2">
-                    <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full font-body">
-                      Week 1
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold font-heading text-gray-700 mb-2">
-                    Elementary
-                  </h4>
-                  <ul className="space-y-1.5">
-                    {WEEK1_ELEM_HIGHLIGHTS.map((item) => (
-                      <li key={item.label} className="flex items-start gap-2">
-                        <span className="text-sm leading-none mt-0.5 flex-shrink-0">
-                          {item.emoji}
-                        </span>
-                        <div>
-                          <p className="text-xs font-bold text-gray-800 font-body leading-tight">
-                            {item.label}
-                          </p>
-                          <p className="text-[11px] text-gray-400 font-body">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Week 2 — Elementary */}
-                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                  <div className="mb-2">
-                    <span className="inline-block px-2 py-0.5 bg-sage-100 text-sage-700 text-[10px] font-bold rounded-full font-body">
-                      Week 2
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold font-heading text-gray-700 mb-2">
-                    Elementary
-                  </h4>
-                  <ul className="space-y-1.5">
-                    {WEEK2_ELEM_HIGHLIGHTS.map((item) => (
-                      <li key={item.label} className="flex items-start gap-2">
-                        <span className="text-sm leading-none mt-0.5 flex-shrink-0">
-                          {item.emoji}
-                        </span>
-                        <div>
-                          <p className="text-xs font-bold text-gray-800 font-body leading-tight">
-                            {item.label}
-                          </p>
-                          <p className="text-[11px] text-gray-400 font-body">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
+            ))}
           </motion.div>
 
           <motion.div
@@ -1130,16 +1101,16 @@ export default function ShadowPage() {
             transition={{ duration: 0.4, delay: 0.18 }}
           >
             <Link
-              href="/highlights/summer/week-1"
+              href="/highlights/school-year/week-4"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm"
             >
-              View Full Week 1 Recap →
+              View Full Week 4 Recap →
             </Link>
             <Link
-              href="/highlights/summer/week-2"
+              href="/highlights/school-year/week-5"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-800 font-semibold rounded-lg border border-gray-200 hover:bg-sage-50 transition-colors duration-200 shadow-sm hover:shadow-md font-body text-sm"
             >
-              View Full Week 2 Recap →
+              View Full Week 5 Recap →
             </Link>
           </motion.div>
         </div>

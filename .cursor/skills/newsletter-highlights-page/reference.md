@@ -86,6 +86,8 @@ Map `teacher_name` → public label. Update when staff changes.
 | `app/community/page.tsx` | Update section intro copy if week/theme changed |
 | `app/homeschool/page.tsx` | Replace inline recap with `WeekRecapPreview` (or update constants) |
 | `app/gallery/page.tsx` | Add `SCHOOL_YEAR_WEEK_N` array + prepend to `ALL_IMAGES` |
+| `app/components/Hero.tsx` | **Update** school-year highlights slide (2nd slide in `slides`) |
+| `app/shadow/page.tsx` | **Update** — roll forward two-week recap (images, highlights, copy, links) |
 
 **Auto-updated via imports (no edit needed if preview module is correct):**
 
@@ -96,11 +98,9 @@ Map `teacher_name` → public label. Update when staff changes.
 **Optional checks for stale inline recaps:**
 
 - `app/free/page.tsx` — summer Week 1 inline recap
-- `app/shadow/page.tsx` — mixed summer recap content
 
 **Out of scope (do not edit unless user asks):**
 
-- `app/components/Hero.tsx`
 - `app/links/page.tsx`
 - `app/meet-miss-joy/page.tsx`
 
@@ -116,6 +116,19 @@ Map `teacher_name` → public label. Update when staff changes.
 | N | `school_week_{word}` | `/assets/highlights/school_week_{word}` |
 
 Use spelled-out ordinals (`one`, `two`, `three`) matching existing pattern.
+
+### Shadow page constants (`app/shadow/page.tsx`)
+
+The shadow page keeps **two** weeks of inline data. Constant suffixes shift forward each ship:
+
+| When shipping week | Image arrays | Highlight arrays |
+| ------------------ | ------------ | ---------------- |
+| 5 | `WEEK4_IMAGES`, `WEEK5_IMAGES` | `WEEK4_PRIMARY_HIGHLIGHTS`, `WEEK5_PRIMARY_HIGHLIGHTS`, etc. |
+| 6 | `WEEK5_IMAGES`, `WEEK6_IMAGES` | `WEEK5_*`, `WEEK6_*` (drop week 4) |
+
+Pattern: `WEEK{N}_IMAGES`, `WEEK{N}_PRIMARY_HIGHLIGHTS`, `WEEK{N}_LOWER_ELEM_HIGHLIGHTS`, `WEEK{N}_UPPER_ELEM_HIGHLIGHTS`.
+
+Also update the grade-band `.map()` config keys and JSX week badges when renaming constants.
 
 ### Routes
 
@@ -151,6 +164,20 @@ export const SCHOOL_YEAR_LATEST_CARD = {
   href: "/highlights/school-year/week-2",
   coverImage: `${BASE}/best-cover-shot.jpg`,
 };
+```
+
+### Hero slide fields
+
+Update the school-year highlights slide in `app/components/Hero.tsx` (2nd entry in the `slides` array). Mirror Step 7 preview data for consistency:
+
+```ts
+{
+  image: SCHOOL_YEAR_LATEST_CARD.coverImage,
+  title: "School Year Week N Highlights Are Live!",
+  description: SCHOOL_YEAR_LATEST_RECAP.subtitle,
+  buttonLabel: "View Week N Recap →",
+  buttonHref: SCHOOL_YEAR_LATEST_RECAP.href,
+}
 ```
 
 ## Image compression
@@ -210,6 +237,58 @@ Sections in render:
 5. Photo gallery grid (opens lightbox)
 6. Enrollment CTA
 7. Footer + FloatingSMSButton
+
+## Shadow page two-week recap
+
+**File:** `app/shadow/page.tsx` — route `/shadow` ($20 Shadow Day landing page).
+
+**Not** `app/shadow-tour/page.tsx` (`/shadow-tour`, legacy $95 tour).
+
+### When to run
+
+Every school-year week, after Step 6 creates the week-N highlights page and Step 8 prepends the index entry.
+
+### Which weeks to show
+
+Use the two most recent entries in `SCHOOL_YEAR_WEEKS` (newest first):
+
+- `SCHOOL_YEAR_WEEKS[0]` — latest week N
+- `SCHOOL_YEAR_WEEKS[1]` — prior week N-1
+
+### What to update
+
+| Area | Details |
+| ---- | ------- |
+| Image arrays | `WEEK{N-1}_IMAGES`, `WEEK{N}_IMAGES` — all `.src` values from each week's `WEEK_IMAGES` |
+| Carousel | `CAROUSEL_IMAGES = [...WEEK{N-1}_IMAGES, ...WEEK{N}_IMAGES]`; feeds mobile strip, desktop strip, expandable grid |
+| Hero mosaic | 3 hardcoded desktop paths: latest-week cover (tall), prior-week standout, latest-week second shot |
+| Badge | `Weeks {N-1} & {N} in Review` |
+| Subtext | School-year framing referencing both weeks |
+| Highlights | 6 arrays copied from week pages: primary / lower / upper for each week |
+| Grade-band grid | `lg:grid-cols-3` outer; inner `sm:grid-cols-2` with Week {N-1} and Week {N} cards per band |
+| Recap CTAs | `/highlights/school-year/week-{N-1}` and `/highlights/school-year/week-{N}` |
+
+Source of truth for highlight bullets: `PRIMARY_HIGHLIGHTS`, `LOWER_ELEMENTARY_HIGHLIGHTS`, `UPPER_ELEMENTARY_HIGHLIGHTS` at the top of each week's highlights page.
+
+### Carousel auto-scroll gotcha
+
+The shadow page drives mobile (`sm:hidden`) and desktop (`hidden sm:block`) carousels from one `requestAnimationFrame` loop. The loop-reset check **must** use the visible scrollable element:
+
+```ts
+const activeEl = refs
+  .map((r) => r.current)
+  .find((el) => el && el.scrollWidth > el.clientWidth);
+if (activeEl && activeEl.scrollLeft >= activeEl.scrollWidth / 2) {
+  pos = 0;
+  // reset both refs
+}
+```
+
+Using the first ref blindly breaks desktop auto-scroll because the hidden mobile carousel has `scrollWidth === 0`, so `scrollLeft >= scrollWidth / 2` is always true and `pos` never advances.
+
+### Verification
+
+- `/shadow` — badge shows correct week numbers, carousel drifts on desktop and mobile, grade-band cards match both weeks, recap links work
 
 ## Summer program (future)
 

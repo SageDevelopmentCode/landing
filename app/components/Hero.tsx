@@ -16,12 +16,12 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/highlights/school_week_four/01C20017-202A-4B7C-ADA0-34086EC915F2.JPG",
-    title: "School Year Week 4 Highlights Are Live!",
+    image: "/assets/highlights/school_week_five/96D93AFA-3B3B-4959-A75F-DD9624B41C29.JPG",
+    title: "School Year Week 5 Highlights Are Live!",
     description:
-      "Chicken investigations, tornado engineering, Dot Day art, and a Dragons & Mythical Creatures Field Friday.",
-    buttonLabel: "View Week 4 Recap →",
-    buttonHref: "/highlights/school-year/week-4",
+      "First chicken eggs, ant investigations, volcano science, Dot Day art, and a Desert Discovery Field Friday.",
+    buttonLabel: "View Week 5 Recap →",
+    buttonHref: "/highlights/school-year/week-5",
   },
   {
     image: "/assets/Stock4.jpg",

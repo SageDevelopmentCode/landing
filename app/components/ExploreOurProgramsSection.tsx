@@ -49,8 +49,91 @@ const programs = [
 
 interface ExploreOurProgramsSectionProps {
   embedded?: boolean;
+  cardsOnly?: boolean;
   className?: string;
   containerClassName?: string;
+}
+
+function ProgramsGrid() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+      {programs.map((program, index) => (
+        <motion.div
+          key={program.href}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{
+            duration: 0.6,
+            delay: 0.1 + index * 0.15,
+            ease: "easeOut" as const,
+          }}
+        >
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 h-full flex flex-col">
+            <div className="relative h-48 w-full">
+              <Image
+                src={program.image}
+                alt={program.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+
+            <div className="p-6 flex flex-col flex-1">
+              <Link
+                href="/apply"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full self-start mb-3 hover:bg-green-200 transition-colors"
+              >
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                Enrollment is now open
+                <span>→</span>
+              </Link>
+
+              <h3 className="text-xl font-bold text-black font-heading mb-3">
+                {program.title}
+              </h3>
+
+              <div
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}
+              >
+                📅 {program.dates}
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {program.details.map((detail) => (
+                  <span
+                    key={detail}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
+                  >
+                    {detail}
+                  </span>
+                ))}
+              </div>
+
+              <p className="text-sm text-text-gray font-body leading-relaxed mb-4 flex-1">
+                {program.description}
+              </p>
+
+              <div className="flex items-center gap-4">
+                <Link
+                  href={program.href}
+                  className="text-primary font-semibold text-sm hover:underline"
+                >
+                  Learn More
+                </Link>
+                <Link
+                  href={program.ctaHref ?? "/apply"}
+                  className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  Enroll Now
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
 }
 
 function ProgramsContent() {
@@ -78,92 +161,27 @@ function ProgramsContent() {
         Explore Our Programs
       </motion.h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-        {programs.map((program, index) => (
-          <motion.div
-            key={program.href}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{
-              duration: 0.6,
-              delay: 0.1 + index * 0.15,
-              ease: "easeOut" as const,
-            }}
-          >
-            <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 h-full flex flex-col">
-              <div className="relative h-48 w-full">
-                <Image
-                  src={program.image}
-                  alt={program.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-
-              <div className="p-6 flex flex-col flex-1">
-                <Link
-                  href="/apply"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full self-start mb-3 hover:bg-green-200 transition-colors"
-                >
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                  Enrollment is now open
-                  <span>→</span>
-                </Link>
-
-                <h3 className="text-xl font-bold text-black font-heading mb-3">
-                  {program.title}
-                </h3>
-
-                <div
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${program.dateBg} ${program.dateText} text-xs font-semibold mb-4 self-start`}
-                >
-                  📅 {program.dates}
-                </div>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {program.details.map((detail) => (
-                    <span
-                      key={detail}
-                      className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full"
-                    >
-                      {detail}
-                    </span>
-                  ))}
-                </div>
-
-                <p className="text-sm text-text-gray font-body leading-relaxed mb-4 flex-1">
-                  {program.description}
-                </p>
-
-                <div className="flex items-center gap-4">
-                  <Link
-                    href={program.href}
-                    className="text-primary font-semibold text-sm hover:underline"
-                  >
-                    Learn More
-                  </Link>
-                  <Link
-                    href={program.ctaHref ?? "/apply"}
-                    className="px-4 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                  >
-                    Enroll Now
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <ProgramsGrid />
     </>
   );
 }
 
 export default function ExploreOurProgramsSection({
   embedded = false,
+  cardsOnly = false,
   className = "bg-white py-16 px-8 sm:px-12 lg:px-16",
   containerClassName = "max-w-7xl mx-auto",
 }: ExploreOurProgramsSectionProps) {
+  if (cardsOnly) {
+    return (
+      <section className={className}>
+        <div className={containerClassName}>
+          <ProgramsGrid />
+        </div>
+      </section>
+    );
+  }
+
   if (embedded) {
     return <ProgramsContent />;
   }

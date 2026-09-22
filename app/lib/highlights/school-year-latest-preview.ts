@@ -1,97 +1,97 @@
-const BASE = "/assets/highlights/school_week_four";
+const BASE = "/assets/highlights/school_week_five";
 
 export const SCHOOL_YEAR_LATEST_RECAP = {
-  badge: "School Year 2026–27 · Week 4",
-  heading: "See Week 4 of Our School Year",
+  badge: "School Year 2026–27 · Week 5",
+  heading: "See Week 5 of Our School Year",
   subtitle:
-    "Chicken investigations, tornado engineering, Dot Day art, and a Dragons & Mythical Creatures Field Friday.",
-  body: "Week four of our 2026–27 school year is complete. From our primary classroom through upper elementary, students investigated chicken life cycles, built tornado-resistant structures, launched multiplication, explored globe geography, celebrated Dot Day, and closed the week with dragons, slime, and dragon eggs.",
-  ctaLabel: "View Full Week 4 Recap →",
-  href: "/highlights/school-year/week-4",
+    "First chicken eggs, ant investigations, volcano science, Dot Day art, and a Desert Discovery Field Friday.",
+  body: "Week five of our 2026–27 school year is complete. From our primary classroom through upper elementary, students celebrated our first chicken eggs, launched ant investigations, strengthened addition and multiplication, researched volcanoes, honored Dot Day with a collaborative mural, and closed the week with desert cactus painting and pasta snakes.",
+  ctaLabel: "View Full Week 5 Recap →",
+  href: "/highlights/school-year/week-5",
 };
 
 export const SCHOOL_YEAR_LATEST_PREVIEW_IMAGES = [
-  `${BASE}/01C20017-202A-4B7C-ADA0-34086EC915F2.JPG`,
-  `${BASE}/9A368F27-0C4F-4DD7-995B-98CC5DB2BE52.JPG`,
-  `${BASE}/C1390CB2-0CD0-4B86-8360-32B658D5E5E2.JPG`,
-  `${BASE}/818F2757-ACE1-41D0-A62F-52F47C9C59E2.JPG`,
-  `${BASE}/B3A30FDD-AAB6-496E-802A-B30FA7CB4446.JPG`,
-  `${BASE}/6F80F35B-3B69-4D26-8868-92A93A382AE1.JPG`,
+  `${BASE}/96D93AFA-3B3B-4959-A75F-DD9624B41C29.JPG`,
+  `${BASE}/5246214C-00FC-4ED2-8369-7FD5DDCF29D3.JPG`,
+  `${BASE}/29AB0AD4-AEDD-4145-A6A9-5FA6D8FD605E.JPG`,
+  `${BASE}/89C4E0CC-3A0E-479B-8DE9-2FA03D891A80.JPG`,
+  `${BASE}/CCACC24E-0E7A-4442-99F4-F0596DCB4134.JPG`,
+  `${BASE}/DEFE850C-99B6-4015-B419-89FDE3617DA0.JPG`,
 ];
 
 export const SCHOOL_YEAR_LATEST_PRIMARY = [
   {
-    emoji: "🐔",
-    label: "Chicken Egg Investigation",
-    desc: "Theories about why the chickens haven't laid yet",
+    emoji: "🥚",
+    label: "First Chicken Eggs",
+    desc: "Student-led research led to our first eggs",
   },
   {
     emoji: "📹",
     label: "Chicken Cam",
-    desc: "Observing behavior and gathering evidence",
+    desc: "Recycled-materials camera to observe coop behavior",
+  },
+  {
+    emoji: "🐜",
+    label: "Ant Investigation",
+    desc: "Dot-art ants and questions about ant habitats",
   },
   {
     emoji: "🔢",
-    label: "Math Through Observation",
-    desc: "Counting, sorting seeds, comparing quantities",
-  },
-  {
-    emoji: "✍️",
-    label: "Collaborative Documentation",
-    desc: "Science, math, art, and writing together",
+    label: "Counting Toward 100",
+    desc: "Number recognition and writing bigger numbers",
   },
 ];
 
 export const SCHOOL_YEAR_LATEST_LOWER = [
   {
     emoji: "➕",
-    label: "Addition Foundations",
-    desc: "Number bonds, base-10 blocks, and the 120 chart",
+    label: "Addition Practice",
+    desc: "Two-digit plus single-digit and regrouping",
   },
   {
-    emoji: "🌍",
-    label: "Globe Geography",
-    desc: "Continents, oceans, hemispheres, and latitude",
+    emoji: "📖",
+    label: "Sight Word Reading",
+    desc: "Blending short vowels and consonants",
+  },
+  {
+    emoji: "🗺️",
+    label: "Map Skills Booklet",
+    desc: "Interactive booklet on continents and maps",
   },
   {
     emoji: "🎨",
-    label: "Dot Day Art",
-    desc: "Painted plates with oil pastels",
-  },
-  {
-    emoji: "🐉",
-    label: "Dragons Field Friday",
-    desc: "Watercolor dragons, mermaid slime, dragon eggs",
+    label: "Color Theory & Dot Day",
+    desc: "Color wheel lions and collaborative dot mural",
   },
 ];
 
 export const SCHOOL_YEAR_LATEST_UPPER = [
   {
     emoji: "✖️",
-    label: "Multiplication Unit",
-    desc: "Array City and visual models with cubes",
+    label: "Multiplication Milestones",
+    desc: "Facts 0–10 and multi-digit multiplication",
   },
   {
-    emoji: "🌪️",
-    label: "Tornado Engineering",
-    desc: "Designing tornado-resistant structures",
+    emoji: "🌋",
+    label: "Volcano Science",
+    desc: "Survival guides and eruption experiments",
   },
   {
-    emoji: "🎨",
-    label: "Dot Day Ombré Art",
-    desc: "Dot patterns and ombré painting",
+    emoji: "✍️",
+    label: "Persuasive Writing",
+    desc: "Opinions with reasons and examples",
   },
   {
-    emoji: "🍓",
-    label: "Cooking & Writing",
-    desc: "Yogurt parfaits and Story of Me writing",
+    emoji: "🍲",
+    label: "Cooking & Nature Art",
+    desc: "Bone broth soup and dried-flower creations",
   },
 ];
 
 export const SCHOOL_YEAR_LATEST_CARD = {
-  week: 4,
-  dates: "Sep 7–11",
-  theme: "Chickens, Tornadoes & Dot Day",
-  href: "/highlights/school-year/week-4",
-  coverImage: `${BASE}/01C20017-202A-4B7C-ADA0-34086EC915F2.JPG`,
+  week: 5,
+  dates: "Sep 14–18",
+  theme: "Eggs, Ants & Desert Discovery",
+  href: "/highlights/school-year/week-5",
+  coverImage: `${BASE}/96D93AFA-3B3B-4959-A75F-DD9624B41C29.JPG`,
 };

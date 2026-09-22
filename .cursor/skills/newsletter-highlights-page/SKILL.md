@@ -52,6 +52,8 @@ Copy this checklist and track progress:
 - [ ] Step 8: Update highlights index
 - [ ] Step 9: Update homepage + community grids
 - [ ] Step 9b: Update inline recap pages (homeschool, etc.)
+- [ ] Step 9c: Update Hero.tsx highlights slide
+- [ ] Step 9d: Update shadow page (last two school-year weeks)
 - [ ] Step 10: Add photos to gallery
 - [ ] Step 11: Build and verify
 ```
@@ -181,9 +183,42 @@ Some pages have **duplicated inline recap sections** with hardcoded summer-week 
 **Optional checks** (still on summer recaps unless user asks):
 
 - [`app/free/page.tsx`](../../../app/free/page.tsx)
-- [`app/shadow/page.tsx`](../../../app/shadow/page.tsx)
 
-Prefer `WeekRecapPreview` over duplicating preview constants — it auto-updates when Step 7 is done.
+Prefer `WeekRecapPreview` over duplicating preview constants — it auto-updates when Step 7 is done. The shadow page is handled separately in Step 9d (two-week recap, not `WeekRecapPreview`).
+
+### Step 9c: Update Hero slide
+
+Update the school-year highlights slide in [`app/components/Hero.tsx`](../../../app/components/Hero.tsx). It is the **second slide** in the `slides` array (immediately after the Welcome slide).
+
+Replace these fields each week — mirror `SCHOOL_YEAR_LATEST_RECAP` and `SCHOOL_YEAR_LATEST_CARD` from Step 7:
+
+| Field | Source |
+| ----- | ------ |
+| `image` | `SCHOOL_YEAR_LATEST_CARD.coverImage` |
+| `title` | `School Year Week N Highlights Are Live!` |
+| `description` | `SCHOOL_YEAR_LATEST_RECAP.subtitle` (one-line teaser) |
+| `buttonLabel` | `View Week N Recap →` |
+| `buttonHref` | `SCHOOL_YEAR_LATEST_RECAP.href` |
+
+### Step 9d: Update shadow page (last two school-year weeks)
+
+**Required.** Update [`app/shadow/page.tsx`](../../../app/shadow/page.tsx) at `/shadow` (the $20 Shadow Day landing page). This is **not** [`app/shadow-tour/page.tsx`](../../../app/shadow-tour/page.tsx) (`/shadow-tour`, legacy $95 tour).
+
+The shadow page shows a **two-week** combined recap (auto-scroll carousel, expandable photo grid, side-by-side grade-band cards). Do **not** replace it with `WeekRecapPreview` — that component only covers the latest single week.
+
+When week **N** ships, showcase weeks **N-1** and **N**:
+
+1. **Identify weeks** — after Step 8, read `SCHOOL_YEAR_WEEKS` in [`app/highlights/page.tsx`](../../../app/highlights/page.tsx) (or [`app/lib/highlights/weeks.ts`](../../../app/lib/highlights/weeks.ts)): index `[0]` = latest (N), index `[1]` = prior (N-1).
+2. **Image arrays** — copy every `.src` from each week's `WEEK_IMAGES` into `WEEK{N-1}_IMAGES` and `WEEK{N}_IMAGES`. Set `CAROUSEL_IMAGES = [...WEEK{N-1}_IMAGES, ...WEEK{N}_IMAGES]`. Drop the oldest week's image array (e.g. when shipping week 6, remove `WEEK4_IMAGES`).
+3. **Hero mosaic (desktop)** — update 3 hardcoded paths in the hero right column: tall image from latest week, square from prior week, square from latest week. Pick strong action shots (cover images from each week page are good defaults).
+4. **Highlight constants** — copy `PRIMARY_HIGHLIGHTS`, `LOWER_ELEMENTARY_HIGHLIGHTS`, `UPPER_ELEMENTARY_HIGHLIGHTS` from both week pages into six shadow constants (`WEEK{N-1}_PRIMARY_HIGHLIGHTS`, etc.). Remove the dropped week's constants.
+5. **Recap copy** — badge: `Weeks {N-1} & {N} in Review`; subtext references both weeks in school-year framing.
+6. **Grade-band grid** — 3 columns (Primary, Lower Elementary, Upper Elementary), each with Week {N-1} and Week {N} cards. Update the `.map()` config object keys (`week4`/`week5` or `weekPrev`/`weekLatest`) **and** the JSX badge labels (`Week 4`, `Week 5`) to match the new week numbers whenever constants are renamed.
+7. **Recap CTAs** — links to `/highlights/school-year/week-{N-1}` and `/week-{N}` with labels `View Full Week {N-1} Recap →` / `View Full Week {N} Recap →`.
+
+**Carousel note:** Do not break the `requestAnimationFrame` loop reset — it must find the visible scrollable element (`scrollWidth > clientWidth`), not the hidden mobile ref. See [reference.md](reference.md).
+
+Full field list and naming patterns: [reference.md — Shadow page two-week recap](reference.md#shadow-page-two-week-recap).
 
 ### Step 10: Add photos to gallery
 
@@ -205,10 +240,11 @@ Spot-check routes:
 
 - `/highlights/school-year/week-N` — full page, carousel, grid, lightbox
 - `/highlights` — new card appears first in School Year section
-- `/` — WeekRecapPreview marquee + grade cards + CTA
+- `/` — Hero carousel highlights slide + WeekRecapPreview marquee + grade cards + CTA
 - `/apply` — WeekRecapPreview section
 - `/community` — highlights grid card
 - `/homeschool` — WeekRecapPreview (not stale summer inline recap)
+- `/shadow` — two-week recap badge, carousel auto-scroll, grade-band cards, recap links
 - `/gallery` — new week's photos appear at top of grid
 
 ## Copy rules
@@ -249,14 +285,16 @@ Agent actions:
 7. Prepend to `SCHOOL_YEAR_WEEKS` in highlights index
 8. Update homepage section copy if needed
 9. Replace homeschool inline recap with `WeekRecapPreview`
-10. Add photos to `app/gallery/page.tsx`
-11. `npm run build`
+10. Update Hero.tsx highlights slide
+11. Update `app/shadow/page.tsx` with weeks N-1 and N photos, highlights, and recap links
+12. Add photos to `app/gallery/page.tsx`
+13. `npm run build`
 
 ## Out of scope
 
 - Instagram carousel copy ([newsletter-carousel-highlights](../newsletter-carousel-highlights/SKILL.md))
 - Zoho parent email ([school-year-newsletter-email](../school-year-newsletter-email/SKILL.md))
-- `Hero.tsx` slide, `app/links/page.tsx`, `app/meet-miss-joy/page.tsx`
+- `app/links/page.tsx`, `app/meet-miss-joy/page.tsx`
 - Supabase DDL / migrations
 - Canva design or social posting
 
@@ -269,6 +307,9 @@ Agent actions:
 - [ ] Highlights index prepended with new week card
 - [ ] Homeschool page uses `WeekRecapPreview` (no stale inline summer recap)
 - [ ] Gallery updated with new week's photos
+- [ ] Hero.tsx highlights slide updated to latest week
+- [ ] Shadow page shows weeks N-1 & N (photos, badge, grade-band cards, recap links)
+- [ ] Shadow page carousel auto-scrolls on desktop and mobile
 - [ ] No teacher names or community names in public copy
 - [ ] Field Friday section included when applicable
 - [ ] `npm run build` passes
