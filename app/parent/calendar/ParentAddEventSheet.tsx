@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft } from "lucide-react";
 import { Merriweather } from "next/font/google";
@@ -102,12 +102,6 @@ export default function ParentAddEventSheet({
   });
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (initialDate && !eventToEdit && !form.event_date) {
-      setForm((f) => ({ ...f, event_date: initialDate }));
-    }
-  }, [initialDate, eventToEdit, form.event_date]);
 
   const step = PARENT_CALENDAR_ADD_EVENT_STEPS[stepIdx];
 

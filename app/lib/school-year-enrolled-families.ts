@@ -87,10 +87,10 @@ export function normalizeAddress(parts: {
   state?: string | null;
   zip?: string | null;
 }): NormalizedAddress | null {
-  let street = normalizeStreet(parts.street?.trim() ?? "");
+  const street = normalizeStreet(parts.street?.trim() ?? "");
   let city = parts.city?.trim() ?? "";
   let state = parts.state?.trim().toUpperCase() ?? "";
-  let zip = parts.zip?.trim() ?? "";
+  const zip = parts.zip?.trim() ?? "";
 
   if (city.includes(",")) {
     const [cityPart, statePart] = city.split(",").map((value) => value.trim());
