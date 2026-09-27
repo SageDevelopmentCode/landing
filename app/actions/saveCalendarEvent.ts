@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createAdminClient } from "@/app/lib/supabase-server";
+import { syncCalendarEventFeedPost } from "@/app/lib/feed/syncCalendarEventFeed";
 
 const saveCalendarEventSchema = z.object({
   title: z.string().min(1, "Event name is required").max(200),
@@ -98,6 +99,12 @@ export async function saveCalendarEvent(
         message: "Failed to save event. Please try again.",
         error: error.message,
       };
+    }
+
+    if (inserted) {
+      syncCalendarEventFeedPost(inserted).catch((e) =>
+        console.error("syncCalendarEventFeedPost:", e),
+      );
     }
 
     return {

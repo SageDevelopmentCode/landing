@@ -5,6 +5,7 @@ export default function CalendarScreen() {
     <MobileCalendarScreen
       fetchErrorTag="parent-calendar-fetch"
       showRegisterCta
+      allowParentAddEvent
     />
   );
 }

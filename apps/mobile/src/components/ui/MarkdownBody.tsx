@@ -1,4 +1,5 @@
 import { FontFamilies, Brand } from "@/constants/theme";
+import { splitFeedBodyLead } from "@/lib/feedBodyLead";
 import { useState } from "react";
 import { TouchableOpacity, Text, View } from "react-native";
 import Markdown from "react-native-markdown-display";
@@ -100,20 +101,41 @@ interface Props {
   body: string;
   collapsible?: boolean;
   previewLength?: number;
+  leadBold?: boolean;
 }
 
-export function MarkdownBody({ body, collapsible = false, previewLength = 280 }: Props) {
+export function MarkdownBody({
+  body,
+  collapsible = false,
+  previewLength = 280,
+  leadBold = false,
+}: Props) {
   const [expanded, setExpanded] = useState(false);
   const decoded = decodeEntities(body);
-  const needsTruncation = collapsible && decoded.length > previewLength;
+  const { lead, rest } = leadBold ? splitFeedBodyLead(decoded) : { lead: null, rest: decoded };
+  const mainBody = lead ? rest : decoded;
+  const needsTruncation = collapsible && mainBody.length > previewLength;
   const displayBody =
     needsTruncation && !expanded
-      ? decoded.slice(0, previewLength).replace(/\s+\S*$/, "") + "…"
-      : decoded;
+      ? mainBody.slice(0, previewLength).replace(/\s+\S*$/, "") + "…"
+      : mainBody;
 
   return (
     <View>
-      <Markdown style={markdownStyles}>{displayBody}</Markdown>
+      {lead && (
+        <Text
+          style={{
+            fontFamily: FontFamilies.bodySemiBold,
+            fontSize: 15,
+            color: "#1f2937",
+            lineHeight: 23,
+            marginBottom: 6,
+          }}
+        >
+          {lead}
+        </Text>
+      )}
+      {displayBody.length > 0 && <Markdown style={markdownStyles}>{displayBody}</Markdown>}
       {needsTruncation && (
         <TouchableOpacity onPress={() => setExpanded((v) => !v)} activeOpacity={0.7}>
           <Text

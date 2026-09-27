@@ -481,6 +481,31 @@ export async function publishNewsletter(
     return { error: error.message }
   }
 
+  const { data: nl } = await adminClient
+    .schema('newsletters')
+    .from('newsletters')
+    .select('id, title')
+    .eq('id', newsletterId)
+    .single()
+
+  if (nl?.title) {
+    const {
+      createAutoFeedPost,
+      newsletterCtaRoute,
+      newsletterFeedBody,
+    } = await import("@/app/lib/feed/autoFeedPost");
+    void createAutoFeedPost({
+      authorUserId: user.id,
+      postType: 'newsletter',
+      body: newsletterFeedBody(nl.title),
+      sourceType: 'newsletter',
+      sourceId: newsletterId,
+      ctaLabel: 'Read newsletter',
+      ctaRoute: newsletterCtaRoute(newsletterId, false),
+      ctaRouteStaff: newsletterCtaRoute(newsletterId, true),
+    }).catch((e) => console.error('newsletter feed post:', e))
+  }
+
   return { success: true }
 }
 

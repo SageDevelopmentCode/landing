@@ -3,6 +3,23 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const DEFAULT_NOTIFY_EMAIL = "sabrina.sagefield@gmail.com";
 const NOTIFY_API_URL = "https://sagefield.co/api/notify/discord";
+const FEED_AUTO_CHANNEL_MESSAGE_URL =
+  Deno.env.get("FEED_AUTO_NOTIFY_URL") ??
+  "https://sagefield.co/api/feed/auto/channel-message";
+
+function syncCommunityChannelFeedPost(messageId: string): void {
+  const secret = Deno.env.get("WEBHOOK_SECRET");
+  if (!secret) return;
+
+  void fetch(FEED_AUTO_CHANNEL_MESSAGE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-webhook-secret": secret,
+    },
+    body: JSON.stringify({ messageId }),
+  }).catch(() => {});
+}
 
 function notifyParentMessageDiscord(data: {
   parentName: string;
@@ -126,6 +143,17 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  const { data: channelForFeed } = await admin
+    .schema("messaging")
+    .from("channels")
+    .select("is_default")
+    .eq("id", record.channel_id)
+    .maybeSingle();
+
+  if (channelForFeed?.is_default && record.id) {
+    syncCommunityChannelFeedPost(record.id);
+  }
 
   const { data: sender } = await admin
     .schema("admin")

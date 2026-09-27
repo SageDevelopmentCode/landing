@@ -21,6 +21,9 @@ import { sendPaySummerTuitionEmail } from "@/app/actions/sendPaySummerTuitionEma
 import { sendPaySummerTuitionEmail2 } from "@/app/actions/sendPaySummerTuitionEmail2";
 import { sendRegistrationFeeConfirmationEmail } from "@/app/actions/sendRegistrationFeeConfirmationEmail";
 import { sendSchoolYearCommitmentEmail } from "@/app/actions/sendSchoolYearCommitmentEmail";
+import { sendSchoolYearOctoberDropInTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberDropInTuitionReminderEmail";
+import { sendSchoolYearOctoberTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearOctoberTuitionReminderGeneralEmail";
+import { sendSchoolYearOctoberTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberTuitionReminderEmail";
 import { sendSchoolYearSeptemberDropInTuitionReminderEmail } from "@/app/actions/sendSchoolYearSeptemberDropInTuitionReminderEmail";
 import { sendSchoolYearSeptemberTuitionReminderEmail } from "@/app/actions/sendSchoolYearSeptemberTuitionReminderEmail";
 import { sendSchoolYearTuitionClarificationEmail } from "@/app/actions/sendSchoolYearTuitionClarificationEmail";
@@ -398,6 +401,39 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
         childLegalName: app.child_legal_name ?? "",
         email,
         useUpdatedHomeschoolPricing: true,
+      }),
+    ),
+  "october-tuition-reminder-school-year": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "october-tuition-reminder-drop-in": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "october-tuition-reminder-drop-in-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
+      }),
+    ),
+  "october-tuition-reminder-general": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberTuitionReminderGeneralEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
       }),
     ),
   "labor-day-reminder": (app) =>

@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createAdminClient } from "@/app/lib/supabase-server";
+import { syncCalendarEventFeedPost } from "@/app/lib/feed/syncCalendarEventFeed";
 
 const updateCalendarEventSchema = z.object({
   id: z.string().uuid(),
@@ -100,6 +101,12 @@ export async function updateCalendarEvent(
         message: "Failed to update event. Please try again.",
         error: error.message,
       };
+    }
+
+    if (updated) {
+      syncCalendarEventFeedPost(updated).catch((e) =>
+        console.error("syncCalendarEventFeedPost:", e),
+      );
     }
 
     return {

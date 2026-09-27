@@ -33,6 +33,7 @@ import {
   BarChart2,
   SlidersHorizontal,
   CalendarDays,
+  MapPin,
 } from "lucide-react";
 import {
   cssColors as colors,
@@ -67,6 +68,11 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         name: "People",
         href: "/admin/people",
         icon: <Users className="w-4 h-4" />,
+      },
+      {
+        name: "Family Map",
+        href: "/admin/family-map",
+        icon: <MapPin className="w-4 h-4" />,
       },
       {
         name: "Programs",

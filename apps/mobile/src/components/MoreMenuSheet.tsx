@@ -11,6 +11,7 @@ import {
   WebBrowserPresentationStyle,
 } from "expo-web-browser";
 import { Brand } from "@/constants/theme";
+import { HomeTheme } from "@/components/home/homeTheme";
 import {
   MoreMenuGrid,
   MoreMenuHeader,
@@ -149,6 +150,7 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
       ref={ref}
       snapPoints={["72%"]}
       enablePanDownToClose
+      backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.handle}
       backdropComponent={(props) => (
         <BottomSheetBackdrop
@@ -171,12 +173,16 @@ export const MoreMenuSheet = forwardRef<BottomSheetModal>((_, ref) => {
 });
 
 const styles = StyleSheet.create({
+  sheetBackground: {
+    backgroundColor: HomeTheme.canvas,
+  },
   handle: {
-    backgroundColor: "#d1d5db",
+    backgroundColor: "#EDE8E2",
     width: 36,
   },
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingBottom: 32,
+    gap: HomeTheme.sectionGap,
   },
 });

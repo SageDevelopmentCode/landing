@@ -1,4 +1,6 @@
 import { HomeHeroHeader } from "@/components/HomeHeroHeader";
+import { HomeSectionHeader } from "@/components/home/HomeSectionHeader";
+import { HomeTheme, homeCardSurface } from "@/components/home/homeTheme";
 import { YourChildrenSection } from "@/components/YourChildrenSection";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import {
@@ -1522,7 +1524,7 @@ function timeAgo(isoString: string): string {
 
 function SkeletonUpcomingEvents() {
   return (
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: 8, paddingHorizontal: HomeTheme.horizontalInset }}>
       {[0, 1, 2].map((i) => (
         <View
           key={i}
@@ -1530,11 +1532,12 @@ function SkeletonUpcomingEvents() {
             flexDirection: "row",
             alignItems: "center",
             gap: 12,
-            backgroundColor: "#fff",
+            backgroundColor: HomeTheme.cardBg,
             borderWidth: 1,
-            borderColor: "#e5e7eb",
-            borderRadius: 12,
+            borderColor: "#EDE8E2",
+            borderRadius: 20,
             padding: 14,
+            ...HomeTheme.shadow,
           }}
         >
           <SkeletonBox width={3} height={40} borderRadius={9999} />
@@ -1556,7 +1559,7 @@ function SkeletonStudentList() {
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
-          paddingHorizontal: 24,
+          paddingHorizontal: HomeTheme.horizontalInset,
         }}
       >
         <SkeletonBox width={120} height={16} borderRadius={4} />
@@ -1565,18 +1568,23 @@ function SkeletonStudentList() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 24, paddingBottom: 6 }}
+        contentContainerStyle={{
+          gap: 12,
+          paddingHorizontal: HomeTheme.horizontalInset,
+          paddingBottom: 6,
+        }}
       >
         {[0, 1, 2].map((i) => (
           <View
             key={i}
             style={{
               width: 172,
-              borderRadius: 16,
-              backgroundColor: "#ffffff",
+              borderRadius: 22,
+              backgroundColor: HomeTheme.cardBg,
               borderWidth: 1,
-              borderColor: "#e5e7eb",
+              borderColor: "#EDE8E2",
               overflow: "hidden",
+              ...HomeTheme.shadow,
             }}
           >
             <View
@@ -1615,12 +1623,9 @@ function SkeletonCommunityPreview() {
   return (
     <View
       style={{
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: "#c2ddc8",
-        backgroundColor: "#eef5ef",
         padding: 16,
         gap: 12,
+        ...homeCardSurface,
       }}
     >
       <SkeletonBox width={80} height={14} borderRadius={9999} />
@@ -1646,11 +1651,12 @@ type HomeProgramCardDef = {
 const homeProgramStyles = StyleSheet.create({
   card: {
     width: 200,
-    borderRadius: 14,
+    borderRadius: 22,
     overflow: "hidden",
-    backgroundColor: "#F9FAFB",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#E5E7EB",
+    backgroundColor: HomeTheme.cardBg,
+    borderWidth: 1,
+    borderColor: "#EDE8E2",
+    ...HomeTheme.shadow,
   },
   banner: {
     height: 110,
@@ -1685,38 +1691,37 @@ const homeProgramStyles = StyleSheet.create({
   title: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
-    color: "#111827",
+    color: HomeTheme.authorName,
     lineHeight: 18,
   },
   statusLine: {
     fontFamily: FontFamilies.body,
     fontSize: 11,
-    color: "#9CA3AF",
+    color: HomeTheme.meta,
   },
 });
 
 const actPrefStyles = StyleSheet.create({
   card: {
-    marginHorizontal: 24,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginBottom: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#fde68a",
-    overflow: "hidden",
     padding: 16,
     gap: 10,
+    ...homeCardSurface,
   },
   badge: {
     alignSelf: "flex-start",
-    backgroundColor: "#f59e0b",
+    backgroundColor: "#FEF3E8",
     borderRadius: 9999,
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   badgeText: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-    color: "#fff",
+    fontSize: 10,
+    color: "#B45309",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
   },
   rows: {
     gap: 8,
@@ -1786,7 +1791,7 @@ const actPrefStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#f59e0b",
+    backgroundColor: Brand.sage700,
     borderRadius: 9999,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1805,33 +1810,32 @@ const weekActStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
+    paddingHorizontal: HomeTheme.horizontalInset,
     marginBottom: 12,
     gap: 12,
   },
   sectionTitleInline: {
     fontFamily: FontFamilies.heading,
-    fontSize: 16,
-    color: "#1f2937",
+    fontSize: 22,
+    color: HomeTheme.authorName,
+    letterSpacing: -0.3,
     flex: 1,
   },
   autoFillLink: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: Brand.sage700,
+    fontSize: 14,
+    color: HomeTheme.authorName,
   },
   section: {
     paddingTop: 18,
     paddingBottom: 6,
-    borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
     marginTop: 8,
   },
   sectionTitle: {
     fontFamily: FontFamilies.heading,
-    fontSize: 16,
-    color: "#1f2937",
-    paddingHorizontal: 24,
+    fontSize: 22,
+    color: HomeTheme.authorName,
+    paddingHorizontal: HomeTheme.horizontalInset,
     marginBottom: 12,
   },
   empty: {
@@ -1842,31 +1846,34 @@ const weekActStyles = StyleSheet.create({
     paddingBottom: 12,
   },
   cardsRow: {
-    paddingHorizontal: 24,
+    paddingHorizontal: HomeTheme.horizontalInset,
     gap: 10,
     paddingBottom: 12,
   },
   card: {
     width: 180,
-    backgroundColor: "#fff",
-    borderRadius: 14,
+    backgroundColor: HomeTheme.cardBg,
+    borderRadius: 22,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#f3f4f6",
+    borderColor: "#EDE8E2",
+    ...HomeTheme.shadow,
   },
   thumb: {
     width: "100%",
     height: 88,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
   },
   thumbPlaceholder: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#F2F7F3",
     alignItems: "center",
     justifyContent: "center",
   },
   cardTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     paddingHorizontal: 10,
     paddingTop: 8,
     lineHeight: 17,
@@ -1973,11 +1980,12 @@ function NewsletterHomeCard({ item }: { item: ParentNewsletterListItem }) {
 const nlCardStyles = StyleSheet.create({
   card: {
     width: 160,
-    borderRadius: 12,
-    backgroundColor: "#fff",
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#e5e7eb",
+    borderRadius: 22,
+    backgroundColor: HomeTheme.cardBg,
+    borderWidth: 1,
+    borderColor: "#EDE8E2",
     overflow: "hidden",
+    ...HomeTheme.shadow,
   },
   imageWrap: { aspectRatio: 16 / 9, width: "100%" },
   image: { flex: 1 },
@@ -3426,12 +3434,6 @@ export default function HomeScreen() {
 
               {showActionNeededCard && (
                 <View style={actPrefStyles.card}>
-                  <LinearGradient
-                    colors={["#fffbeb", "#fff7ed"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                  />
                   <View style={actPrefStyles.badge}>
                     <Text style={actPrefStyles.badgeText}>Action Needed</Text>
                   </View>
@@ -3533,31 +3535,24 @@ export default function HomeScreen() {
           )}
 
           {/* Messages */}
-          <View style={{ marginBottom: 4, marginTop: 24 }}>
-            <View style={styles.tuitionSectionHeader}>
-              <Text style={[styles.sectionHeading, { paddingHorizontal: 0 }]}>
-                Messages
-              </Text>
-              <Pressable
-                style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                onPress={() => router.push("/(tabs)/messages" as any)}
-                hitSlop={8}
-              >
-                <Text style={styles.tuitionViewAllTxt}>View all</Text>
-              </Pressable>
-            </View>
+          <View style={{ marginBottom: 4, marginTop: HomeTheme.sectionGap }}>
+            <HomeSectionHeader
+              title="Messages"
+              onViewAll={() => router.push("/(tabs)/messages" as any)}
+            />
 
             {teachersLoading ? (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={{ marginTop: 10 }}
-                contentContainerStyle={{ gap: 10, paddingHorizontal: 24 }}
+                contentContainerStyle={{
+                  gap: 10,
+                  paddingHorizontal: HomeTheme.horizontalInset,
+                }}
               >
                 {[0, 1, 2].map((i) => (
-                  <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 8,
-                    backgroundColor: "#fff", borderRadius: 14, borderWidth: 1,
-                    borderColor: "#e5e7eb", paddingVertical: 10, paddingHorizontal: 12 }}>
+                  <View key={i} style={[msgTeacherStyles.card, { opacity: 0.7 }]}>
                     <SkeletonBox width={40} height={40} borderRadius={20} />
                     <SkeletonBox width={80} height={13} borderRadius={4} />
                     <SkeletonBox width={72} height={28} borderRadius={9999} />
@@ -3568,7 +3563,7 @@ export default function HomeScreen() {
               <Text
                 style={{
                   marginTop: 10,
-                  paddingHorizontal: 24,
+                  paddingHorizontal: HomeTheme.horizontalInset,
                   fontFamily: FontFamilies.body,
                   fontSize: 13,
                   color: "#9ca3af",
@@ -3581,7 +3576,10 @@ export default function HomeScreen() {
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={{ marginTop: 10 }}
-                contentContainerStyle={{ gap: 10, paddingHorizontal: 24 }}
+                contentContainerStyle={{
+                  gap: 10,
+                  paddingHorizontal: HomeTheme.horizontalInset,
+                }}
               >
                 {teachers.map((teacher) => {
                   const color = avatarColor(teacher.full_name);
@@ -3641,22 +3639,26 @@ export default function HomeScreen() {
             )}
           </View>
 
-          <Text
-            style={[styles.sectionHeading, { marginTop: 28, marginBottom: 8 }]}
-          >
-            Community
-          </Text>
+          <HomeSectionHeader
+            title="Community"
+            style={{ marginTop: HomeTheme.sectionGap, marginBottom: 8 }}
+          />
 
           {/* Community Preview */}
           {communityLoading ? (
-            <View style={{ paddingHorizontal: 24, marginBottom: 28 }}>
+            <View
+              style={{
+                paddingHorizontal: HomeTheme.horizontalInset,
+                marginBottom: 28,
+              }}
+            >
               <SkeletonCommunityPreview />
             </View>
           ) : (
             <Pressable
               style={({ pressed }) => [
                 {
-                  paddingHorizontal: 24,
+                  paddingHorizontal: HomeTheme.horizontalInset,
                   marginBottom: 28,
                   opacity: pressed ? 0.85 : 1,
                 },
@@ -3672,12 +3674,7 @@ export default function HomeScreen() {
                 });
               }}
             >
-              <LinearGradient
-                colors={["#eef5ef", "#ddeede"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.communityCard}
-              >
+              <View style={styles.communityCard}>
                 {/* Header */}
                 <View style={styles.communityHeader}>
                   <View style={styles.communityBadge}>
@@ -3771,7 +3768,7 @@ export default function HomeScreen() {
                     ))}
                   </View>
                 )}
-              </LinearGradient>
+              </View>
             </Pressable>
           )}
 
@@ -3956,18 +3953,10 @@ export default function HomeScreen() {
           {/* Upcoming Events */}
           {!loading && (
             <View style={styles.upcomingSection}>
-              <View style={styles.tuitionSectionHeader}>
-                <Text style={[styles.sectionHeading, { paddingHorizontal: 0 }]}>
-                  Upcoming events
-                </Text>
-                <Pressable
-                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                  onPress={() => router.push("/(tabs)/calendar" as any)}
-                  hitSlop={8}
-                >
-                  <Text style={styles.tuitionViewAllTxt}>View all</Text>
-                </Pressable>
-              </View>
+              <HomeSectionHeader
+                title="Upcoming events"
+                onViewAll={() => router.push("/(tabs)/calendar" as any)}
+              />
               {upcomingEvents.length === 0 ? (
                 <Text style={styles.upcomingEmpty}>No upcoming events</Text>
               ) : (
@@ -4213,20 +4202,10 @@ export default function HomeScreen() {
 
               return (
                 <View style={styles.tuitionSection}>
-                  <View style={styles.tuitionSectionHeader}>
-                    <Text
-                      style={[styles.sectionHeading, { paddingHorizontal: 0 }]}
-                    >
-                      Tuition & billing
-                    </Text>
-                    <Pressable
-                      style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                      onPress={goToTuition}
-                      hitSlop={8}
-                    >
-                      <Text style={styles.tuitionViewAllTxt}>View all</Text>
-                    </Pressable>
-                  </View>
+                  <HomeSectionHeader
+                    title="Tuition & billing"
+                    onViewAll={goToTuition}
+                  />
                   {tuitionLoading ? (
                     <View style={styles.upcomingRow}>
                       <View style={{ flex: 1, gap: 8 }}>
@@ -4296,18 +4275,10 @@ export default function HomeScreen() {
           {/* Newsletters */}
           {!loading && (newslettersLoading || homeNewsletters.length > 0) && (
             <View style={styles.tuitionSection}>
-              <View style={styles.tuitionSectionHeader}>
-                <Text style={[styles.sectionHeading, { paddingHorizontal: 0 }]}>
-                  Newsletters
-                </Text>
-                <Pressable
-                  style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-                  onPress={() => router.push("/(tabs)/newsletters" as any)}
-                  hitSlop={8}
-                >
-                  <Text style={styles.tuitionViewAllTxt}>View all</Text>
-                </Pressable>
-              </View>
+              <HomeSectionHeader
+                title="Newsletters"
+                onViewAll={() => router.push("/(tabs)/newsletters" as any)}
+              />
 
               {newslettersLoading ? (
                 <ScrollView
@@ -5051,12 +5022,13 @@ const msgTeacherStyles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    borderRadius: 14,
-    backgroundColor: "#fff",
+    borderRadius: 22,
+    backgroundColor: HomeTheme.cardBg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#EDE8E2",
     paddingVertical: 10,
     paddingHorizontal: 12,
+    ...HomeTheme.shadow,
   },
   avatar: {
     width: 40,
@@ -5071,11 +5043,13 @@ const msgTeacherStyles = StyleSheet.create({
   name: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     lineHeight: 18,
+    flex: 1,
+    minWidth: 0,
   },
   btn: {
-    backgroundColor: Brand.sage700,
+    backgroundColor: "#EEF5EF",
     borderRadius: 9999,
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -5084,14 +5058,16 @@ const msgTeacherStyles = StyleSheet.create({
   btnText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 10,
-    color: "#fff",
+    color: HomeTheme.authorName,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
 });
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F0DFC4",
+    backgroundColor: HomeTheme.canvas,
   },
   safeArea: {
     flex: 1,
@@ -5220,7 +5196,7 @@ const styles = StyleSheet.create({
   // Content area
   content: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: HomeTheme.canvas,
   },
   contentInner: {
     paddingTop: 8,
@@ -5228,10 +5204,11 @@ const styles = StyleSheet.create({
   },
 
   sectionHeading: {
-    fontFamily: FontFamilies.headingRegular,
-    fontSize: 16,
-    color: "#4b5563",
-    paddingHorizontal: 24,
+    fontFamily: FontFamilies.heading,
+    fontSize: 22,
+    color: HomeTheme.authorName,
+    paddingHorizontal: HomeTheme.horizontalInset,
+    letterSpacing: -0.3,
   },
   // Bottom sheet
   sheetContent: {
@@ -5454,23 +5431,19 @@ const styles = StyleSheet.create({
   // Upcoming events
   upcomingSection: {
     gap: 10,
-    marginTop: 28,
+    marginTop: HomeTheme.sectionGap,
   },
   upcomingRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: HomeTheme.cardBg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
+    borderColor: "#EDE8E2",
+    borderRadius: 20,
     padding: 14,
-    marginHorizontal: 24,
+    marginHorizontal: HomeTheme.horizontalInset,
     gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    ...HomeTheme.shadow,
   },
   upcomingAccent: {
     width: 3,
@@ -5485,12 +5458,12 @@ const styles = StyleSheet.create({
   upcomingTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   upcomingMeta: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   upcomingBadge: {
     alignSelf: "center",
@@ -5505,14 +5478,15 @@ const styles = StyleSheet.create({
   upcomingEmpty: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
     paddingVertical: 8,
+    paddingHorizontal: HomeTheme.horizontalInset,
   },
 
   // Tuition preview
   tuitionSection: {
     gap: 10,
-    marginTop: 24,
+    marginTop: HomeTheme.sectionGap,
   },
   tuitionSectionHeader: {
     flexDirection: "row",
@@ -5521,7 +5495,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   tuitionCardScroll: {
-    paddingHorizontal: 24,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingBottom: 4,
     gap: 12,
   },
@@ -5534,17 +5508,20 @@ const styles = StyleSheet.create({
   },
   tuitionViewAllTxt: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: Brand.sage700,
+    fontSize: 14,
+    color: HomeTheme.authorName,
   },
   tuitionCaughtUp: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#EEF5EF",
-    borderRadius: 12,
-    marginHorizontal: 24,
+    backgroundColor: HomeTheme.cardBg,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#EDE8E2",
+    marginHorizontal: HomeTheme.horizontalInset,
     padding: 14,
+    ...HomeTheme.shadow,
   },
   tuitionCaughtUpTitle: {
     fontFamily: FontFamilies.bodySemiBold,
@@ -5675,10 +5652,13 @@ const styles = StyleSheet.create({
 
   // Rewards teaser card
   rewardsCard: {
-    marginHorizontal: 24,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginTop: 0,
-    borderRadius: 20,
+    borderRadius: 26,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#EDE8E2",
+    ...HomeTheme.shadow,
   },
   rewardsGradient: {
     padding: 20,
@@ -5750,15 +5730,16 @@ const styles = StyleSheet.create({
 
   // Feedback section
   feedbackCard: {
-    marginHorizontal: 24,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginTop: 20,
     marginBottom: 40,
-    backgroundColor: "#F5F3FF",
-    borderRadius: 16,
+    backgroundColor: HomeTheme.cardBg,
+    borderRadius: 26,
     borderWidth: 1,
-    borderColor: "#ddd6fe",
+    borderColor: "#EDE8E2",
     padding: 16,
     gap: 12,
+    ...HomeTheme.shadow,
   },
   feedbackCardHeader: {
     flexDirection: "row",
@@ -5791,7 +5772,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    backgroundColor: "#7c3aed",
+    backgroundColor: Brand.sage700,
     paddingVertical: 11,
     borderRadius: 10,
   },
@@ -5977,11 +5958,13 @@ const styles = StyleSheet.create({
 
   // Community preview
   communityCard: {
-    borderRadius: 16,
+    borderRadius: 26,
     borderWidth: 1,
-    borderColor: "#c2ddc8",
+    borderColor: "#EDE8E2",
+    backgroundColor: HomeTheme.cardBg,
     padding: 16,
     gap: 12,
+    ...HomeTheme.shadow,
   },
   communityHeader: {
     flexDirection: "row",
@@ -5989,26 +5972,28 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   communityBadge: {
-    backgroundColor: "#4a7c59",
+    backgroundColor: "#EEF5EF",
     borderRadius: 9999,
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
   },
   communityBadgeText: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-    color: "#fff",
+    fontSize: 10,
+    color: HomeTheme.authorName,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
   communityTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
-    color: "#2d5a3d",
+    color: HomeTheme.authorName,
   },
   communityJoinBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#4a7c59",
+    backgroundColor: Brand.sage700,
     borderRadius: 9999,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -6140,12 +6125,17 @@ const styles = StyleSheet.create({
 
   // Reels announcement banner
   reelsBanner: {
-    marginHorizontal: 24,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginTop: 16,
     marginBottom: 16,
+    borderRadius: 26,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#EDE8E2",
+    ...HomeTheme.shadow,
   },
   reelsBannerGradient: {
-    borderRadius: 14,
+    borderRadius: 26,
     paddingHorizontal: 16,
     paddingVertical: 14,
     flexDirection: "row",

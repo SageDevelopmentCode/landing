@@ -1,11 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  hasDontIncludeTag,
+  isSchoolYearApp,
+} from "@/app/lib/school-year-program";
+import {
   isSchoolYearFieldFridayPaid,
   isSchoolYearWeekdayPaid,
   type StripeTxnLike,
 } from "@/shared/billing/school-year-attendance";
-
-const DONT_INCLUDE_TAG = "Don't Include";
 
 type AppRow = {
   student_id: string;
@@ -25,16 +27,6 @@ function getDayOfWeek(dateStr: string): string {
   ];
 }
 
-function isSchoolYearApp(a: AppRow): boolean {
-  return (
-    a.program === "school_year_26_27" ||
-    a.program === "both" ||
-    (a.program === "homeschool_drop_in" &&
-      (a.drop_in_program === "school_year_26_27" ||
-        a.drop_in_program === "both"))
-  );
-}
-
 /** Matches apps/mobile fetchSchoolYearTodayStudents attending filter (paid or has record). */
 export async function fetchSchoolYearAttendingStudentIds(
   db: SupabaseClient,
@@ -52,8 +44,7 @@ export async function fetchSchoolYearAttendingStudentIds(
   const enrolledIds = appsData
     .filter(
       (a) =>
-        isSchoolYearApp(a) &&
-        !(a.admin_tags ?? []).includes(DONT_INCLUDE_TAG),
+        isSchoolYearApp(a) && !hasDontIncludeTag(a.admin_tags),
     )
     .map((a) => a.student_id);
 

@@ -446,10 +446,18 @@ export default function ActivityFormScreen() {
         foods: includesFood ? foodPayloads : [],
       };
 
+      let saved;
       if (isEdit && originalActivity) {
-        await updateActivity(activityId!, payload, originalActivity, user.id);
+        saved = await updateActivity(activityId!, payload, originalActivity, user.id);
       } else {
-        await createActivity(payload, user.id);
+        saved = await createActivity(payload, user.id);
+      }
+
+      if (saved.status === "published" && saved.visibility === "public") {
+        const { syncActivityFeedPost } = await import("@/lib/feed-auto-actions");
+        syncActivityFeedPost(saved.id).catch((e) =>
+          console.error("syncActivityFeedPost:", e),
+        );
       }
 
       isDirtyRef.current = false;

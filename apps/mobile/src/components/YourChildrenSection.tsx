@@ -1,3 +1,4 @@
+import { homeCardSurface, HomeTheme, homeTypography } from "@/components/home/homeTheme";
 import { Brand, FontFamilies } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -140,40 +141,26 @@ export function YourChildrenSection({
 const styles = StyleSheet.create({
   section: {
     gap: 14,
+    marginTop: 4,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 24,
+    paddingHorizontal: HomeTheme.horizontalInset,
   },
-  heading: {
-    fontFamily: FontFamilies.headingRegular,
-    fontSize: 16,
-    color: "#4b5563",
-  },
-  viewAll: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: Brand.sage700,
-  },
+  heading: homeTypography.sectionTitle,
+  viewAll: homeTypography.sectionLink,
   cardRow: {
-    paddingHorizontal: 24,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingBottom: 6,
-    gap: 12,
+    gap: 14,
   },
   card: {
     width: 172,
-    borderRadius: 16,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderRadius: HomeTheme.cardRadius,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    ...homeCardSurface,
   },
   cardPressed: {
     opacity: 0.92,

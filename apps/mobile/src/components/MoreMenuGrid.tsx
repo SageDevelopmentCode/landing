@@ -1,6 +1,11 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontFamilies } from "@/constants/theme";
+import {
+  HomeTheme,
+  homeCardSurface,
+  homeTypography,
+} from "@/components/home/homeTheme";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -102,22 +107,21 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   subtitle: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#9ca3af",
+    ...homeTypography.meta,
+    fontSize: 14,
   },
   sections: {
-    gap: 20,
+    gap: HomeTheme.sectionGap,
   },
   section: {
     gap: 10,
   },
   sectionTitle: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 12,
-    color: "#6b7280",
+    fontSize: 11,
+    color: HomeTheme.authorName,
     textTransform: "uppercase",
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   grid: {
     gap: 10,
@@ -130,21 +134,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#f3f4f6",
     paddingVertical: 14,
     paddingHorizontal: 4,
     gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...homeCardSurface,
   },
   cellPressed: {
-    transform: [{ scale: 0.96 }],
+    transform: [{ scale: 0.98 }],
     opacity: 0.85,
   },
   cellSpacer: {
@@ -153,15 +149,15 @@ const styles = StyleSheet.create({
   iconBadge: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },
   label: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-    color: "#4b5563",
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+    color: HomeTheme.authorName,
     textAlign: "center",
-    lineHeight: 14,
+    lineHeight: 15,
   },
 });

@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { homeCardSurface, HomeTheme } from "@/components/home/homeTheme";
 import { FontFamilies } from "@/constants/theme";
 import {
   formatConferenceDateForDisplay,
@@ -111,25 +112,22 @@ export function UpcomingParentTeacherConferenceCard({
 
 const styles = StyleSheet.create({
   stack: {
-    marginHorizontal: 24,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginBottom: 16,
-    gap: 12,
+    gap: 14,
   },
   card: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#d1fae5",
-    backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    ...homeCardSurface,
   },
   dateBlock: {
     width: 48,
-    borderRadius: 8,
-    backgroundColor: "#059669",
+    borderRadius: 12,
+    backgroundColor: "#5E7C68",
     alignItems: "center",
     paddingVertical: 6,
   },
@@ -158,9 +156,9 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   studentName: {
-    fontFamily: FontFamilies.headingRegular,
-    fontSize: 14,
-    color: "#1f2937",
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 15,
+    color: HomeTheme.authorName,
   },
   teacherLine: {
     fontFamily: FontFamilies.body,

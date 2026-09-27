@@ -1,6 +1,17 @@
 import { saveImageToLibrary } from "@/utils/saveMedia";
 import { Brand, FontFamilies, floatingTabBarStyle } from "@/constants/theme";
-import { getPostType } from "@/constants/postTypes";
+import { AuthorAvatar } from "@/components/feed/AuthorAvatar";
+import { FeedMediaGrid } from "@/components/feed/FeedMediaGrid";
+import { FeedPostTypeBadge } from "@/components/feed/FeedPostTypeBadge";
+import { FeedReactionRow } from "@/components/feed/FeedReactionRow";
+import { FeedTheme } from "@/components/feed/feedTheme";
+import {
+  attachmentIcon,
+  formatAuthorSubtitle,
+  formatFileSize,
+  pushFeedCtaRoute,
+  timeAgo,
+} from "@/components/feed/feedUtils";
 import { MarkdownBody } from "@/components/ui/MarkdownBody";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { supabase } from "@/lib/supabase";
@@ -80,6 +91,10 @@ interface PostDetail {
   body: string;
   created_at: string;
   post_type: string | null;
+  source_type: string | null;
+  cta_label: string | null;
+  cta_route: string | null;
+  classroom: string | null;
   authorName: string;
   authorRole: string | null;
   authorProfileImageUrl: string | null;
@@ -128,38 +143,6 @@ function getInitials(fullName: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function timeAgo(isoString: string): string {
-  const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  const d = Math.floor(diff / 86400);
-  return d === 1 ? "yesterday" : `${d}d ago`;
-}
-
-function formatFileSize(bytes: number | null): string {
-  if (!bytes) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function attachmentIcon(kind: PostAttachmentRow["kind"]): string {
-  switch (kind) {
-    case "pdf": return "document-text";
-    case "doc": return "document";
-    case "sheet": return "grid";
-    default: return "attach";
-  }
-}
-
-function avatarColor(id: string): string {
-  const colors = ["#7FA888", "#f29a8f", "#97C09B", "#BFD8C0", "#6B9474", "#e88d82"];
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) & 0xffffffff;
-  return colors[Math.abs(hash) % colors.length];
-}
-
 function deriveReactionSummary(
   reactions: PostReactionRow[],
   userId: string | null,
@@ -171,29 +154,6 @@ function deriveReactionSummary(
     if (r.user_id === userId) summary[r.emoji].iMine = true;
   }
   return summary;
-}
-
-const DEFAULT_REACTIONS = ["❤️", "🌱", "🌻", "🦋"];
-
-// ─── Author Avatar ─────────────────────────────────────────────────────────────
-
-function AuthorAvatar({ name, userId, profileImageUrl, size = 40 }: { name: string; userId: string; profileImageUrl?: string | null; size?: number }) {
-  if (profileImageUrl) {
-    return (
-      <Image
-        source={{ uri: profileImageUrl }}
-        style={{ width: size, height: size, borderRadius: size / 2 }}
-        contentFit="cover"
-      />
-    );
-  }
-  return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: avatarColor(userId), alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ fontFamily: FontFamilies.bodySemiBold, fontSize: size * 0.35, color: "#fff" }}>
-        {getInitials(name)}
-      </Text>
-    </View>
-  );
 }
 
 // ─── Media Grid ───────────────────────────────────────────────────────────────
@@ -452,70 +412,75 @@ const ReactionsSheet = forwardRef<BottomSheetModal, ReactionsSheetProps>(
   }
 );
 
-// ─── Post Type Badge ──────────────────────────────────────────────────────────
-
-function PostTypeBadge({ value }: { value: string | null }) {
-  const config = getPostType(value);
-  if (!config) return null;
-  return (
-    <View style={{ backgroundColor: config.color, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' }}>
-      <Text style={{ color: config.textColor, fontSize: 11, fontFamily: FontFamilies.bodySemiBold }}>
-        {config.label}
-      </Text>
-    </View>
-  );
-}
-
 // ─── Post Header Component ────────────────────────────────────────────────────
 
-function PostHeader({ post, reactionSummary, onToggleReaction, onViewReactions }: {
+function PostHeader({
+  post,
+  rawReactions,
+  currentUserId,
+  reactionSummary,
+  onToggleReaction,
+  onViewReactions,
+}: {
   post: PostDetail;
+  rawReactions: PostReactionRow[];
+  currentUserId: string | null;
   reactionSummary: ReactionSummary;
   onToggleReaction: (emoji: string) => void;
   onViewReactions: () => void;
 }) {
   const router = useRouter();
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const customEmojis = Object.keys(reactionSummary).filter(
-    (e) => !DEFAULT_REACTIONS.includes(e) && reactionSummary[e].count > 0
-  );
-  const allEmojis = [...DEFAULT_REACTIONS, ...customEmojis];
+  const subtitle = formatAuthorSubtitle(post.classroom, post.authorRole);
+  const gridMedia = post.media.map((m) => ({ ...m, post_id: post.id }));
+
   return (
     <View style={detailStyles.postSection}>
       <TouchableOpacity
         activeOpacity={0.8}
-        style={[detailStyles.postHeaderRow, { paddingHorizontal: 16 }]}
+        style={[detailStyles.postHeaderRow, { paddingHorizontal: FeedTheme.cardPaddingH }]}
         onPress={() =>
           router.push({
             pathname: "/(tabs)/teacher/[teacherId]" as any,
             params: {
               teacherId: post.teacher_id,
               teacherName: post.authorName,
-              classroom: "",
+              classroom: post.classroom ?? "",
               program: "",
             },
           })
         }
       >
-        <AuthorAvatar name={post.authorName} userId={post.teacher_id} profileImageUrl={post.authorProfileImageUrl} />
+        <AuthorAvatar
+          name={post.authorName}
+          userId={post.teacher_id}
+          profileImageUrl={post.authorProfileImageUrl}
+          size={46}
+        />
         <View style={{ flex: 1 }}>
           <Text style={detailStyles.authorName}>{post.authorName}</Text>
           <Text style={detailStyles.authorMeta}>
-            {post.authorRole === "super_admin" || post.authorRole === "teacher" ? "Teacher" : (post.authorRole ?? "Teacher")} · {timeAgo(post.created_at)}
+            {subtitle} · {timeAgo(post.created_at)}
           </Text>
         </View>
       </TouchableOpacity>
       {(post.post_type || post.body.length > 0) && (
-        <View style={{ gap: 6, marginBottom: 8, paddingHorizontal: 16 }}>
-          <PostTypeBadge value={post.post_type} />
-          {post.body.length > 0 && (
-            <MarkdownBody body={post.body} />
-          )}
+        <View style={{ gap: 10, marginBottom: 8, paddingHorizontal: FeedTheme.cardPaddingH }}>
+          <FeedPostTypeBadge value={post.post_type} />
+          {post.body.length > 0 && <MarkdownBody body={post.body} leadBold />}
+          {post.cta_route && post.cta_label ? (
+            <TouchableOpacity
+              style={detailStyles.ctaBtn}
+              activeOpacity={0.85}
+              onPress={() => pushFeedCtaRoute(router, post.cta_route!)}
+            >
+              <Text style={detailStyles.ctaBtnText}>{post.cta_label}</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       )}
-      <MediaGrid media={post.media} />
+      <FeedMediaGrid media={gridMedia} />
       {post.attachments.length > 0 && (
-        <View style={{ gap: 6, marginTop: 4, paddingHorizontal: 16 }}>
+        <View style={{ gap: 6, marginTop: 4, paddingHorizontal: FeedTheme.cardPaddingH }}>
           {post.attachments.map((att) => (
             <TouchableOpacity
               key={att.id}
@@ -537,45 +502,15 @@ function PostHeader({ post, reactionSummary, onToggleReaction, onViewReactions }
           ))}
         </View>
       )}
-      {/* Reactions inline */}
-      <View style={[detailStyles.reactionsRow, { paddingHorizontal: 16 }]}>
-        {allEmojis.map((emoji) => {
-          const info = reactionSummary[emoji];
-          const mine = info?.iMine ?? false;
-          return (
-            <TouchableOpacity
-              key={emoji}
-              style={[detailStyles.reactionPill, mine && detailStyles.reactionPillMine]}
-              onPress={() => onToggleReaction(emoji)}
-              activeOpacity={0.75}
-            >
-              <Text style={detailStyles.reactionEmoji}>{emoji}</Text>
-              {(info?.count ?? 0) > 0 && (
-                <Text style={[detailStyles.reactionCount, mine && detailStyles.reactionCountMine]}>
-                  {info!.count}
-                </Text>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-        <TouchableOpacity
-          style={detailStyles.reactionPill}
-          onPress={() => setPickerOpen(true)}
-          activeOpacity={0.75}
-        >
-          <Text style={[detailStyles.reactionEmoji, { fontSize: 16, color: "#6b7280" }]}>+</Text>
-        </TouchableOpacity>
+      <View style={{ paddingHorizontal: FeedTheme.cardPaddingH, paddingTop: 8 }}>
+        <FeedReactionRow
+          reactions={rawReactions}
+          currentUserId={currentUserId}
+          onReact={onToggleReaction}
+        />
       </View>
-      <EmojiKeyboard
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onEmojiSelected={(emojiObj: EmojiType) => {
-          onToggleReaction(emojiObj.emoji);
-          setPickerOpen(false);
-        }}
-      />
       {Object.values(reactionSummary).some((r) => r.count > 0) && (
-        <TouchableOpacity onPress={onViewReactions} hitSlop={8} style={{ paddingHorizontal: 16 }}>
+        <TouchableOpacity onPress={onViewReactions} hitSlop={8} style={{ paddingHorizontal: FeedTheme.cardPaddingH }}>
           <Text style={detailStyles.seeReactionsLink}>See who reacted</Text>
         </TouchableOpacity>
       )}
@@ -654,7 +589,7 @@ export default function ParentPostDetailScreen() {
 
     const [postRes, mediaRes, attachRes, commentRes, reactionsRes] = await Promise.all([
       supabase.schema("feed").from("posts")
-        .select("id, teacher_id, body, created_at, post_type")
+        .select("id, teacher_id, body, created_at, post_type, classroom, source_type, cta_label, cta_route")
         .eq("id", postId)
         .single(),
       supabase.schema("feed").from("post_media")
@@ -745,6 +680,10 @@ export default function ParentPostDetailScreen() {
       body: postRes.data.body,
       created_at: postRes.data.created_at,
       post_type: (postRes.data as any).post_type ?? null,
+      source_type: (postRes.data as { source_type?: string | null }).source_type ?? null,
+      cta_label: (postRes.data as { cta_label?: string | null }).cta_label ?? null,
+      cta_route: (postRes.data as { cta_route?: string | null }).cta_route ?? null,
+      classroom: (postRes.data as { classroom?: string | null }).classroom ?? null,
       authorName: nameById[postRes.data.teacher_id] ?? "Teacher",
       authorRole: roleById[postRes.data.teacher_id] ?? null,
       authorProfileImageUrl: profileImageById[postRes.data.teacher_id] ?? null,
@@ -917,6 +856,8 @@ export default function ParentPostDetailScreen() {
     <>
       <PostHeader
         post={post}
+        rawReactions={rawReactions}
+        currentUserId={currentUserId}
         reactionSummary={reactionSummary}
         onToggleReaction={toggleReaction}
         onViewReactions={() => reactionsSheetRef.current?.present()}
@@ -1029,7 +970,7 @@ export default function ParentPostDetailScreen() {
           <TextInput
             ref={commentInputRef}
             style={detailStyles.commentInput}
-            placeholder="Add a comment..."
+            placeholder="Write a reply..."
             placeholderTextColor="#9ca3af"
             value={commentText}
             onChangeText={setCommentText}
@@ -1059,21 +1000,19 @@ export default function ParentPostDetailScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const detailStyles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#f9fafb" },
+  safe: { flex: 1, backgroundColor: FeedTheme.canvas },
   navBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#ffffff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    backgroundColor: FeedTheme.canvas,
   },
   navTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#1f2937",
+    fontFamily: FontFamilies.heading,
+    fontSize: 18,
+    color: "#3D5C4A",
     flex: 1,
     textAlign: "center",
   },
@@ -1081,12 +1020,14 @@ const detailStyles = StyleSheet.create({
 
   // Post section
   postSection: {
-    backgroundColor: "#ffffff",
-    marginBottom: 8,
-    paddingVertical: 16,
+    backgroundColor: FeedTheme.cardBg,
+    marginHorizontal: FeedTheme.cardMarginH,
+    marginTop: 8,
+    marginBottom: 16,
+    paddingVertical: 18,
     gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderRadius: FeedTheme.cardRadius,
+    ...FeedTheme.shadow,
   },
   postHeaderRow: {
     flexDirection: "row",
@@ -1095,14 +1036,26 @@ const detailStyles = StyleSheet.create({
   },
   authorName: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
-    color: "#1f2937",
+    fontSize: 16,
+    color: FeedTheme.authorName,
   },
   authorMeta: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#6b7280",
-    marginTop: 1,
+    color: FeedTheme.meta,
+    marginTop: 3,
+  },
+  ctaBtn: {
+    backgroundColor: Brand.sage700,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  ctaBtnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#fff",
   },
   attachmentRow: {
     flexDirection: "row",

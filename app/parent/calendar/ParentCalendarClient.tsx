@@ -17,7 +17,12 @@ import {
   BookOpen,
   Clock,
   Paperclip,
+  Plus,
 } from "lucide-react";
+import ParentAddEventSheet, {
+  type ParentCalendarEventRecord,
+} from "./ParentAddEventSheet";
+import { deleteParentCalendarEvent } from "@/app/actions/deleteParentCalendarEvent";
 import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 // ─── Parent-only design tokens (light mode, fully standalone) ─────────────────
@@ -66,7 +71,12 @@ type CalendarEvent = {
   reminder_email: boolean;
   reminder_in_app: boolean;
   reminder_timing: string | null;
+  created_by?: string | null;
 };
+
+function isParentCreatedEvent(event: CalendarEvent, userId: string): boolean {
+  return !!event.created_by && event.created_by === userId;
+}
 
 const programs: Record<ProgramKey, { label: string; shortLabel: string; start: Date; end: Date; dateRange: string }> =
   {
@@ -371,10 +381,18 @@ function OverlapPanel({
 function EventDetailPanel({
   event,
   onClose,
+  currentUserId,
+  onEdit,
+  onDeleted,
 }: {
   event: CalendarEvent;
   onClose: () => void;
+  currentUserId: string;
+  onEdit: () => void;
+  onDeleted: (id: string) => void;
 }) {
+  const [deleting, setDeleting] = useState(false);
+  const canManage = isParentCreatedEvent(event, currentUserId);
   const [eventDate] = event.event_date.split("T");
   const [year, month, day] = eventDate.split("-").map(Number);
   const dateLabel = `${MONTHS[month - 1]} ${day}, ${year}`;
@@ -673,6 +691,47 @@ function EventDetailPanel({
               </Link>
             </motion.div>
           )}
+
+          {canManage && (
+            <motion.div variants={fadeUpVariants} className="mt-6 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={onEdit}
+                className="w-full py-3 text-sm font-semibold rounded-xl"
+                style={{
+                  border: `1px solid ${colors.border}`,
+                  backgroundColor: "white",
+                  color: colors.mistyForest,
+                  cursor: "pointer",
+                }}
+              >
+                Edit event
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={async () => {
+                  if (!confirm("Remove this event from the calendar?")) return;
+                  setDeleting(true);
+                  const result = await deleteParentCalendarEvent({ id: event.id });
+                  setDeleting(false);
+                  if (result.success) {
+                    onDeleted(event.id);
+                    onClose();
+                  }
+                }}
+                className="w-full py-3 text-sm font-semibold rounded-xl"
+                style={{
+                  border: "1px solid #FECACA",
+                  backgroundColor: "#FEF2F2",
+                  color: "#B91C1C",
+                  cursor: deleting ? "wait" : "pointer",
+                }}
+              >
+                {deleting ? "Removing…" : "Delete event"}
+              </button>
+            </motion.div>
+          )}
         </motion.div>
       </motion.div>
     </>
@@ -686,12 +745,16 @@ function MonthlyGrid({
   currentMonth,
   today,
   onViewEvent,
+  onAddEvent,
+  showAddControls,
   events,
 }: {
   days: Date[];
   currentMonth: number;
   today: Date;
   onViewEvent: (event: CalendarEvent) => void;
+  onAddEvent: (date: Date) => void;
+  showAddControls: boolean;
   events: CalendarEvent[];
 }) {
   const isWeekend = (colIndex: number) => colIndex === 0 || colIndex === 6;
@@ -729,7 +792,7 @@ function MonthlyGrid({
           return (
             <div
               key={i}
-              className="relative flex flex-col"
+              className="relative flex flex-col group"
               style={{
                 minHeight: "140px",
                 padding: "10px 8px 8px 8px",
@@ -742,6 +805,7 @@ function MonthlyGrid({
                     : "white",
               }}
             >
+              <div className="flex items-center justify-between w-full">
               <motion.span
                 whileHover={inMonth ? { scale: 1.08 } : {}}
                 transition={{ duration: 0.12 }}
@@ -762,6 +826,29 @@ function MonthlyGrid({
               >
                 {day.getDate()}
               </motion.span>
+              {inMonth && showAddControls && (
+                <button
+                  type="button"
+                  onClick={() => onAddEvent(day)}
+                  className="opacity-0 hover:opacity-100 focus:opacity-100 group-hover:opacity-100"
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 6,
+                    border: `1px solid ${colors.border}`,
+                    backgroundColor: colors.pastelSage,
+                    color: colors.mistyForest,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    lineHeight: 1,
+                  }}
+                  aria-label={`Add event on ${dateStr}`}
+                >
+                  +
+                </button>
+              )}
+              </div>
 
               {inMonth && (
                 <div className="flex flex-col gap-0.5 mt-1.5">
@@ -830,12 +917,16 @@ function WeeklyGrid({
   today,
   onViewEvent,
   onViewOverlap,
+  onAddEvent,
+  showAddControls,
   events,
 }: {
   weekDays: Date[];
   today: Date;
   onViewEvent: (event: CalendarEvent) => void;
   onViewOverlap: (events: CalendarEvent[]) => void;
+  onAddEvent: (date: Date, hour?: number) => void;
+  showAddControls: boolean;
   events: CalendarEvent[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -1018,30 +1109,66 @@ function WeeklyGrid({
                   backgroundColor: isToday ? "#F4F8F5" : "white",
                 }}
               >
-                {HOURS.map((h, rowIdx) => (
-                  <div
-                    key={rowIdx}
-                    className="relative"
-                    style={{
-                      width: "100%",
-                      height: `${HOUR_HEIGHT}px`,
-                      borderBottom: rowIdx === HOURS.length - 1 ? "none" : `1px solid ${colors.border}`,
-                      backgroundColor: rowIdx % 2 === 1 ? "#FAFBFA" : "transparent",
-                    }}
-                  >
-                    {/* Half-hour dashed line */}
-                    <div
+                {HOURS.map((h, rowIdx) =>
+                  showAddControls ? (
+                    <button
+                      key={rowIdx}
+                      type="button"
+                      onClick={() => onAddEvent(day, h)}
+                      className="relative w-full"
                       style={{
-                        position: "absolute",
-                        top: "50%",
-                        left: 0,
-                        right: 0,
-                        borderTop: "1px dashed rgba(229,231,235,0.65)",
-                        pointerEvents: "none",
+                        height: `${HOUR_HEIGHT}px`,
+                        borderBottom:
+                          rowIdx === HOURS.length - 1
+                            ? "none"
+                            : `1px solid ${colors.border}`,
+                        backgroundColor:
+                          rowIdx % 2 === 1 ? "#FAFBFA" : "transparent",
+                        border: "none",
+                        padding: 0,
+                        cursor: "pointer",
                       }}
-                    />
-                  </div>
-                ))}
+                      aria-label={`Add event on ${dateStr} at ${h}:00`}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "50%",
+                          left: 0,
+                          right: 0,
+                          borderTop: "1px dashed rgba(229,231,235,0.65)",
+                          pointerEvents: "none",
+                        }}
+                      />
+                    </button>
+                  ) : (
+                    <div
+                      key={rowIdx}
+                      className="relative"
+                      style={{
+                        width: "100%",
+                        height: `${HOUR_HEIGHT}px`,
+                        borderBottom:
+                          rowIdx === HOURS.length - 1
+                            ? "none"
+                            : `1px solid ${colors.border}`,
+                        backgroundColor:
+                          rowIdx % 2 === 1 ? "#FAFBFA" : "transparent",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: "50%",
+                          left: 0,
+                          right: 0,
+                          borderTop: "1px dashed rgba(229,231,235,0.65)",
+                          pointerEvents: "none",
+                        }}
+                      />
+                    </div>
+                  ),
+                )}
 
                 {/* Timed event blocks */}
                 {getOverlapClusters(timedEvents).map((cluster) => {
@@ -1201,23 +1328,75 @@ function WeeklyGrid({
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
+function normalizeCalendarEvent(
+  e: ParentCalendarEventRecord | CalendarEvent,
+): CalendarEvent {
+  const dateOnly = e.event_date.split("T")[0];
+  return {
+    ...e,
+    event_date: dateOnly,
+    attachment_links: e.attachment_links ?? [],
+    created_by: e.created_by ?? null,
+  } as CalendarEvent;
+}
+
 export default function ParentCalendarClient({
   initialEvents = [],
+  userId,
 }: {
   initialEvents?: CalendarEvent[];
+  userId?: string;
 }) {
-  const [events] = useState<CalendarEvent[]>(initialEvents);
+  const canManageEvents = !!userId;
+  const [events, setEvents] = useState<CalendarEvent[]>(
+    initialEvents.map((e) => normalizeCalendarEvent(e)),
+  );
   const [viewEvent, setViewEvent] = useState<CalendarEvent | null>(null);
   const [selectedProgram, setSelectedProgram] = useState<ProgramKey>("summer");
   const [view, setView] = useState<ViewMode>("weekly");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [overlapEvents, setOverlapEvents] = useState<CalendarEvent[] | null>(null);
+  const [addEventOpen, setAddEventOpen] = useState(false);
+  const [addEventDate, setAddEventDate] = useState<string | null>(null);
+  const [addEventHour, setAddEventHour] = useState<number | null>(null);
+  const [eventToEdit, setEventToEdit] = useState<CalendarEvent | null>(null);
+
+  function openAddEvent(date?: Date, hour?: number) {
+    setEventToEdit(null);
+    setAddEventDate(date ? formatDateInput(date) : null);
+    setAddEventHour(hour ?? null);
+    setAddEventOpen(true);
+  }
+
+  function openEditEvent(event: CalendarEvent) {
+    setViewEvent(null);
+    setEventToEdit(event);
+    setAddEventDate(event.event_date.split("T")[0]);
+    setAddEventHour(null);
+    setAddEventOpen(true);
+  }
+
+  function handleEventSaved(record: ParentCalendarEventRecord) {
+    const normalized = normalizeCalendarEvent(record);
+    setEvents((prev) => {
+      const idx = prev.findIndex((e) => e.id === normalized.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = normalized;
+        return next;
+      }
+      return [...prev, normalized].sort((a, b) =>
+        a.event_date.localeCompare(b.event_date),
+      );
+    });
+    setViewEvent(normalized);
+  }
 
   useEffect(() => {
-    const isOpen = !!viewEvent || !!overlapEvents;
+    const isOpen = !!viewEvent || !!overlapEvents || addEventOpen;
     document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [viewEvent, overlapEvents]);
+  }, [viewEvent, overlapEvents, addEventOpen]);
 
   const program = programs[selectedProgram];
   const today = new Date();
@@ -1517,7 +1696,28 @@ export default function ParentCalendarClient({
                 Today
               </motion.button>
 
-              {/* Right: view toggle with sliding bg */}
+              {/* Right: Add event + view toggle */}
+              <div className="flex items-center gap-2">
+                {canManageEvents && (
+                <motion.button
+                  type="button"
+                  onClick={() => openAddEvent()}
+                  whileHover={{ opacity: 0.88 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium"
+                  style={{
+                    backgroundColor: colors.mistyForest,
+                    color: "white",
+                    border: "none",
+                    borderRadius: radius.md,
+                    cursor: "pointer",
+                    boxShadow: shadows.soft,
+                  }}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add event
+                </motion.button>
+                )}
               <div
                 className="relative flex"
                 style={{
@@ -1561,6 +1761,7 @@ export default function ParentCalendarClient({
                   );
                 })}
               </div>
+              </div>
             </div>
 
             {/* Calendar body with animated transitions */}
@@ -1579,6 +1780,8 @@ export default function ParentCalendarClient({
                     currentMonth={currentDate.getMonth()}
                     today={today}
                     onViewEvent={setViewEvent}
+                    onAddEvent={(d) => openAddEvent(d)}
+                    showAddControls={canManageEvents}
                     events={events}
                   />
                 ) : (
@@ -1587,6 +1790,8 @@ export default function ParentCalendarClient({
                     today={today}
                     onViewEvent={setViewEvent}
                     onViewOverlap={setOverlapEvents}
+                    onAddEvent={(d, h) => openAddEvent(d, h)}
+                    showAddControls={canManageEvents}
                     events={events}
                   />
                 )}
@@ -1607,10 +1812,29 @@ export default function ParentCalendarClient({
             }}
           />
         )}
-        {viewEvent && (
+        {viewEvent && !addEventOpen && (
           <EventDetailPanel
             event={viewEvent}
+            currentUserId={userId ?? ""}
             onClose={() => setViewEvent(null)}
+            onEdit={() => openEditEvent(viewEvent)}
+            onDeleted={(id) => {
+              setEvents((prev) => prev.filter((e) => e.id !== id));
+              setViewEvent(null);
+            }}
+          />
+        )}
+        {addEventOpen && canManageEvents && (
+          <ParentAddEventSheet
+            initialDate={addEventDate}
+            initialHour={addEventHour}
+            eventToEdit={eventToEdit as ParentCalendarEventRecord | null}
+            onClose={() => {
+              setAddEventOpen(false);
+              setEventToEdit(null);
+              setAddEventHour(null);
+            }}
+            onSaved={handleEventSaved}
           />
         )}
       </AnimatePresence>
