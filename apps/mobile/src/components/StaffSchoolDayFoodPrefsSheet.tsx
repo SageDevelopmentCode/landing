@@ -2,6 +2,7 @@ import {
   getEmergencySnackLabel,
   getSharedFoodLabel,
 } from "@/components/SchoolDayFoodPreferencesSheet";
+import { HomeTheme } from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import type { StaffSchoolDayFoodPref } from "@/lib/staff-food-and-activity-prefs";
@@ -59,8 +60,8 @@ export const StaffSchoolDayFoodPrefsSheet = forwardRef<BottomSheetModal, Props>(
             pressBehavior="close"
           />
         )}
-        backgroundStyle={{ backgroundColor: "#ffffff" }}
-        handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
+        backgroundStyle={{ backgroundColor: HomeTheme.canvas }}
+        handleIndicatorStyle={{ backgroundColor: "#C4D9C8" }}
       >
         <BottomSheetScrollView contentContainerStyle={styles.container}>
           <Text style={styles.title}>School Day Food Preferences</Text>

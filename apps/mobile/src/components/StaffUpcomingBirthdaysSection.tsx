@@ -1,3 +1,8 @@
+import {
+  HomeTheme,
+  homeCardSurface,
+  homeTypography,
+} from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import {
@@ -97,7 +102,7 @@ function BirthdayRow({ birthday }: { birthday: StaffBirthday }) {
           <Text style={styles.todayBadgeText}>Today</Text>
         </View>
       ) : (
-        <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+        <Ionicons name="chevron-forward" size={16} color={HomeTheme.meta} />
       )}
     </Pressable>
   );
@@ -163,30 +168,25 @@ export function StaffUpcomingBirthdaysSection({
 
 const styles = StyleSheet.create({
   section: {
-    paddingTop: 18,
-    paddingBottom: 6,
-    borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
-    marginTop: 8,
-    marginHorizontal: 16,
+    marginTop: HomeTheme.sectionGap,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginBottom: 4,
+    gap: 10,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "baseline",
     justifyContent: "space-between",
-    marginBottom: 10,
     gap: 8,
   },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 16,
-    color: "#1f2937",
+    ...homeTypography.sectionTitle,
+    fontSize: 22,
   },
   subtitle: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   loadingStack: {
     gap: 8,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   rowStack: {
     gap: 8,
@@ -202,13 +202,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#fff",
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 10,
+    ...homeCardSurface,
   },
   rowToday: {
     borderColor: "#fde68a",
@@ -238,12 +235,12 @@ const styles = StyleSheet.create({
   rowName: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   rowMeta: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#6b7280",
+    color: HomeTheme.meta,
     marginTop: 2,
   },
   todayBadge: {

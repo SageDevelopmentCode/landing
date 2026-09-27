@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   cardOther: {
     backgroundColor: "#f9fafb",
-    borderColor: "#f3f4f6",
+    borderColor: "#EDE8E2",
   },
   cardHeader: {
     flexDirection: "row",

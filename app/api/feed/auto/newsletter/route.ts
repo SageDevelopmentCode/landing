@@ -7,6 +7,7 @@ import {
   newsletterCtaRoute,
   newsletterFeedBody,
 } from "@/app/lib/feed/autoFeedPost";
+import { isTeacherOrAdmin } from "@/app/lib/feed/isTeacherOrAdmin";
 
 const bodySchema = z.object({
   newsletterId: z.string().uuid(),
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest) {
   const user = await authenticateApiRequest(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (!(await isTeacherOrAdmin(user.id))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   let validated: z.infer<typeof bodySchema>;
@@ -35,7 +40,7 @@ export async function POST(request: NextRequest) {
   const { data: nl, error } = await admin
     .schema("newsletters")
     .from("newsletters")
-    .select("id, title, status")
+    .select("id, title, status, created_by")
     .eq("id", validated.newsletterId)
     .single();
 
@@ -48,7 +53,7 @@ export async function POST(request: NextRequest) {
   }
 
   const result = await createAutoFeedPost({
-    authorUserId: user.id,
+    authorUserId: nl.created_by ?? user.id,
     postType: "newsletter",
     body: newsletterFeedBody(nl.title),
     sourceType: "newsletter",

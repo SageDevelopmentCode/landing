@@ -1,3 +1,4 @@
+import { HomeTheme } from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import {
@@ -120,8 +121,8 @@ export const StaffAllBirthdaysSheet = forwardRef<BottomSheetModal, Props>(
             pressBehavior="close"
           />
         )}
-        backgroundStyle={{ backgroundColor: "#ffffff" }}
-        handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
+        backgroundStyle={{ backgroundColor: HomeTheme.canvas }}
+        handleIndicatorStyle={{ backgroundColor: "#C4D9C8" }}
       >
         <BottomSheetScrollView contentContainerStyle={styles.container}>
           <Text style={styles.title}>All Student Birthdays</Text>

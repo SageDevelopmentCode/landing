@@ -1,3 +1,4 @@
+import { HomeTheme } from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import type { Activity } from "@/lib/activities-actions";
@@ -257,8 +258,8 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
             pressBehavior="close"
           />
         )}
-        backgroundStyle={{ backgroundColor: "#ffffff" }}
-        handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
+        backgroundStyle={{ backgroundColor: HomeTheme.canvas }}
+        handleIndicatorStyle={{ backgroundColor: "#C4D9C8" }}
       >
         <View style={styles.header}>
           <Text style={styles.title}>Upcoming Activity Preferences</Text>

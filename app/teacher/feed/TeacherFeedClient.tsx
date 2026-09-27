@@ -479,6 +479,7 @@ function ReactionPills({
 function PostCard({
   post,
   currentUserId,
+  currentUserRole,
   onReactionToggle,
   onDelete,
   onEdit,
@@ -487,6 +488,7 @@ function PostCard({
 }: {
   post: FeedPost;
   currentUserId: string | undefined;
+  currentUserRole: string | undefined;
   onReactionToggle: (postId: string, emoji: string) => void;
   onDelete: (postId: string) => void;
   onEdit: () => void;
@@ -494,6 +496,8 @@ function PostCard({
   profileHref: string;
 }) {
   const isOwner = currentUserId === post.teacher_id;
+  const isSuperAdmin = currentUserRole === "super_admin";
+  const showPostMenu = isOwner || isSuperAdmin;
   const [menuOpen, setMenuOpen] = useState(false);
   const [bodyExpanded, setBodyExpanded] = useState(false)
   const isLongBody = post.body.length > 300
@@ -540,7 +544,7 @@ function PostCard({
             </p>
           </div>
         </div>
-        {isOwner && (
+        {showPostMenu && (
           <div className="relative">
             <button
               onClick={(e) => {
@@ -556,16 +560,18 @@ function PostCard({
                 onClick={(e) => e.stopPropagation()}
                 className="absolute right-0 top-8 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-10 min-w-[130px]"
               >
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onEdit();
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors font-body"
-                >
-                  <span className="w-3.5 h-3.5 text-xs">✏️</span>
-                  Edit post
-                </button>
+                {isOwner && (
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEdit();
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors font-body"
+                  >
+                    <span className="w-3.5 h-3.5 text-xs">✏️</span>
+                    Edit post
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setMenuOpen(false);
@@ -2311,6 +2317,7 @@ export default function TeacherFeedClient({
                           <PostCard
                             post={post as FeedPost}
                             currentUserId={currentUser?.id}
+                            currentUserRole={currentUser?.role}
                             onReactionToggle={handleReactionToggle}
                             onDelete={handleDeletePost}
                             onEdit={() => setEditingPostId(post.id)}

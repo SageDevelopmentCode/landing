@@ -1,5 +1,10 @@
+import { HomeSectionHeader } from "@/components/home/HomeSectionHeader";
+import {
+  HomeTheme,
+  homeCardSurface,
+} from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
-import { Brand, FontFamilies } from "@/constants/theme";
+import { FontFamilies } from "@/constants/theme";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export type StaffUpcomingCalendarEvent = {
@@ -64,11 +69,8 @@ function SkeletonRows() {
             flexDirection: "row",
             alignItems: "center",
             gap: 12,
-            backgroundColor: "#fff",
-            borderWidth: 1,
-            borderColor: "#e5e7eb",
-            borderRadius: 12,
             padding: 14,
+            ...homeCardSurface,
           }}
         >
           <SkeletonBox width={3} height={40} borderRadius={9999} />
@@ -90,18 +92,10 @@ export function StaffUpcomingEventsSection({
 }: Props) {
   return (
     <View style={styles.section}>
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Upcoming events</Text>
-        {!loading && (
-          <Pressable
-            style={({ pressed }) => [pressed && { opacity: 0.7 }]}
-            onPress={onViewAll}
-            hitSlop={8}
-          >
-            <Text style={styles.viewAllLink}>View all</Text>
-          </Pressable>
-        )}
-      </View>
+      <HomeSectionHeader
+        title="Upcoming events"
+        onViewAll={loading ? undefined : onViewAll}
+      />
 
       {loading ? (
         <SkeletonRows />
@@ -152,30 +146,10 @@ export function StaffUpcomingEventsSection({
 
 const styles = StyleSheet.create({
   section: {
-    paddingTop: 18,
-    paddingBottom: 6,
-    borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
-    marginTop: 8,
-    marginHorizontal: 16,
+    marginTop: HomeTheme.sectionGap,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginBottom: 4,
     gap: 10,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 16,
-    color: "#1f2937",
-  },
-  viewAllLink: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: Brand.sage700,
   },
   loadingStack: {
     gap: 8,
@@ -183,7 +157,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   rowStack: {
     gap: 8,
@@ -191,17 +165,9 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
     padding: 14,
     gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
-    elevation: 1,
+    ...homeCardSurface,
   },
   accent: {
     width: 3,
@@ -217,12 +183,12 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   rowMeta: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   badge: {
     alignSelf: "center",

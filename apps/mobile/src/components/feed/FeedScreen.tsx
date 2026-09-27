@@ -22,7 +22,10 @@ import { FeedTheme } from "./feedTheme";
 import type { PostReactionRow, PostWithMeta } from "./feedTypes";
 import { ReactionViewersSheet } from "./ReactionViewersSheet";
 import { TeacherFilterSheet } from "./TeacherFilterSheet";
-import { isManualFeedPost } from "./feedUtils";
+import {
+  canDeleteFeedPost,
+  feedPostDeleteRpcName,
+} from "./feedUtils";
 import { useFeedPosts } from "./useFeedPosts";
 
 export type FeedScreenConfig = {
@@ -56,6 +59,7 @@ export function FeedScreen({ config }: { config: FeedScreenConfig }) {
     loadingMore,
     error,
     currentUserId,
+    currentUserRole,
     handleRefresh,
     loadMore,
     toggleReactionForPost,
@@ -71,14 +75,15 @@ export function FeedScreen({ config }: { config: FeedScreenConfig }) {
   }
 
   function handleDeletePost(post: PostWithMeta) {
-    if (!isManualFeedPost(post.source_type)) return;
+    if (!canDeleteFeedPost(post, currentUserId, currentUserRole)) return;
     Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
         style: "destructive",
         onPress: async () => {
-          const { error: err } = await supabase.schema("feed").rpc("delete_own_post", {
+          const rpcName = feedPostDeleteRpcName(currentUserRole);
+          const { error: err } = await supabase.schema("feed").rpc(rpcName, {
             p_post_id: post.id,
           });
           if (err) {
@@ -171,7 +176,8 @@ export function FeedScreen({ config }: { config: FeedScreenConfig }) {
               onLongPressReaction={(emoji) => handleLongPressReaction(item, emoji)}
               staffFeed={config.staffFeed}
               onDeletePress={
-                config.allowDelete && isManualFeedPost(item.source_type)
+                config.allowDelete &&
+                canDeleteFeedPost(item, currentUserId, currentUserRole)
                   ? () => handleDeletePost(item)
                   : undefined
               }
