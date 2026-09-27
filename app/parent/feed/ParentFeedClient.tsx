@@ -32,7 +32,8 @@ import {
   type ReelPost,
 } from "@/app/teacher/feed/reelActions";
 import { DEFAULT_REACTIONS } from "@/app/teacher/feed/constants";
-import { getPostType } from "@/app/teacher/feed/postTypes";
+import { splitFeedBodyLead } from "@/shared/feed/feedBodyLead";
+import { getPostTypeDisplay } from "@/shared/feed/postTypeDisplay";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,6 +145,14 @@ function formatRole(role: string): string {
   return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
+function formatAuthorSubtitle(classroom: string | null, role: string): string {
+  if (classroom?.trim()) {
+    const name = classroom.trim();
+    return name.toLowerCase().includes("group") ? `${name} guide` : `${name} guide`;
+  }
+  return formatRole(role);
+}
+
 function getInitials(name: string): string {
   return name
     .split(" ")
@@ -228,21 +237,14 @@ function AuthorAvatar({
 }
 
 function PostTypeBadge({ value }: { value: string | null }) {
-  const config = getPostType(value);
-  if (!config) return null;
+  const display = getPostTypeDisplay(value);
+  if (!display) return null;
   return (
     <span
-      style={{
-        backgroundColor: config.color,
-        color: config.textColor,
-        borderRadius: 6,
-        padding: "3px 8px",
-        fontSize: 11,
-        fontWeight: 600,
-        display: "inline-block",
-      }}
+      className="inline-block rounded-lg px-2.5 py-1 text-[10px] font-semibold tracking-wide"
+      style={{ backgroundColor: display.bg, color: display.text }}
     >
-      {config.label}
+      {display.labelUpper}
     </span>
   );
 }
@@ -295,7 +297,7 @@ function MediaGrid({ media }: { media: MediaItem[] }) {
 
   if (media.length === 1) {
     return (
-      <div className="mt-3">
+      <div>
         {renderItem(media[0], "w-full h-80")}
       </div>
     );
@@ -303,7 +305,7 @@ function MediaGrid({ media }: { media: MediaItem[] }) {
 
   if (media.length === 2) {
     return (
-      <div className="mt-3 grid grid-cols-2 gap-1">
+      <div className="grid grid-cols-2 gap-1">
         {media.map((item) => renderItem(item, "h-64"))}
       </div>
     );
@@ -360,29 +362,38 @@ function ReactionPills({
     setTimeout(() => setJustToggled(null), 400);
   }
 
+  const byEmoji = new Map(reactions.map((r) => [r.emoji, r]));
+  const custom = reactions
+    .map((r) => r.emoji)
+    .filter((e) => !DEFAULT_REACTIONS.includes(e));
+  const emojis = [...DEFAULT_REACTIONS, ...custom];
+
   return (
     <div className="flex flex-wrap gap-2">
-      {reactions.map((r) => (
-        <motion.button
-          key={r.emoji}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.88 }}
-          animate={justToggled === r.emoji ? { scale: [1, 1.3, 1] } : {}}
-          transition={{ duration: 0.25, ease: "easeOut" as const }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleToggle(r.emoji);
-          }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border cursor-pointer select-none ${
-            r.reacted_by_me
-              ? "bg-[#4a7c59]/12 border-[#4a7c59]/40 text-[#4a7c59]"
-              : "bg-white hover:bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-300"
-          }`}
-        >
-          <span className="text-base leading-none">{r.emoji}</span>
-          {r.count > 0 && <span className="text-xs font-semibold">{r.count}</span>}
-        </motion.button>
-      ))}
+      {emojis.map((emoji) => {
+        const r = byEmoji.get(emoji) ?? { emoji, count: 0, reacted_by_me: false };
+        return (
+          <motion.button
+            key={emoji}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.9 }}
+            animate={justToggled === emoji ? { scale: [1, 1.25, 1] } : {}}
+            transition={{ duration: 0.25, ease: "easeOut" as const }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggle(emoji);
+            }}
+            className={`flex h-10 min-w-10 items-center justify-center gap-1 rounded-full border px-2 text-sm transition-colors cursor-pointer select-none ${
+              r.reacted_by_me
+                ? "bg-[#E8F3EC] border-[#C4D9C8] text-[#3D5C4A]"
+                : "bg-white hover:bg-[#FAF7F4] border-[#E8E4DF] text-gray-600"
+            }`}
+          >
+            <span className="text-base leading-none">{emoji}</span>
+            {r.count > 0 && <span className="text-xs font-semibold">{r.count}</span>}
+          </motion.button>
+        );
+      })}
     </div>
   );
 }
@@ -404,8 +415,10 @@ function PostCard({
   // the isOwner check for structural parity.
   const isOwner = currentUserId === post.teacher_id;
   const [menuOpen, setMenuOpen] = useState(false);
-  const [bodyExpanded, setBodyExpanded] = useState(false)
-  const isLongBody = post.body.length > 300
+  const [bodyExpanded, setBodyExpanded] = useState(false);
+  const { lead, rest } = splitFeedBodyLead(post.body);
+  const bodyForLength = lead ? rest : post.body;
+  const isLongBody = bodyForLength.length > 300;
 
   const media: MediaItem[] = post.media.map((m, i) => ({
     type: m.kind,
@@ -424,11 +437,11 @@ function PostCard({
   return (
     <motion.div
       onClick={onClick}
-      className="bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer hover:border-gray-200 transition-colors duration-200 group"
+      className="bg-white rounded-[26px] shadow-[0_4px_24px_rgba(61,92,74,0.08)] border border-[#EDE8E2] overflow-hidden cursor-pointer hover:shadow-[0_6px_28px_rgba(61,92,74,0.1)] transition-shadow duration-200 group"
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-3 pt-5 px-5">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-start justify-between mb-3 pt-6 px-5">
+        <div className="flex items-center gap-3">
           <Link
             href={profileHref}
             onClick={(e) => e.stopPropagation()}
@@ -438,14 +451,16 @@ function PostCard({
               initials={getInitials(post.teacher_name)}
               color={avatarColor(post.teacher_id)}
               imageUrl={post.teacher_profile_image_url}
+              size="lg"
             />
           </Link>
           <div>
-            <p className="text-sm font-semibold font-body text-gray-800 leading-tight">
+            <p className="text-base font-semibold font-body text-[#3D5C4A] leading-tight">
               {post.teacher_name}
             </p>
-            <p className="text-xs text-gray-400 font-body">
-              {formatRole(post.teacher_role)} · <ClientTimestamp iso={post.created_at} />
+            <p className="text-xs text-[#8B9E8F] font-body mt-0.5">
+              {formatAuthorSubtitle(post.classroom, post.teacher_role)} ·{" "}
+              <ClientTimestamp iso={post.created_at} />
             </p>
           </div>
         </div>
@@ -487,12 +502,17 @@ function PostCard({
 
       {/* Body */}
       <div className="px-5">
+        {lead && (
+          <p className="text-[15px] font-semibold font-body text-gray-900 leading-relaxed mb-2">
+            {lead}
+          </p>
+        )}
         <div
-          className={`relative text-sm font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0 ${
-            isLongBody && !bodyExpanded ? 'max-h-24 overflow-hidden' : ''
+          className={`relative text-[15px] font-body text-gray-700 leading-relaxed [&>*:last-child]:mb-0 ${
+            isLongBody && !bodyExpanded ? "max-h-24 overflow-hidden" : ""
           }`}
         >
-          <ReactMarkdown components={markdownComponents}>{post.body}</ReactMarkdown>
+          <ReactMarkdown components={markdownComponents}>{lead ? rest : post.body}</ReactMarkdown>
           {isLongBody && !bodyExpanded && (
             <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none" />
           )}
@@ -507,8 +527,14 @@ function PostCard({
         )}
       </div>
 
-      {/* Media — full bleed */}
-      {media.length > 0 && <MediaGrid media={media} />}
+      {/* Media — inset */}
+      {media.length > 0 && (
+        <div className="px-5 mt-3">
+          <div className="rounded-2xl overflow-hidden">
+            <MediaGrid media={media} />
+          </div>
+        </div>
+      )}
 
       {/* Attachments — full bleed */}
       {attachments.length > 0 && (
@@ -529,8 +555,8 @@ function PostCard({
         </div>
       )}
 
-      {/* Reactions + Comments */}
-      <div className="mt-4 pt-3.5 pb-4 px-5 border-t border-gray-50 flex items-center justify-between">
+      {/* Reactions + Reply */}
+      <div className="mt-5 pt-4 pb-5 px-5 border-t border-[#F3EDE6] flex items-center justify-between gap-3">
         <ReactionPills
           reactions={post.reactions}
           onToggle={(emoji) => onReactionToggle(post.id, emoji)}
@@ -541,10 +567,9 @@ function PostCard({
             e.stopPropagation();
             onClick();
           }}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#4a7c59] transition-colors font-body ml-3 flex-shrink-0"
+          className="text-sm font-semibold text-[#3D5C4A] hover:text-[#2d4538] transition-colors font-body flex-shrink-0"
         >
-          <MessageCircle className="w-3.5 h-3.5" />
-          {post.comments.length} comments
+          Reply
         </button>
       </div>
     </motion.div>
@@ -1210,7 +1235,7 @@ export default function ParentFeedClient({
     : { title: "Class Reels", desc: "Short video moments captured by teachers" };
 
   return (
-    <div className={`flex-1 flex overflow-hidden transition-colors duration-300 ${feedMode === "reel" ? "bg-[#f5f3ef]" : ""}`}>
+    <div className={`flex-1 flex overflow-hidden transition-colors duration-300 ${feedMode === "reel" ? "bg-[#f5f3ef]" : "bg-welcome-bg"}`}>
       {/* ── Left: Nav panel ── */}
       <aside className="hidden md:flex flex-col w-56 flex-shrink-0 px-5 pt-8 gap-4 sticky top-0 h-screen">
         <motion.div
@@ -1218,8 +1243,8 @@ export default function ParentFeedClient({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" as const }}
         >
-          <h1 className="text-2xl font-bold font-heading text-gray-800">{panelContent.title}</h1>
-          <p className="text-sm font-body mt-1 text-gray-400">{panelContent.desc}</p>
+          <h1 className="text-2xl font-bold font-heading text-[#3D5C4A]">{panelContent.title}</h1>
+          <p className="text-sm font-body mt-1 text-[#8B9E8F]">{panelContent.desc}</p>
         </motion.div>
 
         <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
@@ -1262,7 +1287,13 @@ export default function ParentFeedClient({
             )}
           </div>
         ) : (
-          <div className="max-w-2xl mx-auto px-4 pt-8 pb-8">
+          <div className="max-w-2xl mx-auto px-4 pt-6 pb-10 md:pt-8">
+            <div className="md:hidden mb-6">
+              <h1 className="text-3xl font-bold font-heading text-[#3D5C4A]">Family feed</h1>
+              <p className="text-sm font-body text-[#8B9E8F] mt-1">
+                Updates, photos, and moments from the classroom
+              </p>
+            </div>
             <AnimatePresence mode="wait">
               {displayedPosts.length === 0 ? (
                 <motion.div
@@ -1286,7 +1317,7 @@ export default function ParentFeedClient({
                     hidden: {},
                     visible: { transition: { staggerChildren: 0.07 } },
                   }}
-                  className="flex flex-col gap-4"
+                  className="flex flex-col gap-6"
                 >
                   <AnimatePresence>
                     {displayedPosts.map((post) => (

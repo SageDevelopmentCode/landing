@@ -146,6 +146,26 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     label: "Send September Tuition Reminder (Homeschool Drop-In, Updated Rate)",
     category: "schoolYear",
   },
+  {
+    id: "october-tuition-reminder-school-year",
+    label: "Send October Tuition Reminder (School Year)",
+    category: "schoolYear",
+  },
+  {
+    id: "october-tuition-reminder-drop-in",
+    label: "Send October Tuition Reminder (Homeschool Drop-In, Founding Rate)",
+    category: "schoolYear",
+  },
+  {
+    id: "october-tuition-reminder-drop-in-updated",
+    label: "Send October Tuition Reminder (Homeschool Drop-In, Updated Rate)",
+    category: "schoolYear",
+  },
+  {
+    id: "october-tuition-reminder-general",
+    label: "Send October Tuition Reminder (General — Custom Pricing)",
+    category: "schoolYear",
+  },
   { id: "labor-day-reminder", label: "Send Labor Day Reminder", category: "schoolYear" },
   // Other
   { id: "free-friday-announcement", label: "Send Free Friday Announcement", category: "other" },

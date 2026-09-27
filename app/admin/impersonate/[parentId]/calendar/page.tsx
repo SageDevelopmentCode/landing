@@ -24,7 +24,7 @@ export default async function ImpersonateCalendarPage({
       .schema("calendar")
       .from("events")
       .select(
-        "id, title, event_date, is_all_day, start_time, end_time, color, category, shared_with, programs, description, location, recurrence, recurrence_end_date, attachment_links, rsvp_enabled, reminder_email, reminder_in_app, reminder_timing"
+        "id, title, event_date, is_all_day, start_time, end_time, color, category, shared_with, programs, description, location, recurrence, recurrence_end_date, attachment_links, rsvp_enabled, reminder_email, reminder_in_app, reminder_timing, created_by"
       )
       .contains("shared_with", ["Parents"])
       .order("event_date", { ascending: true }),

@@ -61,6 +61,9 @@ import { sendSchoolYearTuitionClarificationEmail } from '../../actions/sendSchoo
 import { sendSchoolYearTuitionReminderEmail } from '../../actions/sendSchoolYearTuitionReminderEmail'
 import { sendSchoolYearSeptemberTuitionReminderEmail } from '../../actions/sendSchoolYearSeptemberTuitionReminderEmail'
 import { sendSchoolYearSeptemberDropInTuitionReminderEmail } from '../../actions/sendSchoolYearSeptemberDropInTuitionReminderEmail'
+import { sendSchoolYearOctoberTuitionReminderEmail } from '../../actions/sendSchoolYearOctoberTuitionReminderEmail'
+import { sendSchoolYearOctoberDropInTuitionReminderEmail } from '../../actions/sendSchoolYearOctoberDropInTuitionReminderEmail'
+import { sendSchoolYearOctoberTuitionReminderGeneralEmail } from '../../actions/sendSchoolYearOctoberTuitionReminderGeneralEmail'
 import { sendSchoolYearTuitionDueDateTodayReminderEmail } from '../../actions/sendSchoolYearTuitionDueDateTodayReminderEmail'
 import { sendHomeschoolDropInTuitionReminderEmail } from '../../actions/sendHomeschoolDropInTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
@@ -370,6 +373,18 @@ export function ApplicationDetailSidebar({
   const [schoolYearSeptemberDropInTuitionReminderUpdatedSending, setSchoolYearSeptemberDropInTuitionReminderUpdatedSending] = useState(false)
   const [schoolYearSeptemberDropInTuitionReminderUpdatedSent, setSchoolYearSeptemberDropInTuitionReminderUpdatedSent] = useState(false)
   const [schoolYearSeptemberDropInTuitionReminderUpdatedError, setSchoolYearSeptemberDropInTuitionReminderUpdatedError] = useState<string | null>(null)
+  const [schoolYearOctoberTuitionReminderSending, setSchoolYearOctoberTuitionReminderSending] = useState(false)
+  const [schoolYearOctoberTuitionReminderSent, setSchoolYearOctoberTuitionReminderSent] = useState(false)
+  const [schoolYearOctoberTuitionReminderError, setSchoolYearOctoberTuitionReminderError] = useState<string | null>(null)
+  const [schoolYearOctoberDropInTuitionReminderSending, setSchoolYearOctoberDropInTuitionReminderSending] = useState(false)
+  const [schoolYearOctoberDropInTuitionReminderSent, setSchoolYearOctoberDropInTuitionReminderSent] = useState(false)
+  const [schoolYearOctoberDropInTuitionReminderError, setSchoolYearOctoberDropInTuitionReminderError] = useState<string | null>(null)
+  const [schoolYearOctoberDropInTuitionReminderUpdatedSending, setSchoolYearOctoberDropInTuitionReminderUpdatedSending] = useState(false)
+  const [schoolYearOctoberDropInTuitionReminderUpdatedSent, setSchoolYearOctoberDropInTuitionReminderUpdatedSent] = useState(false)
+  const [schoolYearOctoberDropInTuitionReminderUpdatedError, setSchoolYearOctoberDropInTuitionReminderUpdatedError] = useState<string | null>(null)
+  const [schoolYearOctoberTuitionReminderGeneralSending, setSchoolYearOctoberTuitionReminderGeneralSending] = useState(false)
+  const [schoolYearOctoberTuitionReminderGeneralSent, setSchoolYearOctoberTuitionReminderGeneralSent] = useState(false)
+  const [schoolYearOctoberTuitionReminderGeneralError, setSchoolYearOctoberTuitionReminderGeneralError] = useState<string | null>(null)
   const [activityPrefReminderSending, setActivityPrefReminderSending] = useState(false)
   const [activityPrefReminderSent, setActivityPrefReminderSent] = useState(false)
   const [activityPrefReminderError, setActivityPrefReminderError] = useState<string | null>(null)
@@ -1357,6 +1372,79 @@ export function ApplicationDetailSidebar({
       setEmailThreadKey(k => k + 1)
     } else {
       setSchoolYearSeptemberDropInTuitionReminderUpdatedError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearOctoberTuitionReminder = async () => {
+    if (schoolYearOctoberTuitionReminderSending || !application.g1_email) return
+    setSchoolYearOctoberTuitionReminderSending(true)
+    setSchoolYearOctoberTuitionReminderError(null)
+    const result = await sendSchoolYearOctoberTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearOctoberTuitionReminderSending(false)
+    if (result.success) {
+      setSchoolYearOctoberTuitionReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearOctoberTuitionReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearOctoberDropInTuitionReminder = async () => {
+    if (schoolYearOctoberDropInTuitionReminderSending || !application.g1_email) return
+    setSchoolYearOctoberDropInTuitionReminderSending(true)
+    setSchoolYearOctoberDropInTuitionReminderError(null)
+    const result = await sendSchoolYearOctoberDropInTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearOctoberDropInTuitionReminderSending(false)
+    if (result.success) {
+      setSchoolYearOctoberDropInTuitionReminderSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearOctoberDropInTuitionReminderError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearOctoberDropInTuitionReminderUpdated = async () => {
+    if (schoolYearOctoberDropInTuitionReminderUpdatedSending || !application.g1_email) return
+    setSchoolYearOctoberDropInTuitionReminderUpdatedSending(true)
+    setSchoolYearOctoberDropInTuitionReminderUpdatedError(null)
+    const result = await sendSchoolYearOctoberDropInTuitionReminderEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+      useUpdatedHomeschoolPricing: true,
+    })
+    setSchoolYearOctoberDropInTuitionReminderUpdatedSending(false)
+    if (result.success) {
+      setSchoolYearOctoberDropInTuitionReminderUpdatedSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearOctoberDropInTuitionReminderUpdatedError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearOctoberTuitionReminderGeneral = async () => {
+    if (schoolYearOctoberTuitionReminderGeneralSending || !application.g1_email) return
+    setSchoolYearOctoberTuitionReminderGeneralSending(true)
+    setSchoolYearOctoberTuitionReminderGeneralError(null)
+    const result = await sendSchoolYearOctoberTuitionReminderGeneralEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearOctoberTuitionReminderGeneralSending(false)
+    if (result.success) {
+      setSchoolYearOctoberTuitionReminderGeneralSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearOctoberTuitionReminderGeneralError(result.error ?? 'Failed to send')
     }
   }
 
@@ -2675,6 +2763,50 @@ export function ApplicationDetailSidebar({
                     {schoolYearSeptemberDropInTuitionReminderUpdatedSending ? 'Sending…' : schoolYearSeptemberDropInTuitionReminderUpdatedSent ? '✓ Sent!' : 'Send September Tuition Reminder (Homeschool Drop-In, Updated Rate)'}
                   </button>
                   {schoolYearSeptemberDropInTuitionReminderUpdatedError && <span className="text-xs text-red-600">{schoolYearSeptemberDropInTuitionReminderUpdatedError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearOctoberTuitionReminder}
+                    disabled={schoolYearOctoberTuitionReminderSending || schoolYearOctoberTuitionReminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearOctoberTuitionReminderSending ? 'Sending…' : schoolYearOctoberTuitionReminderSent ? '✓ Sent!' : 'Send October Tuition Reminder (School Year)'}
+                  </button>
+                  {schoolYearOctoberTuitionReminderError && <span className="text-xs text-red-600">{schoolYearOctoberTuitionReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearOctoberDropInTuitionReminder}
+                    disabled={schoolYearOctoberDropInTuitionReminderSending || schoolYearOctoberDropInTuitionReminderSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearOctoberDropInTuitionReminderSending ? 'Sending…' : schoolYearOctoberDropInTuitionReminderSent ? '✓ Sent!' : 'Send October Tuition Reminder (Homeschool Drop-In, Founding Rate)'}
+                  </button>
+                  {schoolYearOctoberDropInTuitionReminderError && <span className="text-xs text-red-600">{schoolYearOctoberDropInTuitionReminderError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearOctoberDropInTuitionReminderUpdated}
+                    disabled={schoolYearOctoberDropInTuitionReminderUpdatedSending || schoolYearOctoberDropInTuitionReminderUpdatedSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearOctoberDropInTuitionReminderUpdatedSending ? 'Sending…' : schoolYearOctoberDropInTuitionReminderUpdatedSent ? '✓ Sent!' : 'Send October Tuition Reminder (Homeschool Drop-In, Updated Rate)'}
+                  </button>
+                  {schoolYearOctoberDropInTuitionReminderUpdatedError && <span className="text-xs text-red-600">{schoolYearOctoberDropInTuitionReminderUpdatedError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearOctoberTuitionReminderGeneral}
+                    disabled={schoolYearOctoberTuitionReminderGeneralSending || schoolYearOctoberTuitionReminderGeneralSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearOctoberTuitionReminderGeneralSending ? 'Sending…' : schoolYearOctoberTuitionReminderGeneralSent ? '✓ Sent!' : 'Send October Tuition Reminder (General — Custom Pricing)'}
+                  </button>
+                  {schoolYearOctoberTuitionReminderGeneralError && <span className="text-xs text-red-600">{schoolYearOctoberTuitionReminderGeneralError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button

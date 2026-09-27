@@ -354,6 +354,11 @@ export async function publishNewsletter(id: string): Promise<void> {
     .update({ status: "published", published_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw error;
+
+  const { syncNewsletterFeedPost } = await import("@/lib/feed-auto-actions");
+  syncNewsletterFeedPost(id).catch((e) =>
+    console.error("syncNewsletterFeedPost:", e),
+  );
 }
 
 // ---------------------------------------------------------------------------

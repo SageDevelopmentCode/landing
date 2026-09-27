@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
+import { syncActivityFeedPostIfPublished } from '@/app/lib/feed/syncActivityFeed'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -488,6 +489,14 @@ export async function createActivity(
     applyDefaultPreferencesForActivity(activityId).catch(() => {})
   }
 
+  syncActivityFeedPostIfPublished({
+    activityId,
+    title,
+    status,
+    visibility,
+    authorUserId: user.id,
+  }).catch((e) => console.error('syncActivityFeedPost:', e))
+
   return { data: withUrls }
 }
 
@@ -602,6 +611,15 @@ export async function updateActivity(
   }
 
   const [withUrls] = await resolveAndAttach(adminClient, [refetched as RawActivityRow])
+
+  syncActivityFeedPostIfPublished({
+    activityId,
+    title,
+    status,
+    visibility,
+    authorUserId: user.id,
+  }).catch((e) => console.error('syncActivityFeedPost:', e))
+
   return { data: withUrls }
 }
 

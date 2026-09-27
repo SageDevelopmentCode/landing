@@ -1,4 +1,9 @@
 import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
+import {
+  HomeTheme,
+  homeCardSurface,
+  homeTypography,
+} from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { supabase } from "@/lib/supabase";
 import { notifyDiscord, notifyError } from "@/lib/discord";
@@ -182,6 +187,13 @@ function SectionCard({
   );
 }
 
+const skeletonCardSurface = {
+  backgroundColor: HomeTheme.cardBg,
+  borderWidth: 1,
+  borderColor: "#EDE8E2",
+  ...HomeTheme.shadow,
+} as const;
+
 function TeacherTab({
   studentId,
   teachersByStudent,
@@ -317,7 +329,7 @@ function TeacherTab({
                 <View style={styles.teacherCardActions}>
                   <TouchableOpacity
                     style={styles.teacherMessageBtn}
-                    activeOpacity={0.75}
+                    activeOpacity={0.85}
                     onPress={() => handleMessageTeacher(t.teacher_id, t.teacher_name)}
                     disabled={startingConvId === t.teacher_id}
                   >
@@ -608,9 +620,12 @@ function AttendanceTab({
             return (
               <TouchableOpacity
                 key={`${record.program}-${record.id}`}
-                style={[styles.attHistoryRow, { backgroundColor: cfg.bg, borderColor: "#e5e7eb" }]}
+                style={[
+                  styles.attHistoryRow,
+                  { backgroundColor: cfg.bg, borderColor: "#EDE8E2" },
+                ]}
                 onPress={() => setSelectedRecord(record)}
-                activeOpacity={0.75}
+                activeOpacity={0.85}
               >
                 {isPickedUp && record.picked_up_by_name ? (
                   <PickupPersonAvatar name={record.picked_up_by_name} size={40} />
@@ -2352,11 +2367,11 @@ export default function ChildrenScreen() {
         <View
           style={{
             flexDirection: "row",
-            paddingHorizontal: 16,
+            paddingHorizontal: HomeTheme.horizontalInset,
             paddingVertical: 12,
             gap: 8,
             borderBottomWidth: 1,
-            borderBottomColor: "#f3f4f6",
+            borderBottomColor: "#EDE8E2",
           }}
         >
           <SkeletonBox width={110} height={48} borderRadius={9999} />
@@ -2368,29 +2383,27 @@ export default function ChildrenScreen() {
           style={{
             flexDirection: "row",
             paddingVertical: 8,
-            paddingHorizontal: 4,
-            gap: 4,
+            paddingHorizontal: HomeTheme.horizontalInset,
+            gap: 8,
             borderBottomWidth: 1,
-            borderBottomColor: "#f3f4f6",
+            borderBottomColor: "#EDE8E2",
           }}
         >
-          {[72, 88, 72, 60].map((w, i) => (
-            <SkeletonBox key={i} width={w} height={32} borderRadius={6} />
+          {[72, 88, 72, 60, 64].map((w, i) => (
+            <SkeletonBox key={i} width={w} height={32} borderRadius={9999} />
           ))}
         </View>
 
         {/* Teacher card skeleton */}
-        <View style={{ padding: 16 }}>
+        <View style={{ padding: HomeTheme.horizontalInset }}>
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
               gap: 12,
-              backgroundColor: "#ffffff",
-              borderWidth: 1,
-              borderColor: "#e5e7eb",
-              borderRadius: 12,
+              borderRadius: 22,
               padding: 16,
+              ...skeletonCardSurface,
             }}
           >
             <SkeletonBox width={48} height={48} borderRadius={24} />
@@ -2458,7 +2471,7 @@ export default function ChildrenScreen() {
               key={s.id}
               onPress={() => setActiveIndex(i)}
               style={[styles.pill, active && styles.pillActive]}
-              activeOpacity={0.75}
+              activeOpacity={0.85}
             >
               <View style={styles.pillInner}>
                 <View
@@ -2518,7 +2531,7 @@ export default function ChildrenScreen() {
               key={t.key}
               onPress={() => setActiveTab(t.key)}
               style={[styles.tab, active && styles.tabActive]}
-              activeOpacity={0.75}
+              activeOpacity={0.85}
             >
               <Text style={[styles.tabText, active && styles.tabTextActive]}>
                 {t.label}
@@ -2589,7 +2602,7 @@ export default function ChildrenScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: HomeTheme.canvas,
   },
   centered: {
     flex: 1,
@@ -2598,27 +2611,28 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   header: {
-    paddingHorizontal: 20,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingTop: 8,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
   },
   pageTitle: {
     fontFamily: FontFamilies.heading,
-    fontSize: 24,
-    color: Brand.sage700,
+    fontSize: 22,
+    color: HomeTheme.authorName,
+    letterSpacing: -0.3,
   },
 
   // Pills
   pillScroll: {
     flexGrow: 0,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
   },
   pillRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingVertical: 12,
     gap: 8,
   },
@@ -2627,12 +2641,13 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 9999,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#f9fafb",
+    borderColor: "#EDE8E2",
+    backgroundColor: HomeTheme.cardBg,
+    ...HomeTheme.shadow,
   },
   pillActive: {
-    borderColor: Brand.sage700,
-    backgroundColor: "rgba(74,124,89,0.08)",
+    borderColor: HomeTheme.authorName,
+    backgroundColor: HomeTheme.cardBg,
   },
   pillInner: {
     flexDirection: "row",
@@ -2653,33 +2668,34 @@ const styles = StyleSheet.create({
   pillAvatarText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   pillAvatarTextActive: {
-    color: Brand.sage700,
+    color: HomeTheme.authorName,
   },
   pillText: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   pillTextActive: {
     fontFamily: FontFamilies.bodySemiBold,
-    color: Brand.sage700,
+    color: HomeTheme.authorName,
   },
   pillGrade: {
     fontFamily: FontFamilies.body,
     fontSize: 11,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   pillGradeActive: {
-    color: Brand.sage700,
+    color: HomeTheme.authorName,
   },
 
   // Scroll content
   scrollContent: {
-    padding: 16,
-    gap: 16,
+    paddingHorizontal: HomeTheme.horizontalInset,
+    paddingTop: 16,
+    gap: HomeTheme.sectionGap,
     paddingBottom: BottomTabInset + 16,
   },
 
@@ -2687,78 +2703,77 @@ const styles = StyleSheet.create({
   tabScroll: {
     flexGrow: 0,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
   },
   tabRow: {
     flexDirection: "row",
-    gap: 4,
+    gap: 8,
+    paddingHorizontal: HomeTheme.horizontalInset,
+    paddingVertical: 8,
   },
   tab: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 9999,
   },
   tabActive: {
-    backgroundColor: "rgba(74,124,89,0.08)",
-    borderBottomWidth: 2,
-    borderBottomColor: Brand.sage700,
+    backgroundColor: "#EEF5EF",
   },
   tabText: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#4b5563",
+    color: HomeTheme.meta,
   },
   tabTextActive: {
     fontFamily: FontFamilies.bodySemiBold,
-    color: "#4a7c59",
+    color: HomeTheme.authorName,
   },
 
   // Tab Content
   tabContent: {
-    gap: 12,
+    gap: HomeTheme.sectionGap,
   },
 
   // Info rows
   infoRow: {
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
     gap: 2,
   },
   infoLabel: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
-    color: "#4b5563",
+    color: HomeTheme.meta,
   },
   infoValue: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#374151",
+    color: HomeTheme.authorName,
     lineHeight: 20,
   },
 
   // Section Card
   sectionCard: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
     padding: 16,
     gap: 0,
+    ...homeCardSurface,
   },
   sectionCardTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#1f2937",
+    fontFamily: FontFamilies.heading,
+    fontSize: 18,
+    color: HomeTheme.authorName,
+    letterSpacing: -0.2,
     marginBottom: 4,
   },
 
   // Teacher card
   teacherSectionLabel: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: Brand.sage700,
-    textTransform: "capitalize",
+    fontSize: 11,
+    color: HomeTheme.authorName,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
     paddingHorizontal: 2,
   },
   teacherScrollRow: {
@@ -2768,18 +2783,14 @@ const styles = StyleSheet.create({
   },
   teacherProfileCard: {
     width: 200,
-    backgroundColor: "#ffffff",
+    backgroundColor: HomeTheme.cardBg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 16,
+    borderColor: "#EDE8E2",
+    borderRadius: 22,
     padding: 12,
     gap: 5,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    ...HomeTheme.shadow,
   },
   teacherProfileAvatar: {
     width: 56,
@@ -2804,14 +2815,14 @@ const styles = StyleSheet.create({
   teacherProfileName: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     textAlign: "center",
     lineHeight: 18,
   },
   teacherProfileSub: {
     fontFamily: FontFamilies.body,
     fontSize: 11,
-    color: "#6b7280",
+    color: HomeTheme.meta,
     textAlign: "center",
   },
   teacherCardActions: {
@@ -2827,35 +2838,34 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 5,
     paddingVertical: 7,
-    borderRadius: 9,
+    borderRadius: 9999,
     borderWidth: 1,
-    borderColor: "#C8DFCB",
-    backgroundColor: "#F2F7F3",
+    borderColor: "#EDE8E2",
+    backgroundColor: "#EEF5EF",
   },
   teacherMessageBtnText: {
     fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 12,
-    color: Brand.sage700,
+    fontSize: 10,
+    color: HomeTheme.authorName,
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
   },
 
   // Neutral card
   neutralCard: {
-    backgroundColor: "#F2F7F3",
-    borderWidth: 1,
-    borderColor: "#f3f4f6",
-    borderRadius: 12,
     padding: 16,
     gap: 8,
+    ...homeCardSurface,
   },
   neutralCardHeading: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#1f2937",
+    fontFamily: FontFamilies.heading,
+    fontSize: 18,
+    color: HomeTheme.authorName,
   },
   neutralCardBody: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#4b5563",
+    color: HomeTheme.meta,
     lineHeight: 22,
   },
 
@@ -2864,8 +2874,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff1f2",
     borderWidth: 1,
     borderColor: "#ffe4e6",
-    borderRadius: 12,
+    borderRadius: HomeTheme.cardRadius,
     padding: 16,
+    ...HomeTheme.shadow,
   },
   errorText: {
     fontFamily: FontFamilies.body,
@@ -2882,23 +2893,23 @@ const styles = StyleSheet.create({
   attFilterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: "#f3f4f6",
+    borderRadius: 9999,
+    backgroundColor: HomeTheme.cardBg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#EDE8E2",
   },
   attFilterChipActive: {
-    backgroundColor: Brand.sage700,
-    borderColor: Brand.sage700,
+    backgroundColor: "#EEF5EF",
+    borderColor: "#C8DFCB",
   },
   attFilterChipText: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   attFilterChipTextActive: {
     fontFamily: FontFamilies.bodySemiBold,
-    color: "#ffffff",
+    color: HomeTheme.authorName,
   },
 
   // Attendance status badges
@@ -2928,7 +2939,7 @@ const styles = StyleSheet.create({
   attDetailPickupName: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
 
   // Attendance tab
@@ -2967,7 +2978,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: Brand.sage700,
     paddingVertical: 13,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   attActionButtonOut: {
     backgroundColor: "#d97706",
@@ -2980,18 +2991,19 @@ const styles = StyleSheet.create({
   attSectionLabel: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
-    color: "#4b5563",
+    color: HomeTheme.authorName,
     marginTop: 4,
   },
   attHistoryRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
-    borderRadius: 12,
+    backgroundColor: HomeTheme.cardBg,
+    borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#EDE8E2",
     gap: 12,
+    ...HomeTheme.shadow,
   },
   attHistoryRowOpen: {
     borderColor: "#fca5a5",
@@ -3004,12 +3016,12 @@ const styles = StyleSheet.create({
   attHistoryDate: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   attHistoryTime: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   attStaleWarning: {
     flexDirection: "row",
@@ -3036,7 +3048,7 @@ const styles = StyleSheet.create({
   attEmptyText: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   missedBadge: {
     backgroundColor: "#fef3c7",
@@ -3080,9 +3092,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   attDetailSheet: {
-    backgroundColor: "#ffffff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: HomeTheme.cardBg,
+    borderTopLeftRadius: HomeTheme.cardRadius,
+    borderTopRightRadius: HomeTheme.cardRadius,
     paddingHorizontal: 24,
     paddingBottom: 40,
     paddingTop: 12,
@@ -3097,9 +3109,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   attDetailDate: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 17,
-    color: "#1f2937",
+    ...homeTypography.sectionTitle,
+    fontSize: 20,
     textAlign: "center",
   },
   attDetailRow: {
@@ -3120,12 +3131,12 @@ const styles = StyleSheet.create({
   attDetailLabel: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   attDetailTime: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   attDetailUserBlock: {
     alignItems: "center",
@@ -3134,13 +3145,13 @@ const styles = StyleSheet.create({
   attDetailUserName: {
     fontFamily: FontFamilies.body,
     fontSize: 11,
-    color: "#6b7280",
+    color: HomeTheme.meta,
     maxWidth: 60,
     textAlign: "center",
   },
   attDetailDivider: {
     height: 1,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EDE8E2",
   },
   attDetailDuration: {
     fontFamily: FontFamilies.bodySemiBold,
@@ -3169,6 +3180,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
+    borderWidth: 3,
+    borderColor: HomeTheme.cardBg,
+    ...HomeTheme.shadow,
   },
   profileAvatarImage: {
     width: 80,
@@ -3196,21 +3210,18 @@ const styles = StyleSheet.create({
   profileAvatarHint: {
     fontFamily: FontFamilies.body,
     fontSize: 11,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
 
   // Pickup tab
   pickupPlanCard: {
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
     padding: 16,
+    ...homeCardSurface,
   },
   pickupPlanLabel: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 11,
-    color: "#6b7280",
+    color: HomeTheme.meta,
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -3218,11 +3229,11 @@ const styles = StyleSheet.create({
   pickupDateInput: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#1f2937",
-    backgroundColor: "#f9fafb",
+    color: HomeTheme.authorName,
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
+    borderColor: "#EDE8E2",
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
@@ -3237,35 +3248,36 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 9999,
     borderWidth: 1,
-    borderColor: "#C8DFCB",
-    backgroundColor: "#F2F7F3",
+    borderColor: "#EDE8E2",
+    backgroundColor: "#EEF5EF",
   },
   pickupAddBtnText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
-    color: Brand.sage700,
+    color: HomeTheme.authorName,
   },
   pickupPersonRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f9fafb",
+    backgroundColor: HomeTheme.cardBg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
+    borderColor: "#EDE8E2",
+    borderRadius: 18,
     padding: 14,
     gap: 12,
+    ...HomeTheme.shadow,
   },
   pickupPersonName: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   pickupPersonSub: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   pickupPersonActionBtn: {
     width: 30,
@@ -3295,9 +3307,9 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   personModalSheet: {
-    backgroundColor: "#ffffff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: HomeTheme.cardBg,
+    borderTopLeftRadius: HomeTheme.cardRadius,
+    borderTopRightRadius: HomeTheme.cardRadius,
     paddingHorizontal: 24,
     paddingBottom: 40,
     paddingTop: 12,
@@ -3305,9 +3317,8 @@ const styles = StyleSheet.create({
     maxHeight: "90%",
   },
   personModalTitle: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 17,
-    color: "#1f2937",
+    ...homeTypography.sectionTitle,
+    fontSize: 20,
     textAlign: "center",
   },
   personField: {
@@ -3316,16 +3327,16 @@ const styles = StyleSheet.create({
   personFieldLabel: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
-    color: "#4b5563",
+    color: HomeTheme.meta,
   },
   personInput: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#1f2937",
-    backgroundColor: "#f9fafb",
+    color: HomeTheme.authorName,
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
+    borderColor: "#EDE8E2",
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
@@ -3337,12 +3348,13 @@ const styles = StyleSheet.create({
   noteRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    backgroundColor: "#f9fafb",
+    backgroundColor: HomeTheme.cardBg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
+    borderColor: "#EDE8E2",
+    borderRadius: 18,
     padding: 14,
     gap: 12,
+    ...HomeTheme.shadow,
   },
   noteBadge: {
     paddingHorizontal: 8,
@@ -3356,12 +3368,12 @@ const styles = StyleSheet.create({
   noteDate: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   noteText: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#374151",
+    color: HomeTheme.authorName,
     lineHeight: 20,
   },
 
@@ -3369,11 +3381,11 @@ const styles = StyleSheet.create({
   noteModalTextInput: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#1f2937",
-    backgroundColor: "#f9fafb",
+    color: HomeTheme.authorName,
+    backgroundColor: "#F9FAFB",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 8,
+    borderColor: "#EDE8E2",
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 80,
@@ -3388,12 +3400,12 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 9999,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#f9fafb",
+    borderColor: "#EDE8E2",
+    backgroundColor: HomeTheme.cardBg,
   },
   noteCategoryPillText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 13,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
 });

@@ -6,6 +6,7 @@ import {
   useRef,
 } from "react";
 import { Alert } from "react-native";
+import { notifyPhotoBatchFeedPost } from "@/lib/feed-auto-actions";
 import { uploadPhoto, PublicationLabel } from "@/lib/photos-actions";
 
 // ---------------------------------------------------------------------------
@@ -154,10 +155,13 @@ export function UploadQueueProvider({ children }: { children: React.ReactNode })
 
       dispatch({ type: "BATCH_START", items });
 
+      const uploadedPhotoIds: string[] = [];
+
       const tasks = uris.map((uri, i) => async () => {
         dispatch({ type: "ITEM_STARTED", id: String(i) });
         try {
-          await uploadPhoto({ localUri: uri, ...payload }, userId);
+          const photo = await uploadPhoto({ localUri: uri, ...payload }, userId);
+          uploadedPhotoIds.push(photo.id);
           dispatch({ type: "ITEM_DONE", id: String(i) });
         } catch (err) {
           dispatch({ type: "ITEM_ERROR", id: String(i) });
@@ -165,8 +169,15 @@ export function UploadQueueProvider({ children }: { children: React.ReactNode })
         }
       });
 
-      runWithConcurrency(tasks, 4).then((results) => {
+      runWithConcurrency(tasks, 4).then(async (results) => {
         const errorCount = results.filter((r) => r.status === "rejected").length;
+        if (uploadedPhotoIds.length > 0) {
+          try {
+            await notifyPhotoBatchFeedPost(uploadedPhotoIds, payload.caption);
+          } catch (e) {
+            console.error("[UploadQueue] feed notification failed:", e);
+          }
+        }
         completionCallbackRef.current?.();
         if (errorCount > 0) {
           Alert.alert(

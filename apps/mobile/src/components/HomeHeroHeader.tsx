@@ -1,5 +1,6 @@
 import { FALL_COLORS, FALL_GREEN_COLORS } from "@/components/FallLeavesOverlay";
-import { FontFamilies } from "@/constants/theme";
+import { HomeTheme } from "@/components/home/homeTheme";
+import { Brand, FontFamilies } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -7,20 +8,20 @@ import { StatusBar } from "expo-status-bar";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const FallHeroColors = {
-  gradientStart: "#F0DFC4",
-  gradientMid: "#FFF4E8",
-  gradientEnd: "#ffffff",
-  greeting: "#8B7355",
-  name: "#5C4033",
-  dateLine: "#A08B6E",
-  rolePillBg: "#F5E6C8",
-  rolePillText: "#B45309",
-  actionBorder: "#E8D0B0",
-  icon: "#B45309",
-  avatarBg: "#FFF4E8",
-  avatarBorder: "#D97706",
-  avatarText: "#B45309",
+const HeroColors = {
+  gradientStart: Brand.welcomeBg,
+  gradientMid: "#FFFCF9",
+  gradientEnd: Brand.welcomeBg,
+  greeting: HomeTheme.meta,
+  name: HomeTheme.authorName,
+  dateLine: HomeTheme.meta,
+  rolePillBg: "#E8F3EC",
+  rolePillText: HomeTheme.authorName,
+  actionBorder: "#E8E4DF",
+  icon: HomeTheme.authorName,
+  avatarBg: "#E8F3EC",
+  avatarBorder: "#C4D9C8",
+  avatarText: HomeTheme.authorName,
 } as const;
 
 export function getGreeting() {
@@ -71,14 +72,8 @@ function FallHeroBackdrop() {
       <View style={[styles.leaf, styles.leafLowerLeft]}>
         <Ionicons name="leaf" size={18} color={FALL_COLORS[1]} />
       </View>
-      <View style={[styles.leaf, styles.leafLowerLeftSmall]}>
-        <Ionicons name="leaf" size={16} color={FALL_GREEN_COLORS[1]} />
-      </View>
       <View style={[styles.leaf, styles.leafTopRightLarge]}>
-        <Ionicons name="leaf" size={26} color={FALL_COLORS[0]} />
-      </View>
-      <View style={[styles.leaf, styles.leafTopRightSmall]}>
-        <Ionicons name="leaf" size={22} color={FALL_COLORS[4]} />
+        <Ionicons name="leaf" size={22} color="#7FA888" />
       </View>
     </View>
   );
@@ -97,12 +92,8 @@ export function HomeHeroHeader({
 
   return (
     <LinearGradient
-      colors={[
-        FallHeroColors.gradientStart,
-        FallHeroColors.gradientMid,
-        FallHeroColors.gradientEnd,
-      ]}
-      locations={[0, 0.55, 1]}
+      colors={[HeroColors.gradientStart, HeroColors.gradientMid, HeroColors.gradientEnd]}
+      locations={[0, 0.5, 1]}
       style={[styles.gradient, { paddingTop: insets.top + 12 }]}
     >
       <StatusBar style="dark" />
@@ -125,17 +116,10 @@ export function HomeHeroHeader({
             <Pressable
               onPress={checklist.onPress}
               hitSlop={8}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                pressed && styles.pressed,
-              ]}
+              style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
             >
               <View style={styles.badgeAnchor}>
-                <Ionicons
-                  name="checkbox-outline"
-                  size={20}
-                  color={FallHeroColors.icon}
-                />
+                <Ionicons name="checkbox-outline" size={20} color={HeroColors.icon} />
                 {checklist.showBadge && <View style={styles.checklistBadge} />}
               </View>
             </Pressable>
@@ -145,17 +129,10 @@ export function HomeHeroHeader({
             <Pressable
               onPress={notifications.onPress}
               hitSlop={8}
-              style={({ pressed }) => [
-                styles.actionBtn,
-                pressed && styles.pressed,
-              ]}
+              style={({ pressed }) => [styles.actionBtn, pressed && styles.pressed]}
             >
               <View style={styles.badgeAnchor}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={20}
-                  color={FallHeroColors.icon}
-                />
+                <Ionicons name="notifications-outline" size={20} color={HeroColors.icon} />
                 {notifications.count > 0 && (
                   <View style={styles.notifBadge}>
                     <Text style={styles.notifBadgeText}>
@@ -170,17 +147,10 @@ export function HomeHeroHeader({
           <Pressable
             onPress={onAvatarPress}
             hitSlop={8}
-            style={({ pressed }) => [
-              styles.avatar,
-              pressed && styles.pressed,
-            ]}
+            style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
           >
             {avatarUrl ? (
-              <Image
-                source={{ uri: avatarUrl }}
-                style={styles.avatarImage}
-                contentFit="cover"
-              />
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} contentFit="cover" />
             ) : (
               <Text style={styles.avatarText}>{initials}</Text>
             )}
@@ -193,8 +163,8 @@ export function HomeHeroHeader({
 
 const styles = StyleSheet.create({
   gradient: {
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 22,
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -206,8 +176,8 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#D97706",
-    opacity: 0.06,
+    backgroundColor: "#7FA888",
+    opacity: 0.08,
   },
   glowLowerLeft: {
     position: "absolute",
@@ -216,12 +186,12 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: "#CA8A04",
-    opacity: 0.05,
+    backgroundColor: "#C4A882",
+    opacity: 0.06,
   },
   leaf: {
     position: "absolute",
-    opacity: 0.15,
+    opacity: 0.12,
   },
   leafTopLeft: {
     top: 8,
@@ -232,25 +202,11 @@ const styles = StyleSheet.create({
     bottom: 6,
     left: 28,
     transform: [{ rotate: "45deg" }],
-    opacity: 0.14,
-  },
-  leafLowerLeftSmall: {
-    bottom: 18,
-    left: 72,
-    transform: [{ rotate: "-15deg" }],
-    opacity: 0.12,
   },
   leafTopRightLarge: {
     top: 12,
     right: 88,
     transform: [{ rotate: "15deg" }],
-    opacity: 0.16,
-  },
-  leafTopRightSmall: {
-    top: 36,
-    right: 24,
-    transform: [{ rotate: "-25deg" }],
-    opacity: 0.14,
   },
   row: {
     flexDirection: "row",
@@ -266,24 +222,25 @@ const styles = StyleSheet.create({
   greeting: {
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: FallHeroColors.greeting,
+    color: HeroColors.greeting,
   },
   name: {
     fontFamily: FontFamilies.heading,
-    fontSize: 30,
-    color: FallHeroColors.name,
-    lineHeight: 36,
+    fontSize: 28,
+    color: HeroColors.name,
+    lineHeight: 34,
+    letterSpacing: -0.3,
   },
   dateLine: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: FallHeroColors.dateLine,
-    marginTop: 2,
+    color: HeroColors.dateLine,
+    marginTop: 4,
   },
   rolePill: {
     alignSelf: "flex-start",
     marginTop: 6,
-    backgroundColor: FallHeroColors.rolePillBg,
+    backgroundColor: HeroColors.rolePillBg,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
@@ -291,12 +248,12 @@ const styles = StyleSheet.create({
   rolePillText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
-    color: FallHeroColors.rolePillText,
+    color: HeroColors.rolePillText,
   },
   actions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 8,
     paddingTop: 4,
   },
   actionBtn: {
@@ -305,9 +262,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#ffffff",
     borderWidth: 1,
-    borderColor: FallHeroColors.actionBorder,
+    borderColor: HeroColors.actionBorder,
     alignItems: "center",
     justifyContent: "center",
+    ...HomeTheme.shadow,
   },
   pressed: {
     opacity: 0.7,
@@ -349,9 +307,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: FallHeroColors.avatarBg,
+    backgroundColor: HeroColors.avatarBg,
     borderWidth: 2,
-    borderColor: FallHeroColors.avatarBorder,
+    borderColor: HeroColors.avatarBorder,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -364,6 +322,6 @@ const styles = StyleSheet.create({
   avatarText: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 15,
-    color: FallHeroColors.avatarText,
+    color: HeroColors.avatarText,
   },
 });
