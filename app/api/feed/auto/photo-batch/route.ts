@@ -2,28 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { randomUUID } from "crypto";
 import { authenticateApiRequest } from "@/app/lib/authenticate-api-request";
-import { createAdminClient } from "@/app/lib/supabase-server";
 import {
   createAutoFeedPost,
   photoBatchCtaRoute,
   photoBatchFeedBody,
 } from "@/app/lib/feed/autoFeedPost";
+import { isTeacherOrAdmin } from "@/app/lib/feed/isTeacherOrAdmin";
 
 const bodySchema = z.object({
   photoIds: z.array(z.string().uuid()).min(1),
   caption: z.string().max(2000).optional(),
 });
-
-async function isTeacherOrAdmin(userId: string): Promise<boolean> {
-  const { data } = await createAdminClient()
-    .schema("admin")
-    .from("users")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-  const role = data?.role;
-  return role === "teacher" || role === "super_admin";
-}
 
 export async function POST(request: NextRequest) {
   const user = await authenticateApiRequest(request);

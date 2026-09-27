@@ -13,7 +13,6 @@ import {
   attachmentIcon,
   formatAuthorSubtitle,
   formatFileSize,
-  isManualFeedPost,
   pushFeedCtaRoute,
   resolveFeedCtaRoute,
   timeAgo,
@@ -39,11 +38,7 @@ export function FeedPostCard({
   staffFeed?: boolean;
 }) {
   const router = useRouter();
-  const canDelete =
-    onDeletePress &&
-    post.teacher_id === currentUserId &&
-    isManualFeedPost(post.source_type);
-  const isOwn = canDelete;
+  const showPostMenu = !!onDeletePress;
   const subtitle = formatAuthorSubtitle(post.classroom, post.authorRole);
   const showTeacherProfile =
     post.authorRole === "teacher" || post.authorRole === "super_admin";
@@ -85,7 +80,7 @@ export function FeedPostCard({
             </Text>
           </View>
         </TouchableOpacity>
-        {isOwn && (
+        {showPostMenu && (
           <TouchableOpacity onPress={onDeletePress} hitSlop={8} style={{ padding: 4 }}>
             <Ionicons name="ellipsis-vertical" size={18} color="#9ca3af" />
           </TouchableOpacity>

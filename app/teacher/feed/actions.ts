@@ -353,14 +353,29 @@ export async function deletePost(postId: string) {
 
   const adminClient = createAdminClient();
 
-  const { error } = await adminClient
+  const { data: adminUser } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const isSuperAdmin = adminUser?.role === "super_admin";
+
+  let query = adminClient
     .schema("feed")
     .from("posts")
     .update({ is_deleted: true })
-    .eq("id", postId)
-    .eq("teacher_id", user.id);
+    .eq("id", postId);
+
+  if (!isSuperAdmin) {
+    query = query.eq("teacher_id", user.id);
+  }
+
+  const { data, error } = await query.select("id");
 
   if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error("Post not found or permission denied");
 
   revalidatePath("/teacher/feed");
 }

@@ -1,4 +1,9 @@
 import { ConferenceTeacherFilterRow } from "@/components/ConferenceTeacherFilterRow";
+import {
+  HomeTheme,
+  homeCardSurface,
+  homeTypography,
+} from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import {
@@ -360,23 +365,19 @@ export function StaffConferenceSection({
 
 const styles = StyleSheet.create({
   section: {
-    paddingTop: 18,
+    marginTop: HomeTheme.sectionGap,
     paddingBottom: 6,
-    borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
-    marginTop: 8,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: HomeTheme.horizontalInset,
     marginBottom: 8,
   },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 16,
-    color: "#1f2937",
+    ...homeTypography.sectionTitle,
+    fontSize: 22,
     flex: 1,
   },
   countBadge: {
@@ -416,8 +417,8 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9ca3af",
-    paddingHorizontal: 20,
+    color: HomeTheme.meta,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingBottom: 12,
   },
   alertCard: {
@@ -476,9 +477,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderRadius: 12,
-    borderWidth: 1,
     padding: 12,
+    borderRadius: HomeTheme.cardRadius,
   },
   previewCardOwn: {
     backgroundColor: Brand.sage700,
@@ -486,8 +486,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   previewCardOther: {
-    backgroundColor: "#f9fafb",
-    borderColor: "#f3f4f6",
+    ...homeCardSurface,
   },
   dateBlock: {
     width: 44,
@@ -513,7 +512,7 @@ const styles = StyleSheet.create({
   dateDay: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 18,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     lineHeight: 22,
   },
   dateDayOwn: {
@@ -541,7 +540,7 @@ const styles = StyleSheet.create({
   previewStudentName: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     flexShrink: 1,
   },
   previewStudentNameOwn: {
@@ -604,7 +603,7 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.sage700 + "20",
   },
   formatChipVirtual: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EDE8E2",
   },
   formatChipText: {
     fontFamily: FontFamilies.bodySemiBold,

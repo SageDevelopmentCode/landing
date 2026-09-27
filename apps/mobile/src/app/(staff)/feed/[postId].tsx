@@ -9,7 +9,8 @@ import {
   attachmentIcon,
   formatAuthorSubtitle,
   formatFileSize,
-  isManualFeedPost,
+  canDeleteFeedPost,
+  feedPostDeleteRpcName,
   pushFeedCtaRoute,
   resolveFeedCtaRoute,
   timeAgo,
@@ -557,6 +558,7 @@ export default function PostDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [myName, setMyName] = useState<string>("You");
   const [myProfileImageUrl, setMyProfileImageUrl] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
@@ -612,6 +614,14 @@ export default function PostDetailScreen() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setError("Not authenticated."); setLoading(false); return; }
     setCurrentUserId(user.id);
+
+    const { data: me } = await supabase
+      .schema("admin")
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    setCurrentUserRole(me?.role ?? null);
 
     const [postRes, mediaRes, attachRes, commentRes, reactionsRes] = await Promise.all([
       supabase.schema("feed").from("posts")
@@ -832,15 +842,15 @@ export default function PostDetailScreen() {
   }
 
   async function deletePost() {
-    if (!post || !currentUserId) return;
+    if (!post || !canDeleteFeedPost(post, currentUserId, currentUserRole)) return;
     Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete", style: "destructive", onPress: async () => {
-          const { error } = await supabase.schema("feed").from("posts")
-            .update({ is_deleted: true })
-            .eq("id", post.id)
-            .eq("teacher_id", currentUserId);
+          const rpcName = feedPostDeleteRpcName(currentUserRole);
+          const { error } = await supabase.schema("feed").rpc(rpcName, {
+            p_post_id: post.id,
+          });
           if (error) {
             Alert.alert("Error", "Could not delete post.");
           } else {
@@ -898,8 +908,7 @@ export default function PostDetailScreen() {
     );
   }
 
-  const isOwn =
-    post.teacher_id === currentUserId && isManualFeedPost(post.source_type);
+  const canDelete = canDeleteFeedPost(post, currentUserId, currentUserRole);
 
   // Reactions row content (header for FlatList)
   const ListHeader = (
@@ -907,7 +916,7 @@ export default function PostDetailScreen() {
       <PostHeader
         post={post}
         onDelete={deletePost}
-        isOwn={isOwn}
+        isOwn={canDelete}
         rawReactions={rawReactions}
         currentUserId={currentUserId}
         reactionSummary={reactionSummary}

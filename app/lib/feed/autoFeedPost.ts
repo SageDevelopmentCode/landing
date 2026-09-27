@@ -62,7 +62,6 @@ export async function createAutoFeedPost(
         post_type: row.post_type,
         cta_label: row.cta_label,
         cta_route: row.cta_route,
-        teacher_id: row.teacher_id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", existing.id)
@@ -104,15 +103,29 @@ export async function softDeleteAutoFeedPost(
     .eq("source_id", sourceId);
 }
 
-export function calendarEventFeedBody(title: string, eventDate: string): string {
+export function formatCalendarEventDateLabel(eventDate: string): string {
   const dateOnly = eventDate.split("T")[0];
   const [y, m, d] = dateOnly.split("-").map(Number);
-  const label = new Date(y, m - 1, d).toLocaleDateString("en-US", {
+  return new Date(y, m - 1, d).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
+}
+
+export function calendarEventFeedBody(title: string, eventDate: string): string {
+  const label = formatCalendarEventDateLabel(eventDate);
   return `**${title}** was added to the school calendar for ${label}.`;
+}
+
+export function parentCalendarEventFeedBody(
+  parentName: string,
+  title: string,
+  eventDate: string,
+): string {
+  const label = formatCalendarEventDateLabel(eventDate);
+  const name = parentName.trim() || "A parent";
+  return `${name} added **${title}** to the community calendar for ${label}.`;
 }
 
 export function calendarEventCtaRoute(eventDate: string, staff = false): string {

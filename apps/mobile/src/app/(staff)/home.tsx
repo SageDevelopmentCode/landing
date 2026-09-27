@@ -1,5 +1,10 @@
 import { ActivityPreferencesSheet } from "@/components/ActivityPreferencesSheet";
 import { HomeHeroHeader } from "@/components/HomeHeroHeader";
+import { HomeSectionHeader } from "@/components/home/HomeSectionHeader";
+import {
+  HomeTheme,
+  homeCardSurface,
+} from "@/components/home/homeTheme";
 import { StaffAllBirthdaysSheet } from "@/components/StaffAllBirthdaysSheet";
 import { StaffConferenceBookingsSheet, type StaffConferenceBookingsSheetRef } from "@/components/StaffConferenceBookingsSheet";
 import { StaffConferenceSection } from "@/components/StaffConferenceSection";
@@ -79,6 +84,9 @@ import {
   isSchoolYearPickupReminderWindow,
   isStudentAwaitingPickup,
 } from "@/lib/pickup-reminder";
+
+const staffSheetBackground = { backgroundColor: HomeTheme.canvas };
+const staffSheetHandle = { backgroundColor: "#C4D9C8" };
 
 // ─── Greeting helpers ─────────────────────────────────────────────────────────
 
@@ -350,16 +358,16 @@ const aStyles = StyleSheet.create({
   label: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#374151",
+    color: HomeTheme.authorName,
     flex: 1,
   },
   labelChecked: {
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   pickedUpTag: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
 });
 
@@ -1639,7 +1647,7 @@ export default function StaffHomeScreen() {
             borderLeftWidth: 3,
             borderLeftColor: teacherColors.accent,
           },
-          pressed && { backgroundColor: "#f9fafb" },
+          pressed && { backgroundColor: "#FFFCF9" },
         ]}
         onPress={() => openStudentActions(student)}
       >
@@ -1735,7 +1743,7 @@ export default function StaffHomeScreen() {
               return null;
             })()}
             {!isPaid && (
-              <View style={[styles.careChip, { backgroundColor: "#f3f4f6" }]}>
+              <View style={[styles.careChip, styles.careChipUnlogged]}>
                 <Text
                   style={[styles.careChipText, styles.careChipTextUnlogged]}
                 >
@@ -1816,7 +1824,7 @@ export default function StaffHomeScreen() {
 
             return null;
           })()}
-          <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
+          <Ionicons name="chevron-forward" size={16} color={HomeTheme.meta} />
         </View>
       </Pressable>
     );
@@ -1846,7 +1854,7 @@ export default function StaffHomeScreen() {
               ]}
               onPress={() => setSelectedDate((d) => shiftDay(d, -1))}
             >
-              <Ionicons name="chevron-back" size={20} color="#374151" />
+              <Ionicons name="chevron-back" size={20} color={HomeTheme.authorName} />
             </Pressable>
             <Text style={styles.dateNavLabel}>
               {formatTodayDate(selectedDate)}
@@ -1863,7 +1871,7 @@ export default function StaffHomeScreen() {
               ]}
               onPress={() => setSelectedDate((d) => shiftDay(d, 1))}
             >
-              <Ionicons name="chevron-forward" size={20} color="#374151" />
+              <Ionicons name="chevron-forward" size={20} color={HomeTheme.authorName} />
             </Pressable>
             <View style={styles.dateNavActions}>
               {!studentsLoading && (
@@ -2091,9 +2099,7 @@ export default function StaffHomeScreen() {
 
             {/* Upcoming Activities */}
             <View style={styles.activitiesSection}>
-              <Text style={styles.activitiesSectionTitle}>
-                Upcoming Activities
-              </Text>
+              <HomeSectionHeader title="Upcoming Activities" />
               {activitiesLoading ? (
                 <ScrollView
                   horizontal
@@ -2152,7 +2158,7 @@ export default function StaffHomeScreen() {
                             <Ionicons
                               name="ribbon-outline"
                               size={24}
-                              color="#d1d5db"
+                              color={HomeTheme.meta}
                             />
                           </View>
                         )}
@@ -2245,6 +2251,8 @@ export default function StaffHomeScreen() {
         ref={avatarSheetRef}
         snapPoints={["40%"]}
         enablePanDownToClose
+        backgroundStyle={staffSheetBackground}
+        handleIndicatorStyle={staffSheetHandle}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
@@ -2300,7 +2308,7 @@ export default function StaffHomeScreen() {
               });
             }}
           >
-            <Ionicons name="person-outline" size={20} color="#1f2937" />
+            <Ionicons name="person-outline" size={20} color={HomeTheme.authorName} />
             <Text style={styles.sheetItemText}>View Profile</Text>
           </Pressable>
           <Pressable
@@ -2326,6 +2334,8 @@ export default function StaffHomeScreen() {
         ref={studentActionSheetRef}
         snapPoints={["60%"]}
         enablePanDownToClose
+        backgroundStyle={staffSheetBackground}
+        handleIndicatorStyle={staffSheetHandle}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
@@ -2573,8 +2583,8 @@ export default function StaffHomeScreen() {
             pressBehavior="close"
           />
         )}
-        backgroundStyle={{ backgroundColor: "#ffffff" }}
-        handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
+        backgroundStyle={staffSheetBackground}
+        handleIndicatorStyle={staffSheetHandle}
         onDismiss={() => {
           setPickupPersons([]);
           setSelectedPickupPerson(null);
@@ -2687,8 +2697,8 @@ export default function StaffHomeScreen() {
             pressBehavior="close"
           />
         )}
-        backgroundStyle={{ backgroundColor: "#ffffff" }}
-        handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
+        backgroundStyle={staffSheetBackground}
+        handleIndicatorStyle={staffSheetHandle}
         onDismiss={() => {
           setUnpaidStudents([]);
           setAddStudentSearch("");
@@ -2771,10 +2781,7 @@ export default function StaffHomeScreen() {
                       </Text>
                       <View style={styles.careChipsRow}>
                         <View
-                          style={[
-                            styles.careChip,
-                            { backgroundColor: "#f3f4f6" },
-                          ]}
+                          style={[styles.careChip, styles.careChipUnlogged]}
                         >
                           <Text
                             style={[
@@ -2808,8 +2815,8 @@ export default function StaffHomeScreen() {
             pressBehavior="close"
           />
         )}
-        backgroundStyle={{ backgroundColor: "#ffffff" }}
-        handleIndicatorStyle={{ backgroundColor: "#d1d5db" }}
+        backgroundStyle={staffSheetBackground}
+        handleIndicatorStyle={staffSheetHandle}
         onDismiss={() => setAllergyDetails([])}
       >
         <BottomSheetScrollView
@@ -2943,6 +2950,8 @@ export default function StaffHomeScreen() {
         ref={eventSheetRef}
         snapPoints={["60%"]}
         enablePanDownToClose
+        backgroundStyle={staffSheetBackground}
+        handleIndicatorStyle={staffSheetHandle}
         backdropComponent={(props) => (
           <BottomSheetBackdrop
             {...props}
@@ -3103,7 +3112,7 @@ export default function StaffHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F0DFC4",
+    backgroundColor: HomeTheme.canvas,
   },
   safeArea: {
     flex: 1,
@@ -3111,52 +3120,40 @@ const styles = StyleSheet.create({
 
   // Activities quick-access
   activitiesSection: {
-    paddingTop: 18,
+    marginTop: HomeTheme.sectionGap,
     paddingBottom: 6,
-    borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
-    marginTop: 8,
-  },
-  activitiesSectionTitle: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 16,
-    color: "#1f2937",
-    paddingHorizontal: 20,
-    marginBottom: 12,
+    gap: 10,
   },
   activitiesEmpty: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9ca3af",
-    paddingHorizontal: 20,
+    color: HomeTheme.meta,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingBottom: 12,
   },
   activityCardsRow: {
-    paddingHorizontal: 16,
+    paddingHorizontal: HomeTheme.horizontalInset,
     gap: 10,
     paddingBottom: 12,
   },
   activityCard: {
     width: 180,
-    backgroundColor: "#fff",
-    borderRadius: 14,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#f3f4f6",
+    ...homeCardSurface,
   },
   activityThumb: {
     width: "100%",
     height: 88,
   },
   activityThumbPlaceholder: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EDE8E2",
     alignItems: "center",
     justifyContent: "center",
   },
   activityCardTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     paddingHorizontal: 10,
     paddingTop: 8,
     lineHeight: 17,
@@ -3188,15 +3185,15 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
 
-  // Content card
+  // Main body — embedded attendance panel on cream canvas
   content: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: HomeTheme.cardBg,
   },
   sectionCount: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 15,
-    color: "#6b7280",
+    color: HomeTheme.meta,
   },
   teacherSection: {
     marginBottom: 16,
@@ -3210,25 +3207,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9fafb",
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: "#f3f4f6",
+    borderColor: "#EDE8E2",
   },
   teacherSectionTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 14,
-    color: "#374151",
+    color: HomeTheme.authorName,
   },
   teacherSectionCount: {
     fontFamily: FontFamilies.body,
     fontSize: 12,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
   dateNavRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: HomeTheme.horizontalInset,
     paddingTop: 8,
     paddingBottom: 12,
     gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EDE8E2",
   },
   dateNavActions: {
     flexDirection: "row",
@@ -3250,7 +3249,7 @@ const styles = StyleSheet.create({
   dateNavLabel: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 16,
-    color: "#374151",
+    color: HomeTheme.authorName,
   },
   todayChip: {
     backgroundColor: Brand.sage700 + "20",
@@ -3318,20 +3317,23 @@ const styles = StyleSheet.create({
   // Status filter
   statusFilterScroll: {
     flexGrow: 0,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   statusFilterRow: {
     flexDirection: "row",
     gap: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: HomeTheme.horizontalInset,
+    paddingTop: 12,
+    paddingBottom: 10,
   },
   statusFilterChip: {
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 9999,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: HomeTheme.cardBg,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#EDE8E2",
+    ...HomeTheme.shadow,
   },
   statusFilterChipActive: {
     backgroundColor: Brand.sage700 + "18",
@@ -3408,8 +3410,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginHorizontal: 16,
     marginBottom: 8,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: HomeTheme.cardBg,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#EDE8E2",
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 8,
@@ -3418,7 +3422,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: FontFamilies.body,
     fontSize: 14,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     padding: 0,
   },
 
@@ -3427,6 +3431,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
+    paddingTop: 12,
+    gap: HomeTheme.sectionGap,
     paddingBottom: BottomTabInset + 16,
   },
 
@@ -3437,7 +3443,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
     gap: 12,
   },
   avatarCircle: {
@@ -3482,7 +3488,7 @@ const styles = StyleSheet.create({
   studentName: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 15,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     flexShrink: 1,
   },
   careChipsRow: {
@@ -3505,7 +3511,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fee2e2",
   },
   careChipUnlogged: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#EDE8E2",
   },
   careChipIcon: {
     fontSize: 10,
@@ -3523,7 +3529,7 @@ const styles = StyleSheet.create({
   },
   careChipTextUnlogged: {
     fontFamily: FontFamilies.body,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
   },
 
   // Skeleton
@@ -3534,7 +3540,7 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
   },
 
   // Empty state
@@ -3548,13 +3554,13 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 16,
-    color: "#374151",
+    color: HomeTheme.authorName,
     textAlign: "center",
   },
   emptyStateSub: {
     fontFamily: FontFamilies.body,
     fontSize: 13,
-    color: "#9ca3af",
+    color: HomeTheme.meta,
     textAlign: "center",
     lineHeight: 20,
   },
@@ -3604,12 +3610,12 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
   },
   sheetItemText: {
     fontFamily: FontFamilies.body,
     fontSize: 15,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
 
   // Quick action sheet
@@ -3626,9 +3632,12 @@ const styles = StyleSheet.create({
   },
   tile: {
     width: "47%",
-    backgroundColor: "#f3f4f6",
+    backgroundColor: HomeTheme.cardBg,
+    borderWidth: 1,
+    borderColor: "#EDE8E2",
     borderRadius: 14,
     paddingVertical: 16,
+    ...HomeTheme.shadow,
     paddingHorizontal: 12,
     alignItems: "center",
     gap: 6,
@@ -3644,7 +3653,7 @@ const styles = StyleSheet.create({
   tileLabel: {
     fontFamily: FontFamilies.bodySemiBold,
     fontSize: 12,
-    color: "#374151",
+    color: HomeTheme.authorName,
     textAlign: "center",
     lineHeight: 16,
   },
@@ -3657,7 +3666,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
     marginBottom: 2,
   },
   actionAvatarCircle: {
@@ -3681,7 +3690,7 @@ const styles = StyleSheet.create({
   actionSheetName: {
     fontFamily: FontFamilies.heading,
     fontSize: 18,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
   },
   actionAllergyBadge: {
     flexDirection: "row",
@@ -3745,7 +3754,7 @@ const styles = StyleSheet.create({
   pickupSheetTitle: {
     fontFamily: FontFamilies.heading,
     fontSize: 18,
-    color: "#1f2937",
+    color: HomeTheme.authorName,
     paddingVertical: 16,
     paddingHorizontal: 4,
   },
@@ -3756,7 +3765,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    borderBottomColor: "#EDE8E2",
   },
   pickupSlotText: {
     fontFamily: FontFamilies.body,
@@ -3798,7 +3807,7 @@ const styles = StyleSheet.create({
   // Care log history in action sheet
   careHistorySection: {
     borderTopWidth: 1,
-    borderTopColor: "#f3f4f6",
+    borderTopColor: "#EDE8E2",
     paddingTop: 10,
     gap: 4,
   },

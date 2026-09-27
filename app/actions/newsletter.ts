@@ -484,7 +484,7 @@ export async function publishNewsletter(
   const { data: nl } = await adminClient
     .schema('newsletters')
     .from('newsletters')
-    .select('id, title')
+    .select('id, title, created_by')
     .eq('id', newsletterId)
     .single()
 
@@ -495,7 +495,7 @@ export async function publishNewsletter(
       newsletterFeedBody,
     } = await import("@/app/lib/feed/autoFeedPost");
     void createAutoFeedPost({
-      authorUserId: user.id,
+      authorUserId: nl.created_by ?? user.id,
       postType: 'newsletter',
       body: newsletterFeedBody(nl.title),
       sourceType: 'newsletter',

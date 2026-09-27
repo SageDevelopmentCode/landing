@@ -21,6 +21,7 @@ export function useFeedPosts(filterTeacherId: string | null) {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -63,6 +64,16 @@ export function useFeedPosts(filterTeacherId: string | null) {
       return;
     }
     setCurrentUserId(user.id);
+
+    const { data: me } = await supabase
+      .schema("admin")
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!isCancelled()) {
+      setCurrentUserRole(me?.role ?? null);
+    }
 
     let postsQuery = supabase
       .schema("feed")
@@ -296,6 +307,7 @@ export function useFeedPosts(filterTeacherId: string | null) {
     hasMore,
     error,
     currentUserId,
+    currentUserRole,
     handleRefresh,
     loadMore,
     toggleReactionForPost,

@@ -1,3 +1,4 @@
+import { HomeTheme, homeTypography } from "@/components/home/homeTheme";
 import { Brand, FontFamilies } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -30,7 +31,7 @@ function QuickAccessRow({
       style={({ pressed }) => [
         styles.cardButton,
         { backgroundColor, borderColor },
-        pressed && { opacity: 0.7 },
+        pressed && { opacity: 0.85 },
       ]}
       onPress={onPress}
     >
@@ -42,7 +43,7 @@ function QuickAccessRow({
         <View style={[styles.badge, { backgroundColor: badgeBg }]}>
           <Text style={styles.badgeText}>{badgeText}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
+        <Ionicons name="chevron-forward" size={16} color={HomeTheme.meta} />
       </View>
     </Pressable>
   );
@@ -119,15 +120,14 @@ export function StaffHealthFoodSection({
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: 14,
-    marginHorizontal: 16,
+    marginTop: HomeTheme.sectionGap,
+    marginHorizontal: HomeTheme.horizontalInset,
     marginBottom: 4,
+    gap: 10,
   },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 16,
-    color: "#1f2937",
-    marginBottom: 10,
+    ...homeTypography.sectionTitle,
+    fontSize: 22,
   },
   buttonStack: {
     gap: 8,
@@ -136,10 +136,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderRadius: 10,
+    borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    ...HomeTheme.shadow,
   },
   rowLeft: {
     flexDirection: "row",

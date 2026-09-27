@@ -27,6 +27,24 @@ export function isManualFeedPost(sourceType: string | null): boolean {
   return !sourceType;
 }
 
+export function canDeleteFeedPost(
+  post: { teacher_id: string; source_type: string | null },
+  currentUserId: string | null,
+  currentUserRole: string | null,
+): boolean {
+  if (!currentUserId) return false;
+  if (currentUserRole === "super_admin") return true;
+  return (
+    post.teacher_id === currentUserId && isManualFeedPost(post.source_type)
+  );
+}
+
+export function feedPostDeleteRpcName(currentUserRole: string | null): string {
+  return currentUserRole === "super_admin"
+    ? "moderate_delete_post"
+    : "delete_own_post";
+}
+
 export function getInitials(fullName: string): string {
   const parts = fullName.trim().split(/\s+/);
   if (parts.length === 1) return parts[0][0].toUpperCase();
@@ -77,8 +95,14 @@ export function formatAuthorSubtitle(
     const name = classroom.trim();
     return name.toLowerCase().includes("group") ? `${name} guide` : `${name} guide`;
   }
-  if (authorRole === "super_admin" || authorRole === "teacher" || !authorRole) {
+  if (authorRole === "super_admin" || authorRole === "teacher") {
     return "Teacher";
+  }
+  if (authorRole === "parent") {
+    return "Parent";
+  }
+  if (!authorRole) {
+    return "Community";
   }
   return authorRole.charAt(0).toUpperCase() + authorRole.slice(1);
 }
