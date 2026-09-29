@@ -151,11 +151,11 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="children"
+          name="calendar"
           options={{
-            title: "Children",
+            title: "Calendar",
             tabBarIcon: ({ focused }) =>
-              tabIcon(focused, "people", "people-outline"),
+              tabIcon(focused, "calendar", "calendar-outline"),
           }}
         />
         <Tabs.Screen
@@ -197,7 +197,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="help" options={{ href: null }} />
         <Tabs.Screen name="tuition" options={{ href: null }} />
         <Tabs.Screen name="forms" options={{ href: null }} />
-        <Tabs.Screen name="calendar" options={{ href: null }} />
+        <Tabs.Screen name="children" options={{ href: null }} />
         <Tabs.Screen name="attendance" options={{ href: null }} />
         <Tabs.Screen name="teacher" options={{ href: null }} />
         <Tabs.Screen name="settings" options={{ href: null }} />

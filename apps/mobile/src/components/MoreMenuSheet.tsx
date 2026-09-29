@@ -24,11 +24,11 @@ const MENU_SECTIONS: MoreMenuSection[] = [
     title: "School",
     items: [
       {
-        label: "Calendar",
-        icon: "calendar-outline",
-        route: "/(tabs)/calendar",
-        iconColor: "#2563EB",
-        iconBg: "rgba(37,99,235,0.12)",
+        label: "Children",
+        icon: "people-outline",
+        route: "/(tabs)/children",
+        iconColor: Brand.sage700,
+        iconBg: "rgba(94,124,104,0.12)",
       },
       {
         label: "Attendance",
