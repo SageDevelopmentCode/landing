@@ -48,6 +48,7 @@ import { sendSchoolYearWeekTwoNewsletterEmail } from '../../actions/sendSchoolYe
 import { sendSchoolYearWeekThreeNewsletterEmail } from '../../actions/sendSchoolYearWeekThreeNewsletterEmail'
 import { sendSchoolYearWeekFourNewsletterEmail } from '../../actions/sendSchoolYearWeekFourNewsletterEmail'
 import { sendSchoolYearWeekFiveNewsletterEmail } from '../../actions/sendSchoolYearWeekFiveNewsletterEmail'
+import { sendSchoolYearWeekSixNewsletterEmail } from '../../actions/sendSchoolYearWeekSixNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -307,6 +308,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearWeekFiveNewsletterSending, setSchoolYearWeekFiveNewsletterSending] = useState(false)
   const [schoolYearWeekFiveNewsletterSent, setSchoolYearWeekFiveNewsletterSent] = useState(false)
   const [schoolYearWeekFiveNewsletterError, setSchoolYearWeekFiveNewsletterError] = useState<string | null>(null)
+  const [schoolYearWeekSixNewsletterSending, setSchoolYearWeekSixNewsletterSending] = useState(false)
+  const [schoolYearWeekSixNewsletterSent, setSchoolYearWeekSixNewsletterSent] = useState(false)
+  const [schoolYearWeekSixNewsletterError, setSchoolYearWeekSixNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -1806,6 +1810,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendSchoolYearWeekSixNewsletter = async () => {
+    if (schoolYearWeekSixNewsletterSending || !application.g1_email) return
+    setSchoolYearWeekSixNewsletterSending(true)
+    setSchoolYearWeekSixNewsletterError(null)
+    const result = await sendSchoolYearWeekSixNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearWeekSixNewsletterSending(false)
+    if (result.success) {
+      setSchoolYearWeekSixNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSchoolYearWeekSixNewsletterSent(false), 3000)
+    } else {
+      setSchoolYearWeekSixNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendOpenHouseEnrollment = async () => {
     if (openHouseSending || !application.g1_email) return
     setOpenHouseSending(true)
@@ -2730,6 +2753,17 @@ export function ApplicationDetailSidebar({
                     {schoolYearWeekFiveNewsletterSending ? 'Sending…' : schoolYearWeekFiveNewsletterSent ? '✓ Sent!' : 'Send School Year Week Five Newsletter'}
                   </button>
                   {schoolYearWeekFiveNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekFiveNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearWeekSixNewsletter}
+                    disabled={schoolYearWeekSixNewsletterSending || schoolYearWeekSixNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearWeekSixNewsletterSending ? 'Sending…' : schoolYearWeekSixNewsletterSent ? '✓ Sent!' : 'Send School Year Week Six Newsletter'}
+                  </button>
+                  {schoolYearWeekSixNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekSixNewsletterError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button

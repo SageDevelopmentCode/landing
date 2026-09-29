@@ -14,17 +14,17 @@ import {
   BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
+  BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Props = {
   sheetRef: React.RefObject<BottomSheetModal | null>;
@@ -62,6 +62,7 @@ export function ParentCalendarAddSheet({
   );
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const { top: safeTop } = useSafeAreaInsets();
 
   const snapPoints = useMemo(() => ["88%"], []);
 
@@ -148,6 +149,8 @@ export function ParentCalendarAddSheet({
       ref={sheetRef}
       snapPoints={snapPoints}
       enablePanDownToClose
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
       onDismiss={onDismiss}
       backgroundStyle={styles.sheetBackground}
       handleIndicatorStyle={styles.sheetHandle}
@@ -160,7 +163,13 @@ export function ParentCalendarAddSheet({
         />
       )}
     >
-      <BottomSheetScrollView contentContainerStyle={styles.sheetContent}>
+      <BottomSheetScrollView
+        contentContainerStyle={[
+          styles.sheetContent,
+          { paddingTop: safeTop + 8 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.stepLabel}>
           Step {stepIdx + 1} of {PARENT_CALENDAR_ADD_EVENT_STEPS.length}
         </Text>
@@ -182,7 +191,7 @@ export function ParentCalendarAddSheet({
         {step.hint ? <Text style={styles.hint}>{step.hint}</Text> : null}
 
         {step.id === "title" && (
-          <TextInput
+          <BottomSheetTextInput
             style={styles.input}
             placeholder="e.g. Neighborhood playdate"
             value={form.title}
@@ -192,7 +201,7 @@ export function ParentCalendarAddSheet({
         )}
 
         {step.id === "date" && (
-          <TextInput
+          <BottomSheetTextInput
             style={styles.input}
             placeholder="YYYY-MM-DD"
             value={form.event_date}
@@ -231,7 +240,7 @@ export function ParentCalendarAddSheet({
               <View style={styles.timeRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>Starts</Text>
-                  <TextInput
+                  <BottomSheetTextInput
                     style={styles.input}
                     value={form.start_time}
                     onChangeText={(t) => patch({ start_time: t })}
@@ -240,7 +249,7 @@ export function ParentCalendarAddSheet({
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.fieldLabel}>Ends</Text>
-                  <TextInput
+                  <BottomSheetTextInput
                     style={styles.input}
                     value={form.end_time}
                     onChangeText={(t) => patch({ end_time: t })}
@@ -256,7 +265,7 @@ export function ParentCalendarAddSheet({
           <View style={{ gap: 12 }}>
             <View>
               <Text style={styles.fieldLabel}>Location (optional)</Text>
-              <TextInput
+              <BottomSheetTextInput
                 style={styles.input}
                 placeholder="Where is it?"
                 value={form.location}
@@ -265,7 +274,7 @@ export function ParentCalendarAddSheet({
             </View>
             <View>
               <Text style={styles.fieldLabel}>Notes (optional)</Text>
-              <TextInput
+              <BottomSheetTextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Anything other parents should know?"
                 value={form.description}

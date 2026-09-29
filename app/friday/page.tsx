@@ -9,7 +9,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import WeekRecapPreview from "../components/WeekRecapPreview";
-import DesertHeroScene, { DESERT_THEME } from "./components/DesertHeroScene";
+import CampingHeroScene, { CAMPING_THEME } from "./components/CampingHeroScene";
 import { formatPhone } from "../utils/formatPhone";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
 
@@ -49,48 +49,56 @@ const CAROUSEL_IMAGES = [
   "/assets/highlights/school_week_four/E10B5084-3A5E-44CC-B113-2CD6FD96A460.JPG",
 ];
 
-const DESERT_DISCOVERY_ACTIVITIES = [
+const CAMPING_ADVENTURES_ACTIVITIES = [
   {
-    emoji: "🦎",
-    title: "Desert Animal Scavenger Hunt",
-    waypoint: "Track Station",
-    desc: "Follow tracks and clues across Sage Field to discover hidden desert creatures — lizards, jackrabbits, roadrunners, and more!",
-    accent: "#f5e6c8",
-    accentText: "#5C7A3A",
+    emoji: "🍫",
+    title: "S’mores",
+    waypoint: "Campfire Circle",
+    desc: "Kids will make and eat s’mores.",
+    accent: "#F6D7A8",
+    accentText: "#3E6B45",
   },
   {
-    emoji: "🌵",
-    title: "Cactus Painting",
-    waypoint: "Art Oasis",
-    desc: "Paint your own saguaro or prickly pear masterpiece with bold desert colors and textures to take home.",
-    accent: "#fef3c7",
-    accentText: "#C4603C",
+    emoji: "🎨",
+    title: "Campfire Painting",
+    waypoint: "Paint Grove",
+    desc: "Paint a campfire scene to take home.",
+    accent: "#FFF6E8",
+    accentText: "#B4532A",
+  },
+  {
+    emoji: "🦉",
+    title: "Owl Pinecones",
+    waypoint: "Pinecone Perch",
+    desc: "Craft owl pinecones to take home.",
+    accent: "#F3E6C8",
+    accentText: "#3F2E24",
   },
   {
     emoji: "🎯",
-    title: "Desert Bingo",
-    waypoint: "Bingo Camp",
-    desc: "Play bingo with desert plants, animals, and landmarks — first to shout \"Desert!\" wins a prize.",
-    accent: "#fff7ed",
-    accentText: "#E07A5F",
+    title: "Campfire Bingo",
+    waypoint: "Bingo Ring",
+    desc: "Play campfire bingo.",
+    accent: "#FFF9E1",
+    accentText: "#C45C26",
   },
   {
-    emoji: "🏜️",
-    title: "Sand Dune Adventures",
-    waypoint: "Dune Valley",
-    desc: "Build the tallest sand castle, erupt desert volcanoes, and sculpt dunes in our sand pit.",
-    accent: "#f0f9ff",
-    accentText: "#C4603C",
+    emoji: "🎒",
+    title: "What’s in My Camping Bag?",
+    waypoint: "Mystery Bag",
+    desc: "Kids take turns reaching inside a bag of random camping items and try guessing the item without looking.",
+    accent: "#F6D7A8",
+    accentText: "#3E6B45",
   },
 ];
 
 const PACKING_LIST = [
-  { emoji: "👟", item: "Closed-toe shoes for sandy trails" },
+  { emoji: "👟", item: "Closed-toe shoes" },
   { emoji: "🧢", item: "Sun hat or cap" },
   { emoji: "🧴", item: "Sunscreen (applied before drop-off)" },
   { emoji: "💧", item: "Water bottle, labeled" },
   { emoji: "🥪", item: "Snack + lunch from home" },
-  { emoji: "👕", item: "Old clothes — sand play gets messy!" },
+  { emoji: "👕", item: "Old clothes for outdoor play" },
   { emoji: "🎒", item: "Small backpack for paintings & creations" },
   { emoji: "🧣", item: "Optional bandana or explorer vest" },
 ];
@@ -123,11 +131,11 @@ const RISKS = [
 ];
 
 const inputClass =
-  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#C4603C] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
+  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#B4532A] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-bold text-[#C4603C]/70 uppercase tracking-wider mt-6 mb-3 font-body">
+    <p className="text-xs font-bold text-[#B4532A]/70 uppercase tracking-wider mt-6 mb-3 font-body">
       {children}
     </p>
   );
@@ -248,7 +256,7 @@ export default function FieldDayFridayPage() {
   }, []);
 
   useEffect(() => {
-    const target = new Date("2026-09-18T08:30:00-05:00");
+    const target = new Date("2026-10-02T08:30:00-05:00");
     const tick = () => {
       const diff = target.getTime() - Date.now();
       if (diff <= 0) return;
@@ -369,7 +377,7 @@ export default function FieldDayFridayPage() {
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         .desert-headline {
-          color: ${DESERT_THEME.inkBrown};
+          color: ${CAMPING_THEME.inkBrown};
           text-shadow: 0 2px 16px rgba(255, 200, 140, 0.45);
         }
         .letter-drop span {
@@ -385,24 +393,6 @@ export default function FieldDayFridayPage() {
         .expedition-trail-desktop {
           position: relative;
         }
-        .expedition-trail-desktop::before {
-          content: "";
-          position: absolute;
-          top: 50%;
-          left: 8%;
-          right: 8%;
-          height: 2px;
-          background: repeating-linear-gradient(
-            90deg,
-            ${DESERT_THEME.terracotta} 0,
-            ${DESERT_THEME.terracotta} 8px,
-            transparent 8px,
-            transparent 16px
-          );
-          opacity: 0.25;
-          transform: translateY(-50%);
-          pointer-events: none;
-        }
         .expedition-trail-mobile {
           position: relative;
         }
@@ -415,8 +405,8 @@ export default function FieldDayFridayPage() {
           width: 2px;
           background: repeating-linear-gradient(
             180deg,
-            ${DESERT_THEME.terracotta} 0,
-            ${DESERT_THEME.terracotta} 8px,
+            ${CAMPING_THEME.terracotta} 0,
+            ${CAMPING_THEME.terracotta} 8px,
             transparent 8px,
             transparent 16px
           );
@@ -431,7 +421,7 @@ export default function FieldDayFridayPage() {
 
       <div
         className={`${bebasNeue.variable} ${rye.variable} min-h-screen overflow-x-hidden`}
-        style={{ background: DESERT_THEME.skyPeach }}
+        style={{ background: CAMPING_THEME.skyPeach }}
       >
         <Navbar />
 
@@ -440,7 +430,7 @@ export default function FieldDayFridayPage() {
           ref={heroRef}
           className="relative pt-20 overflow-hidden min-h-[620px] sm:min-h-[680px] lg:min-h-[720px]"
         >
-          <DesertHeroScene duneParallaxX={duneParallaxX} />
+          <CampingHeroScene duneParallaxX={duneParallaxX} />
 
           <div className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-10 lg:py-14 flex flex-col lg:flex-row items-center gap-10 lg:gap-12 z-10">
             <motion.div
@@ -464,13 +454,13 @@ export default function FieldDayFridayPage() {
                       letterSpacing: "0.04em",
                     }}
                   >
-                    Desert Discovery
+                    Camping Adventures
                   </span>
                   <span
                     className="letter-drop block"
                     style={{
                       fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                      color: DESERT_THEME.duneDeep,
+                      color: CAMPING_THEME.duneDeep,
                     }}
                   >
                     {Array.from("Field Day").map((ch, i) => (
@@ -483,12 +473,12 @@ export default function FieldDayFridayPage() {
 
                 <motion.p
                   className="text-base sm:text-lg font-body leading-relaxed mb-6 max-w-md mx-auto lg:mx-0"
-                  style={{ color: DESERT_THEME.inkBrown }}
+                  style={{ color: CAMPING_THEME.inkBrown }}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25, duration: 0.5 }}
                 >
-                  One adventure-packed Friday at Sage Field. Track desert animals on a scavenger hunt, paint cactus masterpieces, play desert bingo, and sculpt sand dunes — volcanoes, castles, and all!
+                  Make s’mores, paint by the campfire, craft owl pinecones, play campfire bingo, and guess what’s in the camping bag.
                 </motion.p>
 
                 <motion.div
@@ -498,7 +488,7 @@ export default function FieldDayFridayPage() {
                   transition={{ delay: 0.3, duration: 0.45 }}
                 >
                   {[
-                    { icon: "📅", text: "Sept 18, 2026" },
+                    { icon: "📅", text: "Oct 2, 2026" },
                     { icon: "🕗", text: "Drop-off 8:30 AM" },
                     { icon: "🕒", text: "Pick-up 1:30 PM" },
                     { icon: "👧", text: "Ages 4–11" },
@@ -506,8 +496,8 @@ export default function FieldDayFridayPage() {
                   ].map((pill) => (
                     <span
                       key={pill.text}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#F2A65A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
-                      style={{ color: DESERT_THEME.inkBrown }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#E8A04A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
+                      style={{ color: CAMPING_THEME.inkBrown }}
                     >
                       {pill.icon} {pill.text}
                     </span>
@@ -527,13 +517,13 @@ export default function FieldDayFridayPage() {
                   ].map(({ val, label }) => (
                     <div
                       key={label}
-                      className="flex flex-col items-center px-3 py-2 bg-white/90 border border-[#F2A65A]/30 rounded-xl min-w-12"
+                      className="flex flex-col items-center px-3 py-2 bg-white/90 border border-[#E8A04A]/30 rounded-xl min-w-12"
                     >
                       <AnimatePresence mode="popLayout">
                         <motion.span
                           key={`${label}-${val}`}
                           className="text-xl font-bold font-heading tabular-nums"
-                          style={{ color: DESERT_THEME.inkBrown }}
+                          style={{ color: CAMPING_THEME.inkBrown }}
                           initial={{ opacity: 0, y: -10, scale: 0.8 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10 }}
@@ -542,13 +532,13 @@ export default function FieldDayFridayPage() {
                           {String(val).padStart(2, "0")}
                         </motion.span>
                       </AnimatePresence>
-                      <span className="text-[10px] font-body uppercase tracking-wide" style={{ color: DESERT_THEME.duneDeep }}>
+                      <span className="text-[10px] font-body uppercase tracking-wide" style={{ color: CAMPING_THEME.duneDeep }}>
                         {label}
                       </span>
                     </div>
                   ))}
-                  <span className="text-xs font-body pl-1" style={{ color: DESERT_THEME.duneDeep }}>
-                    until expedition day
+                  <span className="text-xs font-body pl-1" style={{ color: CAMPING_THEME.duneDeep }}>
+                    until camp day
                   </span>
                 </motion.div>
 
@@ -562,15 +552,15 @@ export default function FieldDayFridayPage() {
                     onClick={scrollToForm}
                     className="px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
                     style={{
-                      background: `linear-gradient(135deg, ${DESERT_THEME.duneDeep} 0%, ${DESERT_THEME.terracotta} 100%)`,
+                      background: `linear-gradient(135deg, ${CAMPING_THEME.duneDeep} 0%, ${CAMPING_THEME.terracotta} 100%)`,
                     }}
                   >
-                    Join the Expedition →
+                    Join the Campout →
                   </button>
                   <a
                     href="#what-we-do"
-                    className="px-7 py-4 bg-white border-2 font-bold rounded-2xl hover:bg-[#FFF9F0] transition-all duration-200 font-body text-sm text-center"
-                    style={{ borderColor: DESERT_THEME.duneMid, color: DESERT_THEME.inkBrown }}
+                    className="px-7 py-4 bg-white border-2 font-bold rounded-2xl hover:bg-[#FFF6E8] transition-all duration-200 font-body text-sm text-center"
+                    style={{ borderColor: CAMPING_THEME.duneMid, color: CAMPING_THEME.inkBrown }}
                   >
                     See the Activities ↓
                   </a>
@@ -608,19 +598,19 @@ export default function FieldDayFridayPage() {
                   <div className="relative w-full aspect-square overflow-hidden">
                     <Image src={HERO_IMAGES[0]} alt="Students at Sage Field" fill className="object-cover" sizes="208px" priority />
                   </div>
-                  <p className="text-center text-[10px] font-body mt-1 tracking-wide uppercase" style={{ color: DESERT_THEME.terracotta }}>
-                    Desert Discovery · Sept 18
+                  <p className="text-center text-[10px] font-body mt-1 tracking-wide uppercase" style={{ color: CAMPING_THEME.terracotta }}>
+                    Camping Adventures · Oct 2
                   </p>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          <WaveDivider fill={DESERT_THEME.skyPeach} fromColor="transparent" />
+          <WaveDivider fill={CAMPING_THEME.skyPeach} fromColor="transparent" />
         </section>
 
         {/* ─── PHOTO STRIP ──────────────────────────────────────────────────── */}
-        <div className="pb-2" style={{ background: DESERT_THEME.skyPeach }}>
+        <div className="pb-2" style={{ background: CAMPING_THEME.skyPeach }}>
           <div
             ref={galleryRef}
             className="overflow-x-auto flex gap-3 px-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] py-4"
@@ -647,9 +637,9 @@ export default function FieldDayFridayPage() {
         <section
           id="what-we-do"
           className="py-20 px-6 sm:px-12 lg:px-16"
-          style={{ background: "#FFF9F0" }}
+          style={{ background: "#FFF6E8" }}
         >
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             {/* Header */}
             <motion.div
               className="text-center mb-12"
@@ -659,29 +649,29 @@ export default function FieldDayFridayPage() {
               transition={{ duration: 0.5 }}
             >
               <span
-                className="inline-block px-5 py-2 bg-[#C4603C]/10 text-[#C4603C] text-sm font-bold rounded-full mb-5 font-body"
+                className="inline-block px-5 py-2 bg-[#B4532A]/10 text-[#B4532A] text-sm font-bold rounded-full mb-5 font-body"
                 style={{ fontFamily: "var(--font-rye), serif" }}
               >
-                🌵 This Friday&apos;s Theme
+                🏕️ This Friday&apos;s Theme
               </span>
               <h2
                 className="font-heading font-bold text-slate-800 mb-3 leading-tight"
                 style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
               >
-                Five Hours in the Sonoran
+                Five Hours at Camp
               </h2>
-              <p className="text-base text-slate-500 font-body max-w-xl mx-auto">
-                Scavenger Hunt · Cactus Painting · Desert Bingo · Sand Dune Adventures
+              <p className="text-base text-slate-500 font-body max-w-3xl mx-auto">
+                S’mores · Campfire Painting · Owl Pinecones · Campfire Bingo · What’s in My Camping Bag?
               </p>
             </motion.div>
 
             {/* Activity cards — expedition trail + flip on hover */}
-            <div className="expedition-trail-desktop hidden sm:grid grid-cols-2 sm:grid-cols-4 gap-5 mb-12">
-              {DESERT_DISCOVERY_ACTIVITIES.map((activity, i) => (
+            <div className="expedition-trail-desktop hidden sm:flex sm:flex-wrap sm:justify-center gap-5 mb-12">
+              {CAMPING_ADVENTURES_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={activity.title}
-                  className="flip-card relative cursor-pointer"
-                  style={{ perspective: "800px", minHeight: "200px" }}
+                  className="flip-card relative cursor-pointer sm:w-[calc(50%-0.625rem)] lg:w-[calc((100%-2.5rem)/3)]"
+                  style={{ perspective: "800px", minHeight: "240px" }}
                   initial={{ opacity: 0, y: 20, x: i % 2 === 0 ? -20 : 20 }}
                   whileInView={{ opacity: 1, y: 0, x: 0 }}
                   viewport={{ once: true }}
@@ -689,10 +679,10 @@ export default function FieldDayFridayPage() {
                   whileTap={{ scale: [1, 1.08, 1] }}
                   onClick={() => handleCardFlip(i)}
                 >
-                  <p className="text-[10px] font-bold text-[#C4603C]/80 uppercase tracking-wider text-center mb-2 font-body">
+                  <p className="text-[10px] font-bold text-[#B4532A]/80 uppercase tracking-wider text-center mb-2 font-body">
                     {activity.waypoint}
                   </p>
-                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "180px" }}>
+                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "240px" }}>
                     {/* Front face */}
                     <div
                       className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col"
@@ -713,14 +703,14 @@ export default function FieldDayFridayPage() {
                     </div>
                     {/* Back face */}
                     <div
-                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#C4603C]/30"
-                      style={{ background: DESERT_THEME.inkBrown }}
+                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#B4532A]/30"
+                      style={{ background: CAMPING_THEME.inkBrown }}
                     >
                       <span className="text-4xl">{activity.emoji}</span>
-                      <h3 className="font-heading font-bold text-[#f5e6c8] text-base leading-tight">
+                      <h3 className="font-heading font-bold text-[#F6D7A8] text-base leading-tight">
                         {activity.title}
                       </h3>
-                      <p className="text-sm text-[#D4A574]/90 font-body leading-relaxed">
+                      <p className="text-sm text-[#F6D7A8]/90 font-body leading-relaxed">
                         {activity.desc}
                       </p>
                     </div>
@@ -731,11 +721,11 @@ export default function FieldDayFridayPage() {
 
             {/* Mobile: vertical expedition trail */}
             <div className="expedition-trail-mobile sm:hidden grid grid-cols-1 gap-8 mb-12 px-4">
-              {DESERT_DISCOVERY_ACTIVITIES.map((activity, i) => (
+              {CAMPING_ADVENTURES_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={`mobile-${activity.title}`}
                   className="flip-card relative cursor-pointer"
-                  style={{ perspective: "800px", minHeight: "200px" }}
+                  style={{ perspective: "800px", minHeight: "240px" }}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -743,10 +733,10 @@ export default function FieldDayFridayPage() {
                   whileTap={{ scale: [1, 1.08, 1] }}
                   onClick={() => handleCardFlip(i)}
                 >
-                  <p className="text-[10px] font-bold text-[#C4603C]/80 uppercase tracking-wider text-center mb-2 font-body">
+                  <p className="text-[10px] font-bold text-[#B4532A]/80 uppercase tracking-wider text-center mb-2 font-body">
                     {activity.waypoint}
                   </p>
-                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "180px" }}>
+                  <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "240px" }}>
                     <div className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col">
                       <div className="h-2 w-full" style={{ background: activity.accentText }} />
                       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-3 text-center">
@@ -757,10 +747,10 @@ export default function FieldDayFridayPage() {
                         <p className="text-[11px] text-slate-400 font-body">tap to learn more ✦</p>
                       </div>
                     </div>
-                    <div className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#C4603C]/30" style={{ background: DESERT_THEME.inkBrown }}>
+                    <div className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#B4532A]/30" style={{ background: CAMPING_THEME.inkBrown }}>
                       <span className="text-4xl">{activity.emoji}</span>
-                      <h3 className="font-heading font-bold text-[#f5e6c8] text-base leading-tight">{activity.title}</h3>
-                      <p className="text-sm text-[#D4A574]/90 font-body leading-relaxed">{activity.desc}</p>
+                      <h3 className="font-heading font-bold text-[#F6D7A8] text-base leading-tight">{activity.title}</h3>
+                      <p className="text-sm text-[#F6D7A8]/90 font-body leading-relaxed">{activity.desc}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -771,7 +761,7 @@ export default function FieldDayFridayPage() {
             <motion.div
               className="rounded-3xl p-6 flex flex-wrap gap-4 justify-center"
               style={{
-                background: "linear-gradient(135deg, #f5e6c8 0%, #fef3c7 100%)",
+                background: "linear-gradient(135deg, #F6D7A8 0%, #fef3c7 100%)",
               }}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -797,7 +787,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave into recap */}
-        <div style={{ background: "#FFF9F0", marginBottom: "-1px" }}>
+        <div style={{ background: "#FFF6E8", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -807,16 +797,16 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
-              fill={DESERT_THEME.duneLight}
+              fill={CAMPING_THEME.duneLight}
             />
           </svg>
         </div>
 
         {/* ─── WEEK RECAP ───────────────────────────────────────────────────── */}
-        <WeekRecapPreview className="bg-[#FFF9F0]" variant="light" />
+        <WeekRecapPreview className="bg-[#FFF6E8]" variant="light" />
 
         {/* Wave out of recap */}
-        <div style={{ background: "#FFF9F0", marginTop: "-1px", marginBottom: "-1px" }}>
+        <div style={{ background: "#FFF6E8", marginTop: "-1px", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -826,7 +816,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill={DESERT_THEME.skyPeach}
+              fill={CAMPING_THEME.skyPeach}
             />
           </svg>
         </div>
@@ -836,7 +826,7 @@ export default function FieldDayFridayPage() {
           id="reserve"
           className="py-20 px-3 sm:px-12 lg:px-16"
           style={{
-            background: `linear-gradient(180deg, ${DESERT_THEME.skyPeach} 0%, ${DESERT_THEME.duneLight} 100%)`,
+            background: `linear-gradient(180deg, ${CAMPING_THEME.skyPeach} 0%, ${CAMPING_THEME.duneLight} 100%)`,
           }}
         >
           <div ref={formRef} className="max-w-xl mx-auto">
@@ -848,22 +838,22 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-5xl mb-3">🌵</div>
+              <div className="text-5xl mb-3">🏕️</div>
               <h2
                 className="font-heading font-bold mb-2"
-                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)", color: DESERT_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)", color: CAMPING_THEME.inkBrown }}
               >
                 Reserve Your Spot
               </h2>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#f5e6c8] rounded-full mb-3">
-                <span className="text-[#C4603C] font-bold font-body text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F6D7A8] rounded-full mb-3">
+                <span className="text-[#B4532A] font-bold font-body text-sm">
                   {`$${FRIDAY_DROPIN_DOLLARS} per child`}
                 </span>
-                <span className="text-[#E07A5F]">·</span>
+                <span className="text-[#C45C26]">·</span>
                 <span className="text-[#2A2018] font-body text-sm">
                   No enrollment required
                 </span>
-                <span className="text-[#E07A5F]">·</span>
+                <span className="text-[#C45C26]">·</span>
                 <span className="text-[#2A2018] font-body text-sm">
                   Limited spots
                 </span>
@@ -875,8 +865,8 @@ export default function FieldDayFridayPage() {
                   key="form"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#f5e6c8]"
-                  style={{ borderTop: "4px solid #C4603C" }}
+                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#F6D7A8]"
+                  style={{ borderTop: "4px solid #B4532A" }}
                 >
                   <SectionLabel>Your Info</SectionLabel>
                   <div className="space-y-4">
@@ -936,7 +926,7 @@ export default function FieldDayFridayPage() {
                         className="rounded-2xl border border-stone-200 bg-stone-50/50 p-4 space-y-3"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-bold text-[#C4603C]/70 font-body uppercase tracking-wide">
+                          <p className="text-xs font-bold text-[#B4532A]/70 font-body uppercase tracking-wide">
                             Child {i + 1}
                           </p>
                           {children.length > 1 && (
@@ -990,8 +980,8 @@ export default function FieldDayFridayPage() {
                     </button>
 
                     {children.length > 1 && (
-                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#f5e6c8] rounded-xl">
-                        <span className="text-sm font-bold text-[#C4603C] font-body">
+                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#F6D7A8] rounded-xl">
+                        <span className="text-sm font-bold text-[#B4532A] font-body">
                           {children.length} children · ${totalBase} total
                         </span>
                       </div>
@@ -1092,7 +1082,7 @@ export default function FieldDayFridayPage() {
                         <div
                           className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                             checked
-                              ? "bg-[#C4603C] border-[#C4603C]"
+                              ? "bg-[#B4532A] border-[#B4532A]"
                               : "border-stone-300 bg-white"
                           }`}
                         >
@@ -1128,7 +1118,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("card")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "card"
-                            ? "border-[#C4603C] bg-[#f5e6c8] text-[#C4603C]"
+                            ? "border-[#B4532A] bg-[#F6D7A8] text-[#B4532A]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1139,7 +1129,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("ach")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "ach"
-                            ? "border-[#C4603C] bg-[#f5e6c8] text-[#C4603C]"
+                            ? "border-[#B4532A] bg-[#F6D7A8] text-[#B4532A]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1155,7 +1145,7 @@ export default function FieldDayFridayPage() {
                       <div
                         className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                           coverFees
-                            ? "bg-[#C4603C] border-[#C4603C]"
+                            ? "bg-[#B4532A] border-[#B4532A]"
                             : "border-stone-300 bg-white"
                         }`}
                         onClick={() => setCoverFees((v) => !v)}
@@ -1195,7 +1185,7 @@ export default function FieldDayFridayPage() {
                         {agreementSigned ? (
                           <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         ) : (
-                          <PenLine className="w-5 h-5 text-[#C4603C] flex-shrink-0" />
+                          <PenLine className="w-5 h-5 text-[#B4532A] flex-shrink-0" />
                         )}
                         <div>
                           <p className="text-sm font-bold font-heading text-slate-800">
@@ -1234,12 +1224,12 @@ export default function FieldDayFridayPage() {
                       className="w-full px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
                       style={{
                         background:
-                          "linear-gradient(135deg, #E07A5F 0%, #C4603C 100%)",
+                          "linear-gradient(135deg, #C45C26 0%, #B4532A 100%)",
                       }}
                     >
                       {submitting
                         ? "Submitting…"
-                        : `🌵 Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
+                        : `🏕️ Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
                     </button>
                   </motion.div>
                 </motion.div>
@@ -1248,7 +1238,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave before packing list */}
-        <div style={{ background: DESERT_THEME.skyPeach, marginBottom: "-1px" }}>
+        <div style={{ background: CAMPING_THEME.skyPeach, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1258,7 +1248,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
-              fill={DESERT_THEME.duneMid}
+              fill={CAMPING_THEME.duneMid}
             />
           </svg>
         </div>
@@ -1266,7 +1256,7 @@ export default function FieldDayFridayPage() {
         {/* ─── PACKING LIST ─────────────────────────────────────────────────── */}
         <section
           className="py-16 px-6 sm:px-12 lg:px-16"
-          style={{ background: DESERT_THEME.duneLight }}
+          style={{ background: CAMPING_THEME.duneLight }}
         >
           <div className="max-w-3xl mx-auto">
             <motion.div
@@ -1279,12 +1269,12 @@ export default function FieldDayFridayPage() {
               <div className="text-4xl mb-3">🧭</div>
               <h2
                 className="font-heading font-bold"
-                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", color: DESERT_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", color: CAMPING_THEME.inkBrown }}
               >
                 Expedition Checklist
               </h2>
-              <p className="text-sm font-body mt-1" style={{ color: `${DESERT_THEME.inkBrown}99` }}>
-                Tap each item to check it off — don&apos;t forget anything for Desert Discovery!
+              <p className="text-sm font-body mt-1" style={{ color: `${CAMPING_THEME.inkBrown}99` }}>
+                Tap each item to check it off — don&apos;t forget anything for Camping Adventures!
               </p>
             </motion.div>
 
@@ -1298,8 +1288,8 @@ export default function FieldDayFridayPage() {
                     onClick={() => togglePacking(i)}
                     className={`flex items-center gap-4 rounded-2xl px-5 py-4 shadow-sm border transition-all duration-200 cursor-pointer select-none ${
                       isChecked
-                        ? "bg-[#f5e6c8] border-[#C4603C] opacity-70"
-                        : "bg-white border-[#f5e6c8] hover:shadow-md hover:-translate-y-0.5"
+                        ? "bg-[#F6D7A8] border-[#B4532A] opacity-70"
+                        : "bg-white border-[#F6D7A8] hover:shadow-md hover:-translate-y-0.5"
                     }`}
                     initial={{ opacity: 0, x: -12 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -1312,9 +1302,9 @@ export default function FieldDayFridayPage() {
                       className="w-1 h-8 rounded-full flex-shrink-0 transition-all duration-300"
                       style={{
                         background: isChecked
-                          ? "#C4603C"
+                          ? "#B4532A"
                           : i % 2 === 0
-                          ? "#E07A5F"
+                          ? "#C45C26"
                           : "#5C7A3A",
                       }}
                     />
@@ -1336,10 +1326,10 @@ export default function FieldDayFridayPage() {
             {/* Expedition Ready Progress Bar */}
             <div className="mt-6 mb-2">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold font-body uppercase tracking-wide" style={{ color: DESERT_THEME.inkBrown }}>
+                <span className="text-xs font-bold font-body uppercase tracking-wide" style={{ color: CAMPING_THEME.inkBrown }}>
                   Expedition Ready
                 </span>
-                <span className="text-xs font-body" style={{ color: `${DESERT_THEME.inkBrown}99` }}>
+                <span className="text-xs font-body" style={{ color: `${CAMPING_THEME.inkBrown}99` }}>
                   {packingChecked.size} / {PACKING_LIST.length} packed
                 </span>
               </div>
@@ -1350,7 +1340,7 @@ export default function FieldDayFridayPage() {
                   className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{
                     width: `${(packingChecked.size / PACKING_LIST.length) * 100}%`,
-                    background: `linear-gradient(90deg, ${DESERT_THEME.terracotta} 0%, ${DESERT_THEME.duneDeep} 50%, ${DESERT_THEME.duneMid} 100%)`,
+                    background: `linear-gradient(90deg, ${CAMPING_THEME.terracotta} 0%, ${CAMPING_THEME.duneDeep} 50%, ${CAMPING_THEME.duneMid} 100%)`,
                     minWidth: packingChecked.size > 0 ? "20px" : "0px",
                   }}
                 />
@@ -1361,7 +1351,7 @@ export default function FieldDayFridayPage() {
                       left: `calc(${(packingChecked.size / PACKING_LIST.length) * 100}% - 12px)`,
                     }}
                   >
-                    🌵
+                    🏕️
                   </span>
                 )}
               </div>
@@ -1371,24 +1361,24 @@ export default function FieldDayFridayPage() {
               {packingChecked.size === PACKING_LIST.length && (
                 <motion.p
                   className="text-center text-sm font-body mt-5 font-semibold"
-                  style={{ color: DESERT_THEME.inkBrown }}
+                  style={{ color: CAMPING_THEME.inkBrown }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                 >
-                  🌵 All packed! See you on the expedition.
+                  🏕️ All packed! See you at camp.
                 </motion.p>
               )}
             </AnimatePresence>
 
-            <p className="text-sm font-body text-center mt-6" style={{ color: `${DESERT_THEME.inkBrown}80` }}>
+            <p className="text-sm font-body text-center mt-6" style={{ color: `${CAMPING_THEME.inkBrown}80` }}>
               Questions? Text or call us: (512) 677-5872
             </p>
           </div>
         </section>
 
         {/* Wave before bottom CTA */}
-        <div style={{ background: DESERT_THEME.duneLight, marginBottom: "-1px" }}>
+        <div style={{ background: CAMPING_THEME.duneLight, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1398,7 +1388,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill={DESERT_THEME.duneMid}
+              fill={CAMPING_THEME.duneMid}
             />
           </svg>
         </div>
@@ -1407,7 +1397,7 @@ export default function FieldDayFridayPage() {
         <section
           className="py-24 px-6 sm:px-12 lg:px-16 relative overflow-hidden"
           style={{
-            background: `linear-gradient(160deg, ${DESERT_THEME.duneMid} 0%, ${DESERT_THEME.duneDeep} 50%, ${DESERT_THEME.duneMid} 100%)`,
+            background: `linear-gradient(160deg, ${CAMPING_THEME.duneMid} 0%, ${CAMPING_THEME.duneDeep} 50%, ${CAMPING_THEME.duneMid} 100%)`,
           }}
         >
           <div className="max-w-2xl mx-auto text-center relative z-10">
@@ -1417,31 +1407,31 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="text-5xl mb-6 inline-block">🌵</div>
+              <div className="text-5xl mb-6 inline-block">🏕️</div>
               <div className="inline-block px-4 py-1.5 bg-white/60 rounded-full mb-6">
-                <span className="text-xs font-semibold font-body uppercase tracking-wider" style={{ color: DESERT_THEME.inkBrown }}>
-                  This Friday Only · Sept 18
+                <span className="text-xs font-semibold font-body uppercase tracking-wider" style={{ color: CAMPING_THEME.inkBrown }}>
+                  This Friday Only · Oct 2
                 </span>
               </div>
               <h2
                 className="font-heading font-bold mb-4 leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: DESERT_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: CAMPING_THEME.inkBrown }}
               >
-                Don&apos;t miss Desert Discovery.
+                Don&apos;t miss Camping Adventures.
               </h2>
-              <p className="font-body text-base mb-8 leading-relaxed max-w-md mx-auto" style={{ color: `${DESERT_THEME.inkBrown}CC` }}>
-                September 18 is one day. Spots are limited. Reserve your child&apos;s
-                spot now and join us for a desert animal scavenger hunt, cactus
-                painting, desert bingo, and sand dune adventures at Sage Field.
+              <p className="font-body text-base mb-8 leading-relaxed max-w-md mx-auto" style={{ color: `${CAMPING_THEME.inkBrown}CC` }}>
+                October 2 is one day. Spots are limited. Reserve your child&apos;s
+                spot now and join us for s’mores, campfire painting, owl pinecones,
+                campfire bingo, and what’s in my camping bag at Sage Field.
               </p>
               <button
                 onClick={scrollToForm}
-                className="px-10 py-4 bg-white font-bold rounded-2xl hover:bg-[#FFF9F0] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
-                style={{ color: DESERT_THEME.terracotta }}
+                className="px-10 py-4 bg-white font-bold rounded-2xl hover:bg-[#FFF6E8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
+                style={{ color: CAMPING_THEME.terracotta }}
               >
                 {`Reserve Spot · $${FRIDAY_DROPIN_DOLLARS} →`}
               </button>
-              <p className="font-body text-xs mt-5" style={{ color: `${DESERT_THEME.inkBrown}99` }}>
+              <p className="font-body text-xs mt-5" style={{ color: `${CAMPING_THEME.inkBrown}99` }}>
                 {`One Friday. $${FRIDAY_DROPIN_DOLLARS}. No commitment.`}
               </p>
             </motion.div>
@@ -1460,12 +1450,12 @@ export default function FieldDayFridayPage() {
           <div
             className="rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3"
             style={{
-              background: "linear-gradient(135deg, #E07A5F 0%, #C4603C 100%)",
+              background: "linear-gradient(135deg, #C45C26 0%, #B4532A 100%)",
             }}
           >
             <div>
               <p className="text-white font-heading font-bold text-sm leading-tight">
-                🌵 Desert Discovery · Sept 18
+                🏕️ Camping Adventures · Oct 2
               </p>
               <p className="text-white/80 font-body text-xs">
                 {`$${FRIDAY_DROPIN_DOLLARS} drop-in — limited spots`}
@@ -1473,7 +1463,7 @@ export default function FieldDayFridayPage() {
             </div>
             <button
               onClick={scrollToForm}
-              className="flex-shrink-0 bg-white text-[#C4603C] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#f5e6c8] transition-colors duration-200 cursor-pointer"
+              className="flex-shrink-0 bg-white text-[#B4532A] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#F6D7A8] transition-colors duration-200 cursor-pointer"
             >
               Reserve →
             </button>
@@ -1507,7 +1497,7 @@ export default function FieldDayFridayPage() {
                 <div className="flex-shrink-0 sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
                   <div>
                     <h2 className="text-base font-bold font-heading text-gray-800">
-                      Desert Discovery Participant Agreement
+                      Camping Adventures Participant Agreement
                     </h2>
                     <p className="text-xs text-gray-400 font-body mt-0.5">
                       {agreementSigned ? "1" : "0"} of 1 sections signed
@@ -1530,7 +1520,7 @@ export default function FieldDayFridayPage() {
                         Sage Field Private Microschool
                       </p>
                       <p className="text-xs text-gray-500 font-body">
-                        Location: Round Rock, Texas · Desert Discovery: September 18,
+                        Location: Round Rock, Texas · Camping Adventures: October 2,
                         2026
                       </p>
                     </div>
@@ -1584,7 +1574,7 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-3">
                       <AgreementSectionHeader title="1. Acknowledgment of Program Activities" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        I understand that my child is participating in a Desert Discovery
+                        I understand that my child is participating in a Camping Adventures
                         Field Day at an outdoor education program where
                         children learn through active exploration, hands-on
                         experiences, and supervised outdoor activities.
@@ -1615,7 +1605,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="2. Assumption of Risk" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         I knowingly and voluntarily assume all risks associated
-                        with my child&apos;s participation in the Desert Discovery
+                        with my child&apos;s participation in the Camping Adventures
                         Field Day, including but not limited to:
                       </p>
                       <ul className="flex flex-col gap-1.5">
@@ -1641,7 +1631,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="3. Release of Liability" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         In consideration of my child&apos;s participation in the
-                        Desert Discovery Field Day, I release and hold harmless the
+                        Camping Adventures Field Day, I release and hold harmless the
                         School, its owners, directors, employees, contractors,
                         volunteers, agents, and representatives from any claims,
                         demands, causes of action, damages, losses, costs, or
@@ -1863,7 +1853,7 @@ export default function FieldDayFridayPage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <PenLine className="w-4 h-4 text-[#C4603C]" />
+                      <PenLine className="w-4 h-4 text-[#B4532A]" />
                       <span className="text-sm text-gray-500 font-body">
                         Signature required to continue
                       </span>

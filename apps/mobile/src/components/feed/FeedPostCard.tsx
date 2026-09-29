@@ -2,7 +2,7 @@ import { Brand, FontFamilies } from "@/constants/theme";
 import { MarkdownBody } from "@/components/ui/MarkdownBody";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AuthorAvatar } from "./AuthorAvatar";
 import { FeedMediaGrid } from "./FeedMediaGrid";
 import { FeedPostTypeBadge } from "./FeedPostTypeBadge";
@@ -13,6 +13,7 @@ import {
   attachmentIcon,
   formatAuthorSubtitle,
   formatFileSize,
+  newsletterPublicUrlFromCtaRoute,
   pushFeedCtaRoute,
   resolveFeedCtaRoute,
   timeAgo,
@@ -45,6 +46,13 @@ export function FeedPostCard({
   const ctaRoute =
     post.cta_route && post.cta_label
       ? resolveFeedCtaRoute(post.cta_route, !!staffFeed)
+      : null;
+  const isParentNewsletter =
+    !staffFeed &&
+    (post.post_type === "newsletter" || post.source_type === "newsletter");
+  const newsletterUrl =
+    isParentNewsletter && post.cta_route
+      ? newsletterPublicUrlFromCtaRoute(post.cta_route)
       : null;
 
   return (
@@ -103,6 +111,10 @@ export function FeedPostCard({
             activeOpacity={0.85}
             onPress={(e) => {
               e.stopPropagation?.();
+              if (newsletterUrl) {
+                void Linking.openURL(newsletterUrl);
+                return;
+              }
               pushFeedCtaRoute(router, ctaRoute);
             }}
           >

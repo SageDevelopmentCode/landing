@@ -8,6 +8,14 @@ export interface WeekEntry {
 
 export const SCHOOL_YEAR_WEEKS: WeekEntry[] = [
   {
+    week: 6,
+    dates: "Sep 21–25",
+    theme: "Fall Wonder & At the Zoo",
+    href: "/highlights/school-year/week-6",
+    coverImage:
+      "/assets/highlights/school_week_six/CFFE7C16-F58B-4392-A325-165B53D36776.JPG",
+  },
+  {
     week: 5,
     dates: "Sep 14–18",
     theme: "Eggs, Ants & Desert Discovery",
