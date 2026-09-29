@@ -4,6 +4,11 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Instagram, Facebook } from "lucide-react";
+import {
+  LIVE_SUMMER_WEEKS,
+  SCHOOL_YEAR_WEEKS,
+  type WeekEntry,
+} from "@/app/lib/highlights/weeks";
 
 type LinkItem = {
   emoji?: string;
@@ -17,19 +22,23 @@ type LinkItem = {
   badge?: string;
 };
 
+function highlightLink(entry: WeekEntry, program: string): LinkItem {
+  return {
+    emoji: "📸",
+    title: `Week ${entry.week} Highlights`,
+    subtitle: `${program} · ${entry.dates}`,
+    href: entry.href!,
+  };
+}
+
+const HIGHLIGHT_LINKS: LinkItem[] = [
+  ...SCHOOL_YEAR_WEEKS.map((w) => highlightLink(w, "School Year 2026–27")),
+  ...[...LIVE_SUMMER_WEEKS]
+    .reverse()
+    .map((w) => highlightLink(w, "Summer 2026")),
+];
+
 const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
-  {
-    label: "What's New",
-    links: [
-      {
-        emoji: "🌱",
-        title: "Community Garden Day — You're Invited",
-        subtitle: "Aug 27 · Free evening on campus · Plant, connect & RSVP",
-        href: "/community",
-        featured: true,
-      },
-    ],
-  },
   {
     label: "Enrollment",
     links: [
@@ -116,50 +125,7 @@ const LINK_GROUPS: { label: string; links: LinkItem[] }[] = [
   },
   {
     label: "Highlights",
-    links: [
-      {
-        emoji: "📸",
-        title: "Week 12 Highlights",
-        subtitle: "Summer 2026 · Aug 10–13",
-        href: "/highlights/summer/week-12",
-      },
-      {
-        emoji: "📸",
-        title: "Week 6 Highlights",
-        subtitle: "Summer 2026 · Jun 29–Jul 2",
-        href: "/highlights/summer/week-6",
-      },
-      {
-        emoji: "📸",
-        title: "Week 5 Highlights",
-        subtitle: "Summer 2026 · Jun 22–26",
-        href: "/highlights/summer/week-5",
-      },
-      {
-        emoji: "📸",
-        title: "Week 4 Highlights",
-        subtitle: "Summer 2026 · Jun 15–19",
-        href: "/highlights/summer/week-4",
-      },
-      {
-        emoji: "📸",
-        title: "Week 3 Highlights",
-        subtitle: "Summer 2026 · Jun 8–12",
-        href: "/highlights/summer/week-3",
-      },
-      {
-        emoji: "📸",
-        title: "Week 2 Highlights",
-        subtitle: "Summer 2026 · Jun 1–4",
-        href: "/highlights/summer/week-2",
-      },
-      {
-        emoji: "📸",
-        title: "Week 1 Highlights",
-        subtitle: "Summer 2026 · May 26–29",
-        href: "/highlights/summer/week-1",
-      },
-    ],
+    links: HIGHLIGHT_LINKS,
   },
   {
     label: "Follow Us",

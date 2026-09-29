@@ -9,6 +9,7 @@ import {
   attachmentIcon,
   formatAuthorSubtitle,
   formatFileSize,
+  newsletterPublicUrlFromCtaRoute,
   pushFeedCtaRoute,
   timeAgo,
 } from "@/components/feed/feedUtils";
@@ -26,6 +27,7 @@ import {
   Dimensions,
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -471,7 +473,20 @@ function PostHeader({
             <TouchableOpacity
               style={detailStyles.ctaBtn}
               activeOpacity={0.85}
-              onPress={() => pushFeedCtaRoute(router, post.cta_route!)}
+              onPress={() => {
+                const isNewsletter =
+                  post.post_type === "newsletter" ||
+                  post.source_type === "newsletter";
+                const url =
+                  isNewsletter && post.cta_route
+                    ? newsletterPublicUrlFromCtaRoute(post.cta_route)
+                    : null;
+                if (url) {
+                  void Linking.openURL(url);
+                  return;
+                }
+                pushFeedCtaRoute(router, post.cta_route!);
+              }}
             >
               <Text style={detailStyles.ctaBtnText}>{post.cta_label}</Text>
             </TouchableOpacity>
@@ -551,6 +566,14 @@ export default function ParentPostDetailScreen() {
       };
     }, [navigation])
   );
+
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/feed");
+    }
+  }, [navigation, router]);
 
   const commentTree = useMemo(() => buildCommentTree(comments), [comments]);
 
@@ -811,7 +834,7 @@ export default function ParentPostDetailScreen() {
     return (
       <SafeAreaView style={detailStyles.safe} edges={["top", "left", "right"]}>
         <View style={detailStyles.navBar}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+          <TouchableOpacity onPress={handleBack} hitSlop={8}>
             <Ionicons name="chevron-back" size={24} color="#374151" />
           </TouchableOpacity>
           <Text style={detailStyles.navTitle}>Post</Text>
@@ -837,7 +860,7 @@ export default function ParentPostDetailScreen() {
     return (
       <SafeAreaView style={detailStyles.safe} edges={["top", "left", "right"]}>
         <View style={detailStyles.navBar}>
-          <TouchableOpacity onPress={() => router.back()} hitSlop={8}>
+          <TouchableOpacity onPress={handleBack} hitSlop={8}>
             <Ionicons name="chevron-back" size={24} color="#374151" />
           </TouchableOpacity>
           <Text style={detailStyles.navTitle}>Post</Text>
@@ -875,7 +898,7 @@ export default function ParentPostDetailScreen() {
     <SafeAreaView style={detailStyles.safe} edges={["top", "left", "right"]}>
       {/* Nav bar */}
       <View style={detailStyles.navBar}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={{ padding: 4 }}>
+        <TouchableOpacity onPress={handleBack} hitSlop={8} style={{ padding: 4 }}>
           <Ionicons name="chevron-back" size={24} color="#374151" />
         </TouchableOpacity>
         <Text style={detailStyles.navTitle} numberOfLines={1}>{post.authorName}</Text>

@@ -25,7 +25,7 @@ import WaitlistDialog from "./components/WaitlistDialog";
 import FloatingSMSButton from "./components/FloatingSMSButton";
 import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 import WeekRecapPreview from "./components/WeekRecapPreview";
-import DesertHeroScene, { DESERT_THEME } from "./friday/components/DesertHeroScene";
+import CampingHeroScene, { CAMPING_THEME } from "./friday/components/CampingHeroScene";
 import WeekCardsGrid from "./components/WeekCardsGrid";
 import {
   LIVE_SUMMER_WEEKS,
@@ -182,7 +182,7 @@ export default function Home() {
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         .fdf-desert-headline {
-          color: ${DESERT_THEME.inkBrown};
+          color: ${CAMPING_THEME.inkBrown};
           text-shadow: 0 2px 16px rgba(255, 200, 140, 0.45);
         }
         .fdf-letter-drop span {
@@ -197,12 +197,12 @@ export default function Home() {
 
       <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill={DESERT_THEME.skyPeach} />
+          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill={CAMPING_THEME.skyPeach} />
         </svg>
       </div>
 
       <section className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16 min-h-[420px]">
-        <DesertHeroScene compact />
+        <CampingHeroScene compact />
 
         <div className="relative max-w-5xl mx-auto z-10">
           <motion.div
@@ -213,10 +213,10 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             <span
-              className="inline-flex items-center gap-2 px-5 py-2 bg-white/80 backdrop-blur-sm border border-[#F2A65A]/40 rounded-full text-xs font-semibold font-body uppercase tracking-wide"
-              style={{ color: DESERT_THEME.inkBrown }}
+              className="inline-flex items-center gap-2 px-5 py-2 bg-white/80 backdrop-blur-sm border border-[#E8A04A]/40 rounded-full text-xs font-semibold font-body uppercase tracking-wide"
+              style={{ color: CAMPING_THEME.inkBrown }}
             >
-              This Friday · Sept 18 · Limited Spots
+              This Friday · Oct 2 · Limited Spots
             </span>
           </motion.div>
 
@@ -239,9 +239,9 @@ export default function Home() {
                     letterSpacing: "0.04em",
                   }}
                 >
-                  Desert Discovery
+                  Camping Adventures
                 </span>
-                <span className="fdf-letter-drop block" style={{ color: DESERT_THEME.duneDeep }}>
+                <span className="fdf-letter-drop block" style={{ color: CAMPING_THEME.duneDeep }}>
                   {Array.from("Field Day").map((ch, i) => (
                     <span key={i} style={{ animationDelay: `${0.3 + i * 0.06}s` }}>
                       {ch === " " ? " " : ch}
@@ -249,21 +249,21 @@ export default function Home() {
                   ))}
                 </span>
               </h2>
-              <p className="font-body text-base leading-relaxed mb-6 max-w-md" style={{ color: DESERT_THEME.inkBrown }}>
-                One adventure-packed Friday at Sage Field. Track desert animals on a scavenger hunt, paint cactus masterpieces, play desert bingo, and sculpt sand dunes!
+              <p className="font-body text-base leading-relaxed mb-6 max-w-md" style={{ color: CAMPING_THEME.inkBrown }}>
+                Make s’mores, paint by the campfire, craft owl pinecones, play campfire bingo, and guess what’s in the camping bag.
               </p>
 
               <div className="flex flex-wrap gap-2 mb-7">
                 {[
-                  { icon: "📅", text: "Sept 18, 2026" },
+                  { icon: "📅", text: "Oct 2, 2026" },
                   { icon: "🕗", text: "8:30 AM – 1:30 PM" },
                   { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} / child` },
                   { icon: "👧", text: "Ages 4–11" },
                 ].map((pill) => (
                   <span
                     key={pill.text}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#F2A65A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
-                    style={{ color: DESERT_THEME.inkBrown }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#E8A04A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
+                    style={{ color: CAMPING_THEME.inkBrown }}
                   >
                     {pill.icon} {pill.text}
                   </span>
@@ -273,11 +273,11 @@ export default function Home() {
               <Link
                 href="/friday"
                 className="inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                style={{ background: `linear-gradient(135deg, ${DESERT_THEME.duneDeep} 0%, ${DESERT_THEME.terracotta} 100%)` }}
+                style={{ background: `linear-gradient(135deg, ${CAMPING_THEME.duneDeep} 0%, ${CAMPING_THEME.terracotta} 100%)` }}
               >
-                Join the Expedition →
+                Join the Campout →
               </Link>
-              <p className="text-xs font-body mt-3" style={{ color: DESERT_THEME.duneDeep }}>
+              <p className="text-xs font-body mt-3" style={{ color: CAMPING_THEME.duneDeep }}>
                 No enrollment required · One-time drop-in
               </p>
             </motion.div>
@@ -288,16 +288,17 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ duration: 0.55, delay: 0.1 }}
             >
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-wrap justify-center gap-3">
                 {[
-                  { emoji: "🦎", title: "Scavenger Hunt", accent: "#FFF9F0" },
-                  { emoji: "🌵", title: "Cactus Painting", accent: "#FFF9F0" },
-                  { emoji: "🎯", title: "Desert Bingo", accent: "#FFF9F0" },
-                  { emoji: "🏜️", title: "Sand Dune Adventures", accent: "#FFF9F0" },
+                  { emoji: "🍫", title: "S’mores", accent: "#FFF6E8" },
+                  { emoji: "🎨", title: "Campfire Painting", accent: "#FFF6E8" },
+                  { emoji: "🦉", title: "Owl Pinecones", accent: "#FFF6E8" },
+                  { emoji: "🎯", title: "Campfire Bingo", accent: "#FFF6E8" },
+                  { emoji: "🎒", title: "Camping Bag", accent: "#FFF6E8" },
                 ].map((act, i) => (
                   <motion.div
                     key={act.title}
-                    className="bg-white/85 backdrop-blur-sm border border-[#F2A65A]/30 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm"
+                    className="bg-white/85 backdrop-blur-sm border border-[#E8A04A]/30 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm w-[calc(50%-0.375rem)]"
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -309,7 +310,7 @@ export default function Home() {
                     >
                       {act.emoji}
                     </div>
-                    <p className="text-xs font-bold font-body leading-tight" style={{ color: DESERT_THEME.inkBrown }}>
+                    <p className="text-xs font-bold font-body leading-tight" style={{ color: CAMPING_THEME.inkBrown }}>
                       {act.title}
                     </p>
                   </motion.div>
@@ -317,7 +318,7 @@ export default function Home() {
               </div>
               <motion.p
                 className="text-center text-xs font-body mt-4"
-                style={{ color: DESERT_THEME.inkBrown }}
+                style={{ color: CAMPING_THEME.inkBrown }}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
@@ -330,7 +331,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div style={{ background: DESERT_THEME.skyPeach, marginBottom: "-1px" }}>
+      <div style={{ background: CAMPING_THEME.skyPeach, marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
           <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
         </svg>

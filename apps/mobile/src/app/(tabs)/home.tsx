@@ -8,6 +8,7 @@ import {
   markFallLeavesPlayed,
   shouldPlayFallLeaves,
 } from "@/components/FallLeavesOverlay";
+import { ParentAddEventsIntroSheet } from "@/components/ParentAddEventsIntroSheet";
 import { ParentActivityPreferenceSheet } from "@/components/ParentActivityPreferenceSheet";
 import { AutoFillPreferencesSheet } from "@/components/AutoFillPreferencesSheet";
 import { ParentTeacherConferenceSheet } from "@/components/ParentTeacherConferenceSheet";
@@ -82,6 +83,7 @@ import {
   countSchoolYearFunFridayPaidMonths,
   type PaidHomeschoolByStudent,
 } from "@/lib/school-year-billing";
+import { PARENT_CALENDAR_ADD_INTRO_SEEN } from "@/lib/parent-onboarding-flags";
 
 function formatHomeCardStatus(names: string[], status: string): string {
   if (names.length === 0) return status;
@@ -2325,6 +2327,8 @@ export default function HomeScreen() {
   const ptcSheetRef = useRef<BottomSheetModal>(null);
   const activityPrefSheetRef = useRef<BottomSheetModal>(null);
   const autoFillSheetRef = useRef<BottomSheetModal>(null);
+  const calendarAddIntroSheetRef = useRef<BottomSheetModal>(null);
+  const pendingCalendarAddIntroRef = useRef(false);
   const [introVisible, setIntroVisible] = useState(false);
   const [introIndex, setIntroIndex] = useState(0);
   const introListRef = useRef<FlatList<IntroSlide>>(null);
@@ -2350,6 +2354,30 @@ export default function HomeScreen() {
       }
     }
   }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const tryPresentCalendarAddIntro = useCallback(() => {
+    if (isReadOnlyPreview) return;
+    if (onboardingCompleted.has(PARENT_CALENDAR_ADD_INTRO_SEEN)) return;
+    calendarAddIntroSheetRef.current?.present();
+  }, [isReadOnlyPreview, onboardingCompleted]);
+
+  useEffect(() => {
+    if (loading || onboardingLoading || introVisible || isReadOnlyPreview) {
+      return;
+    }
+    if (!onboardingCompleted.has("intro_seen")) return;
+    if (onboardingCompleted.has(PARENT_CALENDAR_ADD_INTRO_SEEN)) return;
+    if (pendingCalendarAddIntroRef.current) return;
+    const t = setTimeout(() => tryPresentCalendarAddIntro(), 400);
+    return () => clearTimeout(t);
+  }, [
+    loading,
+    onboardingLoading,
+    introVisible,
+    isReadOnlyPreview,
+    onboardingCompleted,
+    tryPresentCalendarAddIntro,
+  ]);
 
   useEffect(() => {
     if (!effectiveParentId || !userId) return;
@@ -3261,6 +3289,37 @@ export default function HomeScreen() {
       );
   }
 
+  async function markCalendarAddIntroSeen() {
+    if (isReadOnlyPreview) return;
+    if (onboardingCompleted.has(PARENT_CALENDAR_ADD_INTRO_SEEN)) return;
+    const next = new Set(onboardingCompleted);
+    next.add(PARENT_CALENDAR_ADD_INTRO_SEEN);
+    setOnboardingCompleted(next);
+    pendingCalendarAddIntroRef.current = false;
+    if (!effectiveParentId) return;
+    await supabase
+      .schema("parent_app")
+      .from("onboarding_checklist")
+      .upsert(
+        {
+          parent_id: effectiveParentId,
+          completed: [...next],
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "parent_id" },
+      );
+  }
+
+  function handleChecklistDismiss() {
+    if (!pendingCalendarAddIntroRef.current) return;
+    if (onboardingCompleted.has(PARENT_CALENDAR_ADD_INTRO_SEEN)) {
+      pendingCalendarAddIntroRef.current = false;
+      return;
+    }
+    pendingCalendarAddIntroRef.current = false;
+    setTimeout(() => tryPresentCalendarAddIntro(), 350);
+  }
+
   function handleIntroNext() {
     if (introIndex < INTRO_SLIDES.length - 1) {
       const next = introIndex + 1;
@@ -3274,6 +3333,9 @@ export default function HomeScreen() {
   function handleIntroFinish() {
     setIntroVisible(false);
     markIntroSeen();
+    if (!onboardingCompleted.has(PARENT_CALENDAR_ADD_INTRO_SEEN)) {
+      pendingCalendarAddIntroRef.current = true;
+    }
     setTimeout(() => checklistSheetRef.current?.present(), 350);
   }
 
@@ -4007,6 +4069,35 @@ export default function HomeScreen() {
                   </Pressable>
                 ))
               )}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.addOwnEventWrap,
+                  pressed && { opacity: 0.92, transform: [{ scale: 0.99 }] },
+                ]}
+                onPress={() =>
+                  router.push("/(tabs)/calendar?addEvent=1" as any)
+                }
+                accessibilityRole="button"
+                accessibilityLabel="Share an event"
+              >
+                <LinearGradient
+                  colors={["#6B8E5A", Brand.sage700, "#4A6354"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.addOwnEventGradient}
+                >
+                  <View style={styles.addOwnEventIcon}>
+                    <Ionicons name="sparkles" size={18} color={Brand.sage700} />
+                  </View>
+                  <View style={styles.addOwnEventTextCol}>
+                    <Text style={styles.addOwnEventTitle}>Share an event!</Text>
+                    <Text style={styles.addOwnEventSub}>
+                      Share with other Sagefield families
+                    </Text>
+                  </View>
+                  <Ionicons name="add-circle" size={26} color="#ffffff" />
+                </LinearGradient>
+              </Pressable>
             </View>
           )}
 
@@ -4628,6 +4719,7 @@ export default function HomeScreen() {
           ref={checklistSheetRef}
           snapPoints={["65%", "92%"]}
           enablePanDownToClose
+          onDismiss={handleChecklistDismiss}
           backdropComponent={(props) => (
             <BottomSheetBackdrop
               {...props}
@@ -4886,6 +4978,11 @@ export default function HomeScreen() {
             readOnly={isReadOnlyPreview}
           />
         )}
+
+        <ParentAddEventsIntroSheet
+          ref={calendarAddIntroSheetRef}
+          onAcknowledge={() => void markCalendarAddIntroSeen()}
+        />
 
         {students.length > 0 && effectiveParentId && (
           <ParentActivityPreferenceSheet
@@ -5432,6 +5529,42 @@ const styles = StyleSheet.create({
   upcomingSection: {
     gap: 10,
     marginTop: HomeTheme.sectionGap,
+  },
+  addOwnEventWrap: {
+    marginHorizontal: HomeTheme.horizontalInset,
+    marginTop: 4,
+    borderRadius: 20,
+    overflow: "hidden",
+    ...HomeTheme.shadow,
+  },
+  addOwnEventGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  addOwnEventIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.92)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  addOwnEventTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  addOwnEventTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 16,
+    color: "#ffffff",
+  },
+  addOwnEventSub: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "rgba(255,255,255,0.85)",
   },
   upcomingRow: {
     flexDirection: "row",

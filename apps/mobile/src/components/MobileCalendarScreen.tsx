@@ -298,7 +298,10 @@ export function MobileCalendarScreen({
   const currentDateRef = useRef(currentDate);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const addSheetRef = useRef<BottomSheetModal>(null);
-  const { selectDate } = useLocalSearchParams<{ selectDate?: string }>();
+  const { selectDate, addEvent } = useLocalSearchParams<{
+    selectDate?: string;
+    addEvent?: string;
+  }>();
 
   const fetchEvents = useCallback(
     async (date: Date) => {
@@ -419,6 +422,16 @@ export function MobileCalendarScreen({
     setSelectedEvent(null);
     addSheetRef.current?.present();
   }
+
+  useEffect(() => {
+    if (!addEvent || !allowParentAddEvent) return;
+    const t = setTimeout(() => {
+      openAddEvent();
+      router.setParams({ addEvent: undefined });
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- open once when param is set
+  }, [addEvent, allowParentAddEvent]);
 
   function openEditEvent(event: CalendarEvent) {
     setEventToEdit(event as ParentCalendarEventRecord);

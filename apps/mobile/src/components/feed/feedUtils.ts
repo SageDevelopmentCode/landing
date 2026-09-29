@@ -1,5 +1,17 @@
+import { API_BASE_URL } from "@/constants/config";
 import type { Router } from "expo-router";
 import type { PostAttachmentRow } from "./feedTypes";
+
+const NEWSLETTER_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Public page for a newsletter CTA stored as `/(tabs)/newsletters/{id}`. */
+export function newsletterPublicUrlFromCtaRoute(route: string): string | null {
+  const pathname = route.split("?")[0].replace(/\/$/, "");
+  const id = pathname.split("/").pop() ?? "";
+  if (!NEWSLETTER_ID.test(id)) return null;
+  return `${API_BASE_URL}/newsletter/${id}`;
+}
 
 export function resolveFeedCtaRoute(
   route: string,
