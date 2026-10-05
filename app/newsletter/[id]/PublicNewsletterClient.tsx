@@ -8,6 +8,12 @@ import remarkBreaks from "remark-breaks";
 import { verifyNewsletterPassword } from "@/app/actions/newsletter";
 import type { DBNewsletter, DBSectionImage, DBTeacherUpdate } from "@/app/actions/newsletter";
 
+const DEFAULT_NEWSLETTER_COVER = "/assets/NewsletterWeek1.jpg";
+
+function isRemoteImageSrc(src: string): boolean {
+  return src.startsWith("http://") || src.startsWith("https://");
+}
+
 // ── Markdown ──────────────────────────────────────────────────────────────────
 
 const markdownComponents = {
@@ -240,13 +246,22 @@ function NewsletterView({ newsletter }: { newsletter: DBNewsletter }) {
       teacherUpdates: s.teacher_updates ?? [],
     }));
 
+  const coverSrc = newsletter.cover_image_signed_url ?? DEFAULT_NEWSLETTER_COVER;
+
   return (
     <div className="min-h-screen bg-white md:bg-[#f0f4f1] md:py-12 md:px-4">
       <div className="md:max-w-2xl md:mx-auto md:bg-white md:rounded-xl md:shadow-xl overflow-hidden">
 
         {/* Hero Banner */}
         <div className="relative h-64 md:h-80 overflow-hidden">
-          <Image src={newsletter.cover_image_signed_url ?? "/assets/NewsletterWeek1.jpg"} alt="Newsletter banner" fill className="object-cover object-center" priority />
+          <Image
+            src={coverSrc}
+            alt="Newsletter banner"
+            fill
+            className="object-cover object-center"
+            priority
+            unoptimized={isRemoteImageSrc(coverSrc)}
+          />
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.38) 0%, transparent 42%)" }} />
           <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(10,30,18,0.82) 0%, rgba(10,30,18,0.32) 50%, transparent 100%)" }} />
 
@@ -334,6 +349,14 @@ function PasswordGate({ id, title, weekRange, coverImageUrl, onUnlocked }: { id:
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [heroLoaded, setHeroLoaded] = useState(false);
+  const [heroSrc, setHeroSrc] = useState(coverImageUrl ?? DEFAULT_NEWSLETTER_COVER);
+
+  function handleHeroError() {
+    setHeroLoaded(true);
+    if (heroSrc !== DEFAULT_NEWSLETTER_COVER) {
+      setHeroSrc(DEFAULT_NEWSLETTER_COVER);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -357,7 +380,15 @@ function PasswordGate({ id, title, weekRange, coverImageUrl, onUnlocked }: { id:
           {/* Hero strip */}
           <div className="relative h-36 overflow-hidden">
             {!heroLoaded && <div className="absolute inset-0 bg-[#e8ede9] animate-pulse z-10" />}
-            <Image src={coverImageUrl ?? "/assets/NewsletterWeek1.jpg"} alt="" fill className="object-cover object-center" onLoad={() => setHeroLoaded(true)} />
+            <Image
+              src={heroSrc}
+              alt=""
+              fill
+              className="object-cover object-center"
+              unoptimized={isRemoteImageSrc(heroSrc)}
+              onLoad={() => setHeroLoaded(true)}
+              onError={handleHeroError}
+            />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(10,30,18,0.85) 0%, rgba(10,30,18,0.3) 100%)" }} />
             <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
               <div className="flex items-center gap-2 mb-1.5">

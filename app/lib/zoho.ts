@@ -6016,11 +6016,16 @@ function buildSchoolYearOctoberReminderEmailContent(
   },
   subject: string,
   variant: "school-year" | "drop-in",
+  timing: "one-week" | "due-soon" = "one-week",
 ): { subject: string; content: string } {
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
   const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
   const productLabel =
     variant === "school-year" ? "October tuition" : "October homeschool drop-in";
+  const duePhrase =
+    timing === "one-week"
+      ? `${productLabel} is due in one week, next Thursday, October 1`
+      : `${productLabel} is due in two days, this Thursday, October 1`;
   const pricingTableHtml =
     variant === "school-year"
       ? schoolYearTuitionByGradeTableHtml("24px")
@@ -6073,7 +6078,7 @@ function buildSchoolYearOctoberReminderEmailContent(
   </p>
 
   <p style="margin-bottom: 16px;">
-    If you haven't yet — a quick reminder that <strong>${productLabel} is due in one week, next Thursday, October 1</strong>.
+    If you haven't yet — a quick reminder that <strong>${duePhrase}</strong>.
     Please submit payment through your parent billing portal under the <strong>"School Year"</strong> tab.
   </p>
 
@@ -6129,6 +6134,33 @@ export async function buildSchoolYearOctoberDropInTuitionReminderEmail(opts: {
   );
 }
 
+export async function buildSchoolYearOctoberDueSoonTuitionReminderEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  return buildSchoolYearOctoberReminderEmailContent(
+    opts,
+    `October Tuition Due This Thursday (October 1) — 2026–2027`,
+    "school-year",
+    "due-soon",
+  );
+}
+
+export async function buildSchoolYearOctoberDueSoonDropInTuitionReminderEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+  useUpdatedHomeschoolPricing?: boolean;
+}): Promise<{ subject: string; content: string }> {
+  return buildSchoolYearOctoberReminderEmailContent(
+    opts,
+    `October Homeschool Drop-In Due This Thursday (October 1) — 2026–2027`,
+    "drop-in",
+    "due-soon",
+  );
+}
+
 export async function buildSchoolYearOctoberTuitionReminderGeneralEmail(opts: {
   g1FullName?: string;
   childLegalName?: string;
@@ -6151,6 +6183,124 @@ export async function buildSchoolYearOctoberTuitionReminderGeneralEmail(opts: {
 
   <p style="margin-bottom: 16px;">
     If you haven't yet — a quick reminder that <strong>October tuition is due in one week, next Thursday, October 1</strong>.
+    Please submit payment through your parent billing portal under the <strong>"School Year"</strong> tab.
+  </p>
+
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0; color: #b45309;">⚠️ A <strong>$50 late fee</strong> applies if payment is not received by <strong>October 4</strong>.</p>
+  </div>
+
+  <p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
+    Payments are due on the <strong>1st of each month</strong>.
+    A <strong>$50 late fee</strong> applies to any payment not received by the <strong>4th of the month</strong>.
+  </p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Your parent billing portal shows the amount due for your family</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page and click the <strong>"School Year"</strong> tab.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Pay Tuition Now →
+    </a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about your specific tuition or billing, please don't hesitate to reach out. We are happy to help!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildSchoolYearOctoberDueSoonTuitionReminderGeneralEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const subject = `October Tuition Due This Thursday (October 1) — 2026–2027`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">
+    If you've already paid October tuition — thank you, you're all set! 🎉
+  </p>
+
+  <p style="margin-bottom: 16px;">
+    If you haven't yet — a quick reminder that <strong>October tuition is due in two days, this Thursday, October 1</strong>.
+    Please submit payment through your parent billing portal under the <strong>"School Year"</strong> tab.
+  </p>
+
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0; color: #b45309;">⚠️ A <strong>$50 late fee</strong> applies if payment is not received by <strong>October 4</strong>.</p>
+  </div>
+
+  <p style="margin-bottom: 16px; font-size: 14px; color: #3a3a3a;">
+    Payments are due on the <strong>1st of each month</strong>.
+    A <strong>$50 late fee</strong> applies to any payment not received by the <strong>4th of the month</strong>.
+  </p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 10px; padding: 24px; margin: 0 0 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; color: #2c2c2c; font-weight: bold;">Your parent billing portal shows the amount due for your family</p>
+    <p style="margin: 0 0 16px 0; font-size: 14px; color: #555;">Go to the <strong>Billing</strong> page and click the <strong>"School Year"</strong> tab.</p>
+    <a href="https://sagefield.co/parent/billing"
+       style="display: inline-block; background: #2C5F2E; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: bold; letter-spacing: 0.3px;">
+      Pay Tuition Now →
+    </a>
+  </div>
+
+  <p style="margin-bottom: 24px; font-size: 14px; color: #555;">If you have any questions about your specific tuition or billing, please don't hesitate to reach out. We are happy to help!</p>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;">
+    <strong>Sabrina</strong><br />
+    Sage Field School<br />
+    <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> · <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a>
+  </p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail(opts: {
+  g1FullName?: string;
+  childLegalName?: string;
+  email: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName?.split(" ")[0] || "there";
+  const subject = `October Tuition Due Tonight at Midnight (October 1) — 2026–2027`;
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 12px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 16px;">
+    If you've already paid October tuition — thank you, you're all set! 🎉
+  </p>
+
+  <p style="margin-bottom: 16px;">
+    If you haven't yet — a quick reminder that <strong>October tuition is due tonight at midnight</strong>.
     Please submit payment through your parent billing portal under the <strong>"School Year"</strong> tab.
   </p>
 

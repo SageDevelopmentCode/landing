@@ -22,6 +22,10 @@ import { sendPaySummerTuitionEmail2 } from "@/app/actions/sendPaySummerTuitionEm
 import { sendRegistrationFeeConfirmationEmail } from "@/app/actions/sendRegistrationFeeConfirmationEmail";
 import { sendSchoolYearCommitmentEmail } from "@/app/actions/sendSchoolYearCommitmentEmail";
 import { sendSchoolYearOctoberDropInTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberDropInTuitionReminderEmail";
+import { sendSchoolYearOctoberDueSoonDropInTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberDueSoonDropInTuitionReminderEmail";
+import { sendSchoolYearOctoberDueSoonTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearOctoberDueSoonTuitionReminderGeneralEmail";
+import { sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail";
+import { sendSchoolYearOctoberDueSoonTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberDueSoonTuitionReminderEmail";
 import { sendSchoolYearOctoberTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearOctoberTuitionReminderGeneralEmail";
 import { sendSchoolYearOctoberTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberTuitionReminderEmail";
 import { sendSchoolYearSeptemberDropInTuitionReminderEmail } from "@/app/actions/sendSchoolYearSeptemberDropInTuitionReminderEmail";
@@ -440,6 +444,47 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
   "october-tuition-reminder-general": (app) =>
     withEmail(app, (email) =>
       sendSchoolYearOctoberTuitionReminderGeneralEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "october-tuition-reminder-due-soon-school-year": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberDueSoonTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "october-tuition-reminder-due-soon-drop-in": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberDueSoonDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "october-tuition-reminder-due-soon-drop-in-updated": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberDueSoonDropInTuitionReminderEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+        useUpdatedHomeschoolPricing: true,
+      }),
+    ),
+  "october-tuition-reminder-due-soon-general": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberDueSoonTuitionReminderGeneralEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "october-tuition-reminder-due-tomorrow-general": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail({
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,

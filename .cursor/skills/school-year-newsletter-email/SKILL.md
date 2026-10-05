@@ -17,6 +17,7 @@ Build parent outreach emails for school-year weekly newsletters. Content comes f
 - User asks to create/send a school year week N newsletter email
 - User provides a newsletter ID, title, or week number and wants the outreach email built
 - User references `@school-year-newsletter-email`
+- User needs Welcome Message markdown before outreach — use [school-year-newsletter-welcome-message](../school-year-newsletter-welcome-message/SKILL.md)
 
 ## Prerequisites
 
@@ -58,6 +59,8 @@ Full queries: [reference.md](reference.md).
 
 ### Step 3: Map sections to email
 
+To generate Welcome Message markdown from Class Updates (copy-paste into the newsletter editor), use [school-year-newsletter-welcome-message](../school-year-newsletter-welcome-message/SKILL.md) first.
+
 Default section labels (from `apps/mobile/src/lib/newsletters-actions.ts`):
 
 | Section label     | Email block                                      |
@@ -94,7 +97,7 @@ Known grade bands (update if staff changes):
 
 | Teacher (first name) | Grade band   | Community name |
 | -------------------- | ------------ | -------------- |
-| Joy                  | Pre-K–K      | —              |
+| Joy                  | Pre-K–K      | Wildflowers    |
 | Zelinda              | 1st–2nd      | Firefly        |
 | Sabrina              | 3rd–4th      | Honeybee       |
 
@@ -187,6 +190,7 @@ Agent actions:
 ## Reference
 
 - SQL queries + HTML skeleton: [reference.md](reference.md)
+- Welcome Message markdown from class updates: [school-year-newsletter-welcome-message](../school-year-newsletter-welcome-message/SKILL.md)
 - Social carousel slides (heading + body): [newsletter-carousel-highlights](../newsletter-carousel-highlights/SKILL.md)
 - Highlights page + WeekRecapPreview: [newsletter-highlights-page](../newsletter-highlights-page/SKILL.md)
 - Canonical email: `app/lib/zoho.ts` → `buildSchoolYearWeekOneNewsletterEmail`
