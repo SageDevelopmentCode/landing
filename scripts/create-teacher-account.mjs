@@ -1,13 +1,38 @@
 /**
- * One-off: create a teacher auth user + admin.users row on production.
- * Usage: dotenv -e .env.local -- node scripts/create-teacher-account.mjs
+ * Create a teacher auth user + admin.users row (production or local with service role).
+ *
+ * Usage:
+ *   dotenv -e .env.local -- node scripts/create-teacher-account.mjs --email teacher@example.com --name "Full Name"
+ *   TEACHER_EMAIL=... TEACHER_FULL_NAME=... dotenv -e .env.local -- node scripts/create-teacher-account.mjs
  */
 import { randomBytes } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
 
-const EMAIL = 'Meredith.jennifer@outlook.com'
-const FULL_NAME = 'Jennifer Meredith'
 const ROLE = 'teacher'
+
+function parseArgs(argv) {
+  const out = {}
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg === '--email' && argv[i + 1]) {
+      out.email = argv[++i]
+    } else if (arg === '--name' && argv[i + 1]) {
+      out.fullName = argv[++i]
+    }
+  }
+  return out
+}
+
+const cli = parseArgs(process.argv.slice(2))
+const EMAIL = (cli.email ?? process.env.TEACHER_EMAIL)?.trim()
+const FULL_NAME = (cli.fullName ?? process.env.TEACHER_FULL_NAME)?.trim()
+
+if (!EMAIL || !FULL_NAME) {
+  console.error(
+    'Missing teacher email or full name. Pass --email and --name, or set TEACHER_EMAIL and TEACHER_FULL_NAME.',
+  )
+  process.exit(1)
+}
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
