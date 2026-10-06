@@ -1064,6 +1064,7 @@ interface ChildTabsProps {
   healthStatementByStudent: Record<string, { option_type: string } | null>;
   religiousExemptionCountByStudent: Record<string, number>;
   profileImageByStudent: Record<string, string | null>;
+  readOnlyPreview?: boolean;
 }
 
 export default function ChildTabs({
@@ -1082,6 +1083,7 @@ export default function ChildTabs({
   healthStatementByStudent,
   religiousExemptionCountByStudent,
   profileImageByStudent,
+  readOnlyPreview,
 }: ChildTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -1711,6 +1713,7 @@ export default function ChildTabs({
             }
           }
           onPlanSaved={handleAuthorizedPickupPlanSaved}
+          readOnly={readOnlyPreview}
         />
       )}
 

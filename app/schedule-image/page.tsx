@@ -1,15 +1,3 @@
-import { Merriweather, Poppins } from "next/font/google";
-
-const merriweather = Merriweather({
-  weight: ["700", "900"],
-  subsets: ["latin"],
-});
-
-const poppins = Poppins({
-  weight: ["400", "600"],
-  subsets: ["latin"],
-});
-
 const schoolYearRows = [
   {
     time: "Morning",
@@ -42,8 +30,8 @@ function ScheduleTable({
   return (
     <div style={{ flex: 1, minWidth: 280 }}>
       <h2
-        className={merriweather.className}
         style={{
+          fontFamily: "'Merriweather', serif",
           fontSize: 20,
           fontWeight: 900,
           color: "#f29a8f",
@@ -119,8 +107,8 @@ function ScheduleTable({
 export default function ScheduleImagePage() {
   return (
     <div
-      className={poppins.className}
       style={{
+        fontFamily: "'Poppins', sans-serif",
         minHeight: "100vh",
         backgroundColor: "#fff",
         display: "flex",
@@ -131,8 +119,8 @@ export default function ScheduleImagePage() {
       }}
     >
       <h1
-        className={merriweather.className}
         style={{
+          fontFamily: "'Merriweather', serif",
           fontSize: 28,
           fontWeight: 900,
           color: "#3d2b1f",

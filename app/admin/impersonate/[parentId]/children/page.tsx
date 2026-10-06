@@ -143,6 +143,7 @@ export default async function ImpersonateChildrenPage({
             studentProgramMap={studentProgramMap}
             pickupByStudent={pickupByStudent}
             notesByStudent={notesByStudent}
+            isSharedAccess
           />
         </Suspense>
       </main>
