@@ -36,26 +36,31 @@ const dancingScript = Dancing_Script({
 
 // ─── Image Arrays ─────────────────────────────────────────────────────────────
 
-const WEEK5_IMAGES = [
-  "/assets/highlights/school_week_five/96D93AFA-3B3B-4959-A75F-DD9624B41C29.JPG",
-  "/assets/highlights/school_week_five/5246214C-00FC-4ED2-8369-7FD5DDCF29D3.JPG",
-  "/assets/highlights/school_week_five/29AB0AD4-AEDD-4145-A6A9-5FA6D8FD605E.JPG",
-  "/assets/highlights/school_week_five/89C4E0CC-3A0E-479B-8DE9-2FA03D891A80.JPG",
-  "/assets/highlights/school_week_five/7A2E475F-76BD-4718-A484-854DA4FC48B5.JPG",
-  "/assets/highlights/school_week_five/FC66AAAA-7A33-4614-B36B-B553F5EAEF6D.JPG",
-  "/assets/highlights/school_week_five/9965B812-C19C-45DF-97DF-031DDDF9381E.JPG",
-  "/assets/highlights/school_week_five/DEFE850C-99B6-4015-B419-89FDE3617DA0.JPG",
-  "/assets/highlights/school_week_five/4182F696-085D-47CB-9021-8F8F5DC1BD9D.JPG",
-  "/assets/highlights/school_week_five/6F5B4460-BFF1-486C-9DAB-B7B1BB4C2FFD.JPG",
-  "/assets/highlights/school_week_five/1BDB4106-7495-45A8-9391-3BED523FA5C1.JPG",
-  "/assets/highlights/school_week_five/F47AC380-A0C2-4C05-80B3-C3FC804976EF.JPG",
-  "/assets/highlights/school_week_five/F232DFAA-059D-4705-80AC-EDB763175364.JPG",
-  "/assets/highlights/school_week_five/F157BD53-B669-429C-8613-5634FA945599.JPG",
-  "/assets/highlights/school_week_five/F855F2DE-4407-4A85-8F6A-52F5C8EAA910.JPG",
-  "/assets/highlights/school_week_five/03B0FFDA-ACC9-4F70-B82C-B16EBACD5636.JPG",
-  "/assets/highlights/school_week_five/05A3BE7A-1DE2-4C9E-91EC-769F1888C0AD.JPG",
-  "/assets/highlights/school_week_five/CCACC24E-0E7A-4442-99F4-F0596DCB4134.JPG",
-  "/assets/highlights/school_week_five/BFF44DC7-3510-46E9-8D96-6DB9C96E90C5.JPG",
+const WEEK7_IMAGES = [
+  "/assets/highlights/school_week_seven/81893DBE-4D91-4B49-B3B6-70F6E5CE5C48.JPG",
+  "/assets/highlights/school_week_seven/7E7D75AA-5A68-4203-8E71-F90C2110B3A5.JPG",
+  "/assets/highlights/school_week_seven/8DF9D7EB-3679-4A7E-92B7-5C96B246D548.JPG",
+  "/assets/highlights/school_week_seven/1E58CE6E-C5A3-4359-92F1-7EA492647DE4.JPG",
+  "/assets/highlights/school_week_seven/F9962D51-54E6-4252-BEE1-63C60C4E7019.JPG",
+  "/assets/highlights/school_week_seven/FFB523F7-1793-4D6A-BED8-4BB9F6AE18DE.JPG",
+  "/assets/highlights/school_week_seven/6F226AE6-D003-41E2-9BD4-5E94F7719FD0.JPG",
+  "/assets/highlights/school_week_seven/38E25CD5-EF03-4ABE-8260-F1F3C1987597.JPG",
+  "/assets/highlights/school_week_seven/6D7CCB1F-18C9-446A-A6BB-F6DF846AC750.JPG",
+  "/assets/highlights/school_week_seven/127E3CE8-67FB-4693-BB81-CB6177750B21.JPG",
+  "/assets/highlights/school_week_seven/6CE83AA4-0630-468D-BF67-8C7D997EB9CF.JPG",
+  "/assets/highlights/school_week_seven/3D638912-10F6-45E4-AB3F-D0C3DBC6356A.JPG",
+  "/assets/highlights/school_week_seven/9F91650B-6CEA-4100-9C59-4AF4680FE5E4.JPG",
+  "/assets/highlights/school_week_seven/14C88DEC-1481-4815-9B17-46A646A9D342.JPG",
+  "/assets/highlights/school_week_seven/99590ABC-F1B4-4EE0-8C9F-D89FA69A067A.JPG",
+  "/assets/highlights/school_week_seven/1F6F0AAF-B89B-485C-AB7C-A2D3E48794DE.JPG",
+  "/assets/highlights/school_week_seven/1DC2BD3D-F328-4E20-86BC-7BABDF4D6267.JPG",
+  "/assets/highlights/school_week_seven/B7F8A5C3-F3AB-4518-8F47-C2D6757E6090.JPG",
+  "/assets/highlights/school_week_seven/E46F448C-DAED-47BD-BAC8-CCB35D9032EC.JPG",
+  "/assets/highlights/school_week_seven/1850A877-CB87-4CF2-9D56-511B78E51C16.JPG",
+  "/assets/highlights/school_week_seven/4473143D-F34C-4F34-86C9-AC3BF9348A4D.JPG",
+  "/assets/highlights/school_week_seven/8E030795-CC6C-4C09-8D0E-A045B5B110B6.JPG",
+  "/assets/highlights/school_week_seven/D5A9015C-F204-4679-A0A9-0F0C918C169E.JPG",
+  "/assets/highlights/school_week_seven/FAED5614-5837-4FAC-BE8A-5330D8E7DFEB.JPG",
 ];
 
 const WEEK6_IMAGES = [
@@ -86,77 +91,77 @@ const WEEK6_IMAGES = [
   "/assets/highlights/school_week_six/A61A1CA3-C251-4DE9-9E1A-99B025791D3A.JPG",
 ];
 
-const CAROUSEL_IMAGES = [...WEEK5_IMAGES, ...WEEK6_IMAGES];
+const CAROUSEL_IMAGES = [...WEEK6_IMAGES, ...WEEK7_IMAGES];
 const GALLERY_INITIAL_COUNT = 9;
 
-// ─── Week 5 Highlights ────────────────────────────────────────────────────────
+// ─── Week 7 Highlights ────────────────────────────────────────────────────────
 
-const WEEK5_PRIMARY_HIGHLIGHTS = [
+const WEEK7_PRIMARY_HIGHLIGHTS = [
   {
-    emoji: "🥚",
-    label: "First Chicken Eggs",
-    desc: "Student-led research on what chickens need — and our first eggs arrived",
+    emoji: "♻️",
+    label: "Found Materials Inquiry",
+    desc: "Sandpit collections sparked questions about waste, reuse, and caring for our world",
   },
   {
-    emoji: "📹",
-    label: "Chicken Cam",
-    desc: "Recycled-materials camera to observe coop behavior and gather evidence",
+    emoji: "🪑",
+    label: "Heritage & Clay Chairs",
+    desc: "Story-inspired sculpting during Hispanic Heritage Month explorations",
+  },
+  {
+    emoji: "🗣️",
+    label: "Spanish in Routines",
+    desc: "Colors, numbers, and greetings woven into everyday Primary conversations",
   },
   {
     emoji: "🐜",
-    label: "Ant Investigation",
-    desc: "Dot-art ants and new questions about where ants live and what they need",
-  },
-  {
-    emoji: "🔢",
-    label: "Counting Toward 100",
-    desc: "Number recognition, writing bigger numbers, and math through observation",
+    label: "Ants & Environment",
+    desc: "Wondering what ants eat and how they help clean up our shared spaces",
   },
 ];
 
-const WEEK5_LOWER_ELEM_HIGHLIGHTS = [
+const WEEK7_LOWER_ELEM_HIGHLIGHTS = [
   {
     emoji: "➕",
-    label: "Addition Practice",
-    desc: "Two-digit plus single-digit numbers and addition with regrouping",
+    label: "Addition Unit Wrap",
+    desc: "Number lines, regrouping, bonds, and word problems reviewed end-to-end",
   },
   {
     emoji: "📖",
-    label: "Sight Word Reading",
-    desc: "Blending short vowels, consonants, and syllables while reading",
+    label: "Short Vowel Phonics",
+    desc: "Consonant sounds and short vowel patterns before October units begin",
   },
   {
-    emoji: "🗺️",
-    label: "Map Skills Booklet",
-    desc: "Interactive booklet breaking down continents, oceans, and map features",
+    emoji: "🌍",
+    label: "Globes & Matter",
+    desc: "Continent-and-ocean mini globes plus properties-of-matter detective work",
   },
   {
-    emoji: "🎨",
-    label: "Color Theory & Dot Day",
-    desc: "Color wheel lions, color mixing, and a collaborative Dot Day mural",
+    emoji: "🍳",
+    label: "Omelette Bar Independence",
+    desc: "Chop, whisk, flip, and serve — every step with growing confidence",
   },
 ];
 
-const WEEK5_UPPER_ELEM_HIGHLIGHTS = [
+const WEEK7_UPPER_ELEM_HIGHLIGHTS = [
   {
-    emoji: "✖️",
-    label: "Multiplication Milestones",
-    desc: "Facts for multiples 0–10 and multi-digit multiplication with regrouping",
+    emoji: "➗",
+    label: "Division & Remainders",
+    desc: "Even splits, leftovers, and clear links back to multiplication facts",
   },
   {
-    emoji: "🌋",
-    label: "Volcano Science",
-    desc: "Survival guides, town design, and eruption experiments with data collection",
+    emoji: "✏️",
+    label: "Nouns & Sensory Writing",
+    desc: "Common and proper nouns plus vivid kitchen descriptions with the senses",
   },
   {
-    emoji: "✍️",
-    label: "Persuasive Writing",
-    desc: "Stating opinions with reasons, examples, and CUPS editing practice",
+    emoji: "🥚",
+    label: "Farm-to-Table Omelettes",
+    desc: "Build-your-own omelettes with fresh Sage Field eggs from our chickens",
   },
   {
-    emoji: "🍲",
-    label: "Cooking & Nature Art",
-    desc: "Potato and rice chicken bone broth soup and dried-flower creations",
+    emoji: "🎃",
+    label: "Pumpkin Mosaic Art",
+    desc: "Seasonal mosaic work alongside long E spelling and Reading Buddies",
   },
 ];
 
@@ -842,7 +847,7 @@ export default function ShadowPage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md">
                 <Image
-                  src="/assets/highlights/school_week_six/CFFE7C16-F58B-4392-A325-165B53D36776.JPG"
+                  src="/assets/highlights/school_week_seven/81893DBE-4D91-4B49-B3B6-70F6E5CE5C48.JPG"
                   alt="Students at Sage Field"
                   fill
                   className="object-cover"
@@ -853,7 +858,7 @@ export default function ShadowPage() {
               <div className="flex flex-col gap-2">
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
                   <Image
-                    src="/assets/highlights/school_week_five/96D93AFA-3B3B-4959-A75F-DD9624B41C29.JPG"
+                    src="/assets/highlights/school_week_six/CFFE7C16-F58B-4392-A325-165B53D36776.JPG"
                     alt="Students at Sage Field"
                     fill
                     className="object-cover"
@@ -863,7 +868,7 @@ export default function ShadowPage() {
                 </div>
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
                   <Image
-                    src="/assets/highlights/school_week_six/E8A37B1E-B2E0-4459-935A-9F12BAB7ABA7.JPG"
+                    src="/assets/highlights/school_week_seven/1E58CE6E-C5A3-4359-92F1-7EA492647DE4.JPG"
                     alt="Students at Sage Field"
                     fill
                     className="object-cover"
@@ -912,13 +917,13 @@ export default function ShadowPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              Weeks 5 &amp; 6 in Review
+              Weeks 6 &amp; 7 in Review
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
               A Glimpse of What Kids Do Here
             </h2>
             <p className="text-base text-gray-500 font-body leading-relaxed max-w-2xl">
-              Weeks five and six — here&apos;s a real look at what your child
+              Weeks six and seven — here&apos;s a real look at what your child
               would experience at Sage Field. Real academics, real cooking, real
               community.
             </p>
@@ -1003,24 +1008,24 @@ export default function ShadowPage() {
                 title: "Primary",
                 subtitle: "Pre-K & Kindergarten",
                 iconBg: "bg-primary/10",
-                week5: WEEK5_PRIMARY_HIGHLIGHTS,
                 week6: WEEK6_PRIMARY_HIGHLIGHTS,
+                week7: WEEK7_PRIMARY_HIGHLIGHTS,
               },
               {
                 emoji: "✨",
                 title: "Lower Elementary",
                 subtitle: "1st & 2nd Grade",
                 iconBg: "bg-sage-100",
-                week5: WEEK5_LOWER_ELEM_HIGHLIGHTS,
                 week6: WEEK6_LOWER_ELEM_HIGHLIGHTS,
+                week7: WEEK7_LOWER_ELEM_HIGHLIGHTS,
               },
               {
                 emoji: "📐",
                 title: "Upper Elementary",
                 subtitle: "3rd & 4th Grade",
                 iconBg: "bg-sky-100",
-                week5: WEEK5_UPPER_ELEM_HIGHLIGHTS,
                 week6: WEEK6_UPPER_ELEM_HIGHLIGHTS,
+                week7: WEEK7_UPPER_ELEM_HIGHLIGHTS,
               },
             ].map((band) => (
               <div key={band.title} className="bg-sage-50 rounded-2xl p-5">
@@ -1043,11 +1048,11 @@ export default function ShadowPage() {
                   <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <div className="mb-2">
                       <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full font-body">
-                        Week 5
+                        Week 6
                       </span>
                     </div>
                     <ul className="space-y-1.5">
-                      {band.week5.map((item) => (
+                      {band.week6.map((item) => (
                         <li key={item.label} className="flex items-start gap-2">
                           <span className="text-sm leading-none mt-0.5 flex-shrink-0">
                             {item.emoji}
@@ -1067,11 +1072,11 @@ export default function ShadowPage() {
                   <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <div className="mb-2">
                       <span className="inline-block px-2 py-0.5 bg-sage-100 text-sage-700 text-[10px] font-bold rounded-full font-body">
-                        Week 6
+                        Week 7
                       </span>
                     </div>
                     <ul className="space-y-1.5">
-                      {band.week6.map((item) => (
+                      {band.week7.map((item) => (
                         <li key={item.label} className="flex items-start gap-2">
                           <span className="text-sm leading-none mt-0.5 flex-shrink-0">
                             {item.emoji}
@@ -1101,16 +1106,16 @@ export default function ShadowPage() {
             transition={{ duration: 0.4, delay: 0.18 }}
           >
             <Link
-              href="/highlights/school-year/week-5"
+              href="/highlights/school-year/week-6"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm"
             >
-              View Full Week 5 Recap →
+              View Full Week 6 Recap →
             </Link>
             <Link
-              href="/highlights/school-year/week-6"
+              href="/highlights/school-year/week-7"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-800 font-semibold rounded-lg border border-gray-200 hover:bg-sage-50 transition-colors duration-200 shadow-sm hover:shadow-md font-body text-sm"
             >
-              View Full Week 6 Recap →
+              View Full Week 7 Recap →
             </Link>
           </motion.div>
         </div>

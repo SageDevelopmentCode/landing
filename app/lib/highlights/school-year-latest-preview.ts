@@ -1,97 +1,97 @@
-const BASE = "/assets/highlights/school_week_six";
+const BASE = "/assets/highlights/school_week_seven";
 
 export const SCHOOL_YEAR_LATEST_RECAP = {
-  badge: "School Year 2026–27 · Week 6",
-  heading: "See Week 6 of Our School Year",
+  badge: "School Year 2026–27 · Week 7",
+  heading: "See Week 7 of Our School Year",
   subtitle:
-    "Fall nature walks, division with manipulatives, states of matter, procedural writing, and an At the Zoo Field Friday.",
-  body: "Week six of our 2026–27 school year is complete. From our primary classroom through upper elementary, students welcomed fall with outdoor observations, deepened ant and pumpkin investigations, practiced addition and division, tested sink-or-float hypotheses, explored clay and buddy learning, and closed the week as zookeepers on a stuffed-animal riddle hunt.",
-  ctaLabel: "View Full Week 6 Recap →",
-  href: "/highlights/school-year/week-6",
+    "Found-material inquiry, division with remainders, globes and matter detectives, farm-fresh omelettes, and Camping Adventures Field Friday.",
+  body: "Week seven of our 2026–27 school year is complete. From our primary classroom through upper elementary, students followed found materials into environmental questions, wrapped September units with globes and phonics, deepened division and sensory writing, cooked with Sage Field eggs, sculpted clay chairs, and closed the week around a campfire for Camping Adventures Field Friday.",
+  ctaLabel: "View Full Week 7 Recap →",
+  href: "/highlights/school-year/week-7",
 };
 
 export const SCHOOL_YEAR_LATEST_PREVIEW_IMAGES = [
-  `${BASE}/CFFE7C16-F58B-4392-A325-165B53D36776.JPG`,
-  `${BASE}/9D2AC2BE-C4FB-4EA2-A3F3-50070DF3D6F6.JPG`,
-  `${BASE}/E8A37B1E-B2E0-4459-935A-9F12BAB7ABA7.JPG`,
-  `${BASE}/A308BD2F-F8A5-4AC4-92B0-B4594010A2DA.JPG`,
-  `${BASE}/56E3D25A-E7EB-4736-9481-33A016535AB4.JPG`,
-  `${BASE}/D829EEC5-6E49-4EAF-8511-1A69149F8C29.JPG`,
+  `${BASE}/81893DBE-4D91-4B49-B3B6-70F6E5CE5C48.JPG`,
+  `${BASE}/7E7D75AA-5A68-4203-8E71-F90C2110B3A5.JPG`,
+  `${BASE}/8DF9D7EB-3679-4A7E-92B7-5C96B246D548.JPG`,
+  `${BASE}/1E58CE6E-C5A3-4359-92F1-7EA492647DE4.JPG`,
+  `${BASE}/F9962D51-54E6-4252-BEE1-63C60C4E7019.JPG`,
+  `${BASE}/FFB523F7-1793-4D6A-BED8-4BB9F6AE18DE.JPG`,
 ];
 
 export const SCHOOL_YEAR_LATEST_PRIMARY = [
   {
-    emoji: "🍂",
-    label: "Fall Nature Walks",
-    desc: "Leaves, sticks, and counting by 5s outdoors",
+    emoji: "♻️",
+    label: "Found Materials",
+    desc: "Sandpit collections into reuse and environment questions",
+  },
+  {
+    emoji: "🪑",
+    label: "Clay Chairs",
+    desc: "Heritage story-inspired sculpting in Primary",
+  },
+  {
+    emoji: "🗣️",
+    label: "Spanish Routines",
+    desc: "Colors, numbers, and greetings in daily talk",
   },
   {
     emoji: "🐜",
-    label: "Ant Life Cycle",
-    desc: "Puzzles and tracing during ant investigations",
-  },
-  {
-    emoji: "🎃",
-    label: "Pumpkin Decomposition",
-    desc: "Compost questions from a close look at decay",
-  },
-  {
-    emoji: "🏪",
-    label: "Classroom Marketplace",
-    desc: "Store play with costs and reuse",
+    label: "Ants & Waste",
+    desc: "What belongs in trash vs. what we can transform",
   },
 ];
 
 export const SCHOOL_YEAR_LATEST_LOWER = [
   {
     emoji: "➕",
-    label: "Addition Strategies",
-    desc: "Number lines and two-digit regrouping",
+    label: "Addition Review",
+    desc: "Lines, bonds, regrouping, and word problems",
   },
   {
     emoji: "📖",
-    label: "Phonics & Sight Words",
-    desc: "Short vowels and encoding practice",
+    label: "Short Vowels",
+    desc: "Phonics wrap before new October units",
   },
   {
-    emoji: "💧",
-    label: "States of Matter",
-    desc: "Sink-or-float tests with hypotheses",
+    emoji: "🌍",
+    label: "Globes & Matter",
+    desc: "Continents, oceans, and property detectives",
   },
   {
-    emoji: "🎨",
-    label: "Complementary Colors",
-    desc: "Ocean-and-sun art plus music time",
+    emoji: "🍳",
+    label: "Omelette Bar",
+    desc: "Independent chop, whisk, flip, and serve",
   },
 ];
 
 export const SCHOOL_YEAR_LATEST_UPPER = [
   {
     emoji: "➗",
-    label: "Division Foundations",
-    desc: "Groups-of thinking with manipulatives",
+    label: "Division",
+    desc: "Remainders linked back to multiplication",
   },
   {
     emoji: "✏️",
-    label: "How-To Writing",
-    desc: "Procedural PB&J directions for readers",
+    label: "Sensory Writing",
+    desc: "Nouns plus vivid kitchen descriptions",
   },
   {
-    emoji: "🫖",
-    label: "Clay & Buddies",
-    desc: "First clay lesson and cross-grade buddies",
+    emoji: "🥚",
+    label: "Sage Field Eggs",
+    desc: "Farm-fresh omelettes students built themselves",
   },
   {
-    emoji: "🥗",
-    label: "Harvest Quinoa Bowls",
-    desc: "Cooking with sequencing and teamwork",
+    emoji: "🎃",
+    label: "Pumpkin Mosaic",
+    desc: "Seasonal art and long E spelling",
   },
 ];
 
 export const SCHOOL_YEAR_LATEST_CARD = {
-  week: 6,
-  dates: "Sep 21–25",
-  theme: "Fall Wonder & At the Zoo",
-  href: "/highlights/school-year/week-6",
-  coverImage: `${BASE}/CFFE7C16-F58B-4392-A325-165B53D36776.JPG`,
+  week: 7,
+  dates: "Sep 28–Oct 2",
+  theme: "October Inquiry & Camping Adventures",
+  href: "/highlights/school-year/week-7",
+  coverImage: `${BASE}/81893DBE-4D91-4B49-B3B6-70F6E5CE5C48.JPG`,
 };
