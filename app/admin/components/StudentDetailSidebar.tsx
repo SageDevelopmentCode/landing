@@ -21,11 +21,10 @@ import {
   ChevronUp,
   Trash2,
   ExternalLink,
-  Clock,
-  Car,
 } from 'lucide-react'
 import type { FileObject } from '@supabase/storage-js'
 import type { StudentAuthorizedPickupPerson } from '../../actions/getAdminEnrollmentData'
+import { AdminAuthorizedPickupEditor } from './AdminAuthorizedPickupEditor'
 
 type Student = {
   id: string
@@ -516,46 +515,6 @@ function MedicationsPanel({ medications, plan }: {
   )
 }
 
-function AuthorizedPickupPanel({ persons, effectiveUntil }: {
-  persons: StudentAuthorizedPickupPerson[]
-  effectiveUntil?: string | null
-}) {
-  if (persons.length === 0) {
-    return <p style={{ fontSize: 12, color: '#94A3B8', padding: '4px 0' }}>No authorized pickup persons on file.</p>
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
-      {effectiveUntil && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-          <Clock size={11} color="#94A3B8" />
-          <span style={{ fontSize: 11, color: '#94A3B8' }}>Effective until: {effectiveUntil}</span>
-        </div>
-      )}
-      {persons.map((p, i) => (
-        <div key={i} style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '10px 12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#1E293B' }}>{p.full_name}</span>
-            <span style={{ fontSize: 11, color: '#4A6354', fontWeight: 500 }}>{p.relationship}</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {p.phone && <span style={{ fontSize: 11, color: '#475569' }}>{p.phone}</span>}
-            {p.email && <span style={{ fontSize: 11, color: '#475569' }}>{p.email}</span>}
-            {p.vehicle_info && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                <Car size={11} color="#94A3B8" />
-                <span style={{ fontSize: 11, color: '#94A3B8' }}>
-                  {p.vehicle_info}{p.license_plate_state ? ` · ${p.license_plate_state}` : ''}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 export function StudentDetailSidebar({ student, loading, onClose, onStudentDeleted }: StudentDetailSidebarProps) {
   const dob =
     student?.dob_month && student?.dob_day && student?.dob_year
@@ -573,6 +532,8 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
   const [medicationPlan, setMedicationPlan] = useState<{ emergency_procedure?: string | null; special_instructions?: string | null } | null>(null)
   const [pickupPersons, setPickupPersons] = useState<StudentAuthorizedPickupPerson[]>([])
   const [pickupEffectiveUntil, setPickupEffectiveUntil] = useState<string | null>(null)
+  const [pickupDateOfRequest, setPickupDateOfRequest] = useState<string | null>(null)
+  const [pickupReloadKey, setPickupReloadKey] = useState(0)
   const [immunizationCount, setImmunizationCount] = useState<number | null>(null)
 
   useEffect(() => {
@@ -601,6 +562,7 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
       if (pickupData) {
         setPickupPersons(pickupData.persons ?? [])
         setPickupEffectiveUntil(pickupData.plan?.effective_until ?? null)
+        setPickupDateOfRequest(pickupData.plan?.date_of_request ?? null)
       }
       setImmunizationCount(data.immunizationFileCountByStudent[student.id] ?? 0)
       setEnrollmentLoading(false)
@@ -623,6 +585,19 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
     } else {
       setDeleteError(result.error ?? 'Failed to delete student')
     }
+  }
+
+  const reloadPickupData = () => {
+    if (!student) return
+    getAdminEnrollmentData(student.parent_id, [student.id]).then((data) => {
+      const pickupData = data.authorizedPickupByStudent[student.id]
+      if (pickupData) {
+        setPickupPersons(pickupData.persons ?? [])
+        setPickupEffectiveUntil(pickupData.plan?.effective_until ?? null)
+        setPickupDateOfRequest(pickupData.plan?.date_of_request ?? null)
+        setPickupReloadKey((k) => k + 1)
+      }
+    })
   }
 
   const togglePanel = (panel: ActivePanel) => {
@@ -903,7 +878,15 @@ export function StudentDetailSidebar({ student, loading, onClose, onStudentDelet
                 <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#2563EB', marginBottom: 10 }}>
                   Authorized Pickup Persons
                 </p>
-                <AuthorizedPickupPanel persons={pickupPersons} effectiveUntil={pickupEffectiveUntil} />
+                <AdminAuthorizedPickupEditor
+                  key={`${student.id}-${pickupReloadKey}`}
+                  parentId={student.parent_id}
+                  studentId={student.id}
+                  persons={pickupPersons}
+                  dateOfRequest={pickupDateOfRequest}
+                  effectiveUntil={pickupEffectiveUntil}
+                  onSaved={reloadPickupData}
+                />
               </div>
             )}
 

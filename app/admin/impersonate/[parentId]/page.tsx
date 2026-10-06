@@ -257,6 +257,7 @@ export default async function ImpersonateParentPage({
             healthStatementByStudent={healthStatementByStudent}
             religiousExemptionCountByStudent={religiousExemptionCountByStudent}
             profileImageByStudent={{}}
+            readOnlyPreview
           />
         </div>
       </div>

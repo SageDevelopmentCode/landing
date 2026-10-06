@@ -16,12 +16,12 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/highlights/school_week_six/CFFE7C16-F58B-4392-A325-165B53D36776.JPG",
-    title: "School Year Week 6 Highlights Are Live!",
+    image: "/assets/highlights/school_week_seven/81893DBE-4D91-4B49-B3B6-70F6E5CE5C48.JPG",
+    title: "School Year Week 7 Highlights Are Live!",
     description:
-      "Fall nature walks, division with manipulatives, states of matter, procedural writing, and an At the Zoo Field Friday.",
-    buttonLabel: "View Week 6 Recap →",
-    buttonHref: "/highlights/school-year/week-6",
+      "Found-material inquiry, division with remainders, globes and matter detectives, farm-fresh omelettes, and Camping Adventures Field Friday.",
+    buttonLabel: "View Week 7 Recap →",
+    buttonHref: "/highlights/school-year/week-7",
   },
   {
     image: "/assets/Stock4.jpg",
