@@ -9,7 +9,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import WeekRecapPreview from "../components/WeekRecapPreview";
-import CampingHeroScene, { CAMPING_THEME } from "./components/CampingHeroScene";
+import WizardHeroScene, { WIZARD_THEME } from "./components/WizardHeroScene";
 import { formatPhone } from "../utils/formatPhone";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
 
@@ -49,46 +49,38 @@ const CAROUSEL_IMAGES = [
   "/assets/highlights/school_week_four/E10B5084-3A5E-44CC-B113-2CD6FD96A460.JPG",
 ];
 
-const CAMPING_ADVENTURES_ACTIVITIES = [
+const WIZARD_ACADEMY_ACTIVITIES = [
   {
-    emoji: "🍫",
-    title: "S’mores",
-    waypoint: "Campfire Circle",
-    desc: "Kids will make and eat s’mores.",
-    accent: "#F6D7A8",
-    accentText: "#3E6B45",
+    emoji: "🪄",
+    title: "Make your own wizard wand",
+    waypoint: "Wand Workshop",
+    desc: "Decorate a wand with stars, ribbon, and gems to take home.",
+    accent: "#E8D9FF",
+    accentText: "#5C3D8F",
   },
   {
-    emoji: "🎨",
-    title: "Campfire Painting",
-    waypoint: "Paint Grove",
-    desc: "Paint a campfire scene to take home.",
-    accent: "#FFF6E8",
-    accentText: "#B4532A",
+    emoji: "🧪",
+    title: "Potion lab",
+    waypoint: "Potion Lab",
+    desc: "Mix colorful potions and watch them fizz and change.",
+    accent: "#F7F2FF",
+    accentText: "#7B4BB0",
   },
   {
-    emoji: "🦉",
-    title: "Owl Pinecones",
-    waypoint: "Pinecone Perch",
-    desc: "Craft owl pinecones to take home.",
-    accent: "#F3E6C8",
-    accentText: "#3F2E24",
+    emoji: "🧴",
+    title: "BYO potion",
+    waypoint: "BYO Station",
+    desc: "Build your own potion — pick colors, glitter, and mix-ins.",
+    accent: "#FFF8E7",
+    accentText: "#C4A35A",
   },
   {
-    emoji: "🎯",
-    title: "Campfire Bingo",
-    waypoint: "Bingo Ring",
-    desc: "Play campfire bingo.",
-    accent: "#FFF9E1",
-    accentText: "#C45C26",
-  },
-  {
-    emoji: "🎒",
-    title: "What’s in My Camping Bag?",
-    waypoint: "Mystery Bag",
-    desc: "Kids take turns reaching inside a bag of random camping items and try guessing the item without looking.",
-    accent: "#F6D7A8",
-    accentText: "#3E6B45",
+    emoji: "🎩",
+    title: "Wizard hat",
+    waypoint: "Hat Hall",
+    desc: "Make a pointed wizard hat to wear for the day.",
+    accent: "#E8D9FF",
+    accentText: "#2E2444",
   },
 ];
 
@@ -100,7 +92,7 @@ const PACKING_LIST = [
   { emoji: "🥪", item: "Snack + lunch from home" },
   { emoji: "👕", item: "Old clothes for outdoor play" },
   { emoji: "🎒", item: "Small backpack for paintings & creations" },
-  { emoji: "🧣", item: "Optional bandana or explorer vest" },
+  { emoji: "🪄", item: "Optional wizard cape or favorite magic accessory" },
 ];
 
 const ACTIVITIES = [
@@ -131,11 +123,11 @@ const RISKS = [
 ];
 
 const inputClass =
-  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#B4532A] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
+  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#7B4BB0] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-bold text-[#B4532A]/70 uppercase tracking-wider mt-6 mb-3 font-body">
+    <p className="text-xs font-bold text-[#7B4BB0]/70 uppercase tracking-wider mt-6 mb-3 font-body">
       {children}
     </p>
   );
@@ -256,7 +248,7 @@ export default function FieldDayFridayPage() {
   }, []);
 
   useEffect(() => {
-    const target = new Date("2026-10-02T08:30:00-05:00");
+    const target = new Date("2026-10-09T08:30:00-05:00");
     const tick = () => {
       const diff = target.getTime() - Date.now();
       if (diff <= 0) return;
@@ -377,13 +369,64 @@ export default function FieldDayFridayPage() {
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         .desert-headline {
-          color: ${CAMPING_THEME.inkBrown};
-          text-shadow: 0 2px 16px rgba(255, 200, 140, 0.45);
+          color: ${WIZARD_THEME.inkBrown};
+          text-shadow: 0 2px 16px rgba(196, 163, 90, 0.45);
         }
         .letter-drop span {
           display: inline-block;
           opacity: 0;
           animation: letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+        @keyframes wizard-sheen {
+          0%, 62%, 100% { background-position: 0% 50%; }
+          38% { background-position: 100% 50%; }
+        }
+        .wizard-sheen {
+          background-image: linear-gradient(110deg, #2E2444 0%, #2E2444 38%, #E8C872 50%, #2E2444 62%, #2E2444 100%);
+          background-size: 220% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: wizard-sheen 7s ease-in-out infinite;
+        }
+        @keyframes wizard-cta-glow {
+          0%, 100% { box-shadow: 0 10px 24px rgba(92, 61, 143, 0.28); }
+          50% { box-shadow: 0 14px 32px rgba(196, 163, 90, 0.48); }
+        }
+        .wizard-cta { animation: wizard-cta-glow 2.8s ease-in-out infinite; }
+        .wizard-cta:disabled { animation: none; }
+        .wizard-hero-card {
+          box-shadow: 0 24px 60px rgba(92, 61, 143, 0.14), 0 0 0 1px rgba(196, 163, 90, 0.4);
+        }
+        .flip-face { transition: box-shadow 0.3s ease; }
+        .flip-card:hover .flip-face {
+          box-shadow: 0 18px 40px rgba(123, 75, 176, 0.22);
+        }
+        @keyframes spell-ring {
+          0% { box-shadow: 0 0 0 0 rgba(196, 163, 90, 0.55); }
+          100% { box-shadow: 0 0 0 18px rgba(196, 163, 90, 0); }
+        }
+        .flip-card.is-revealed::after {
+          content: "";
+          position: absolute;
+          top: 22px;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          border-radius: 24px;
+          pointer-events: none;
+          animation: spell-ring 0.75s ease-out;
+        }
+        .wizard-pip {
+          width: 10px;
+          height: 10px;
+          border-radius: 999px;
+          background: rgba(123, 75, 176, 0.2);
+          transition: background 0.3s ease, transform 0.3s ease;
+        }
+        .wizard-pip.on {
+          background: #C4A35A;
+          transform: scale(1.15);
         }
         .flip-card-inner { transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); }
         .flip-card:hover .flip-card-inner,
@@ -405,8 +448,8 @@ export default function FieldDayFridayPage() {
           width: 2px;
           background: repeating-linear-gradient(
             180deg,
-            ${CAMPING_THEME.terracotta} 0,
-            ${CAMPING_THEME.terracotta} 8px,
+            ${WIZARD_THEME.terracotta} 0,
+            ${WIZARD_THEME.terracotta} 8px,
             transparent 8px,
             transparent 16px
           );
@@ -416,12 +459,20 @@ export default function FieldDayFridayPage() {
         }
         @media (prefers-reduced-motion: reduce) {
           .letter-drop span { animation: none !important; opacity: 1 !important; transform: none !important; }
+          .wizard-sheen {
+            animation: none !important;
+            background: none !important;
+            color: ${WIZARD_THEME.inkBrown} !important;
+            -webkit-text-fill-color: ${WIZARD_THEME.inkBrown} !important;
+          }
+          .wizard-cta { animation: none !important; }
+          .flip-card.is-revealed::after { animation: none !important; }
         }
       `}</style>
 
       <div
         className={`${bebasNeue.variable} ${rye.variable} min-h-screen overflow-x-hidden`}
-        style={{ background: CAMPING_THEME.skyPeach }}
+        style={{ background: WIZARD_THEME.skyPeach }}
       >
         <Navbar />
 
@@ -430,7 +481,7 @@ export default function FieldDayFridayPage() {
           ref={heroRef}
           className="relative pt-20 overflow-hidden min-h-[620px] sm:min-h-[680px] lg:min-h-[720px]"
         >
-          <CampingHeroScene duneParallaxX={duneParallaxX} />
+          <WizardHeroScene duneParallaxX={duneParallaxX} />
 
           <div className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-10 lg:py-14 flex flex-col lg:flex-row items-center gap-10 lg:gap-12 z-10">
             <motion.div
@@ -439,7 +490,7 @@ export default function FieldDayFridayPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="rounded-3xl border border-white/60 bg-white/75 backdrop-blur-md shadow-xl px-6 sm:px-8 py-8 sm:py-10">
+              <div className="rounded-3xl border border-white/70 bg-white/80 backdrop-blur-md wizard-hero-card px-6 sm:px-8 py-8 sm:py-10">
                 <motion.h1
                   className="font-heading font-bold leading-[1.05] mb-3 text-center lg:text-left"
                   initial={{ opacity: 0, y: 20 }}
@@ -447,20 +498,20 @@ export default function FieldDayFridayPage() {
                   transition={{ delay: 0.15, duration: 0.55 }}
                 >
                   <span
-                    className="block desert-headline"
+                    className="block desert-headline wizard-sheen"
                     style={{
                       fontSize: "clamp(2.8rem, 7vw, 4.8rem)",
                       fontFamily: "var(--font-bebas-neue), sans-serif",
                       letterSpacing: "0.04em",
                     }}
                   >
-                    Camping Adventures
+                    Wizard Academy
                   </span>
                   <span
                     className="letter-drop block"
                     style={{
                       fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                      color: CAMPING_THEME.duneDeep,
+                      color: WIZARD_THEME.duneDeep,
                     }}
                   >
                     {Array.from("Field Day").map((ch, i) => (
@@ -473,12 +524,12 @@ export default function FieldDayFridayPage() {
 
                 <motion.p
                   className="text-base sm:text-lg font-body leading-relaxed mb-6 max-w-md mx-auto lg:mx-0"
-                  style={{ color: CAMPING_THEME.inkBrown }}
+                  style={{ color: WIZARD_THEME.inkBrown }}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25, duration: 0.5 }}
                 >
-                  Make s’mores, paint by the campfire, craft owl pinecones, play campfire bingo, and guess what’s in the camping bag.
+                  Craft a wand, mix potions, and wear your wizard hat at Sage Field.
                 </motion.p>
 
                 <motion.div
@@ -488,7 +539,7 @@ export default function FieldDayFridayPage() {
                   transition={{ delay: 0.3, duration: 0.45 }}
                 >
                   {[
-                    { icon: "📅", text: "Oct 2, 2026" },
+                    { icon: "📅", text: "Oct 9, 2026" },
                     { icon: "🕗", text: "Drop-off 8:30 AM" },
                     { icon: "🕒", text: "Pick-up 1:30 PM" },
                     { icon: "👧", text: "Ages 4–11" },
@@ -496,8 +547,8 @@ export default function FieldDayFridayPage() {
                   ].map((pill) => (
                     <span
                       key={pill.text}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#E8A04A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
-                      style={{ color: CAMPING_THEME.inkBrown }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#C4A35A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
+                      style={{ color: WIZARD_THEME.inkBrown }}
                     >
                       {pill.icon} {pill.text}
                     </span>
@@ -517,13 +568,13 @@ export default function FieldDayFridayPage() {
                   ].map(({ val, label }) => (
                     <div
                       key={label}
-                      className="flex flex-col items-center px-3 py-2 bg-white/90 border border-[#E8A04A]/30 rounded-xl min-w-12"
+                      className="flex flex-col items-center px-3 py-2 bg-white/90 border border-[#C4A35A]/30 rounded-xl min-w-12"
                     >
                       <AnimatePresence mode="popLayout">
                         <motion.span
                           key={`${label}-${val}`}
                           className="text-xl font-bold font-heading tabular-nums"
-                          style={{ color: CAMPING_THEME.inkBrown }}
+                          style={{ color: WIZARD_THEME.inkBrown }}
                           initial={{ opacity: 0, y: -10, scale: 0.8 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10 }}
@@ -532,13 +583,13 @@ export default function FieldDayFridayPage() {
                           {String(val).padStart(2, "0")}
                         </motion.span>
                       </AnimatePresence>
-                      <span className="text-[10px] font-body uppercase tracking-wide" style={{ color: CAMPING_THEME.duneDeep }}>
+                      <span className="text-[10px] font-body uppercase tracking-wide" style={{ color: WIZARD_THEME.duneDeep }}>
                         {label}
                       </span>
                     </div>
                   ))}
-                  <span className="text-xs font-body pl-1" style={{ color: CAMPING_THEME.duneDeep }}>
-                    until camp day
+                  <span className="text-xs font-body pl-1" style={{ color: WIZARD_THEME.duneDeep }}>
+                    until academy day
                   </span>
                 </motion.div>
 
@@ -550,17 +601,17 @@ export default function FieldDayFridayPage() {
                 >
                   <button
                     onClick={scrollToForm}
-                    className="px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
+                    className="wizard-cta px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
                     style={{
-                      background: `linear-gradient(135deg, ${CAMPING_THEME.duneDeep} 0%, ${CAMPING_THEME.terracotta} 100%)`,
+                      background: `linear-gradient(135deg, ${WIZARD_THEME.duneDeep} 0%, ${WIZARD_THEME.terracotta} 100%)`,
                     }}
                   >
-                    Join the Campout →
+                    Join the Academy →
                   </button>
                   <a
                     href="#what-we-do"
-                    className="px-7 py-4 bg-white border-2 font-bold rounded-2xl hover:bg-[#FFF6E8] transition-all duration-200 font-body text-sm text-center"
-                    style={{ borderColor: CAMPING_THEME.duneMid, color: CAMPING_THEME.inkBrown }}
+                    className="px-7 py-4 bg-white border-2 font-bold rounded-2xl hover:bg-[#F7F2FF] transition-all duration-200 font-body text-sm text-center"
+                    style={{ borderColor: WIZARD_THEME.duneMid, color: WIZARD_THEME.inkBrown }}
                   >
                     See the Activities ↓
                   </a>
@@ -598,19 +649,19 @@ export default function FieldDayFridayPage() {
                   <div className="relative w-full aspect-square overflow-hidden">
                     <Image src={HERO_IMAGES[0]} alt="Students at Sage Field" fill className="object-cover" sizes="208px" priority />
                   </div>
-                  <p className="text-center text-[10px] font-body mt-1 tracking-wide uppercase" style={{ color: CAMPING_THEME.terracotta }}>
-                    Camping Adventures · Oct 2
+                  <p className="text-center text-[10px] font-body mt-1 tracking-wide uppercase" style={{ color: WIZARD_THEME.terracotta }}>
+                    Wizard Academy · Oct 9
                   </p>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          <WaveDivider fill={CAMPING_THEME.skyPeach} fromColor="transparent" />
+          <WaveDivider fill={WIZARD_THEME.skyPeach} fromColor="transparent" />
         </section>
 
         {/* ─── PHOTO STRIP ──────────────────────────────────────────────────── */}
-        <div className="pb-2" style={{ background: CAMPING_THEME.skyPeach }}>
+        <div className="pb-2" style={{ background: WIZARD_THEME.skyPeach }}>
           <div
             ref={galleryRef}
             className="overflow-x-auto flex gap-3 px-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] py-4"
@@ -637,7 +688,7 @@ export default function FieldDayFridayPage() {
         <section
           id="what-we-do"
           className="py-20 px-6 sm:px-12 lg:px-16"
-          style={{ background: "#FFF6E8" }}
+          style={{ background: "#F7F2FF" }}
         >
           <div className="max-w-6xl mx-auto">
             {/* Header */}
@@ -649,37 +700,63 @@ export default function FieldDayFridayPage() {
               transition={{ duration: 0.5 }}
             >
               <span
-                className="inline-block px-5 py-2 bg-[#B4532A]/10 text-[#B4532A] text-sm font-bold rounded-full mb-5 font-body"
+                className="inline-block px-5 py-2 bg-[#7B4BB0]/10 text-[#7B4BB0] text-sm font-bold rounded-full mb-5 font-body"
                 style={{ fontFamily: "var(--font-rye), serif" }}
               >
-                🏕️ This Friday&apos;s Theme
+                🪄 This Friday&apos;s Theme
               </span>
               <h2
                 className="font-heading font-bold text-slate-800 mb-3 leading-tight"
                 style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
               >
-                Five Hours at Camp
+                Five Hours at the Academy
               </h2>
               <p className="text-base text-slate-500 font-body max-w-3xl mx-auto">
-                S’mores · Campfire Painting · Owl Pinecones · Campfire Bingo · What’s in My Camping Bag?
+                Make your own wizard wand · Potion lab · BYO potion · Wizard hat
               </p>
+              <div className="mt-6 flex flex-col items-center gap-3">
+                <p className="text-xs font-semibold font-body uppercase tracking-wide" style={{ color: WIZARD_THEME.duneDeep }}>
+                  {flippedCards.size === WIZARD_ACADEMY_ACTIVITIES.length
+                    ? "Every station is open"
+                    : `Tap a station · ${flippedCards.size} of ${WIZARD_ACADEMY_ACTIVITIES.length}`}
+                </p>
+                <div className="flex items-center gap-2" aria-hidden>
+                  {WIZARD_ACADEMY_ACTIVITIES.map((activity, i) => (
+                    <span
+                      key={activity.title}
+                      className={`wizard-pip${flippedCards.has(i) ? " on" : ""}`}
+                    />
+                  ))}
+                </div>
+                {flippedCards.size === WIZARD_ACADEMY_ACTIVITIES.length && (
+                  <button
+                    type="button"
+                    onClick={scrollToForm}
+                    className="wizard-cta mt-1 px-5 py-2.5 text-white text-sm font-bold font-body rounded-xl cursor-pointer"
+                    style={{ background: `linear-gradient(135deg, ${WIZARD_THEME.duneDeep} 0%, ${WIZARD_THEME.terracotta} 100%)` }}
+                  >
+                    Reserve a spot →
+                  </button>
+                )}
+              </div>
             </motion.div>
 
             {/* Activity cards — expedition trail + flip on hover */}
             <div className="expedition-trail-desktop hidden sm:flex sm:flex-wrap sm:justify-center gap-5 mb-12">
-              {CAMPING_ADVENTURES_ACTIVITIES.map((activity, i) => (
+              {WIZARD_ACADEMY_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={activity.title}
-                  className="flip-card relative cursor-pointer sm:w-[calc(50%-0.625rem)] lg:w-[calc((100%-2.5rem)/3)]"
+                  className={`flip-card relative cursor-pointer sm:w-[calc(50%-0.625rem)]${flippedCards.has(i) ? " is-revealed" : ""}`}
                   style={{ perspective: "800px", minHeight: "240px" }}
                   initial={{ opacity: 0, y: 20, x: i % 2 === 0 ? -20 : 20 }}
                   whileInView={{ opacity: 1, y: 0, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: 0.1 * i }}
-                  whileTap={{ scale: [1, 1.08, 1] }}
+                  whileHover={{ y: -6 }}
+                  whileTap={{ scale: [1, 1.04, 1] }}
                   onClick={() => handleCardFlip(i)}
                 >
-                  <p className="text-[10px] font-bold text-[#B4532A]/80 uppercase tracking-wider text-center mb-2 font-body">
+                  <p className="text-[10px] font-bold text-[#7B4BB0]/80 uppercase tracking-wider text-center mb-2 font-body">
                     {activity.waypoint}
                   </p>
                   <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "240px" }}>
@@ -703,14 +780,14 @@ export default function FieldDayFridayPage() {
                     </div>
                     {/* Back face */}
                     <div
-                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#B4532A]/30"
-                      style={{ background: CAMPING_THEME.inkBrown }}
+                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#7B4BB0]/30"
+                      style={{ background: WIZARD_THEME.inkBrown }}
                     >
                       <span className="text-4xl">{activity.emoji}</span>
-                      <h3 className="font-heading font-bold text-[#F6D7A8] text-base leading-tight">
+                      <h3 className="font-heading font-bold text-[#E8D9FF] text-base leading-tight">
                         {activity.title}
                       </h3>
-                      <p className="text-sm text-[#F6D7A8]/90 font-body leading-relaxed">
+                      <p className="text-sm text-[#E8D9FF]/90 font-body leading-relaxed">
                         {activity.desc}
                       </p>
                     </div>
@@ -721,19 +798,20 @@ export default function FieldDayFridayPage() {
 
             {/* Mobile: vertical expedition trail */}
             <div className="expedition-trail-mobile sm:hidden grid grid-cols-1 gap-8 mb-12 px-4">
-              {CAMPING_ADVENTURES_ACTIVITIES.map((activity, i) => (
+              {WIZARD_ACADEMY_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={`mobile-${activity.title}`}
-                  className="flip-card relative cursor-pointer"
+                  className={`flip-card relative cursor-pointer${flippedCards.has(i) ? " is-revealed" : ""}`}
                   style={{ perspective: "800px", minHeight: "240px" }}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.45, delay: 0.1 * i }}
-                  whileTap={{ scale: [1, 1.08, 1] }}
+                  whileHover={{ y: -6 }}
+                  whileTap={{ scale: [1, 1.04, 1] }}
                   onClick={() => handleCardFlip(i)}
                 >
-                  <p className="text-[10px] font-bold text-[#B4532A]/80 uppercase tracking-wider text-center mb-2 font-body">
+                  <p className="text-[10px] font-bold text-[#7B4BB0]/80 uppercase tracking-wider text-center mb-2 font-body">
                     {activity.waypoint}
                   </p>
                   <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "240px" }}>
@@ -747,10 +825,10 @@ export default function FieldDayFridayPage() {
                         <p className="text-[11px] text-slate-400 font-body">tap to learn more ✦</p>
                       </div>
                     </div>
-                    <div className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#B4532A]/30" style={{ background: CAMPING_THEME.inkBrown }}>
+                    <div className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#7B4BB0]/30" style={{ background: WIZARD_THEME.inkBrown }}>
                       <span className="text-4xl">{activity.emoji}</span>
-                      <h3 className="font-heading font-bold text-[#F6D7A8] text-base leading-tight">{activity.title}</h3>
-                      <p className="text-sm text-[#F6D7A8]/90 font-body leading-relaxed">{activity.desc}</p>
+                      <h3 className="font-heading font-bold text-[#E8D9FF] text-base leading-tight">{activity.title}</h3>
+                      <p className="text-sm text-[#E8D9FF]/90 font-body leading-relaxed">{activity.desc}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -761,7 +839,7 @@ export default function FieldDayFridayPage() {
             <motion.div
               className="rounded-3xl p-6 flex flex-wrap gap-4 justify-center"
               style={{
-                background: "linear-gradient(135deg, #F6D7A8 0%, #fef3c7 100%)",
+                background: "linear-gradient(135deg, #E8D9FF 0%, #FFF8E7 100%)",
               }}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -787,7 +865,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave into recap */}
-        <div style={{ background: "#FFF6E8", marginBottom: "-1px" }}>
+        <div style={{ background: "#F7F2FF", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -797,16 +875,16 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
-              fill={CAMPING_THEME.duneLight}
+              fill={WIZARD_THEME.duneLight}
             />
           </svg>
         </div>
 
         {/* ─── WEEK RECAP ───────────────────────────────────────────────────── */}
-        <WeekRecapPreview className="bg-[#FFF6E8]" variant="light" />
+        <WeekRecapPreview className="bg-[#F7F2FF]" variant="light" />
 
         {/* Wave out of recap */}
-        <div style={{ background: "#FFF6E8", marginTop: "-1px", marginBottom: "-1px" }}>
+        <div style={{ background: "#F7F2FF", marginTop: "-1px", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -816,7 +894,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill={CAMPING_THEME.skyPeach}
+              fill={WIZARD_THEME.skyPeach}
             />
           </svg>
         </div>
@@ -826,7 +904,7 @@ export default function FieldDayFridayPage() {
           id="reserve"
           className="py-20 px-3 sm:px-12 lg:px-16"
           style={{
-            background: `linear-gradient(180deg, ${CAMPING_THEME.skyPeach} 0%, ${CAMPING_THEME.duneLight} 100%)`,
+            background: `linear-gradient(180deg, ${WIZARD_THEME.skyPeach} 0%, ${WIZARD_THEME.duneLight} 100%)`,
           }}
         >
           <div ref={formRef} className="max-w-xl mx-auto">
@@ -838,23 +916,23 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-5xl mb-3">🏕️</div>
+              <div className="text-5xl mb-3">🪄</div>
               <h2
                 className="font-heading font-bold mb-2"
-                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)", color: CAMPING_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)", color: WIZARD_THEME.inkBrown }}
               >
                 Reserve Your Spot
               </h2>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#F6D7A8] rounded-full mb-3">
-                <span className="text-[#B4532A] font-bold font-body text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#E8D9FF] rounded-full mb-3">
+                <span className="text-[#7B4BB0] font-bold font-body text-sm">
                   {`$${FRIDAY_DROPIN_DOLLARS} per child`}
                 </span>
-                <span className="text-[#C45C26]">·</span>
-                <span className="text-[#2A2018] font-body text-sm">
+                <span className="text-[#5C3D8F]">·</span>
+                <span className="text-[#2E2444] font-body text-sm">
                   No enrollment required
                 </span>
-                <span className="text-[#C45C26]">·</span>
-                <span className="text-[#2A2018] font-body text-sm">
+                <span className="text-[#5C3D8F]">·</span>
+                <span className="text-[#2E2444] font-body text-sm">
                   Limited spots
                 </span>
               </div>
@@ -865,8 +943,8 @@ export default function FieldDayFridayPage() {
                   key="form"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#F6D7A8]"
-                  style={{ borderTop: "4px solid #B4532A" }}
+                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#E8D9FF]"
+                  style={{ borderTop: "4px solid #7B4BB0" }}
                 >
                   <SectionLabel>Your Info</SectionLabel>
                   <div className="space-y-4">
@@ -926,7 +1004,7 @@ export default function FieldDayFridayPage() {
                         className="rounded-2xl border border-stone-200 bg-stone-50/50 p-4 space-y-3"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-bold text-[#B4532A]/70 font-body uppercase tracking-wide">
+                          <p className="text-xs font-bold text-[#7B4BB0]/70 font-body uppercase tracking-wide">
                             Child {i + 1}
                           </p>
                           {children.length > 1 && (
@@ -980,8 +1058,8 @@ export default function FieldDayFridayPage() {
                     </button>
 
                     {children.length > 1 && (
-                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#F6D7A8] rounded-xl">
-                        <span className="text-sm font-bold text-[#B4532A] font-body">
+                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#E8D9FF] rounded-xl">
+                        <span className="text-sm font-bold text-[#7B4BB0] font-body">
                           {children.length} children · ${totalBase} total
                         </span>
                       </div>
@@ -1082,7 +1160,7 @@ export default function FieldDayFridayPage() {
                         <div
                           className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                             checked
-                              ? "bg-[#B4532A] border-[#B4532A]"
+                              ? "bg-[#7B4BB0] border-[#7B4BB0]"
                               : "border-stone-300 bg-white"
                           }`}
                         >
@@ -1118,7 +1196,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("card")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "card"
-                            ? "border-[#B4532A] bg-[#F6D7A8] text-[#B4532A]"
+                            ? "border-[#7B4BB0] bg-[#E8D9FF] text-[#7B4BB0]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1129,7 +1207,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("ach")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "ach"
-                            ? "border-[#B4532A] bg-[#F6D7A8] text-[#B4532A]"
+                            ? "border-[#7B4BB0] bg-[#E8D9FF] text-[#7B4BB0]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1145,7 +1223,7 @@ export default function FieldDayFridayPage() {
                       <div
                         className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                           coverFees
-                            ? "bg-[#B4532A] border-[#B4532A]"
+                            ? "bg-[#7B4BB0] border-[#7B4BB0]"
                             : "border-stone-300 bg-white"
                         }`}
                         onClick={() => setCoverFees((v) => !v)}
@@ -1185,7 +1263,7 @@ export default function FieldDayFridayPage() {
                         {agreementSigned ? (
                           <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         ) : (
-                          <PenLine className="w-5 h-5 text-[#B4532A] flex-shrink-0" />
+                          <PenLine className="w-5 h-5 text-[#7B4BB0] flex-shrink-0" />
                         )}
                         <div>
                           <p className="text-sm font-bold font-heading text-slate-800">
@@ -1221,15 +1299,15 @@ export default function FieldDayFridayPage() {
                       type="button"
                       onClick={handleSubmit}
                       disabled={!isFormValid || !agreementSigned || submitting}
-                      className="w-full px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
+                      className="w-full wizard-cta px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
                       style={{
                         background:
-                          "linear-gradient(135deg, #C45C26 0%, #B4532A 100%)",
+                          "linear-gradient(135deg, #5C3D8F 0%, #7B4BB0 100%)",
                       }}
                     >
                       {submitting
                         ? "Submitting…"
-                        : `🏕️ Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
+                        : `🪄 Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
                     </button>
                   </motion.div>
                 </motion.div>
@@ -1238,7 +1316,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave before packing list */}
-        <div style={{ background: CAMPING_THEME.skyPeach, marginBottom: "-1px" }}>
+        <div style={{ background: WIZARD_THEME.skyPeach, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1248,7 +1326,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
-              fill={CAMPING_THEME.duneMid}
+              fill={WIZARD_THEME.duneMid}
             />
           </svg>
         </div>
@@ -1256,7 +1334,7 @@ export default function FieldDayFridayPage() {
         {/* ─── PACKING LIST ─────────────────────────────────────────────────── */}
         <section
           className="py-16 px-6 sm:px-12 lg:px-16"
-          style={{ background: CAMPING_THEME.duneLight }}
+          style={{ background: WIZARD_THEME.duneLight }}
         >
           <div className="max-w-3xl mx-auto">
             <motion.div
@@ -1269,12 +1347,12 @@ export default function FieldDayFridayPage() {
               <div className="text-4xl mb-3">🧭</div>
               <h2
                 className="font-heading font-bold"
-                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", color: CAMPING_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", color: WIZARD_THEME.inkBrown }}
               >
                 Expedition Checklist
               </h2>
-              <p className="text-sm font-body mt-1" style={{ color: `${CAMPING_THEME.inkBrown}99` }}>
-                Tap each item to check it off — don&apos;t forget anything for Camping Adventures!
+              <p className="text-sm font-body mt-1" style={{ color: `${WIZARD_THEME.inkBrown}99` }}>
+                Tap each item to check it off — don&apos;t forget anything for Wizard Academy!
               </p>
             </motion.div>
 
@@ -1288,8 +1366,8 @@ export default function FieldDayFridayPage() {
                     onClick={() => togglePacking(i)}
                     className={`flex items-center gap-4 rounded-2xl px-5 py-4 shadow-sm border transition-all duration-200 cursor-pointer select-none ${
                       isChecked
-                        ? "bg-[#F6D7A8] border-[#B4532A] opacity-70"
-                        : "bg-white border-[#F6D7A8] hover:shadow-md hover:-translate-y-0.5"
+                        ? "bg-[#E8D9FF] border-[#7B4BB0] opacity-70"
+                        : "bg-white border-[#E8D9FF] hover:shadow-md hover:-translate-y-0.5"
                     }`}
                     initial={{ opacity: 0, x: -12 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -1302,9 +1380,9 @@ export default function FieldDayFridayPage() {
                       className="w-1 h-8 rounded-full flex-shrink-0 transition-all duration-300"
                       style={{
                         background: isChecked
-                          ? "#B4532A"
+                          ? "#7B4BB0"
                           : i % 2 === 0
-                          ? "#C45C26"
+                          ? "#5C3D8F"
                           : "#5C7A3A",
                       }}
                     />
@@ -1326,10 +1404,10 @@ export default function FieldDayFridayPage() {
             {/* Expedition Ready Progress Bar */}
             <div className="mt-6 mb-2">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold font-body uppercase tracking-wide" style={{ color: CAMPING_THEME.inkBrown }}>
+                <span className="text-xs font-bold font-body uppercase tracking-wide" style={{ color: WIZARD_THEME.inkBrown }}>
                   Expedition Ready
                 </span>
-                <span className="text-xs font-body" style={{ color: `${CAMPING_THEME.inkBrown}99` }}>
+                <span className="text-xs font-body" style={{ color: `${WIZARD_THEME.inkBrown}99` }}>
                   {packingChecked.size} / {PACKING_LIST.length} packed
                 </span>
               </div>
@@ -1340,7 +1418,7 @@ export default function FieldDayFridayPage() {
                   className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{
                     width: `${(packingChecked.size / PACKING_LIST.length) * 100}%`,
-                    background: `linear-gradient(90deg, ${CAMPING_THEME.terracotta} 0%, ${CAMPING_THEME.duneDeep} 50%, ${CAMPING_THEME.duneMid} 100%)`,
+                    background: `linear-gradient(90deg, ${WIZARD_THEME.terracotta} 0%, ${WIZARD_THEME.duneDeep} 50%, ${WIZARD_THEME.duneMid} 100%)`,
                     minWidth: packingChecked.size > 0 ? "20px" : "0px",
                   }}
                 />
@@ -1351,7 +1429,7 @@ export default function FieldDayFridayPage() {
                       left: `calc(${(packingChecked.size / PACKING_LIST.length) * 100}% - 12px)`,
                     }}
                   >
-                    🏕️
+                    🪄
                   </span>
                 )}
               </div>
@@ -1361,24 +1439,24 @@ export default function FieldDayFridayPage() {
               {packingChecked.size === PACKING_LIST.length && (
                 <motion.p
                   className="text-center text-sm font-body mt-5 font-semibold"
-                  style={{ color: CAMPING_THEME.inkBrown }}
+                  style={{ color: WIZARD_THEME.inkBrown }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                 >
-                  🏕️ All packed! See you at camp.
+                  🪄 All packed! See you at the academy.
                 </motion.p>
               )}
             </AnimatePresence>
 
-            <p className="text-sm font-body text-center mt-6" style={{ color: `${CAMPING_THEME.inkBrown}80` }}>
+            <p className="text-sm font-body text-center mt-6" style={{ color: `${WIZARD_THEME.inkBrown}80` }}>
               Questions? Text or call us: (512) 677-5872
             </p>
           </div>
         </section>
 
         {/* Wave before bottom CTA */}
-        <div style={{ background: CAMPING_THEME.duneLight, marginBottom: "-1px" }}>
+        <div style={{ background: WIZARD_THEME.duneLight, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1388,7 +1466,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill={CAMPING_THEME.duneMid}
+              fill={WIZARD_THEME.duneMid}
             />
           </svg>
         </div>
@@ -1397,7 +1475,7 @@ export default function FieldDayFridayPage() {
         <section
           className="py-24 px-6 sm:px-12 lg:px-16 relative overflow-hidden"
           style={{
-            background: `linear-gradient(160deg, ${CAMPING_THEME.duneMid} 0%, ${CAMPING_THEME.duneDeep} 50%, ${CAMPING_THEME.duneMid} 100%)`,
+            background: `linear-gradient(160deg, ${WIZARD_THEME.duneMid} 0%, ${WIZARD_THEME.duneDeep} 50%, ${WIZARD_THEME.duneMid} 100%)`,
           }}
         >
           <div className="max-w-2xl mx-auto text-center relative z-10">
@@ -1407,31 +1485,31 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="text-5xl mb-6 inline-block">🏕️</div>
+              <div className="text-5xl mb-6 inline-block">🪄</div>
               <div className="inline-block px-4 py-1.5 bg-white/60 rounded-full mb-6">
-                <span className="text-xs font-semibold font-body uppercase tracking-wider" style={{ color: CAMPING_THEME.inkBrown }}>
-                  This Friday Only · Oct 2
+                <span className="text-xs font-semibold font-body uppercase tracking-wider" style={{ color: WIZARD_THEME.inkBrown }}>
+                  This Friday Only · Oct 9
                 </span>
               </div>
               <h2
                 className="font-heading font-bold mb-4 leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: CAMPING_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: WIZARD_THEME.inkBrown }}
               >
-                Don&apos;t miss Camping Adventures.
+                Don&apos;t miss Wizard Academy.
               </h2>
-              <p className="font-body text-base mb-8 leading-relaxed max-w-md mx-auto" style={{ color: `${CAMPING_THEME.inkBrown}CC` }}>
-                October 2 is one day. Spots are limited. Reserve your child&apos;s
-                spot now and join us for s’mores, campfire painting, owl pinecones,
-                campfire bingo, and what’s in my camping bag at Sage Field.
+              <p className="font-body text-base mb-8 leading-relaxed max-w-md mx-auto" style={{ color: `${WIZARD_THEME.inkBrown}CC` }}>
+                October 9 is one day. Spots are limited. Reserve your child&apos;s
+                spot now and join us to make a wizard wand, mix potions, build
+                your own potion, and make a wizard hat at Sage Field.
               </p>
               <button
                 onClick={scrollToForm}
-                className="px-10 py-4 bg-white font-bold rounded-2xl hover:bg-[#FFF6E8] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
-                style={{ color: CAMPING_THEME.terracotta }}
+                className="px-10 py-4 bg-white font-bold rounded-2xl hover:bg-[#F7F2FF] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
+                style={{ color: WIZARD_THEME.terracotta }}
               >
                 {`Reserve Spot · $${FRIDAY_DROPIN_DOLLARS} →`}
               </button>
-              <p className="font-body text-xs mt-5" style={{ color: `${CAMPING_THEME.inkBrown}99` }}>
+              <p className="font-body text-xs mt-5" style={{ color: `${WIZARD_THEME.inkBrown}99` }}>
                 {`One Friday. $${FRIDAY_DROPIN_DOLLARS}. No commitment.`}
               </p>
             </motion.div>
@@ -1450,12 +1528,12 @@ export default function FieldDayFridayPage() {
           <div
             className="rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3"
             style={{
-              background: "linear-gradient(135deg, #C45C26 0%, #B4532A 100%)",
+              background: "linear-gradient(135deg, #5C3D8F 0%, #7B4BB0 100%)",
             }}
           >
             <div>
               <p className="text-white font-heading font-bold text-sm leading-tight">
-                🏕️ Camping Adventures · Oct 2
+                🪄 Wizard Academy · Oct 9
               </p>
               <p className="text-white/80 font-body text-xs">
                 {`$${FRIDAY_DROPIN_DOLLARS} drop-in — limited spots`}
@@ -1463,7 +1541,7 @@ export default function FieldDayFridayPage() {
             </div>
             <button
               onClick={scrollToForm}
-              className="flex-shrink-0 bg-white text-[#B4532A] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#F6D7A8] transition-colors duration-200 cursor-pointer"
+              className="flex-shrink-0 bg-white text-[#7B4BB0] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#E8D9FF] transition-colors duration-200 cursor-pointer"
             >
               Reserve →
             </button>
@@ -1497,7 +1575,7 @@ export default function FieldDayFridayPage() {
                 <div className="flex-shrink-0 sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
                   <div>
                     <h2 className="text-base font-bold font-heading text-gray-800">
-                      Camping Adventures Participant Agreement
+                      Wizard Academy Participant Agreement
                     </h2>
                     <p className="text-xs text-gray-400 font-body mt-0.5">
                       {agreementSigned ? "1" : "0"} of 1 sections signed
@@ -1520,7 +1598,7 @@ export default function FieldDayFridayPage() {
                         Sage Field Private Microschool
                       </p>
                       <p className="text-xs text-gray-500 font-body">
-                        Location: Round Rock, Texas · Camping Adventures: October 2,
+                        Location: Round Rock, Texas · Wizard Academy: October 9,
                         2026
                       </p>
                     </div>
@@ -1574,7 +1652,7 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-3">
                       <AgreementSectionHeader title="1. Acknowledgment of Program Activities" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        I understand that my child is participating in a Camping Adventures
+                        I understand that my child is participating in a Wizard Academy
                         Field Day at an outdoor education program where
                         children learn through active exploration, hands-on
                         experiences, and supervised outdoor activities.
@@ -1605,7 +1683,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="2. Assumption of Risk" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         I knowingly and voluntarily assume all risks associated
-                        with my child&apos;s participation in the Camping Adventures
+                        with my child&apos;s participation in the Wizard Academy
                         Field Day, including but not limited to:
                       </p>
                       <ul className="flex flex-col gap-1.5">
@@ -1631,7 +1709,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="3. Release of Liability" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         In consideration of my child&apos;s participation in the
-                        Camping Adventures Field Day, I release and hold harmless the
+                        Wizard Academy Field Day, I release and hold harmless the
                         School, its owners, directors, employees, contractors,
                         volunteers, agents, and representatives from any claims,
                         demands, causes of action, damages, losses, costs, or
@@ -1853,7 +1931,7 @@ export default function FieldDayFridayPage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <PenLine className="w-4 h-4 text-[#B4532A]" />
+                      <PenLine className="w-4 h-4 text-[#7B4BB0]" />
                       <span className="text-sm text-gray-500 font-body">
                         Signature required to continue
                       </span>

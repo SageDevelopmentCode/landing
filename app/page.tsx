@@ -25,7 +25,7 @@ import WaitlistDialog from "./components/WaitlistDialog";
 import FloatingSMSButton from "./components/FloatingSMSButton";
 import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 import WeekRecapPreview from "./components/WeekRecapPreview";
-import CampingHeroScene, { CAMPING_THEME } from "./friday/components/CampingHeroScene";
+import WizardHeroScene, { WIZARD_THEME } from "./friday/components/WizardHeroScene";
 import WeekCardsGrid from "./components/WeekCardsGrid";
 import {
   LIVE_SUMMER_WEEKS,
@@ -182,27 +182,51 @@ export default function Home() {
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         .fdf-desert-headline {
-          color: ${CAMPING_THEME.inkBrown};
-          text-shadow: 0 2px 16px rgba(255, 200, 140, 0.45);
+          color: ${WIZARD_THEME.inkBrown};
+          text-shadow: 0 2px 16px rgba(196, 163, 90, 0.45);
         }
         .fdf-letter-drop span {
           display: inline-block;
           opacity: 0;
           animation: fdf-letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
+        @keyframes wizard-sheen {
+          0%, 62%, 100% { background-position: 0% 50%; }
+          38% { background-position: 100% 50%; }
+        }
+        .wizard-sheen {
+          background-image: linear-gradient(110deg, #2E2444 0%, #2E2444 38%, #E8C872 50%, #2E2444 62%, #2E2444 100%);
+          background-size: 220% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: wizard-sheen 7s ease-in-out infinite;
+        }
+        @keyframes wizard-cta-glow {
+          0%, 100% { box-shadow: 0 10px 24px rgba(92, 61, 143, 0.28); }
+          50% { box-shadow: 0 14px 32px rgba(196, 163, 90, 0.48); }
+        }
+        .wizard-cta { animation: wizard-cta-glow 2.8s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
           .fdf-letter-drop span { animation: none !important; opacity: 1 !important; transform: none !important; }
+          .wizard-sheen {
+            animation: none !important;
+            background: none !important;
+            color: ${WIZARD_THEME.inkBrown} !important;
+            -webkit-text-fill-color: ${WIZARD_THEME.inkBrown} !important;
+          }
+          .wizard-cta { animation: none !important; }
         }
       `}</style>
 
       <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill={CAMPING_THEME.skyPeach} />
+          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill={WIZARD_THEME.skyPeach} />
         </svg>
       </div>
 
       <section className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16 min-h-[420px]">
-        <CampingHeroScene compact />
+        <WizardHeroScene compact />
 
         <div className="relative max-w-5xl mx-auto z-10">
           <motion.div
@@ -213,10 +237,10 @@ export default function Home() {
             transition={{ duration: 0.5 }}
           >
             <span
-              className="inline-flex items-center gap-2 px-5 py-2 bg-white/80 backdrop-blur-sm border border-[#E8A04A]/40 rounded-full text-xs font-semibold font-body uppercase tracking-wide"
-              style={{ color: CAMPING_THEME.inkBrown }}
+              className="inline-flex items-center gap-2 px-5 py-2 bg-white/80 backdrop-blur-sm border border-[#C4A35A]/40 rounded-full text-xs font-semibold font-body uppercase tracking-wide"
+              style={{ color: WIZARD_THEME.inkBrown }}
             >
-              This Friday · Oct 2 · Limited Spots
+              This Friday · Oct 9 · Limited Spots
             </span>
           </motion.div>
 
@@ -233,15 +257,15 @@ export default function Home() {
                 style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
               >
                 <span
-                  className="block fdf-desert-headline"
+                  className="block fdf-desert-headline wizard-sheen"
                   style={{
                     fontFamily: "var(--font-bebas-neue), sans-serif",
                     letterSpacing: "0.04em",
                   }}
                 >
-                  Camping Adventures
+                  Wizard Academy
                 </span>
-                <span className="fdf-letter-drop block" style={{ color: CAMPING_THEME.duneDeep }}>
+                <span className="fdf-letter-drop block" style={{ color: WIZARD_THEME.duneDeep }}>
                   {Array.from("Field Day").map((ch, i) => (
                     <span key={i} style={{ animationDelay: `${0.3 + i * 0.06}s` }}>
                       {ch === " " ? " " : ch}
@@ -249,21 +273,21 @@ export default function Home() {
                   ))}
                 </span>
               </h2>
-              <p className="font-body text-base leading-relaxed mb-6 max-w-md" style={{ color: CAMPING_THEME.inkBrown }}>
-                Make s’mores, paint by the campfire, craft owl pinecones, play campfire bingo, and guess what’s in the camping bag.
+              <p className="font-body text-base leading-relaxed mb-6 max-w-md" style={{ color: WIZARD_THEME.inkBrown }}>
+                Craft a wand, mix potions, and wear your wizard hat at Sage Field.
               </p>
 
               <div className="flex flex-wrap gap-2 mb-7">
                 {[
-                  { icon: "📅", text: "Oct 2, 2026" },
+                  { icon: "📅", text: "Oct 9, 2026" },
                   { icon: "🕗", text: "8:30 AM – 1:30 PM" },
                   { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} / child` },
                   { icon: "👧", text: "Ages 4–11" },
                 ].map((pill) => (
                   <span
                     key={pill.text}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#E8A04A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
-                    style={{ color: CAMPING_THEME.inkBrown }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#C4A35A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
+                    style={{ color: WIZARD_THEME.inkBrown }}
                   >
                     {pill.icon} {pill.text}
                   </span>
@@ -272,12 +296,12 @@ export default function Home() {
 
               <Link
                 href="/friday"
-                className="inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                style={{ background: `linear-gradient(135deg, ${CAMPING_THEME.duneDeep} 0%, ${CAMPING_THEME.terracotta} 100%)` }}
+                className="wizard-cta inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
+                style={{ background: `linear-gradient(135deg, ${WIZARD_THEME.duneDeep} 0%, ${WIZARD_THEME.terracotta} 100%)` }}
               >
-                Join the Campout →
+                Join the Academy →
               </Link>
-              <p className="text-xs font-body mt-3" style={{ color: CAMPING_THEME.duneDeep }}>
+              <p className="text-xs font-body mt-3" style={{ color: WIZARD_THEME.duneDeep }}>
                 No enrollment required · One-time drop-in
               </p>
             </motion.div>
@@ -290,18 +314,18 @@ export default function Home() {
             >
               <div className="flex flex-wrap justify-center gap-3">
                 {[
-                  { emoji: "🍫", title: "S’mores", accent: "#FFF6E8" },
-                  { emoji: "🎨", title: "Campfire Painting", accent: "#FFF6E8" },
-                  { emoji: "🦉", title: "Owl Pinecones", accent: "#FFF6E8" },
-                  { emoji: "🎯", title: "Campfire Bingo", accent: "#FFF6E8" },
-                  { emoji: "🎒", title: "Camping Bag", accent: "#FFF6E8" },
+                  { emoji: "🪄", title: "Make your own wizard wand", accent: "#F7F2FF" },
+                  { emoji: "🧪", title: "Potion lab", accent: "#F7F2FF" },
+                  { emoji: "🧴", title: "BYO potion", accent: "#F7F2FF" },
+                  { emoji: "🎩", title: "Wizard hat", accent: "#F7F2FF" },
                 ].map((act, i) => (
                   <motion.div
                     key={act.title}
-                    className="bg-white/85 backdrop-blur-sm border border-[#E8A04A]/30 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm w-[calc(50%-0.375rem)]"
+                    className="bg-white/85 backdrop-blur-sm border border-[#C4A35A]/30 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm w-[calc(50%-0.375rem)]"
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
+                    whileHover={{ y: -4, transition: { delay: 0, duration: 0.25 } }}
                     transition={{ duration: 0.4, delay: 0.15 + i * 0.1 }}
                   >
                     <div
@@ -310,7 +334,7 @@ export default function Home() {
                     >
                       {act.emoji}
                     </div>
-                    <p className="text-xs font-bold font-body leading-tight" style={{ color: CAMPING_THEME.inkBrown }}>
+                    <p className="text-xs font-bold font-body leading-tight" style={{ color: WIZARD_THEME.inkBrown }}>
                       {act.title}
                     </p>
                   </motion.div>
@@ -318,20 +342,20 @@ export default function Home() {
               </div>
               <motion.p
                 className="text-center text-xs font-body mt-4"
-                style={{ color: CAMPING_THEME.inkBrown }}
+                style={{ color: WIZARD_THEME.inkBrown }}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.45 }}
               >
-                All activities included · Take home your paintings & creations!
+                All activities included · Take home your wand, potion, and hat!
               </motion.p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      <div style={{ background: CAMPING_THEME.skyPeach, marginBottom: "-1px" }}>
+      <div style={{ background: WIZARD_THEME.skyPeach, marginBottom: "-1px" }}>
         <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
           <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
         </svg>
