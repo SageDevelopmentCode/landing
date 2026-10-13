@@ -10,6 +10,7 @@ export type ChicagoDateTimeParts = {
 export type AwaitingPickupRecord = {
   marked_absent?: boolean | null;
   picked_up_by_name?: string | null;
+  checked_in?: boolean | null;
 };
 
 export function getChicagoDateTimeParts(now = new Date()): ChicagoDateTimeParts {
@@ -71,6 +72,7 @@ export function isStudentAwaitingPickup(
 ): boolean {
   if (!record) return false;
   if (record.marked_absent) return false;
+  if (record.checked_in === false) return false;
   if (record.picked_up_by_name) return false;
   return true;
 }

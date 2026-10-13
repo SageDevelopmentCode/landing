@@ -23,6 +23,7 @@ import { BottomTabInset, Brand, FontFamilies } from "@/constants/theme";
 import { Activity, getActivities } from "@/lib/activities-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
 import {
+  fetchSchoolYearHiddenStudentsForDate,
   fetchSchoolYearTodayStudents,
   type AttendanceSlim,
   type SchoolYearTodayStudent,
@@ -142,8 +143,13 @@ function getStudentDayStatus(
     : student.schoolYearRecord;
   if (!record) return "unmarked";
   if (record.marked_absent) return "absent";
+  if (!record.checked_in) return "unmarked";
   if (record.picked_up_by_name) return "picked_up";
   return "present";
+}
+
+function isStudentCheckedIn(record: AttendanceSlim | null): boolean {
+  return !!record?.checked_in && !record.marked_absent;
 }
 
 const STATUS_FILTER_CHIPS: {
@@ -200,7 +206,7 @@ type AllergyDetail = {
 };
 
 const SY_ATTENDANCE_SLIM_SELECT =
-  "id, paid_for_day, pickup_time, picked_up_by_name, marked_absent";
+  "id, paid_for_day, pickup_time, picked_up_by_name, marked_absent, excluded_from_roster, checked_in";
 const AFTERCARE_SLIM_SELECT =
   "id, paid_for_day, pickup_time, picked_up_by_name";
 
@@ -447,8 +453,12 @@ export default function StaffHomeScreen() {
   // Add student sheet
   const addStudentSheetRef = useRef<BottomSheetModal>(null);
   const [unpaidStudents, setUnpaidStudents] = useState<SchoolYearTodayStudent[]>([]);
+  const [hiddenStudents, setHiddenStudents] = useState<SchoolYearTodayStudent[]>([]);
   const [unpaidStudentsLoading, setUnpaidStudentsLoading] = useState(false);
   const [addStudentSearch, setAddStudentSearch] = useState("");
+  const [rosterActionStudentId, setRosterActionStudentId] = useState<
+    string | null
+  >(null);
 
   // Allergies sheet
   const allergiesSheetRef = useRef<BottomSheetModal>(null);
@@ -828,13 +838,23 @@ export default function StaffHomeScreen() {
 
   async function openAddStudentSheet() {
     setUnpaidStudents([]);
+    setHiddenStudents([]);
     setAddStudentSearch("");
     setUnpaidStudentsLoading(true);
     addStudentSheetRef.current?.present();
     const excludeIds = new Set(todayStudents.map((s) => s.student_id));
-    const rows = await fetchUnpaidStudentsForDate(selectedDate, excludeIds);
-    setUnpaidStudents(rows);
-    setUnpaidStudentsLoading(false);
+    try {
+      const [unpaidRows, hiddenRows] = await Promise.all([
+        fetchUnpaidStudentsForDate(selectedDate, excludeIds),
+        fetchSchoolYearHiddenStudentsForDate(selectedDate),
+      ]);
+      setUnpaidStudents(unpaidRows);
+      setHiddenStudents(hiddenRows);
+    } catch (e) {
+      notifyError("staff-home-add-student-sheet", e);
+    } finally {
+      setUnpaidStudentsLoading(false);
+    }
   }
 
   async function openAllergiesSheet() {
@@ -891,9 +911,177 @@ export default function StaffHomeScreen() {
     }
   }
 
-  function handleAddStudent(student: SchoolYearTodayStudent) {
-    setTodayStudents((prev) => [...prev, student]);
-    addStudentSheetRef.current?.dismiss();
+  async function addStudentToRoster(student: SchoolYearTodayStudent) {
+    if (rosterActionStudentId) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const isFriday = selectedIsFriday;
+    const table = isFriday
+      ? "school_year_field_friday_records"
+      : "school_year_records";
+    const recordKey = isFriday
+      ? ("schoolYearFieldFridayRecord" as const)
+      : ("schoolYearRecord" as const);
+    const paidForDay = isFriday
+      ? student.hasSchoolYearFridayEnrollment
+      : student.hasSchoolYearEnrollment;
+
+    setRosterActionStudentId(student.student_id);
+    try {
+      const { data, error } = await supabase
+        .schema("attendance")
+        .from(table)
+        .upsert(
+          {
+            student_id: student.student_id,
+            date: selectedDate,
+            recorded_by: user.id,
+            paid_for_day: paidForDay,
+            marked_absent: false,
+            checked_in: false,
+            excluded_from_roster: false,
+          },
+          { onConflict: "student_id,date" },
+        )
+        .select(SY_ATTENDANCE_SLIM_SELECT)
+        .single();
+
+      if (error || !data) {
+        notifyError("staff-home-add-student-roster", error);
+        return;
+      }
+
+      const slim = data as AttendanceSlim;
+      const merged: SchoolYearTodayStudent = {
+        ...student,
+        [recordKey]: slim,
+      };
+      setTodayStudents((prev) => {
+        const without = prev.filter((s) => s.student_id !== student.student_id);
+        return [...without, merged].sort((a, b) =>
+          (a.name ?? "").localeCompare(b.name ?? ""),
+        );
+      });
+      setHiddenStudents((prev) =>
+        prev.filter((s) => s.student_id !== student.student_id),
+      );
+      addStudentSheetRef.current?.dismiss();
+    } finally {
+      setRosterActionStudentId(null);
+    }
+  }
+
+  async function restoreHiddenStudent(student: SchoolYearTodayStudent) {
+    if (rosterActionStudentId) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const isFriday = selectedIsFriday;
+    const table = isFriday
+      ? "school_year_field_friday_records"
+      : "school_year_records";
+    const recordKey = isFriday
+      ? ("schoolYearFieldFridayRecord" as const)
+      : ("schoolYearRecord" as const);
+    const existing = getActiveAttendanceRecord(student);
+    const paidForDay = isFriday
+      ? student.hasSchoolYearFridayEnrollment
+      : student.hasSchoolYearEnrollment;
+
+    setRosterActionStudentId(student.student_id);
+    try {
+      const { data, error } = await supabase
+        .schema("attendance")
+        .from(table)
+        .upsert(
+          {
+            student_id: student.student_id,
+            date: selectedDate,
+            recorded_by: user.id,
+            paid_for_day: existing?.paid_for_day ?? paidForDay,
+            marked_absent: existing?.marked_absent ?? false,
+            checked_in: existing?.checked_in ?? false,
+            excluded_from_roster: false,
+          },
+          { onConflict: "student_id,date" },
+        )
+        .select(SY_ATTENDANCE_SLIM_SELECT)
+        .single();
+
+      if (error || !data) {
+        notifyError("staff-home-restore-hidden-student", error);
+        return;
+      }
+
+      const slim = data as AttendanceSlim;
+      const merged: SchoolYearTodayStudent = {
+        ...student,
+        [recordKey]: slim,
+      };
+      setTodayStudents((prev) => {
+        const without = prev.filter((s) => s.student_id !== student.student_id);
+        return [...without, merged].sort((a, b) =>
+          (a.name ?? "").localeCompare(b.name ?? ""),
+        );
+      });
+      setHiddenStudents((prev) =>
+        prev.filter((s) => s.student_id !== student.student_id),
+      );
+      addStudentSheetRef.current?.dismiss();
+    } finally {
+      setRosterActionStudentId(null);
+    }
+  }
+
+  async function hideStudentFromRoster(student: SchoolYearTodayStudent) {
+    if (rosterActionStudentId) return;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const isFriday = selectedIsFriday;
+    const table = isFriday
+      ? "school_year_field_friday_records"
+      : "school_year_records";
+    const existing = getActiveAttendanceRecord(student);
+    const paidForDay = isFriday
+      ? student.hasSchoolYearFridayEnrollment
+      : student.hasSchoolYearEnrollment;
+
+    setRosterActionStudentId(student.student_id);
+    try {
+      const { error } = await supabase.schema("attendance").from(table).upsert(
+        {
+          student_id: student.student_id,
+          date: selectedDate,
+          recorded_by: user.id,
+          paid_for_day: existing?.paid_for_day ?? paidForDay,
+          marked_absent: existing?.marked_absent ?? false,
+          checked_in: existing?.checked_in ?? false,
+          excluded_from_roster: true,
+        },
+        { onConflict: "student_id,date" },
+      );
+
+      if (error) {
+        notifyError("staff-home-hide-student-roster", error);
+        return;
+      }
+
+      setTodayStudents((prev) =>
+        prev.filter((s) => s.student_id !== student.student_id),
+      );
+      studentActionSheetRef.current?.dismiss();
+      setSelectedStudent(null);
+    } finally {
+      setRosterActionStudentId(null);
+    }
   }
 
   // ── Attendance toggles ────────────────────────────────────────────────────────
@@ -918,7 +1106,7 @@ export default function StaffHomeScreen() {
   async function markStudentPresent(student: SchoolYearTodayStudent) {
     if (attendanceSaving) return;
     const record = getActiveAttendanceRecord(student);
-    if (record && !record.marked_absent) return;
+    if (isStudentCheckedIn(record)) return;
 
     const {
       data: { user },
@@ -949,7 +1137,11 @@ export default function StaffHomeScreen() {
         const { data, error } = await supabase
           .schema("attendance")
           .from(table)
-          .update({ marked_absent: false })
+          .update({
+            marked_absent: false,
+            checked_in: true,
+            excluded_from_roster: false,
+          })
           .eq("id", record.id)
           .select(SY_ATTENDANCE_SLIM_SELECT)
           .single();
@@ -976,6 +1168,8 @@ export default function StaffHomeScreen() {
               recorded_by: user.id,
               paid_for_day: paidForDay,
               marked_absent: false,
+              checked_in: true,
+              excluded_from_roster: false,
             },
             { onConflict: "student_id,date" },
           )
@@ -1072,7 +1266,7 @@ export default function StaffHomeScreen() {
     const recordKey = "schoolYearRecord" as const;
 
     try {
-      if (existing && !existing.marked_absent) {
+      if (existing && isStudentCheckedIn(existing)) {
         patchStudent((s) => ({ ...s, [recordKey]: null }));
         const { error } = await supabase
           .schema("attendance")
@@ -1092,7 +1286,11 @@ export default function StaffHomeScreen() {
         const { data, error } = await supabase
           .schema("attendance")
           .from(table)
-          .update({ marked_absent: false })
+          .update({
+            marked_absent: false,
+            checked_in: true,
+            excluded_from_roster: false,
+          })
           .eq("id", existing.id)
           .select(SY_ATTENDANCE_SLIM_SELECT)
           .single();
@@ -1119,6 +1317,8 @@ export default function StaffHomeScreen() {
               recorded_by: user.id,
               paid_for_day: selectedStudent.hasSchoolYearEnrollment,
               marked_absent: false,
+              checked_in: true,
+              excluded_from_roster: false,
             },
             { onConflict: "student_id,date" },
           )
@@ -1175,7 +1375,7 @@ export default function StaffHomeScreen() {
         const { data, error } = await supabase
           .schema("attendance")
           .from(table)
-          .update({ marked_absent: true })
+          .update({ marked_absent: true, checked_in: false })
           .eq("id", existing.id)
           .select(SY_ATTENDANCE_SLIM_SELECT)
           .single();
@@ -1202,6 +1402,8 @@ export default function StaffHomeScreen() {
               recorded_by: user.id,
               paid_for_day: selectedStudent.hasSchoolYearEnrollment,
               marked_absent: true,
+              checked_in: false,
+              excluded_from_roster: false,
             },
             { onConflict: "student_id,date" },
           )
@@ -1238,7 +1440,7 @@ export default function StaffHomeScreen() {
     const recordKey = "schoolYearFieldFridayRecord" as const;
 
     try {
-      if (existing && !existing.marked_absent) {
+      if (existing && isStudentCheckedIn(existing)) {
         patchStudent((s) => ({ ...s, [recordKey]: null }));
         const { error } = await supabase
           .schema("attendance")
@@ -1258,7 +1460,11 @@ export default function StaffHomeScreen() {
         const { data, error } = await supabase
           .schema("attendance")
           .from(table)
-          .update({ marked_absent: false })
+          .update({
+            marked_absent: false,
+            checked_in: true,
+            excluded_from_roster: false,
+          })
           .eq("id", existing.id)
           .select(SY_ATTENDANCE_SLIM_SELECT)
           .single();
@@ -1285,6 +1491,8 @@ export default function StaffHomeScreen() {
               recorded_by: user.id,
               paid_for_day: selectedStudent.hasSchoolYearFridayEnrollment,
               marked_absent: false,
+              checked_in: true,
+              excluded_from_roster: false,
             },
             { onConflict: "student_id,date" },
           )
@@ -1341,7 +1549,7 @@ export default function StaffHomeScreen() {
         const { data, error } = await supabase
           .schema("attendance")
           .from(table)
-          .update({ marked_absent: true })
+          .update({ marked_absent: true, checked_in: false })
           .eq("id", existing.id)
           .select(SY_ATTENDANCE_SLIM_SELECT)
           .single();
@@ -1368,6 +1576,8 @@ export default function StaffHomeScreen() {
               recorded_by: user.id,
               paid_for_day: selectedStudent.hasSchoolYearFridayEnrollment,
               marked_absent: true,
+              checked_in: false,
+              excluded_from_roster: false,
             },
             { onConflict: "student_id,date" },
           )
@@ -1398,7 +1608,7 @@ export default function StaffHomeScreen() {
     const record = selectedIsFriday
       ? target?.schoolYearFieldFridayRecord
       : target?.schoolYearRecord;
-    if (!record || record.marked_absent || !target) return;
+    if (!record || record.marked_absent || !record.checked_in || !target) return;
     setSelectedPickupPerson(null);
     setPickupPersonsLoading(true);
     pickupSheetRef.current?.present();
@@ -1535,7 +1745,7 @@ export default function StaffHomeScreen() {
 
   function statusPriority(s: SchoolYearTodayStudent): number {
     const record = getActiveAttendanceRecord(s);
-    if (!record) return 0;
+    if (!record || !record.checked_in) return 0;
     if (record.picked_up_by_name) return 2;
     return 1;
   }
@@ -1721,7 +1931,7 @@ export default function StaffHomeScreen() {
                   </View>
                 );
               }
-              if (record) {
+              if (record && record.checked_in) {
                 return (
                   <View style={[styles.careChip, styles.careChipLogged]}>
                     <Ionicons
@@ -1759,7 +1969,7 @@ export default function StaffHomeScreen() {
         >
           {(() => {
             const record = getActiveAttendanceRecord(student);
-            const isPresent = !!record && !record.marked_absent;
+            const isPresent = isStudentCheckedIn(record);
             const alreadyPickedUp = !!record?.picked_up_by_name;
             const chipDisabled = attendanceSaving !== null;
 
@@ -2428,11 +2638,10 @@ export default function StaffHomeScreen() {
                   tiles.push({
                     key: "school_year",
                     icon: "🎒",
-                    label:
-                      activeRecord && !activeRecord.marked_absent
-                        ? "Present"
-                        : "Mark Present",
-                    active: !!activeRecord && !activeRecord.marked_absent,
+                    label: isStudentCheckedIn(activeRecord)
+                      ? "Present"
+                      : "Mark Present",
+                    active: isStudentCheckedIn(activeRecord),
                     saving: attendanceSaving === "school_year",
                     disabled: attendanceSaving !== null,
                     onPress: toggleSchoolYearAttendance,
@@ -2452,11 +2661,10 @@ export default function StaffHomeScreen() {
                   tiles.push({
                     key: "school_year_friday",
                     icon: "🌿",
-                    label:
-                      activeRecord && !activeRecord.marked_absent
-                        ? "Field Friday"
-                        : "Mark Present",
-                    active: !!activeRecord && !activeRecord.marked_absent,
+                    label: isStudentCheckedIn(activeRecord)
+                      ? "Field Friday"
+                      : "Mark Present",
+                    active: isStudentCheckedIn(activeRecord),
                     saving: attendanceSaving === "school_year_friday",
                     disabled: attendanceSaving !== null,
                     onPress: toggleSchoolYearFieldFridayAttendance,
@@ -2534,9 +2742,30 @@ export default function StaffHomeScreen() {
               })()}
 
               {/* Record Pickup */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.hideRosterBtn,
+                  pressed && { opacity: 0.75 },
+                  rosterActionStudentId === selectedStudent.student_id && {
+                    opacity: 0.6,
+                  },
+                ]}
+                disabled={rosterActionStudentId !== null}
+                onPress={() => hideStudentFromRoster(selectedStudent)}
+              >
+                <Ionicons
+                  name="eye-off-outline"
+                  size={16}
+                  color="#6b7280"
+                />
+                <Text style={styles.hideRosterBtnText}>
+                  Hide from today&apos;s list
+                </Text>
+              </Pressable>
+
               {(() => {
                 const record = getActiveAttendanceRecord(selectedStudent);
-                if (!record || record.marked_absent) return null;
+                if (!record || !isStudentCheckedIn(record)) return null;
                 if (record.picked_up_by_name) {
                   return (
                     <View style={styles.pickedUpRow}>
@@ -2701,6 +2930,7 @@ export default function StaffHomeScreen() {
         handleIndicatorStyle={staffSheetHandle}
         onDismiss={() => {
           setUnpaidStudents([]);
+          setHiddenStudents([]);
           setAddStudentSearch("");
         }}
       >
@@ -2729,7 +2959,7 @@ export default function StaffHomeScreen() {
             <View style={{ padding: 24, alignItems: "center" }}>
               <ActivityIndicator color={Brand.sage700} />
             </View>
-          ) : unpaidStudents.length === 0 ? (
+          ) : unpaidStudents.length === 0 && hiddenStudents.length === 0 ? (
             <Text
               style={{
                 fontFamily: FontFamilies.body,
@@ -2741,7 +2971,92 @@ export default function StaffHomeScreen() {
               All enrolled students are already in today's list.
             </Text>
           ) : (
-            unpaidStudents
+            <>
+            {hiddenStudents.filter(
+              (s) =>
+                !addStudentSearch ||
+                (s.name ?? "")
+                  .toLowerCase()
+                  .includes(addStudentSearch.toLowerCase()),
+            ).length > 0 && (
+              <>
+                <Text style={styles.addSheetSectionTitle}>Hidden today</Text>
+                {hiddenStudents
+                  .filter(
+                    (s) =>
+                      !addStudentSearch ||
+                      (s.name ?? "")
+                        .toLowerCase()
+                        .includes(addStudentSearch.toLowerCase()),
+                  )
+                  .map((student) => {
+                    const color = avatarColor(student.student_id);
+                    const busy =
+                      rosterActionStudentId === student.student_id;
+                    return (
+                      <Pressable
+                        key={`hidden-${student.student_id}`}
+                        style={({ pressed }) => [
+                          styles.studentRow,
+                          pressed && { backgroundColor: "#f9fafb" },
+                        ]}
+                        disabled={rosterActionStudentId !== null}
+                        onPress={() => restoreHiddenStudent(student)}
+                      >
+                        <View
+                          style={[
+                            styles.avatarCircle,
+                            { backgroundColor: color },
+                          ]}
+                        >
+                          {student.profile_image_url ? (
+                            <Image
+                              source={{ uri: student.profile_image_url }}
+                              style={styles.avatarCircleImage}
+                              contentFit="cover"
+                            />
+                          ) : (
+                            <Text style={styles.avatarCircleText}>
+                              {getInitials(student.name ?? "?")}
+                            </Text>
+                          )}
+                        </View>
+                        <View style={styles.studentRowInfo}>
+                          <Text style={styles.studentName} numberOfLines={1}>
+                            {shortName(student.name)}
+                          </Text>
+                          <Text style={styles.addSheetHiddenHint}>
+                            Tap to restore to list
+                          </Text>
+                        </View>
+                        {busy ? (
+                          <ActivityIndicator
+                            size="small"
+                            color={Brand.sage700}
+                          />
+                        ) : (
+                          <Ionicons
+                            name="eye-outline"
+                            size={18}
+                            color={Brand.sage700}
+                          />
+                        )}
+                      </Pressable>
+                    );
+                  })}
+              </>
+            )}
+            {unpaidStudents
+              .filter(
+                (s) =>
+                  !addStudentSearch ||
+                  (s.name ?? "")
+                    .toLowerCase()
+                    .includes(addStudentSearch.toLowerCase()),
+              ).length > 0 && (
+              <Text style={styles.addSheetSectionTitle}>Add to roster</Text>
+            )}
+            {unpaidStudents
               .filter(
                 (s) =>
                   !addStudentSearch ||
@@ -2751,6 +3066,7 @@ export default function StaffHomeScreen() {
               )
               .map((student) => {
                 const color = avatarColor(student.student_id);
+                const busy = rosterActionStudentId === student.student_id;
                 return (
                   <Pressable
                     key={student.student_id}
@@ -2758,7 +3074,8 @@ export default function StaffHomeScreen() {
                       styles.studentRow,
                       pressed && { backgroundColor: "#f9fafb" },
                     ]}
-                    onPress={() => handleAddStudent(student)}
+                    disabled={rosterActionStudentId !== null}
+                    onPress={() => addStudentToRoster(student)}
                   >
                     <View
                       style={[styles.avatarCircle, { backgroundColor: color }]}
@@ -2794,10 +3111,18 @@ export default function StaffHomeScreen() {
                         </View>
                       </View>
                     </View>
-                    <Ionicons name="add" size={18} color={Brand.sage700} />
+                    {busy ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={Brand.sage700}
+                      />
+                    ) : (
+                      <Ionicons name="add" size={18} color={Brand.sage700} />
+                    )}
                   </Pressable>
                 );
-              })
+              })}
+            </>
           )}
         </BottomSheetScrollView>
       </BottomSheetModal>
@@ -3183,6 +3508,37 @@ const styles = StyleSheet.create({
 
   addStudentSheetContent: {
     paddingBottom: 32,
+  },
+  addSheetSectionTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 13,
+    color: HomeTheme.meta,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  addSheetHiddenHint: {
+    fontFamily: FontFamilies.body,
+    fontSize: 12,
+    color: "#9ca3af",
+    marginTop: 2,
+  },
+  hideRosterBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    backgroundColor: "#f9fafb",
+  },
+  hideRosterBtnText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#6b7280",
   },
 
   // Main body — embedded attendance panel on cream canvas
