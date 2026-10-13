@@ -51,6 +51,8 @@ type SchoolYearRecord = {
   notes: string | null;
   paid_for_day: boolean;
   marked_absent: boolean;
+  excluded_from_roster: boolean;
+  checked_in: boolean;
   pickup_time: string | null;
   picked_up_by_name: string | null;
   picked_up_by_relationship: string | null;
@@ -120,6 +122,9 @@ type FieldFridayRecord = {
   recorded_by: string;
   notes: string | null;
   paid_for_day: boolean;
+  marked_absent?: boolean;
+  excluded_from_roster?: boolean;
+  checked_in?: boolean;
 };
 
 type FieldFridayStudentRow = {
@@ -467,7 +472,7 @@ async function fetchSchoolYearDayData(
       .schema("attendance")
       .from("school_year_records")
       .select(
-        "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
+        "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, excluded_from_roster, checked_in, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
       )
       .eq("date", date)
       .in("student_id", studentIds),
@@ -496,7 +501,11 @@ async function fetchSchoolYearDayData(
   );
 
   return students
-    .filter((s) => paidIds.has(s.id) || recordMap.has(s.id))
+    .filter((s) => {
+      const record = recordMap.get(s.id);
+      if (record?.excluded_from_roster) return false;
+      return paidIds.has(s.id) || record != null;
+    })
     .map((s) => ({
       student_id: s.id,
       name:
@@ -513,7 +522,7 @@ async function fetchSchoolYearDayData(
       const priority = (s: SchoolYearStudentRow) =>
         s.record?.picked_up_by_name
           ? 0
-          : s.record !== null && !s.record.marked_absent
+          : s.record?.checked_in && !s.record.marked_absent
             ? 1
             : s.hasEnrollment
               ? 2
@@ -683,7 +692,7 @@ async function fetchFieldFridayData(
     supabase
       .schema("attendance")
       .from("school_year_field_friday_records")
-      .select("id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by, recorded_by, notes, paid_for_day")
+      .select("id, date, student_id, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by, recorded_by, notes, paid_for_day, marked_absent, excluded_from_roster, checked_in")
       .eq("date", date)
       .in("student_id", studentIds),
     supabase
@@ -711,6 +720,11 @@ async function fetchFieldFridayData(
   );
 
   return students
+    .filter((s) => {
+      const record = recordMap.get(s.id);
+      if (record?.excluded_from_roster) return false;
+      return paidIds.has(s.id) || record != null;
+    })
     .map((s) => ({
       student_id: s.id,
       name:
@@ -726,7 +740,7 @@ async function fetchFieldFridayData(
     .sort((a, b) => {
       const priority = (s: FieldFridayStudentRow) =>
         s.record?.picked_up_by_name ? 0
-        : s.record !== null         ? 1
+        : s.record?.checked_in && !s.record.marked_absent ? 1
         : s.hasEnrollment           ? 2
         :                             3;
       const pa = priority(a), pb = priority(b);
@@ -1139,7 +1153,11 @@ export default function StaffAttendanceScreen() {
         ),
       );
 
-    if (student.record && !student.record.marked_absent) {
+    if (
+      student.record &&
+      student.record.checked_in &&
+      !student.record.marked_absent
+    ) {
       patch((s) => ({ ...s, record: null }));
 
       const { error } = await supabase
@@ -1166,6 +1184,8 @@ export default function StaffAttendanceScreen() {
         notes: null,
         paid_for_day: student.hasEnrollment,
         marked_absent: false,
+        excluded_from_roster: false,
+        checked_in: true,
         pickup_time: null,
         picked_up_by_name: null,
         picked_up_by_relationship: null,
@@ -1183,11 +1203,13 @@ export default function StaffAttendanceScreen() {
             recorded_by: user.id,
             paid_for_day: student.hasEnrollment,
             marked_absent: false,
+            checked_in: true,
+            excluded_from_roster: false,
           },
           { onConflict: "student_id,date" },
         )
         .select(
-          "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
+          "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, excluded_from_roster, checked_in, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
         )
         .single();
 
@@ -1686,7 +1708,7 @@ export default function StaffAttendanceScreen() {
         { onConflict: "student_id,date" },
       )
       .select(
-        "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
+        "id, date, student_id, recorded_by, notes, paid_for_day, marked_absent, excluded_from_roster, checked_in, pickup_time, picked_up_by_name, picked_up_by_relationship, pickup_recorded_by",
       )
       .single();
 

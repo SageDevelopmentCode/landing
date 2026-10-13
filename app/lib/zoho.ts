@@ -1371,26 +1371,25 @@ export async function buildWaitlistConfirmationEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.parentName.split(" ")[0] || opts.parentName;
 
+  const emailProgramKey =
+    opts.programInterest === "homeschool_drop_in"
+      ? "homeschool_drop_in"
+      : "school-year-2026";
+
   const programLabels: Record<string, string> = {
-    "summer-2026": "Summer 2026",
     "school-year-2026": "School Year 2026–2027",
-    both: "Summer 2026 &amp; School Year 2026–2027",
     homeschool_drop_in: "Homeschool Drop-In",
   };
 
   const programDetails: Record<string, string> = {
-    "summer-2026":
-      "May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10",
     "school-year-2026":
       "Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment",
-    both: "Summer 2026 (May 26–Aug 13) + School Year 2026–2027 (starts Aug 17)",
     homeschool_drop_in:
-      "1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days &nbsp;·&nbsp; Group of ~10",
+      "1–3 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days &nbsp;·&nbsp; Group of ~10",
   };
 
-  const selectedLabel =
-    programLabels[opts.programInterest] || opts.programInterest;
-  const selectedDetails = programDetails[opts.programInterest] || "";
+  const selectedLabel = programLabels[emailProgramKey];
+  const selectedDetails = programDetails[emailProgramKey] || "";
 
   const subject = "We received your interest form — Sage Field School";
   const content = `
@@ -1413,13 +1412,6 @@ export async function buildWaitlistConfirmationEmail(opts: {
   <h2 style="font-size: 18px; margin-top: 36px; margin-bottom: 12px; color: #2c2c2c;">Our Programs</h2>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
-    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Summer 2026</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">May 26 – Aug 13 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Mon–Thu, ~6 hrs/day &nbsp;·&nbsp; Group of ~10</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Twelve weeks of themed adventures, hands-on projects, nature play, art, music, and academic enrichment in a small, nurturing group setting.</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/summer-2026" style="color: #5a7a5a;">Learn more about Summer 2026 →</a></p>
-  </div>
-
-  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year microschool experience blending Montessori, Waldorf, and Reggio Emilia philosophies with TEKS-aligned academics — in a small, nature-connected environment.</p>
@@ -1428,8 +1420,8 @@ export async function buildWaitlistConfirmationEmail(opts: {
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families — choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–3 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 3 days per week with ability-based grouping and all enrichments included every day.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
@@ -1445,10 +1437,10 @@ export async function buildWaitlistConfirmationEmail(opts: {
   </div>
 
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin: 0 0 28px 0;">
-    <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Book a Shadow Day</p>
-    <p style="margin: 4px 0; color: #555; font-size: 14px;">Full School Day &nbsp;·&nbsp; 9 AM – 3 PM &nbsp;·&nbsp; Mon – Thu &nbsp;·&nbsp; $95 (waived if you enroll)</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Want your child to actually experience a day at Sage Field? A Shadow Day puts them in real lessons, outdoor time, and lunch with classmates — so they can tell you if it feels like home. The $95 fee is waived if you enroll within 14 days.</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/shadow-tour" style="color: #5a7a5a; font-weight: bold;">Book a Shadow Day →</a></p>
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Book a Shadow Day</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Mon–Thu &nbsp;·&nbsp; Full Day 9 AM–3 PM &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; $20 per child</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Let your child experience a full school day at Sage Field — real lessons, outdoor time, and lunch with classmates. Not a tour. An experience.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/shadow" style="color: #5a7a5a; font-weight: bold;">Book a Shadow Day →</a></p>
   </div>
 
   <p style="margin-top: 8px; font-size: 14px;">Ready to take the next step? <a href="https://www.sagefield.co/apply" style="color: #5a7a5a; font-weight: bold;">Start your application →</a></p>

@@ -68,21 +68,33 @@ export async function fetchSchoolYearAttendingStudentIds(
         .eq("is_deleted", false)
         .in("student_id", enrolledIds),
       isFridayDate
-        ? Promise.resolve({ data: [] as { student_id: string }[], error: null })
+        ? Promise.resolve({
+            data: [] as {
+              student_id: string;
+              excluded_from_roster: boolean;
+            }[],
+            error: null,
+          })
         : db
             .schema("attendance")
             .from("school_year_records")
-            .select("student_id")
+            .select("student_id, excluded_from_roster")
             .eq("date", date)
             .in("student_id", enrolledIds),
       isFridayDate
         ? db
             .schema("attendance")
             .from("school_year_field_friday_records")
-            .select("student_id")
+            .select("student_id, excluded_from_roster")
             .eq("date", date)
             .in("student_id", enrolledIds)
-        : Promise.resolve({ data: [] as { student_id: string }[], error: null }),
+        : Promise.resolve({
+            data: [] as {
+              student_id: string;
+              excluded_from_roster: boolean;
+            }[],
+            error: null,
+          }),
     ]);
 
   if (txnsRes.error) throw new Error(txnsRes.error.message);
@@ -106,21 +118,29 @@ export async function fetchSchoolYearAttendingStudentIds(
     }
   }
 
-  const schoolYearRecordIds = new Set(
-    ((schoolYearRecordsRes.data ?? []) as { student_id: string }[]).map(
-      (r) => r.student_id,
-    ),
+  type RecordRow = { student_id: string; excluded_from_roster: boolean };
+
+  const schoolYearRecordMap = new Map(
+    ((schoolYearRecordsRes.data ?? []) as RecordRow[]).map((r) => [
+      r.student_id,
+      r,
+    ]),
   );
-  const schoolYearFridayRecordIds = new Set(
-    ((schoolYearFridayRecordsRes.data ?? []) as { student_id: string }[]).map(
-      (r) => r.student_id,
-    ),
+  const schoolYearFridayRecordMap = new Map(
+    ((schoolYearFridayRecordsRes.data ?? []) as RecordRow[]).map((r) => [
+      r.student_id,
+      r,
+    ]),
   );
 
-  return enrolledIds.filter((studentId) =>
-    isFridayDate
-      ? schoolYearFridayPaidIds.has(studentId) ||
-        schoolYearFridayRecordIds.has(studentId)
-      : schoolYearPaidIds.has(studentId) || schoolYearRecordIds.has(studentId),
-  );
+  return enrolledIds.filter((studentId) => {
+    const record = isFridayDate
+      ? schoolYearFridayRecordMap.get(studentId)
+      : schoolYearRecordMap.get(studentId);
+    if (record?.excluded_from_roster) return false;
+    const isPaid = isFridayDate
+      ? schoolYearFridayPaidIds.has(studentId)
+      : schoolYearPaidIds.has(studentId);
+    return isPaid || record != null;
+  });
 }
