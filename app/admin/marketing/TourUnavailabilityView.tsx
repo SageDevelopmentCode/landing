@@ -19,6 +19,13 @@ import type { TourBooking } from './page'
 import { sendTourReminderEmail } from '@/app/actions/sendTourReminderEmail'
 import { sendTourThankYouEmail } from '@/app/actions/sendTourThankYouEmail'
 import { EmailThread } from '../components/EmailThread'
+import {
+  entryAppliesToDate,
+  formatTourDateKey,
+  getFullDayBlockedDates,
+  getPartialDateKeysForMonth,
+  normalizeTourDateKey,
+} from '@/app/lib/tour-availability'
 
 const merriweather = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 
@@ -67,7 +74,7 @@ const labelStyle: React.CSSProperties = {
 }
 
 function formatDateKey(year: number, month: number, day: number): string {
-  return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  return formatTourDateKey(year, month, day)
 }
 
 function formatDateKeyDisplay(dateKey: string): string {
@@ -1453,49 +1460,26 @@ export function TourUnavailabilityView({ initial, tourBookings }: { initial: Tou
     if (fullDayRecord) setSelectedBlock(fullDayRecord)
   }
 
-  // Fully blocked dates (entire day blocked)
-  const blockedDates = new Set<string>(
-    records.filter(r => r.unavailable_time === null).map(r => r.unavailable_date)
+  const blockedDates = getFullDayBlockedDates(records)
+
+  const partialDates = getPartialDateKeysForMonth(
+    records,
+    calendarYear,
+    calendarMonth,
   )
 
-  // Partially blocked dates (has time blocks but not full-day) — account for recurring
-  const partialDates = new Set<string>()
-  for (const r of records) {
-    if (r.unavailable_time === null) continue
-    if (r.is_recurring) {
-      const [ry, rm, rd] = r.unavailable_date.split('-').map(Number)
-      const recurringDow = new Date(ry, rm - 1, rd).getDay()
-      const daysInMonth = getDaysInMonth(calendarYear, calendarMonth)
-      for (let d = 1; d <= daysInMonth; d++) {
-        if (new Date(calendarYear, calendarMonth, d).getDay() === recurringDow) {
-          const key = formatDateKey(calendarYear, calendarMonth, d)
-          if (!blockedDates.has(key)) partialDates.add(key)
-        }
-      }
-    } else {
-      if (!blockedDates.has(r.unavailable_date)) partialDates.add(r.unavailable_date)
-    }
-  }
-
-  // Blocked time records for the selected date (considering recurring)
-  const blockedRecordsForDate: TourUnavailability[] = (() => {
-    if (!selectedDate) return []
-    const [sy, sm, sd] = selectedDate.split('-').map(Number)
-    const dayOfWeek = new Date(sy, sm - 1, sd).getDay()
-    return records.filter(r => {
-      if (r.unavailable_time === null) return false
-      if (r.is_recurring) {
-        const [ry, rm, rd] = r.unavailable_date.split('-').map(Number)
-        return new Date(ry, rm - 1, rd).getDay() === dayOfWeek
-      }
-      return r.unavailable_date === selectedDate
-    })
-  })()
+  const blockedRecordsForDate: TourUnavailability[] = selectedDate
+    ? records.filter((r) => entryAppliesToDate(r, selectedDate))
+    : []
 
   const blockedTimesForDate = new Set<string>(blockedRecordsForDate.map(r => r.unavailable_time as string))
 
   const isFullDayBlocked = blockedDates.has(selectedDate ?? '')
-  const fullDayRecord = records.find(r => r.unavailable_date === selectedDate && r.unavailable_time === null)
+  const fullDayRecord = records.find(
+    (r) =>
+      normalizeTourDateKey(r.unavailable_date) === selectedDate &&
+      r.unavailable_time === null,
+  )
 
   return (
     <div>

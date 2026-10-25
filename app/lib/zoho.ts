@@ -1493,7 +1493,7 @@ export async function buildFacebookLeadEmail(opts: {
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays Are Field Days</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families — choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families — choose 1 to 3 days per week with ability-based grouping and all enrichments included every day.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
@@ -1801,7 +1801,8 @@ export async function buildParentTeacherConferenceConfirmationEmail(opts: {
   timeSlot: string;
   format: "in_person" | "virtual";
 }): Promise<{ subject: string; content: string }> {
-  const subject = "Your parent-teacher conference is confirmed — Sage Field School";
+  const subject =
+    "Your parent-teacher conference is confirmed — Sage Field School";
   const formatLine =
     opts.format === "in_person"
       ? `<p style="margin: 4px 0;"><strong>Format:</strong> In person at Sage Field</p>
@@ -1844,8 +1845,7 @@ export async function buildParentTeacherConferenceRescheduleEmail(opts: {
   scheduleUrl?: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName?.split(" ")[0] ?? "there";
-  const scheduleUrl =
-    opts.scheduleUrl ?? "https://sagefield.co/parent/home";
+  const scheduleUrl = opts.scheduleUrl ?? "https://sagefield.co/parent/home";
   const subject =
     "Please reschedule your parent-teacher conference — Sage Field School";
   const content = `
@@ -1925,7 +1925,7 @@ export async function buildOpenHouseReminderEmail(opts: {
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 3 days per week with ability-based grouping and all enrichments included every day.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
@@ -2001,7 +2001,7 @@ export async function buildOpenHouseTwoDayReminderEmail(opts: {
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">1–5 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 5 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 3 days per week with ability-based grouping and all enrichments included every day.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
@@ -2175,7 +2175,7 @@ export async function buildInfoSessionRSVPEmail(opts: {
   <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 28px;">
     <p style="margin: 0 0 6px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
     <p style="margin: 4px 0; color: #555; font-size: 14px;">Ages 4–11 &nbsp;·&nbsp; 1–5 Days/Week &nbsp;·&nbsp; Flexible Scheduling</p>
-    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible drop-in program for homeschool families — choose 1 to 5 days per week with ability-based learning, enrichments, and Friday Field Days.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible drop-in program for homeschool families — choose 1 to 3 days per week with ability-based learning, enrichments, and Friday Field Days.</p>
     <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
   </div>
 
@@ -4573,8 +4573,7 @@ export async function buildSchoolYearWeekThreeNewsletterEmail(opts: {
   childLegalName: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName.split(" ")[0];
-  const subject =
-    "Week 3 Newsletter — Hands-On Science, Art & Exploration 🌿";
+  const subject = "Week 3 Newsletter — Hands-On Science, Art & Exploration 🌿";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -4686,8 +4685,7 @@ export async function buildSchoolYearWeekFourNewsletterEmail(opts: {
   childLegalName: string;
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.g1FullName.split(" ")[0];
-  const subject =
-    "Week 4 Newsletter — Chickens, Tornadoes & Dot Day 🌿";
+  const subject = "Week 4 Newsletter — Chickens, Tornadoes & Dot Day 🌿";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -5694,7 +5692,8 @@ export async function buildCommunityGardenDayThankYouExistingFamilyEmail(opts: {
 export async function buildCommunityGardenDayThankYouNewFamilyEmail(opts: {
   firstName: string;
 }): Promise<{ subject: string; content: string }> {
-  const subject = "Thank you for visiting Sage Field — here's how to learn more";
+  const subject =
+    "Thank you for visiting Sage Field — here's how to learn more";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -5918,7 +5917,9 @@ function homeschoolDropInPricingTableHtml(
   useUpdatedHomeschoolPricing = false,
   marginBottom = "28px",
 ): string {
-  const pricingTable = getHomeschoolSchoolYearPricing(useUpdatedHomeschoolPricing);
+  const pricingTable = getHomeschoolSchoolYearPricing(
+    useUpdatedHomeschoolPricing,
+  );
   const rows = HOMESCHOOL_TIERS.map((tier, i) => {
     const pricing = pricingTable[tier.key];
     const rowStyle = i % 2 === 1 ? ' style="background: #fafaf8;"' : "";
@@ -6286,7 +6287,9 @@ function buildSchoolYearSeptemberReminderEmailContent(
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
   const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
   const productLabel =
-    variant === "school-year" ? "September tuition" : "September homeschool drop-in";
+    variant === "school-year"
+      ? "September tuition"
+      : "September homeschool drop-in";
   const pricingTableHtml =
     variant === "school-year"
       ? schoolYearTuitionByGradeTableHtml("24px")
@@ -6409,7 +6412,9 @@ function buildSchoolYearOctoberReminderEmailContent(
   const firstName = opts.g1FullName?.split(" ")[0] || "there";
   const useUpdatedHomeschoolPricing = opts.useUpdatedHomeschoolPricing ?? false;
   const productLabel =
-    variant === "school-year" ? "October tuition" : "October homeschool drop-in";
+    variant === "school-year"
+      ? "October tuition"
+      : "October homeschool drop-in";
   const duePhrase =
     timing === "one-week"
       ? `${productLabel} is due in one week, next Thursday, October 1`
@@ -6885,10 +6890,14 @@ export async function buildSchoolYearTuitionConfirmationEmail(opts: {
         <td style="padding: 4px 0; color: #555;">Student</td>
         <td style="padding: 4px 0; text-align: right; font-weight: bold;">${opts.childName}</td>
       </tr>
-      ${monthList ? `<tr>
+      ${
+        monthList
+          ? `<tr>
         <td style="padding: 4px 0; color: #555;">Months Covered</td>
         <td style="padding: 4px 0; text-align: right; font-weight: bold;">${monthList}</td>
-      </tr>` : ""}
+      </tr>`
+          : ""
+      }
       <tr>
         <td style="padding: 4px 0; color: #555;">Amount Paid</td>
         <td style="padding: 4px 0; text-align: right; font-weight: bold;">$${opts.amountDollars}</td>

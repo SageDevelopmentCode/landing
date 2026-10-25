@@ -183,7 +183,7 @@ export default function HomeschoolDropInPage() {
             <p className="text-lg text-gray-600 font-body leading-relaxed">
               Sage Field&apos;s Homeschool Drop-In Program is built for families
               who want flexible, enriching academic support without a long-term
-              commitment. Choose 1 to 5 days per week — and adjust as your
+              commitment. Choose 1 to 3 days per week — and adjust as your
               family&apos;s schedule evolves.
             </p>
           </motion.div>

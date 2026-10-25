@@ -16,12 +16,12 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/highlights/school_week_seven/81893DBE-4D91-4B49-B3B6-70F6E5CE5C48.JPG",
-    title: "School Year Week 7 Highlights Are Live!",
+    image: "/assets/highlights/school_week_nine/EF809D8C-9404-455C-B3B8-5EBCEBC0C6E4.JPG",
+    title: "School Year Week 9 Highlights Are Live!",
     description:
-      "Found-material inquiry, division with remainders, globes and matter detectives, farm-fresh omelettes, and Camping Adventures Field Friday.",
-    buttonLabel: "View Week 7 Recap →",
-    buttonHref: "/highlights/school-year/week-7",
+      "Force and motion inquiry, Summerween water play, subtraction and fractions, persuasive writing, and Little Scientists Field Friday.",
+    buttonLabel: "View Week 9 Recap →",
+    buttonHref: "/highlights/school-year/week-9",
   },
   {
     image: "/assets/Stock4.jpg",

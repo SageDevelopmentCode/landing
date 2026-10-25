@@ -73,7 +73,7 @@ const programs = [
       "Flexible Scheduling",
     ],
     description:
-      "Flexible drop-in program for homeschool families — choose 1 to 5 days per week with ability-based learning, enrichments, and Friday Field Days.",
+      "Flexible drop-in program for homeschool families — choose 1 to 3 days per week with ability-based learning, enrichments, and Friday Field Days.",
     href: "/homeschool",
     image: "/assets/After1.png",
     dateBg: "bg-emerald-50",
@@ -268,7 +268,11 @@ export default function OpenHousePage() {
               className="text-4xl md:text-5xl font-bold font-heading text-gray-800 leading-tight mb-5"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.1,
+                ease: "easeOut" as const,
+              }}
             >
               Come See Sage Field in Person
             </motion.h1>
@@ -277,7 +281,11 @@ export default function OpenHousePage() {
               className="text-lg text-gray-500 font-body leading-relaxed mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: "easeOut" as const,
+              }}
             >
               Tour our outdoor space, meet our educators, and discover what
               makes Sage Field different. Bring the whole family — we&apos;d
@@ -290,7 +298,11 @@ export default function OpenHousePage() {
               className="inline-block px-8 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
             >
               Reserve My Spot
             </motion.a>
@@ -409,7 +421,11 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.1,
+                  ease: "easeOut" as const,
+                }}
               >
                 <h3 className="text-base font-bold text-gray-800 font-heading mb-1">
                   {card.title}
@@ -471,7 +487,11 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.1,
+                  ease: "easeOut" as const,
+                }}
               >
                 <div className="relative h-40 w-full">
                   <Image
@@ -522,7 +542,11 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.1,
+                  ease: "easeOut" as const,
+                }}
               >
                 <span className="text-2xl shrink-0">{item.emoji}</span>
                 <p className="text-base text-gray-700 font-body leading-relaxed pt-0.5">
@@ -534,7 +558,6 @@ export default function OpenHousePage() {
 
           {/* Cards: horizontal scroll on mobile, stacked on sm+ */}
           <div className="overflow-x-auto flex snap-x snap-mandatory gap-4 pb-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] sm:overflow-visible sm:block sm:space-y-4">
-
             {/* Kids Activity Stations — display:contents on mobile so cards are direct flex children */}
             <div className="contents sm:grid sm:grid-cols-3 sm:gap-4">
               {kidsStations.map((station, i) => (
@@ -544,7 +567,11 @@ export default function OpenHousePage() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
+                  transition={{
+                    duration: 0.4,
+                    delay: i * 0.1,
+                    ease: "easeOut" as const,
+                  }}
                 >
                   <div className="text-3xl mb-3">{station.emoji}</div>
                   <h3 className="text-base font-bold text-gray-800 font-heading mb-3">
@@ -571,7 +598,11 @@ export default function OpenHousePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.4,
+                delay: 0.3,
+                ease: "easeOut" as const,
+              }}
             >
               <h3 className="text-base font-bold text-gray-800 font-heading mb-2">
                 ☕ Parent Lounge
@@ -600,7 +631,11 @@ export default function OpenHousePage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" as const }}
+              transition={{
+                duration: 0.4,
+                delay: 0.4,
+                ease: "easeOut" as const,
+              }}
             >
               <h3 className="text-base font-bold text-gray-800 font-heading mb-4">
                 🍋 Food &amp; Drinks
@@ -646,10 +681,10 @@ export default function OpenHousePage() {
                 </div>
               </div>
               <p className="text-xs text-gray-400 font-body italic">
-                Good food keeps families around longer — and we want you to stay.
+                Good food keeps families around longer — and we want you to
+                stay.
               </p>
             </motion.div>
-
           </div>
         </div>
       </section>
@@ -677,7 +712,12 @@ export default function OpenHousePage() {
             transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
           >
             <p className="text-xs text-gray-500 font-body max-w-xl text-center bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3">
-              These photos are renderings of our property! We should be about 75% complete in building our vision to life by open house! Thank you for your grace and patience as we cultivate this beautiful environment for your children. Small changes such as changes in table colors or style of rugs may change, but our mission for a wholistic, outdoor focused, love for learning school is firm.
+              These photos are renderings of our property! We should be about
+              75% complete in building our vision to life by open house! Thank
+              you for your grace and patience as we cultivate this beautiful
+              environment for your children. Small changes such as changes in
+              table colors or style of rugs may change, but our mission for a
+              wholistic, outdoor focused, love for learning school is firm.
             </p>
           </motion.div>
 
@@ -698,7 +738,11 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.1,
+                  ease: "easeOut" as const,
+                }}
                 whileHover={{ scale: 1.02 }}
               >
                 <Image
@@ -908,13 +952,18 @@ export default function OpenHousePage() {
           >
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
-              <h2 className="text-xl font-bold font-heading text-gray-800">Parking Info</h2>
+              <h2 className="text-xl font-bold font-heading text-gray-800">
+                Parking Info
+              </h2>
             </div>
 
             <div className="bg-[#f7f4f0] border-l-4 border-[#a8c5a0] rounded-r-lg px-5 py-4 mb-5">
-              <p className="font-semibold text-gray-800 font-body mb-1">🅿️ Parking Instructions</p>
+              <p className="font-semibold text-gray-800 font-body mb-1">
+                🅿️ Parking Instructions
+              </p>
               <p className="text-sm text-gray-700 font-body leading-relaxed">
-                Please park <strong>across the street</strong> from our school at:{" "}
+                Please park <strong>across the street</strong> from our school
+                at:{" "}
                 <a
                   href="https://maps.app.goo.gl/Ga1wv5Cu33PTGyvM8"
                   target="_blank"
@@ -936,10 +985,12 @@ export default function OpenHousePage() {
             />
 
             <p className="text-sm text-gray-600 font-body leading-relaxed mb-1">
-              We are an all weather school! Whether it rains or shines, we will be there enjoying the day!
+              We are an all weather school! Whether it rains or shines, we will
+              be there enjoying the day!
             </p>
             <p className="text-sm text-gray-600 font-body leading-relaxed">
-              We recommend kids pack some <strong>boots</strong> to enjoy whatever weather comes our way!
+              We recommend kids pack some <strong>boots</strong> to enjoy
+              whatever weather comes our way!
             </p>
           </motion.div>
         </div>
@@ -970,7 +1021,11 @@ export default function OpenHousePage() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.05, ease: "easeOut" as const }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.05,
+                  ease: "easeOut" as const,
+                }}
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -1121,7 +1176,10 @@ export default function OpenHousePage() {
         </div>
       </section>
 
-      <WaitlistDialog isOpen={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} />
+      <WaitlistDialog
+        isOpen={isWaitlistOpen}
+        onClose={() => setIsWaitlistOpen(false)}
+      />
 
       <MeetTheTeamSection />
 
@@ -1143,8 +1201,8 @@ export default function OpenHousePage() {
             </h2>
             <p className="text-gray-500 font-body mb-8 max-w-md mx-auto">
               We offer Summer 2026 and School Year 2026–2027 programs for
-              curious learners ages 4–11. Apply today to secure your child&apos;s
-              spot.
+              curious learners ages 4–11. Apply today to secure your
+              child&apos;s spot.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
@@ -1164,7 +1222,10 @@ export default function OpenHousePage() {
         </div>
       </section>
 
-      <WaitlistDialog isOpen={contactOpen} onClose={() => setContactOpen(false)} />
+      <WaitlistDialog
+        isOpen={contactOpen}
+        onClose={() => setContactOpen(false)}
+      />
       <Footer />
       <FloatingSMSButton />
     </div>
