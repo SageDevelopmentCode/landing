@@ -2329,6 +2329,61 @@ export async function buildShadowDayPaymentConfirmationEmail(opts: {
   return { subject, content };
 }
 
+export async function buildShadowDayThankYouEmail(opts: {
+  firstName: string;
+  childName: string;
+}): Promise<{ subject: string; content: string }> {
+  const subject = "Thank you for your Shadow Day at Sage Field";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+  <p style="margin-bottom: 24px;">Dear ${opts.firstName},</p>
+
+  <p>Thank you for bringing <strong>${opts.childName}</strong> to Sage Field for a shadow day! We hope you both left with a real sense of what a typical day feels like here — the academics, outdoor time, cooking, and the warmth of our small community.</p>
+
+  <p>We know choosing the right learning environment is a big decision, and we&apos;re grateful your family spent a full day with us. If any questions came up after the visit — big or small — we&apos;d love to hear from you.</p>
+
+  <h2 style="font-size: 18px; margin-top: 32px; margin-bottom: 12px; color: #2c2c2c;">Ready for Next Steps?</h2>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">School Year 2026–2027</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">A full-year microschool experience blending Montessori, Waldorf, and Reggio Emilia philosophies with TEKS-aligned academics, in a small, nature-connected environment.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/school-year-2026-2027" style="color: #5a7a5a;">Learn more about the School Year →</a></p>
+  </div>
+
+  <div style="border: 1px solid #ddd; border-radius: 4px; padding: 16px 20px; margin-bottom: 12px;">
+    <p style="margin: 0 0 4px 0; font-weight: bold; font-size: 15px;">Homeschool Drop-In</p>
+    <p style="margin: 4px 0; color: #555; font-size: 14px;">1–3 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;">Flexible enriching support for homeschooling families. Choose 1 to 3 days per week with ability-based grouping and all enrichments included every day.</p>
+    <p style="margin: 10px 0 0 0; font-size: 14px;"><a href="https://www.sagefield.co/homeschool" style="color: #5a7a5a;">Learn more about Homeschool Drop-In →</a></p>
+  </div>
+
+  <p style="font-size: 14px; color: #555; margin-bottom: 28px;">Families who enroll within <strong>14 days</strong> of their child&apos;s shadow day visit may have the shadow day fee waived from their first month&apos;s tuition.</p>
+
+  <div style="border: 1px solid #a8c5a0; border-radius: 4px; padding: 20px 24px; margin: 28px 0; text-align: center; background: #f7f4f0;">
+    <p style="margin: 0 0 10px 0; font-weight: bold; font-size: 15px;">Ready to apply?</p>
+    <a href="https://www.sagefield.co/apply" style="display: inline-block; background: #5a7a5a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 4px; font-family: Georgia, serif; font-size: 15px;">Apply Here →</a>
+  </div>
+
+  <p>We&apos;d love to have your family join ours. Whether you&apos;re ready to apply now or still exploring, we&apos;re here for you every step of the way.</p>
+
+  <ul style="padding-left: 20px; margin: 8px 0;">
+    <li style="margin-bottom: 6px;">Email: <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></li>
+    <li style="margin-bottom: 6px;">Call/Text: <a href="tel:5126775872" style="color: #5a7a5a;">(512) 677-5872</a></li>
+  </ul>
+
+  <p style="margin-top: 32px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
 export async function buildBeachBashConfirmationEmail(opts: {
   parentName: string;
   childNames: string;
@@ -5191,6 +5246,118 @@ export async function buildSchoolYearWeekEightNewsletterEmail(opts: {
   </div>
 
   <p style="margin-bottom: 8px; font-size: 14px; color: #555;">Enjoy the long weekend — we can't wait for Summer-Ween on Wednesday and more adventures ahead. Thank you for being part of Sage Field.</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
+  <p style="margin-top: 4px;"><strong>Sage Field School</strong></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+export async function buildSchoolYearWeekNineNewsletterEmail(opts: {
+  g1FullName: string;
+  childLegalName: string;
+}): Promise<{ subject: string; content: string }> {
+  const firstName = opts.g1FullName.split(" ")[0];
+  const subject =
+    "Week 9 Newsletter — Summerween, Little Scientists & Fairytale Kingdom Ahead 🌿";
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${firstName}!</p>
+
+  <p style="margin-bottom: 20px;">Welcome to Week 9! This past week (October 12–16) brought hands-on science, literacy and math tied to real-world questions, and a joyful midweek celebration as we leaned into fall.</p>
+
+  <p style="margin-bottom: 20px; font-size: 14px; color: #444;">We've put together our school year newsletter — a closer look at the week through photos and classroom moments.</p>
+
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin: 28px 0; text-align: center;">
+    <p style="margin: 0 0 6px 0; font-size: 15px; font-weight: bold; color: #2C5F2E;">📰 Week 9 Newsletter is Live!</p>
+    <p style="margin: 0 0 18px 0; font-size: 13px; color: #555;">Photos, classroom moments, and a deeper look into our week.</p>
+    <a href="https://sagefield.co/newsletter/416f202a-ed39-4a39-ad4e-7ec5209defb3" style="background: #2C5F2E; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Read the Newsletter →</a>
+    <div style="margin-top: 14px;">
+      <span style="display: inline-block; background: #f7f4f0; border: 1px solid #a8c5a0; border-radius: 999px; padding: 5px 14px; font-size: 12px; color: #555;">🔑 Password: <strong>weeknine</strong></span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🌿 Classroom Highlights</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <div style="margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #e0dbd5;">
+      <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #2C5F2E;">Joy's Class (Pre-K–K)</p>
+      <p style="margin: 0; font-size: 14px; color: #2c2c2c;">Students explored force, motion, and speed through garbage and sanitation trucks — connecting movement, time, and the work community helpers do. Their recycling inquiry wove in counting, number recognition, and CVC spelling, and everyday observations like skid marks on pavement sparked rich talk about fast and slow movement.</p>
+    </div>
+    <div style="margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid #e0dbd5;">
+      <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #2C5F2E;">Zelinda's Class (1st–2nd)</p>
+      <p style="margin: 0; font-size: 14px; color: #2c2c2c;">Summerween brought pumpkin muffins and a sunny water day before cooler weather. Math focused on subtraction and CVC work; science contrasted physical and chemical changes in matter, and social studies highlighted American symbols. Field Friday was Little Scientist — lava lamp, pepper-and-soap, Oobleck, and soda-and-Mentos experiments filled the day.</p>
+    </div>
+    <div style="margin-bottom: 0;">
+      <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #2C5F2E;">Sabrina's Class (3rd–4th)</p>
+      <p style="margin: 0; font-size: 14px; color: #2c2c2c;">Students joined Summerween with water play and outdoor games, continued fractions in small groups, and wrote persuasive paragraphs on what their teacher should be for Halloween. Reading centered on why we dream, ELA covered linking verbs, and art and music included clay creation and time with Mr. Craig.</p>
+    </div>
+    <p style="margin: 16px 0 0 0; font-size: 13px; color: #555;">Read the full classroom stories, photos, and details in the newsletter above.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">📅 Upcoming Events</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>🏰 <strong>Field Friday: Fairytale Kingdom — Friday, October 23</strong> — sign up for Friday on your Parent Portal through Tuition and Billing</li>
+    </ul>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">📣 Parent Reminders</h2>
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px;">
+    <ul style="margin: 0; padding-left: 18px; line-height: 2.1; font-size: 14px; color: #2c2c2c;">
+      <li>🎯 <strong>Activity Preferences</strong> — please set or update in the Parent Portal so your child can participate in planned experiences throughout the month</li>
+      <li>☀️ <strong>Sunscreen &amp; bug spray</strong> — spray sunscreen, spray bug spray, and facial sunscreen sticks only. Please do not send cream sunscreen or cream bug spray for the body</li>
+      <li>🏷️ <strong>Label belongings</strong> — please label all of your child's belongings with their name</li>
+      <li>🚗 <strong>Drop-off &amp; pick-up</strong> — please pull through the gate during drop-off and pick-up. Do not park in the front unless the gates are closed</li>
+    </ul>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">📱 The Sage Field App Is Now Available!</h2>
+  <p style="margin-bottom: 12px; font-size: 14px; color: #2c2c2c;">We're excited to share that the <strong>Sage Field app is officially live</strong> — download it today and have everything you need right in your pocket.</p>
+
+  <div style="text-align: center; margin: 24px 0;">
+    <a href="https://sagefield.co/download" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Download the App</a>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">With the app you can:</p>
+  <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 14px; color: #555; line-height: 2;">
+    <li>💳 Pay tuition directly</li>
+    <li>📸 View the school feed</li>
+    <li>💬 Message staff</li>
+    <li>🌿 Join the community channel</li>
+    <li>👧 Check your children's profiles</li>
+    <li>📅 Schedule parent-teacher conferences</li>
+  </ul>
+
+  <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 14px 18px; margin: 20px 0 24px 0; border-radius: 4px; font-size: 14px;">
+    <p style="margin: 0;"><strong>Android users:</strong> When you tap the Google Play button on the download page, it will prompt you with an email address — we'll use that to send you a direct install link right away.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #2C5F2E; margin-top: 32px; margin-bottom: 14px;">🎁 Referral Program</h2>
+  <div style="background: #eef6ee; border: 1px solid #a8c5a0; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">We're excited to share our <strong>referral program</strong> — and we'd love your help spreading the word about Sage Field!</p>
+    <p style="margin: 0 0 12px 0;">When a family you refer <strong>enrolls in our current school program and pays their registration fee</strong>, you'll receive a <strong>$500 gift card of your choice</strong>. 🎉</p>
+    <p style="margin: 0 0 16px 0;">Simply share your unique referral link — you can find it on your home dashboard. If sharing the link isn't convenient, you can also just let the family know to <strong>mention your name when they apply</strong> and it will still count toward your referral.</p>
+    <p style="margin: 0; color: #888; font-size: 13px;">⏳ This offer is available through the end of our school year.</p>
+  </div>
+
+  <h2 style="font-size: 17px; color: #b45309; margin-top: 32px; margin-bottom: 14px;">🌟 Share Your Story</h2>
+  <div style="background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px; font-size: 14px; color: #2c2c2c;">
+    <p style="margin: 0 0 12px 0;">Has Sage Field made a difference for your family? We'd love to hear about it — and so would other families looking for the right fit for their child.</p>
+    <p style="margin: 0 0 12px 0;">As a thank-you for sharing your experience, we'll send you a <strong>$15 Starbucks gift card ☕</strong>. It only takes a few minutes and means the world to us.</p>
+    <div style="text-align: center; margin-top: 16px;">
+      <a href="https://sagefield.co/testimonial" style="background: #d97706; color: #ffffff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Share a Testimonial →</a>
+    </div>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">Thank you for helping make Summerween and our Little Scientist Field Friday so memorable — we can't wait for Fairytale Kingdom on October 23. Thank you for being part of Sage Field.</p>
 
   <p style="margin-top: 32px; margin-bottom: 4px;">Warmly,</p>
   <p style="margin-top: 4px;"><strong>Sage Field School</strong></p>

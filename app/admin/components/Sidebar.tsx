@@ -135,6 +135,11 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         icon: <CreditCard className="w-4 h-4" />,
       },
       {
+        name: "Staff photos",
+        href: "/admin/staff-photos",
+        icon: <Camera className="w-4 h-4" />,
+      },
+      {
         name: "Messages",
         href: "/admin/messages",
         icon: <MessageSquare className="w-4 h-4" />,

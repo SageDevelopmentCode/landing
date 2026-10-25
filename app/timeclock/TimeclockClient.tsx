@@ -129,6 +129,7 @@ function DayView({
   selectedDate,
   sessionsByDay,
   activeSession,
+  clockActionPending,
   onClockIn,
   onClockOut,
   onDeleteSession,
@@ -138,6 +139,7 @@ function DayView({
   onDateChange: (d: Date) => void;
   sessionsByDay: SessionsByDay;
   activeSession: ClockSession | null;
+  clockActionPending: boolean;
   onClockIn: () => void;
   onClockOut: () => void;
   onDeleteSession: (id: string) => void;
@@ -210,18 +212,27 @@ function DayView({
             {isActiveDay ? (
               <button
                 onClick={onClockOut}
-                className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 font-semibold font-body text-sm rounded-xl hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm cursor-pointer"
+                disabled={clockActionPending}
+                className="flex items-center gap-2 px-5 py-3 bg-white border border-gray-200 text-gray-700 font-semibold font-body text-sm rounded-xl hover:border-red-200 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <LogOut className="w-4 h-4" />
+                {clockActionPending ? (
+                  <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                ) : (
+                  <LogOut className="w-4 h-4" />
+                )}
                 Clock Out
               </button>
             ) : (
               <button
                 onClick={onClockIn}
-                disabled={isFuture}
+                disabled={isFuture || clockActionPending}
                 className="flex items-center gap-2 px-5 py-3 bg-[#4a7c59] text-white font-semibold font-body text-sm rounded-xl hover:bg-[#3d6b4a] transition-colors shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <LogIn className="w-4 h-4" />
+                {clockActionPending ? (
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <LogIn className="w-4 h-4" />
+                )}
                 Clock In
               </button>
             )}
@@ -767,6 +778,7 @@ function ClockView({
 }) {
   const [sessionsByDay, setSessionsByDay] = useState<SessionsByDay>({});
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [clockActionPending, setClockActionPending] = useState(false);
   const [view, setView] = useState<ViewMode>("day");
   const [selectedDate, setSelectedDate] = useState<Date>(() => {
     const today = new Date();
@@ -803,23 +815,40 @@ function ClockView({
   const activeSession = Object.values(sessionsByDay).flat().find((s) => !s.clockOutAt) ?? null;
 
   async function handleClockIn() {
+    if (clockActionPending || activeSession) return;
     resetInactivity();
-    const session = await clockInByUserId(teacher.id, teacher.full_name);
-    if (!session) return;
-    const dateKey = toISOKey(new Date(session.clockInAt));
-    setSessionsByDay((prev) => ({ ...prev, [dateKey]: [...(prev[dateKey] ?? []), session] }));
+    setClockActionPending(true);
+    try {
+      const session = await clockInByUserId(teacher.id, teacher.full_name);
+      if (!session) return;
+      const dateKey = toISOKey(new Date(session.clockInAt));
+      setSessionsByDay((prev) => {
+        const daySessions = prev[dateKey] ?? [];
+        if (daySessions.some((s) => s.id === session.id)) return prev;
+        return { ...prev, [dateKey]: [...daySessions, session] };
+      });
+    } finally {
+      setClockActionPending(false);
+    }
   }
 
   async function handleClockOut() {
+    if (clockActionPending || !activeSession) return;
     resetInactivity();
-    if (!activeSession) return;
-    const clockOutAt = await clockOutByUserId(activeSession.id, teacher.id, teacher.full_name);
-    if (!clockOutAt) return;
-    const dateKey = toISOKey(new Date(activeSession.clockInAt));
-    setSessionsByDay((prev) => ({
-      ...prev,
-      [dateKey]: (prev[dateKey] ?? []).map((s) => s.id === activeSession.id ? { ...s, clockOutAt } : s),
-    }));
+    const sessionId = activeSession.id;
+    const clockInAt = activeSession.clockInAt;
+    setClockActionPending(true);
+    try {
+      const clockOutAt = await clockOutByUserId(sessionId, teacher.id, teacher.full_name);
+      if (!clockOutAt) return;
+      const dateKey = toISOKey(new Date(clockInAt));
+      setSessionsByDay((prev) => ({
+        ...prev,
+        [dateKey]: (prev[dateKey] ?? []).map((s) => s.id === sessionId ? { ...s, clockOutAt } : s),
+      }));
+    } finally {
+      setClockActionPending(false);
+    }
   }
 
   function handleDeleteSession(id: string) {
@@ -968,6 +997,7 @@ function ClockView({
                     onDateChange={setSelectedDate}
                     sessionsByDay={sessionsByDay}
                     activeSession={activeSession}
+                    clockActionPending={clockActionPending}
                     onClockIn={handleClockIn}
                     onClockOut={handleClockOut}
                     onDeleteSession={handleDeleteSession}

@@ -62,3 +62,6 @@ apps/mobile/expo-env.d.ts
 apps/mobile/google-service-account.json
 apps/mobile/ios
 apps/mobile/android
+
+# personal pay stubs
+/paystubs/

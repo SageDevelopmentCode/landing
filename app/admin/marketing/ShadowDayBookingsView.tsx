@@ -6,6 +6,8 @@ import { Poppins } from 'next/font/google'
 import { cssColors as colors, radius, cssShadows as shadows } from '../design-system'
 import { Table, TableRow, TableCell } from '../components/Table'
 import type { ShadowDayBooking } from './page'
+import { sendShadowDayThankYouEmail } from '@/app/actions/sendShadowDayThankYouEmail'
+import { EmailThread } from '../components/EmailThread'
 
 const merriweather = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
 
@@ -44,12 +46,27 @@ function formatCreatedAt(iso: string): string {
 
 export function ShadowDayBookingsView({ bookings }: { bookings: ShadowDayBooking[] }) {
   const [selected, setSelected] = useState<ShadowDayBooking | null>(null)
+  const [thankYouSending, setThankYouSending] = useState(false)
+  const [thankYouSent, setThankYouSent] = useState(false)
 
   const paidCount = bookings.filter(b => b.payment_status === 'paid').length
   const pendingCount = bookings.filter(b => b.payment_status === 'pending').length
 
+  async function handleSendThankYou() {
+    if (!selected) return
+    setThankYouSending(true)
+    const res = await sendShadowDayThankYouEmail({
+      firstName: selected.first_name,
+      childName: selected.child_name,
+      email: selected.email,
+    })
+    setThankYouSending(false)
+    if (res.success) setThankYouSent(true)
+  }
+
   function closePanel() {
     setSelected(null)
+    setThankYouSent(false)
   }
 
   return (
@@ -230,6 +247,35 @@ export function ShadowDayBookingsView({ bookings }: { bookings: ShadowDayBooking
                   <p style={{ fontSize: '14px', color: colors.textPrimary }}>{value}</p>
                 </div>
               ))}
+
+              <div style={{ marginTop: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleSendThankYou}
+                  disabled={thankYouSending || thankYouSent}
+                  style={{
+                    width: '100%',
+                    padding: '10px 0',
+                    backgroundColor: thankYouSent ? '#e8f0e8' : colors.mistyForest,
+                    color: thankYouSent ? colors.mistyForest : 'white',
+                    border: thankYouSent ? `1px solid ${colors.mistyForest}` : 'none',
+                    borderRadius: radius.md,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: thankYouSending || thankYouSent ? 'default' : 'pointer',
+                    opacity: thankYouSending ? 0.7 : 1,
+                  }}
+                >
+                  {thankYouSending ? 'Sending…' : thankYouSent ? 'Thank You Sent ✓' : 'Send Thank You Email'}
+                </button>
+              </div>
+
+              <div style={{ marginTop: '28px', borderTop: `1px solid ${colors.divider}`, paddingTop: '20px' }}>
+                <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+                  Email History
+                </p>
+                <EmailThread emailAddress={selected.email} />
+              </div>
             </motion.div>
           </>
         )}
