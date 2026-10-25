@@ -109,6 +109,22 @@ export async function fetchUpcomingTours(): Promise<TourBooking[]> {
   return (data ?? []) as TourBooking[];
 }
 
+export async function fetchTourBookingsForDate(
+  date: string,
+): Promise<TourBooking[]> {
+  const { data, error } = await supabase
+    .schema("marketing")
+    .from("tour_bookings")
+    .select("*")
+    .eq("is_deleted", false)
+    .eq("tour_date", date)
+    .in("status", ["pending", "confirmed"])
+    .order("tour_time", { ascending: true });
+
+  if (error) throw error;
+  return (data ?? []) as TourBooking[];
+}
+
 export async function updateTourBookingDateTime(input: {
   id: string;
   tour_date: string;

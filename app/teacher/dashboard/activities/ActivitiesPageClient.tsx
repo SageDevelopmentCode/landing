@@ -1,6 +1,17 @@
 "use client";
 
-import { useState, useRef, useTransition, useMemo, useEffect } from "react";
+import {
+  useState,
+  useRef,
+  useTransition,
+  useMemo,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+  type Ref,
+} from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -24,7 +35,23 @@ import {
 } from "lucide-react";
 import { createActivity, deleteActivity, updateActivity } from "@/app/actions/activities";
 import ActivityDatePicker from "./ActivityDatePicker";
+import DiscardChangesDialog from "./DiscardChangesDialog";
+import {
+  useBeforeUnloadGuard,
+  useInAppNavigationGuard,
+  type NavigateAwayTarget,
+} from "./useInAppNavigationGuard";
 import type { Activity, ActivityChangeLogEntry, AutoFillStudent } from "@/app/actions/activities";
+
+type PendingLeave =
+  | { kind: "close" }
+  | { kind: "link"; href: string }
+  | { kind: "back" }
+  | { kind: "action"; run: () => void };
+
+export type ActivityDrawerHandle = {
+  attemptLeaveThen: (run: () => void) => void;
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -553,26 +580,33 @@ function FoodCard({
 
 // ─── Activity Drawer (create + edit) ─────────────────────────────────────────
 
-function ActivityDrawer({
-  editingActivity,
-  allActivities = [],
-  onClose,
-  onSaved,
-  onUpdated,
-}: {
-  editingActivity?: Activity;
-  allActivities?: Activity[];
-  onClose: () => void;
-  onSaved: (activity: Activity) => void;
-  onUpdated: (activity: Activity) => void;
-}) {
+const ActivityDrawer = forwardRef(function ActivityDrawer(
+  {
+    editingActivity,
+    allActivities = [],
+    onClose,
+    onSaved,
+    onUpdated,
+    onUnsavedChangesChange,
+  }: {
+    editingActivity?: Activity;
+    allActivities?: Activity[];
+    onClose: () => void;
+    onSaved: (activity: Activity) => void;
+    onUpdated: (activity: Activity) => void;
+    onUnsavedChangesChange?: (dirty: boolean) => void;
+  },
+  ref: Ref<ActivityDrawerHandle>
+) {
+  const router = useRouter();
   const isEdit = !!editingActivity;
   const [draft, setDraft] = useState<ActivityDraft>(
     isEdit ? activityToDraft(editingActivity!) : EMPTY_DRAFT
   );
   const [isPending, startTransition] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [showConfirmClose, setShowConfirmClose] = useState(false);
+  const [pendingLeave, setPendingLeave] = useState<PendingLeave | null>(null);
+  const suppressHistoryRestoreRef = useRef(false);
 
   const previousFoods = useMemo(() => {
     const seen = new Map<string, PreviousFood>();
@@ -599,15 +633,28 @@ function ActivityDrawer({
     ? JSON.stringify(draft) !== JSON.stringify(activityToDraft(editingActivity!))
     : JSON.stringify(draft) !== JSON.stringify(EMPTY_DRAFT);
 
+  useBeforeUnloadGuard(hasUnsavedChanges);
+
   useEffect(() => {
-    if (!hasUnsavedChanges) return;
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [hasUnsavedChanges]);
+    onUnsavedChangesChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onUnsavedChangesChange]);
+
+  const openLeavePrompt = useCallback((leave: PendingLeave) => {
+    setPendingLeave(leave);
+  }, []);
+
+  const handleNavigateAway = useCallback(
+    (target: NavigateAwayTarget) => {
+      if (target.kind === "link") {
+        openLeavePrompt({ kind: "link", href: target.href });
+      } else {
+        openLeavePrompt({ kind: "back" });
+      }
+    },
+    [openLeavePrompt]
+  );
+
+  useInAppNavigationGuard(hasUnsavedChanges, handleNavigateAway, suppressHistoryRestoreRef);
 
   function set<K extends keyof ActivityDraft>(key: K, value: ActivityDraft[K]) {
     setDraft((prev) => ({ ...prev, [key]: value }));
@@ -655,7 +702,7 @@ function ActivityDrawer({
   }
 
   // Real teardown — only called when close is confirmed or after a successful save
-  function doClose() {
+  const doClose = useCallback(() => {
     draft.images.forEach((img) => { if (img.compressedFile) URL.revokeObjectURL(img.preview); });
     draft.foods.forEach((f) => {
       f.images.forEach((img) => { if (img.compressedFile) URL.revokeObjectURL(img.preview); });
@@ -665,16 +712,55 @@ function ActivityDrawer({
     });
     setSaveError(null);
     onClose();
+  }, [draft, onClose]);
+
+  function confirmDiscard() {
+    const leave = pendingLeave;
+    setPendingLeave(null);
+
+    if (leave?.kind === "back") {
+      suppressHistoryRestoreRef.current = true;
+    }
+
+    doClose();
+
+    if (!leave || leave.kind === "close") return;
+    if (leave.kind === "link") {
+      router.push(leave.href);
+    } else if (leave.kind === "back") {
+      window.history.go(-2);
+    } else {
+      leave.run();
+    }
+  }
+
+  function keepEditing() {
+    setPendingLeave(null);
   }
 
   // Gate: show modal if unsaved changes, otherwise close directly
   function requestClose() {
     if (hasUnsavedChanges) {
-      setShowConfirmClose(true);
+      openLeavePrompt({ kind: "close" });
     } else {
       doClose();
     }
   }
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      attemptLeaveThen(run: () => void) {
+        if (hasUnsavedChanges) {
+          openLeavePrompt({ kind: "action", run });
+        } else {
+          doClose();
+          run();
+        }
+      },
+    }),
+    [hasUnsavedChanges, openLeavePrompt, doClose]
+  );
 
   function buildFormData(): FormData {
     const fd = new FormData();
@@ -1015,41 +1101,14 @@ function ActivityDrawer({
         </div>
       </motion.div>
 
-      {showConfirmClose && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-            onClick={() => setShowConfirmClose(false)}
-          />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6 flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <h3 className="text-base font-semibold font-heading text-gray-900">
-                Discard unsaved changes?
-              </h3>
-              <p className="text-sm font-body text-gray-500">
-                You have unsaved changes. If you close now, your changes will be lost.
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowConfirmClose(false)}
-                className="px-4 py-2 text-sm font-semibold font-body text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-              >
-                Keep editing
-              </button>
-              <button
-                onClick={doClose}
-                className="px-4 py-2 text-sm font-semibold font-body text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors"
-              >
-                Discard changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DiscardChangesDialog
+        open={pendingLeave !== null}
+        onKeepEditing={keepEditing}
+        onDiscard={confirmDiscard}
+      />
     </>
   );
-}
+});
 
 // ─── Change Log Panel ─────────────────────────────────────────────────────────
 
@@ -1373,6 +1432,36 @@ export default function ActivitiesPageClient({ initialActivities, autoFillStuden
   const [historyActivity, setHistoryActivity] = useState<Activity | null>(null);
   const [filter, setFilter] = useState<FilterTab>("all");
   const [autoFillOpen, setAutoFillOpen] = useState(false);
+  const createDrawerRef = useRef<ActivityDrawerHandle>(null);
+  const editDrawerRef = useRef<ActivityDrawerHandle>(null);
+
+  function openCreateDrawer() {
+    if (editingActivity) {
+      editDrawerRef.current?.attemptLeaveThen(() => {
+        setEditingActivity(null);
+        setDrawerOpen(true);
+      });
+      return;
+    }
+    setDrawerOpen(true);
+  }
+
+  function openEditDrawer(activity: Activity) {
+    if (drawerOpen) {
+      createDrawerRef.current?.attemptLeaveThen(() => {
+        setDrawerOpen(false);
+        setEditingActivity(activity);
+      });
+      return;
+    }
+    if (editingActivity && editingActivity.id !== activity.id) {
+      editDrawerRef.current?.attemptLeaveThen(() => {
+        setEditingActivity(activity);
+      });
+      return;
+    }
+    setEditingActivity(activity);
+  }
 
   function handleSaved(activity: Activity) {
     setActivities((prev) => [activity, ...prev]);
@@ -1416,7 +1505,7 @@ export default function ActivitiesPageClient({ initialActivities, autoFillStuden
             Auto-fill ({autoFillStudents.length})
           </button>
           <button
-            onClick={() => setDrawerOpen(true)}
+            onClick={openCreateDrawer}
             className="flex items-center gap-2 px-4 py-2 text-sm font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6b4f] rounded-xl transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
@@ -1460,7 +1549,7 @@ export default function ActivitiesPageClient({ initialActivities, autoFillStuden
             Create your first activity to get started. You can add foods and ingredients so parents can review and share preferences.
           </p>
           <button
-            onClick={() => setDrawerOpen(true)}
+            onClick={openCreateDrawer}
             className="mt-5 flex items-center gap-2 px-4 py-2 text-sm font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 rounded-xl hover:bg-[#4a7c59]/5 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -1480,7 +1569,7 @@ export default function ActivitiesPageClient({ initialActivities, autoFillStuden
               key={activity.id}
               activity={activity}
               onDelete={handleDelete}
-              onEdit={setEditingActivity}
+              onEdit={openEditDrawer}
               onHistory={setHistoryActivity}
             />
           ))}
@@ -1488,25 +1577,26 @@ export default function ActivitiesPageClient({ initialActivities, autoFillStuden
       )}
 
       <AnimatePresence>
-        {drawerOpen && (
+        {drawerOpen ? (
           <ActivityDrawer
             key="new"
+            ref={createDrawerRef}
             allActivities={activities}
             onClose={() => setDrawerOpen(false)}
             onSaved={handleSaved}
             onUpdated={handleUpdated}
           />
-        )}
-        {editingActivity && (
+        ) : editingActivity ? (
           <ActivityDrawer
             key={`edit-${editingActivity.id}`}
+            ref={editDrawerRef}
             editingActivity={editingActivity}
             allActivities={activities}
             onClose={() => setEditingActivity(null)}
             onSaved={handleSaved}
             onUpdated={handleUpdated}
           />
-        )}
+        ) : null}
         {historyActivity && (
           <ChangeLogPanel
             key={`log-${historyActivity.id}`}

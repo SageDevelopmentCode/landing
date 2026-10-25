@@ -56,7 +56,7 @@ const PROGRAMS = [
     badge: "Homeschool",
     title: "Homeschool Drop-In",
     teaser: "1–5 flexible days for homeschool families",
-    desc: "Flexible enrichment for families who want structure without losing autonomy. Choose 1 to 5 days — adjust as your family's rhythm evolves. All enrichments included.",
+    desc: "Flexible enrichment for families who want structure without losing autonomy. Choose 1 to 3 days — adjust as your family's rhythm evolves. All enrichments included.",
     details: ["Ages 4–11", "1–5 Days/Wk", "Flexible", "Max 12 Kids"],
     image: "/assets/Homeschool3.jpg",
     accent: "text-emerald-700",

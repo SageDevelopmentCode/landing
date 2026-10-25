@@ -108,7 +108,7 @@ const programs = [
       "Flexible Scheduling",
     ],
     description:
-      "Flexible drop-in program for homeschool families — choose 1 to 5 days per week with ability-based learning, enrichments, and Friday Field Days.",
+      "Flexible drop-in program for homeschool families — choose 1 to 3 days per week with ability-based learning, enrichments, and Friday Field Days.",
     href: "/homeschool",
     image: "/assets/After1.png",
     dateBg: "bg-emerald-50",

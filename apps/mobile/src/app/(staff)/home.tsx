@@ -85,6 +85,10 @@ import {
   isSchoolYearPickupReminderWindow,
   isStudentAwaitingPickup,
 } from "@/lib/pickup-reminder";
+import {
+  fetchTourBookingsForDate,
+  type TourBooking,
+} from "@/lib/admin-actions";
 
 const staffSheetBackground = { backgroundColor: HomeTheme.canvas };
 const staffSheetHandle = { backgroundColor: "#C4D9C8" };
@@ -491,6 +495,11 @@ export default function StaffHomeScreen() {
   const [selectedEvent, setSelectedEvent] =
     useState<StaffUpcomingCalendarEvent | null>(null);
 
+  const [todayTours, setTodayTours] = useState<TourBooking[]>([]);
+
+  const canSeeTourBanner =
+    role === "teacher" || role === "super_admin";
+
   const upcomingBirthdays = useMemo(
     () => getUpcomingBirthdays(allBirthdays),
     [allBirthdays],
@@ -733,12 +742,31 @@ export default function StaffHomeScreen() {
     }
   }, []);
 
+  const loadTodayTours = useCallback(async () => {
+    if (!canSeeTourBanner) {
+      setTodayTours([]);
+      return;
+    }
+    try {
+      const rows = await fetchTourBookingsForDate(todayActual);
+      setTodayTours(rows);
+    } catch (e) {
+      notifyError("staff-home-today-tours", e);
+      setTodayTours([]);
+    }
+  }, [canSeeTourBanner, todayActual]);
+
+  useEffect(() => {
+    loadTodayTours();
+  }, [loadTodayTours]);
+
   useFocusEffect(
     useCallback(() => {
       loadTodayStudents();
       loadBirthdays();
       loadUpcomingEvents();
-    }, [loadTodayStudents, loadBirthdays, loadUpcomingEvents]),
+      loadTodayTours();
+    }, [loadTodayStudents, loadBirthdays, loadUpcomingEvents, loadTodayTours]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -758,6 +786,7 @@ export default function StaffHomeScreen() {
               .then(setConferenceBookings)
               .catch((e) => notifyError("staff-home-ptc-bookings", e))
           : Promise.resolve(),
+        loadTodayTours(),
       ]);
     } catch (e) {
       notifyError("staff-home-refresh", e);
@@ -772,6 +801,7 @@ export default function StaffHomeScreen() {
     loadWeekActivityPrefs,
     loadSchoolDayFoodPrefs,
     showConferenceSection,
+    loadTodayTours,
   ]);
 
   // ── Profile image upload ─────────────────────────────────────────────────────
@@ -1788,6 +1818,24 @@ export default function StaffHomeScreen() {
     return `${names.slice(0, 5).join(", ")} +${names.length - 5} more`;
   })();
 
+  const showTourBanner =
+    canSeeTourBanner &&
+    selectedDate === todayActual &&
+    todayTours.length > 0;
+
+  const todayToursSummary = useMemo(() => {
+    if (todayTours.length <= 3) {
+      return todayTours
+        .map((t) => {
+          const lastInitial = t.last_name?.[0] ? ` ${t.last_name[0]}.` : "";
+          return `${t.tour_time} · ${t.first_name}${lastInitial}`;
+        })
+        .join("\n");
+    }
+    const times = todayTours.map((t) => t.tour_time).join(", ");
+    return `${todayTours.length} tours: ${times}`;
+  }, [todayTours]);
+
   // ── Empty state ───────────────────────────────────────────────────────────────
 
   function renderEmptyState() {
@@ -2102,6 +2150,50 @@ export default function StaffHomeScreen() {
               </Pressable>
             </View>
           </View>
+
+          {showTourBanner && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.tourDayBannerCard,
+                role === "super_admin" && pressed && { opacity: 0.85 },
+              ]}
+              disabled={role !== "super_admin"}
+              onPress={() => router.push("/(staff)/admin/tours" as any)}
+            >
+              <View style={styles.tourDayBannerIconWrap}>
+                <Ionicons
+                  name="information-circle"
+                  size={18}
+                  color="#1d4ed8"
+                />
+              </View>
+              <View style={styles.tourDayBannerContent}>
+                <View style={styles.tourDayBannerTitleRow}>
+                  <Text style={styles.tourDayBannerTitle}>
+                    {todayTours.length === 1
+                      ? "Campus tour today"
+                      : "Campus tours today"}
+                  </Text>
+                  {todayTours.length > 1 && (
+                    <View style={styles.tourDayBannerBadge}>
+                      <Text style={styles.tourDayBannerBadgeText}>
+                        {todayTours.length}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.tourDayBannerBody}>{todayToursSummary}</Text>
+                {role === "super_admin" && (
+                  <Text style={styles.tourDayBannerHint}>
+                    Tap to open Campus Tours
+                  </Text>
+                )}
+              </View>
+              {role === "super_admin" && (
+                <Ionicons name="chevron-forward" size={16} color="#1d4ed8" />
+              )}
+            </Pressable>
+          )}
 
           {unpickedStudents.length > 0 && (
             <Pressable
@@ -3668,6 +3760,57 @@ const styles = StyleSheet.create({
     fontFamily: FontFamilies.body,
     fontSize: 11,
     color: "#d97706",
+  },
+  tourDayBannerCard: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: "#eff6ff",
+    borderWidth: 1,
+    borderColor: "#bfdbfe",
+  },
+  tourDayBannerIconWrap: {
+    marginTop: 1,
+  },
+  tourDayBannerContent: {
+    flex: 1,
+    gap: 4,
+  },
+  tourDayBannerTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  tourDayBannerTitle: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 14,
+    color: "#1e3a8a",
+  },
+  tourDayBannerBadge: {
+    backgroundColor: "#bfdbfe",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 9999,
+  },
+  tourDayBannerBadgeText: {
+    fontFamily: FontFamilies.bodySemiBold,
+    fontSize: 12,
+    color: "#1e3a8a",
+  },
+  tourDayBannerBody: {
+    fontFamily: FontFamilies.body,
+    fontSize: 13,
+    color: "#1d4ed8",
+    lineHeight: 18,
+  },
+  tourDayBannerHint: {
+    fontFamily: FontFamilies.body,
+    fontSize: 11,
+    color: "#3b82f6",
   },
 
   // Status filter

@@ -67,8 +67,35 @@ export async function getTeacherSessionsByUserId(userId: string): Promise<Sessio
   return grouped
 }
 
+function mapClockSessionRow(row: {
+  id: string
+  clock_in_at: string
+  clock_out_at: string | null
+  note: string
+}): ClockSession {
+  return {
+    id: row.id,
+    clockInAt: row.clock_in_at,
+    clockOutAt: row.clock_out_at ?? null,
+    note: row.note ?? '',
+  }
+}
+
 export async function clockInByUserId(userId: string, teacherName: string | null): Promise<ClockSession | null> {
   const adminClient = createAdminClient()
+
+  const { data: existing } = await adminClient
+    .schema('teachers')
+    .from('clock_sessions')
+    .select('id, clock_in_at, clock_out_at, note')
+    .eq('teacher_id', userId)
+    .is('clock_out_at', null)
+    .maybeSingle()
+
+  if (existing) {
+    return mapClockSessionRow(existing)
+  }
+
   const { data, error } = await adminClient
     .schema('teachers')
     .from('clock_sessions')
@@ -78,12 +105,7 @@ export async function clockInByUserId(userId: string, teacherName: string | null
 
   if (error || !data) return null
 
-  const session: ClockSession = {
-    id: data.id,
-    clockInAt: data.clock_in_at,
-    clockOutAt: data.clock_out_at ?? null,
-    note: data.note ?? '',
-  }
+  const session = mapClockSessionRow(data)
 
   sendDiscordNotification(
     createTeacherClockInEmbed({

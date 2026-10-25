@@ -36,6 +36,14 @@ import WeekRecapPreview from "@/app/components/WeekRecapPreview";
 import EducationalPhilosophySection from "@/app/components/EducationalPhilosophySection";
 import MeetTheTeamSection from "@/app/components/MeetTheTeamSection";
 import FAQAccordion from "@/app/components/FAQAccordion";
+import {
+  dateKeyFromDate,
+  getFullDayBlockedDates,
+  getBlockedTimesForDate,
+  hasAvailableSlot,
+  normalizeTourUnavailabilityEntries,
+  type TourUnavailabilityEntry,
+} from "@/app/lib/tour-availability";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,7 +152,7 @@ const TOUR_IMAGES = [
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
-const MAX_MONTH = 9; // October (0-indexed)
+const MAX_MONTH = 11; // December (0-indexed)
 const MAX_YEAR = 2026;
 
 // ─── New Constants ────────────────────────────────────────────────────────────
@@ -434,7 +442,7 @@ function CalendarGrid({
   calendarYear,
   onPrevMonth,
   onNextMonth,
-  blockedDates,
+  unavailability,
 }: {
   selectedDate: Date | null;
   onSelectDate: (date: Date) => void;
@@ -442,8 +450,9 @@ function CalendarGrid({
   calendarYear: number;
   onPrevMonth: () => void;
   onNextMonth: () => void;
-  blockedDates: Set<string>;
+  unavailability: TourUnavailabilityEntry[];
 }) {
+  const blockedDates = getFullDayBlockedDates(unavailability);
   const daysInMonth = getDaysInMonth(calendarYear, calendarMonth);
   const startOffset = getFirstDayOfMonth(calendarYear, calendarMonth);
   const isPrevDisabled =
@@ -497,7 +506,11 @@ function CalendarGrid({
           const past = isPastDate(date);
           const dateKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
           const fullyBlocked = blockedDates.has(dateKey);
-          const available = isAvailableDay(date) && !past && !fullyBlocked;
+          const available =
+            isAvailableDay(date) &&
+            !past &&
+            !fullyBlocked &&
+            hasAvailableSlot(unavailability, dateKey, TIME_SLOTS);
           const selected = isDateSelected(date, selectedDate);
           const todayCell = isToday(date);
 
@@ -984,12 +997,6 @@ const STEP_HEADINGS: Record<TourStep, { title: string; sub: string }> = {
   },
 };
 
-type UnavailabilityEntry = {
-  unavailable_date: string;
-  unavailable_time: string | null;
-  is_recurring: boolean;
-};
-
 export default function TourPage() {
   const [currentStep, setCurrentStep] = useState<TourStep>(1);
   const [stepDirection, setStepDirection] = useState<1 | -1>(1);
@@ -1011,7 +1018,7 @@ export default function TourPage() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
 
-  const [unavailability, setUnavailability] = useState<UnavailabilityEntry[]>(
+  const [unavailability, setUnavailability] = useState<TourUnavailabilityEntry[]>(
     [],
   );
   const [isSubmitting, startSubmitTransition] = useTransition();
@@ -1056,34 +1063,37 @@ export default function TourPage() {
   };
 
   useEffect(() => {
-    fetch("/api/tour-unavailability")
-      .then((r) => r.json())
-      .then((data: UnavailabilityEntry[]) => {
-        if (Array.isArray(data)) {
-          setUnavailability(data);
+    fetch("/api/tour-unavailability", { cache: "no-store" })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: TourUnavailabilityEntry[]) => {
+        if (!Array.isArray(data)) return;
+        const normalized = normalizeTourUnavailabilityEntries(data);
+        setUnavailability(normalized);
 
-          // Auto-select first available date on desktop only
-          if (window.innerWidth >= 1024) {
-            const blockedDates = new Set(
-              data
-                .filter((e) => e.unavailable_time === null)
-                .map((e) => e.unavailable_date),
-            );
-            const candidate = new Date(TODAY);
-            for (let i = 0; i < 365; i++) {
-              const dateStr = `${candidate.getFullYear()}-${String(candidate.getMonth() + 1).padStart(2, "0")}-${String(candidate.getDate()).padStart(2, "0")}`;
-              if (isAvailableDay(candidate) && !blockedDates.has(dateStr)) {
-                setSelectedDate(new Date(candidate));
-                setCalendarMonth(candidate.getMonth());
-                setCalendarYear(candidate.getFullYear());
-                break;
-              }
-              candidate.setDate(candidate.getDate() + 1);
+        // Auto-select first available date on desktop only
+        if (window.innerWidth >= 1024) {
+          const candidate = new Date(TODAY);
+          for (let i = 0; i < 365; i++) {
+            const dateStr = dateKeyFromDate(candidate);
+            if (
+              isAvailableDay(candidate) &&
+              hasAvailableSlot(normalized, dateStr, TIME_SLOTS)
+            ) {
+              setSelectedDate(new Date(candidate));
+              setCalendarMonth(candidate.getMonth());
+              setCalendarYear(candidate.getFullYear());
+              break;
             }
+            candidate.setDate(candidate.getDate() + 1);
           }
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Failed to load tour availability:", err);
+      });
   }, []);
 
   const [formData, setFormData] = useState<FormData>({
@@ -1143,35 +1153,15 @@ export default function TourPage() {
     }
   }
 
-  const blockedDates = new Set<string>(
-    unavailability
-      .filter((u) => u.unavailable_time === null)
-      .map((u) => u.unavailable_date),
-  );
-
-  const blockedTimesForDate = (() => {
-    if (!selectedDate) return new Set<string>();
-    const key = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
-    const dayOfWeek = selectedDate.getDay();
-    return new Set<string>(
-      unavailability
-        .filter((u) => {
-          if (u.unavailable_time === null) return false;
-          if (u.is_recurring) {
-            const [y, m, d] = u.unavailable_date.split("-").map(Number);
-            return new Date(y, m - 1, d).getDay() === dayOfWeek;
-          }
-          return u.unavailable_date === key;
-        })
-        .map((u) => u.unavailable_time as string),
-    );
-  })();
+  const blockedTimesForDate = selectedDate
+    ? getBlockedTimesForDate(unavailability, dateKeyFromDate(selectedDate))
+    : new Set<string>();
 
   function handleSubmit() {
     if (!selectedDate || !selectedTime) return;
     setSubmitError("");
 
-    const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`;
+    const dateKey = dateKeyFromDate(selectedDate);
     const referralMap: Record<string, string> = {
       Google: "google",
       "Social Media": "social_media",
@@ -1622,7 +1612,7 @@ export default function TourPage() {
                           calendarYear={calendarYear}
                           onPrevMonth={handlePrevMonth}
                           onNextMonth={handleNextMonth}
-                          blockedDates={blockedDates}
+                          unavailability={unavailability}
                         />
                         {/* Mobile: hint to open time sheet after date selected */}
                         {selectedDate && (

@@ -39,6 +39,60 @@ export async function submitTourBooking(
     const validated = schema.parse(data);
     const supabase = createAdminClient();
 
+    const { data: unavailabilityRows, error: unavailabilityError } =
+      await supabase
+        .schema("marketing")
+        .from("tour_unavailability")
+        .select("unavailable_date, unavailable_time, is_recurring")
+        .eq("unavailable_date", validated.tour_date);
+
+    if (unavailabilityError) {
+      console.error("Supabase unavailability check error:", unavailabilityError);
+      return {
+        success: false,
+        message: "Failed to verify availability. Please try again.",
+      };
+    }
+
+    const blocks = unavailabilityRows ?? [];
+    const [tourYear, tourMonth, tourDayNum] = validated.tour_date
+      .split("-")
+      .map(Number);
+    const tourDayOfWeek = new Date(tourYear, tourMonth - 1, tourDayNum).getDay();
+
+    const isFullDayBlocked = blocks.some((row) => {
+      if (row.unavailable_time !== null) return false;
+      if (row.is_recurring) {
+        const [y, m, d] = String(row.unavailable_date)
+          .slice(0, 10)
+          .split("-")
+          .map(Number);
+        return new Date(y, m - 1, d).getDay() === tourDayOfWeek;
+      }
+      return true;
+    });
+    if (isFullDayBlocked) {
+      return {
+        success: false,
+        message: "That date is not available for tours. Please choose another day.",
+      };
+    }
+
+    const isTimeBlocked = blocks.some((row) => {
+      if (row.unavailable_time === null) return false;
+      if (row.is_recurring) {
+        const [y, m, d] = String(row.unavailable_date).slice(0, 10).split("-").map(Number);
+        return new Date(y, m - 1, d).getDay() === tourDayOfWeek;
+      }
+      return row.unavailable_time === validated.tour_time;
+    });
+    if (isTimeBlocked) {
+      return {
+        success: false,
+        message: "That time is no longer available. Please choose another slot.",
+      };
+    }
+
     const { data: booking, error } = await supabase
       .schema("marketing")
       .from("tour_bookings")
