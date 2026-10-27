@@ -9,7 +9,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import WeekRecapPreview from "../components/WeekRecapPreview";
-import WizardHeroScene, { WIZARD_THEME } from "./components/WizardHeroScene";
+import HalloweenHeroScene, { HALLOWEEN_THEME } from "./components/HalloweenHeroScene";
 import { formatPhone } from "../utils/formatPhone";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
 
@@ -49,38 +49,54 @@ const CAROUSEL_IMAGES = [
   "/assets/highlights/school_week_four/E10B5084-3A5E-44CC-B113-2CD6FD96A460.JPG",
 ];
 
-const WIZARD_ACADEMY_ACTIVITIES = [
+const HALLOWEEN_ACTIVITIES = [
   {
-    emoji: "🪄",
-    title: "Make your own wizard wand",
-    waypoint: "Wand Workshop",
-    desc: "Decorate a wand with stars, ribbon, and gems to take home.",
-    accent: "#E8D9FF",
-    accentText: "#5C3D8F",
+    emoji: "🎃",
+    title: "pumpkin painting",
+    waypoint: "Pumpkin Patch",
+    desc: "Paint mini pumpkins.",
+    accent: "#FFE4C7",
+    accentText: "#E85D04",
   },
   {
     emoji: "🧪",
-    title: "Potion lab",
-    waypoint: "Potion Lab",
-    desc: "Mix colorful potions and watch them fizz and change.",
-    accent: "#F7F2FF",
-    accentText: "#7B4BB0",
+    title: "witches brew",
+    waypoint: "Cauldron Lab",
+    desc: "A potion experiment with mini cauldrons.",
+    accent: "#FFF6EB",
+    accentText: "#D4532B",
   },
   {
-    emoji: "🧴",
-    title: "BYO potion",
-    waypoint: "BYO Station",
-    desc: "Build your own potion — pick colors, glitter, and mix-ins.",
-    accent: "#FFF8E7",
-    accentText: "#C4A35A",
+    emoji: "✨",
+    title: "slime",
+    waypoint: "Slime Station",
+    desc: "Make slime with glitter or mini charms.",
+    accent: "#FFF8DC",
+    accentText: "#C2410C",
   },
   {
-    emoji: "🎩",
-    title: "Wizard hat",
-    waypoint: "Hat Hall",
-    desc: "Make a pointed wizard hat to wear for the day.",
-    accent: "#E8D9FF",
-    accentText: "#2E2444",
+    emoji: "🎨",
+    title: "Halloween painting ornaments",
+    waypoint: "Ornament Studio",
+    desc: "Paint Halloween ornaments.",
+    accent: "#FFE4C7",
+    accentText: "#4A2C2A",
+  },
+  {
+    emoji: "👻",
+    title: "Ghost freeze dance",
+    waypoint: "Ghost Dance",
+    desc: "Dance like a ghost, then freeze when the music stops.",
+    accent: "#FFF6EB",
+    accentText: "#6B8F71",
+  },
+  {
+    emoji: "🧻",
+    title: "Mummy wrap",
+    waypoint: "Wrap Station",
+    desc: "Wrap a kid in toilet paper under 30 seconds.",
+    accent: "#FFF8DC",
+    accentText: "#E85D04",
   },
 ];
 
@@ -92,7 +108,7 @@ const PACKING_LIST = [
   { emoji: "🥪", item: "Snack + lunch from home" },
   { emoji: "👕", item: "Old clothes for outdoor play" },
   { emoji: "🎒", item: "Small backpack for paintings & creations" },
-  { emoji: "🪄", item: "Optional wizard cape or favorite magic accessory" },
+  { emoji: "🎃", item: "Optional costume or not-so-scary accessory" },
 ];
 
 const ACTIVITIES = [
@@ -123,11 +139,11 @@ const RISKS = [
 ];
 
 const inputClass =
-  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#7B4BB0] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
+  "w-full px-4 py-3 border-2 border-stone-200 rounded-xl focus:border-[#D4532B] focus:outline-none transition-colors font-body text-gray-900 placeholder:text-gray-400 bg-white";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs font-bold text-[#7B4BB0]/70 uppercase tracking-wider mt-6 mb-3 font-body">
+    <p className="text-xs font-bold text-[#D4532B]/70 uppercase tracking-wider mt-6 mb-3 font-body">
       {children}
     </p>
   );
@@ -180,6 +196,16 @@ export default function FieldDayFridayPage() {
   const [sigValue, setSigValue] = useState("");
   const [packingChecked, setPackingChecked] = useState<Set<number>>(new Set());
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
+  const [ghostStartled, setGhostStartled] = useState(false);
+  const booTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (booTimer.current) clearTimeout(booTimer.current);
+  }, []);
+  const sayBoo = () => {
+    setGhostStartled(true);
+    if (booTimer.current) clearTimeout(booTimer.current);
+    booTimer.current = setTimeout(() => setGhostStartled(false), 1100);
+  };
   const toggleCard = (i: number) =>
     setFlippedCards((prev) => {
       const n = new Set(prev);
@@ -248,7 +274,7 @@ export default function FieldDayFridayPage() {
   }, []);
 
   useEffect(() => {
-    const target = new Date("2026-10-09T08:30:00-05:00");
+    const target = new Date("2026-10-30T08:30:00-05:00");
     const tick = () => {
       const diff = target.getTime() - Date.now();
       if (diff <= 0) return;
@@ -369,42 +395,49 @@ export default function FieldDayFridayPage() {
           100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         .desert-headline {
-          color: ${WIZARD_THEME.inkBrown};
-          text-shadow: 0 2px 16px rgba(196, 163, 90, 0.45);
+          color: ${HALLOWEEN_THEME.inkBrown};
+          text-shadow: 0 2px 16px rgba(244, 162, 97, 0.45);
         }
         .letter-drop span {
           display: inline-block;
           opacity: 0;
           animation: letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
         }
-        @keyframes wizard-sheen {
+        @keyframes halloween-sheen {
           0%, 62%, 100% { background-position: 0% 50%; }
           38% { background-position: 100% 50%; }
         }
-        .wizard-sheen {
-          background-image: linear-gradient(110deg, #2E2444 0%, #2E2444 38%, #E8C872 50%, #2E2444 62%, #2E2444 100%);
+        .halloween-sheen {
+          background-image: linear-gradient(110deg, #4A2C2A 0%, #4A2C2A 38%, #F4A261 50%, #4A2C2A 62%, #4A2C2A 100%);
           background-size: 220% 100%;
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
-          animation: wizard-sheen 7s ease-in-out infinite;
+          animation: halloween-sheen 7s ease-in-out infinite;
         }
-        @keyframes wizard-cta-glow {
-          0%, 100% { box-shadow: 0 10px 24px rgba(92, 61, 143, 0.28); }
-          50% { box-shadow: 0 14px 32px rgba(196, 163, 90, 0.48); }
+        @keyframes halloween-cta-glow {
+          0%, 100% { box-shadow: 0 10px 24px rgba(232, 93, 4, 0.28); }
+          50% { box-shadow: 0 14px 32px rgba(244, 162, 97, 0.48); }
         }
-        .wizard-cta { animation: wizard-cta-glow 2.8s ease-in-out infinite; }
-        .wizard-cta:disabled { animation: none; }
-        .wizard-hero-card {
-          box-shadow: 0 24px 60px rgba(92, 61, 143, 0.14), 0 0 0 1px rgba(196, 163, 90, 0.4);
+        .halloween-cta { animation: halloween-cta-glow 2.8s ease-in-out infinite; }
+        .halloween-cta:disabled { animation: none; }
+        .halloween-hero-card {
+          box-shadow: 0 24px 60px rgba(232, 93, 4, 0.14), 0 0 0 1px rgba(244, 162, 97, 0.4);
         }
         .flip-face { transition: box-shadow 0.3s ease; }
         .flip-card:hover .flip-face {
-          box-shadow: 0 18px 40px rgba(123, 75, 176, 0.22);
+          box-shadow: 0 18px 40px rgba(212, 83, 43, 0.22);
         }
+        @keyframes halloween-wiggle {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-12deg); }
+          75% { transform: rotate(12deg); }
+        }
+        .halloween-wiggle { display: inline-block; }
+        .flip-card:hover .halloween-wiggle { animation: halloween-wiggle 0.45s ease-in-out; }
         @keyframes spell-ring {
-          0% { box-shadow: 0 0 0 0 rgba(196, 163, 90, 0.55); }
-          100% { box-shadow: 0 0 0 18px rgba(196, 163, 90, 0); }
+          0% { box-shadow: 0 0 0 0 rgba(244, 162, 97, 0.55); }
+          100% { box-shadow: 0 0 0 18px rgba(244, 162, 97, 0); }
         }
         .flip-card.is-revealed::after {
           content: "";
@@ -417,15 +450,15 @@ export default function FieldDayFridayPage() {
           pointer-events: none;
           animation: spell-ring 0.75s ease-out;
         }
-        .wizard-pip {
+        .halloween-pip {
           width: 10px;
           height: 10px;
           border-radius: 999px;
-          background: rgba(123, 75, 176, 0.2);
+          background: rgba(212, 83, 43, 0.2);
           transition: background 0.3s ease, transform 0.3s ease;
         }
-        .wizard-pip.on {
-          background: #C4A35A;
+        .halloween-pip.on {
+          background: #F4A261;
           transform: scale(1.15);
         }
         .flip-card-inner { transform-style: preserve-3d; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); }
@@ -448,8 +481,8 @@ export default function FieldDayFridayPage() {
           width: 2px;
           background: repeating-linear-gradient(
             180deg,
-            ${WIZARD_THEME.terracotta} 0,
-            ${WIZARD_THEME.terracotta} 8px,
+            ${HALLOWEEN_THEME.terracotta} 0,
+            ${HALLOWEEN_THEME.terracotta} 8px,
             transparent 8px,
             transparent 16px
           );
@@ -459,20 +492,21 @@ export default function FieldDayFridayPage() {
         }
         @media (prefers-reduced-motion: reduce) {
           .letter-drop span { animation: none !important; opacity: 1 !important; transform: none !important; }
-          .wizard-sheen {
+          .halloween-sheen {
             animation: none !important;
             background: none !important;
-            color: ${WIZARD_THEME.inkBrown} !important;
-            -webkit-text-fill-color: ${WIZARD_THEME.inkBrown} !important;
+            color: ${HALLOWEEN_THEME.inkBrown} !important;
+            -webkit-text-fill-color: ${HALLOWEEN_THEME.inkBrown} !important;
           }
-          .wizard-cta { animation: none !important; }
+          .halloween-cta { animation: none !important; }
           .flip-card.is-revealed::after { animation: none !important; }
+          .flip-card:hover .halloween-wiggle { animation: none !important; }
         }
       `}</style>
 
       <div
         className={`${bebasNeue.variable} ${rye.variable} min-h-screen overflow-x-hidden`}
-        style={{ background: WIZARD_THEME.skyPeach }}
+        style={{ background: HALLOWEEN_THEME.skyPeach }}
       >
         <Navbar />
 
@@ -481,16 +515,16 @@ export default function FieldDayFridayPage() {
           ref={heroRef}
           className="relative pt-20 overflow-hidden min-h-[620px] sm:min-h-[680px] lg:min-h-[720px]"
         >
-          <WizardHeroScene duneParallaxX={duneParallaxX} />
+          <HalloweenHeroScene duneParallaxX={duneParallaxX} interactive startled={ghostStartled} onSayBoo={sayBoo} />
 
-          <div className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-10 lg:py-14 flex flex-col lg:flex-row items-center gap-10 lg:gap-12 z-10">
+          <div className="relative max-w-6xl mx-auto px-6 sm:px-12 lg:px-16 py-10 lg:py-14 flex flex-col lg:flex-row items-center gap-10 lg:gap-12 z-10 pointer-events-none">
             <motion.div
-              className="flex-1 w-full max-w-xl"
+              className="flex-1 w-full max-w-xl pointer-events-auto"
               initial={{ opacity: 0, y: 28 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="rounded-3xl border border-white/70 bg-white/80 backdrop-blur-md wizard-hero-card px-6 sm:px-8 py-8 sm:py-10">
+              <div className="rounded-3xl border border-white/70 bg-white/80 backdrop-blur-md halloween-hero-card px-6 sm:px-8 py-8 sm:py-10">
                 <motion.h1
                   className="font-heading font-bold leading-[1.05] mb-3 text-center lg:text-left"
                   initial={{ opacity: 0, y: 20 }}
@@ -498,20 +532,20 @@ export default function FieldDayFridayPage() {
                   transition={{ delay: 0.15, duration: 0.55 }}
                 >
                   <span
-                    className="block desert-headline wizard-sheen"
+                    className="block desert-headline halloween-sheen"
                     style={{
-                      fontSize: "clamp(2.8rem, 7vw, 4.8rem)",
+                      fontSize: "clamp(2.15rem, 5.2vw, 3.5rem)",
                       fontFamily: "var(--font-bebas-neue), sans-serif",
                       letterSpacing: "0.04em",
                     }}
                   >
-                    Wizard Academy
+                    Not-So-Scary Halloween
                   </span>
                   <span
                     className="letter-drop block"
                     style={{
                       fontSize: "clamp(2rem, 5vw, 3.5rem)",
-                      color: WIZARD_THEME.duneDeep,
+                      color: HALLOWEEN_THEME.duneDeep,
                     }}
                   >
                     {Array.from("Field Day").map((ch, i) => (
@@ -524,12 +558,12 @@ export default function FieldDayFridayPage() {
 
                 <motion.p
                   className="text-base sm:text-lg font-body leading-relaxed mb-6 max-w-md mx-auto lg:mx-0"
-                  style={{ color: WIZARD_THEME.inkBrown }}
+                  style={{ color: HALLOWEEN_THEME.inkBrown }}
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25, duration: 0.5 }}
                 >
-                  Craft a wand, mix potions, and wear your wizard hat at Sage Field.
+                  Paint mini pumpkins, brew a potion, and play not-so-scary games at Sage Field.
                 </motion.p>
 
                 <motion.div
@@ -539,7 +573,7 @@ export default function FieldDayFridayPage() {
                   transition={{ delay: 0.3, duration: 0.45 }}
                 >
                   {[
-                    { icon: "📅", text: "Oct 9, 2026" },
+                    { icon: "📅", text: "Oct 30, 2026" },
                     { icon: "🕗", text: "Drop-off 8:30 AM" },
                     { icon: "🕒", text: "Pick-up 1:30 PM" },
                     { icon: "👧", text: "Ages 4–11" },
@@ -547,8 +581,8 @@ export default function FieldDayFridayPage() {
                   ].map((pill) => (
                     <span
                       key={pill.text}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#C4A35A]/40 rounded-full text-xs font-semibold font-body shadow-sm"
-                      style={{ color: WIZARD_THEME.inkBrown }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#F4A261]/40 rounded-full text-xs font-semibold font-body shadow-sm"
+                      style={{ color: HALLOWEEN_THEME.inkBrown }}
                     >
                       {pill.icon} {pill.text}
                     </span>
@@ -568,13 +602,13 @@ export default function FieldDayFridayPage() {
                   ].map(({ val, label }) => (
                     <div
                       key={label}
-                      className="flex flex-col items-center px-3 py-2 bg-white/90 border border-[#C4A35A]/30 rounded-xl min-w-12"
+                      className="flex flex-col items-center px-3 py-2 bg-white/90 border border-[#F4A261]/30 rounded-xl min-w-12"
                     >
                       <AnimatePresence mode="popLayout">
                         <motion.span
                           key={`${label}-${val}`}
                           className="text-xl font-bold font-heading tabular-nums"
-                          style={{ color: WIZARD_THEME.inkBrown }}
+                          style={{ color: HALLOWEEN_THEME.inkBrown }}
                           initial={{ opacity: 0, y: -10, scale: 0.8 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 10 }}
@@ -583,13 +617,13 @@ export default function FieldDayFridayPage() {
                           {String(val).padStart(2, "0")}
                         </motion.span>
                       </AnimatePresence>
-                      <span className="text-[10px] font-body uppercase tracking-wide" style={{ color: WIZARD_THEME.duneDeep }}>
+                      <span className="text-[10px] font-body uppercase tracking-wide" style={{ color: HALLOWEEN_THEME.duneDeep }}>
                         {label}
                       </span>
                     </div>
                   ))}
-                  <span className="text-xs font-body pl-1" style={{ color: WIZARD_THEME.duneDeep }}>
-                    until academy day
+                  <span className="text-xs font-body pl-1" style={{ color: HALLOWEEN_THEME.duneDeep }}>
+                    until Friday
                   </span>
                 </motion.div>
 
@@ -601,17 +635,17 @@ export default function FieldDayFridayPage() {
                 >
                   <button
                     onClick={scrollToForm}
-                    className="wizard-cta px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
+                    className="halloween-cta px-7 py-4 text-white font-bold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl hover:-translate-y-0.5 font-body cursor-pointer text-sm"
                     style={{
-                      background: `linear-gradient(135deg, ${WIZARD_THEME.duneDeep} 0%, ${WIZARD_THEME.terracotta} 100%)`,
+                      background: `linear-gradient(135deg, ${HALLOWEEN_THEME.duneDeep} 0%, ${HALLOWEEN_THEME.terracotta} 100%)`,
                     }}
                   >
-                    Join the Academy →
+                    Join the Fun →
                   </button>
                   <a
                     href="#what-we-do"
-                    className="px-7 py-4 bg-white border-2 font-bold rounded-2xl hover:bg-[#F7F2FF] transition-all duration-200 font-body text-sm text-center"
-                    style={{ borderColor: WIZARD_THEME.duneMid, color: WIZARD_THEME.inkBrown }}
+                    className="px-7 py-4 bg-white border-2 font-bold rounded-2xl hover:bg-[#FFF6EB] transition-all duration-200 font-body text-sm text-center"
+                    style={{ borderColor: HALLOWEEN_THEME.duneMid, color: HALLOWEEN_THEME.inkBrown }}
                   >
                     See the Activities ↓
                   </a>
@@ -620,7 +654,7 @@ export default function FieldDayFridayPage() {
             </motion.div>
 
             <motion.div
-              className="w-full lg:w-auto flex-1 max-w-xs sm:max-w-sm lg:max-w-none relative hidden sm:block"
+              className="w-full lg:w-auto flex-1 max-w-xs sm:max-w-sm lg:max-w-none relative hidden sm:block pointer-events-none"
               initial={{ opacity: 0, scale: 0.96, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.65, delay: 0.2 }}
@@ -649,19 +683,19 @@ export default function FieldDayFridayPage() {
                   <div className="relative w-full aspect-square overflow-hidden">
                     <Image src={HERO_IMAGES[0]} alt="Students at Sage Field" fill className="object-cover" sizes="208px" priority />
                   </div>
-                  <p className="text-center text-[10px] font-body mt-1 tracking-wide uppercase" style={{ color: WIZARD_THEME.terracotta }}>
-                    Wizard Academy · Oct 9
+                  <p className="text-center text-[10px] font-body mt-1 tracking-wide uppercase" style={{ color: HALLOWEEN_THEME.terracotta }}>
+                    Not-So-Scary Halloween · Oct 30
                   </p>
                 </div>
               </div>
             </motion.div>
           </div>
 
-          <WaveDivider fill={WIZARD_THEME.skyPeach} fromColor="transparent" />
+          <WaveDivider fill={HALLOWEEN_THEME.skyPeach} fromColor="transparent" />
         </section>
 
         {/* ─── PHOTO STRIP ──────────────────────────────────────────────────── */}
-        <div className="pb-2" style={{ background: WIZARD_THEME.skyPeach }}>
+        <div className="pb-2" style={{ background: HALLOWEEN_THEME.skyPeach }}>
           <div
             ref={galleryRef}
             className="overflow-x-auto flex gap-3 px-4 [&::-webkit-scrollbar]:hidden [scrollbar-width:none] py-4"
@@ -688,7 +722,7 @@ export default function FieldDayFridayPage() {
         <section
           id="what-we-do"
           className="py-20 px-6 sm:px-12 lg:px-16"
-          style={{ background: "#F7F2FF" }}
+          style={{ background: HALLOWEEN_THEME.skyPeach }}
         >
           <div className="max-w-6xl mx-auto">
             {/* Header */}
@@ -700,40 +734,40 @@ export default function FieldDayFridayPage() {
               transition={{ duration: 0.5 }}
             >
               <span
-                className="inline-block px-5 py-2 bg-[#7B4BB0]/10 text-[#7B4BB0] text-sm font-bold rounded-full mb-5 font-body"
+                className="inline-block px-5 py-2 bg-[#D4532B]/10 text-[#D4532B] text-sm font-bold rounded-full mb-5 font-body"
                 style={{ fontFamily: "var(--font-rye), serif" }}
               >
-                🪄 This Friday&apos;s Theme
+                🎃 This Friday&apos;s Theme
               </span>
               <h2
-                className="font-heading font-bold text-slate-800 mb-3 leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)" }}
+                className="font-heading font-bold mb-3 leading-tight"
+                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: "#FFF6EB" }}
               >
-                Five Hours at the Academy
+                Five Hours of Not-So-Scary Halloween
               </h2>
-              <p className="text-base text-slate-500 font-body max-w-3xl mx-auto">
-                Make your own wizard wand · Potion lab · BYO potion · Wizard hat
+              <p className="text-base font-body max-w-3xl mx-auto" style={{ color: "#FFF6EBCC" }}>
+                pumpkin painting · witches brew · slime · Halloween painting ornaments · Ghost freeze dance · Mummy wrap
               </p>
               <div className="mt-6 flex flex-col items-center gap-3">
-                <p className="text-xs font-semibold font-body uppercase tracking-wide" style={{ color: WIZARD_THEME.duneDeep }}>
-                  {flippedCards.size === WIZARD_ACADEMY_ACTIVITIES.length
-                    ? "Every station is open"
-                    : `Tap a station · ${flippedCards.size} of ${WIZARD_ACADEMY_ACTIVITIES.length}`}
+                <p className="text-xs font-semibold font-body uppercase tracking-wide" style={{ color: HALLOWEEN_THEME.duneDeep }}>
+                  {flippedCards.size === HALLOWEEN_ACTIVITIES.length
+                    ? "Boo! Every station is open"
+                    : `Tap a station · ${flippedCards.size} of ${HALLOWEEN_ACTIVITIES.length}`}
                 </p>
                 <div className="flex items-center gap-2" aria-hidden>
-                  {WIZARD_ACADEMY_ACTIVITIES.map((activity, i) => (
+                  {HALLOWEEN_ACTIVITIES.map((activity, i) => (
                     <span
                       key={activity.title}
-                      className={`wizard-pip${flippedCards.has(i) ? " on" : ""}`}
+                      className={`halloween-pip${flippedCards.has(i) ? " on" : ""}`}
                     />
                   ))}
                 </div>
-                {flippedCards.size === WIZARD_ACADEMY_ACTIVITIES.length && (
+                {flippedCards.size === HALLOWEEN_ACTIVITIES.length && (
                   <button
                     type="button"
                     onClick={scrollToForm}
-                    className="wizard-cta mt-1 px-5 py-2.5 text-white text-sm font-bold font-body rounded-xl cursor-pointer"
-                    style={{ background: `linear-gradient(135deg, ${WIZARD_THEME.duneDeep} 0%, ${WIZARD_THEME.terracotta} 100%)` }}
+                    className="halloween-cta mt-1 px-5 py-2.5 text-white text-sm font-bold font-body rounded-xl cursor-pointer"
+                    style={{ background: `linear-gradient(135deg, ${HALLOWEEN_THEME.duneDeep} 0%, ${HALLOWEEN_THEME.terracotta} 100%)` }}
                   >
                     Reserve a spot →
                   </button>
@@ -742,11 +776,11 @@ export default function FieldDayFridayPage() {
             </motion.div>
 
             {/* Activity cards — expedition trail + flip on hover */}
-            <div className="expedition-trail-desktop hidden sm:flex sm:flex-wrap sm:justify-center gap-5 mb-12">
-              {WIZARD_ACADEMY_ACTIVITIES.map((activity, i) => (
+            <div className="expedition-trail-desktop hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
+              {HALLOWEEN_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={activity.title}
-                  className={`flip-card relative cursor-pointer sm:w-[calc(50%-0.625rem)]${flippedCards.has(i) ? " is-revealed" : ""}`}
+                  className={`flip-card relative cursor-pointer${flippedCards.has(i) ? " is-revealed" : ""}`}
                   style={{ perspective: "800px", minHeight: "240px" }}
                   initial={{ opacity: 0, y: 20, x: i % 2 === 0 ? -20 : 20 }}
                   whileInView={{ opacity: 1, y: 0, x: 0 }}
@@ -756,7 +790,7 @@ export default function FieldDayFridayPage() {
                   whileTap={{ scale: [1, 1.04, 1] }}
                   onClick={() => handleCardFlip(i)}
                 >
-                  <p className="text-[10px] font-bold text-[#7B4BB0]/80 uppercase tracking-wider text-center mb-2 font-body">
+                  <p className="text-[10px] font-bold text-[#D4532B]/80 uppercase tracking-wider text-center mb-2 font-body">
                     {activity.waypoint}
                   </p>
                   <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "240px" }}>
@@ -767,7 +801,7 @@ export default function FieldDayFridayPage() {
                       <div className="h-2 w-full" style={{ background: activity.accentText }} />
                       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-3 text-center">
                         <div
-                          className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm"
+                          className="halloween-wiggle w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm"
                           style={{ background: activity.accent }}
                         >
                           {activity.emoji}
@@ -780,14 +814,14 @@ export default function FieldDayFridayPage() {
                     </div>
                     {/* Back face */}
                     <div
-                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#7B4BB0]/30"
-                      style={{ background: WIZARD_THEME.inkBrown }}
+                      className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#D4532B]/30"
+                      style={{ background: HALLOWEEN_THEME.inkBrown }}
                     >
-                      <span className="text-4xl">{activity.emoji}</span>
-                      <h3 className="font-heading font-bold text-[#E8D9FF] text-base leading-tight">
+                      <span className="halloween-wiggle text-4xl">{activity.emoji}</span>
+                      <h3 className="font-heading font-bold text-[#FFE4C7] text-base leading-tight">
                         {activity.title}
                       </h3>
-                      <p className="text-sm text-[#E8D9FF]/90 font-body leading-relaxed">
+                      <p className="text-sm text-[#FFE4C7]/90 font-body leading-relaxed">
                         {activity.desc}
                       </p>
                     </div>
@@ -798,7 +832,7 @@ export default function FieldDayFridayPage() {
 
             {/* Mobile: vertical expedition trail */}
             <div className="expedition-trail-mobile sm:hidden grid grid-cols-1 gap-8 mb-12 px-4">
-              {WIZARD_ACADEMY_ACTIVITIES.map((activity, i) => (
+              {HALLOWEEN_ACTIVITIES.map((activity, i) => (
                 <motion.div
                   key={`mobile-${activity.title}`}
                   className={`flip-card relative cursor-pointer${flippedCards.has(i) ? " is-revealed" : ""}`}
@@ -811,24 +845,24 @@ export default function FieldDayFridayPage() {
                   whileTap={{ scale: [1, 1.04, 1] }}
                   onClick={() => handleCardFlip(i)}
                 >
-                  <p className="text-[10px] font-bold text-[#7B4BB0]/80 uppercase tracking-wider text-center mb-2 font-body">
+                  <p className="text-[10px] font-bold text-[#D4532B]/80 uppercase tracking-wider text-center mb-2 font-body">
                     {activity.waypoint}
                   </p>
                   <div className={`flip-card-inner relative w-full h-full${flippedCards.has(i) ? " flipped" : ""}`} style={{ minHeight: "240px" }}>
                     <div className="flip-face absolute inset-0 bg-white rounded-3xl overflow-hidden shadow-md border border-gray-100 flex flex-col">
                       <div className="h-2 w-full" style={{ background: activity.accentText }} />
                       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-3 text-center">
-                        <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm" style={{ background: activity.accent }}>
+                        <div className="halloween-wiggle w-16 h-16 rounded-2xl flex items-center justify-center text-4xl shadow-sm" style={{ background: activity.accent }}>
                           {activity.emoji}
                         </div>
                         <h3 className="font-heading font-bold text-slate-800 text-base leading-tight">{activity.title}</h3>
                         <p className="text-[11px] text-slate-400 font-body">tap to learn more ✦</p>
                       </div>
                     </div>
-                    <div className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#7B4BB0]/30" style={{ background: WIZARD_THEME.inkBrown }}>
-                      <span className="text-4xl">{activity.emoji}</span>
-                      <h3 className="font-heading font-bold text-[#E8D9FF] text-base leading-tight">{activity.title}</h3>
-                      <p className="text-sm text-[#E8D9FF]/90 font-body leading-relaxed">{activity.desc}</p>
+                    <div className="flip-back absolute inset-0 rounded-3xl flex flex-col items-center justify-center p-6 text-center gap-3 border-2 border-[#D4532B]/30" style={{ background: HALLOWEEN_THEME.inkBrown }}>
+                      <span className="halloween-wiggle text-4xl">{activity.emoji}</span>
+                      <h3 className="font-heading font-bold text-[#FFE4C7] text-base leading-tight">{activity.title}</h3>
+                      <p className="text-sm text-[#FFE4C7]/90 font-body leading-relaxed">{activity.desc}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -839,7 +873,7 @@ export default function FieldDayFridayPage() {
             <motion.div
               className="rounded-3xl p-6 flex flex-wrap gap-4 justify-center"
               style={{
-                background: "linear-gradient(135deg, #E8D9FF 0%, #FFF8E7 100%)",
+                background: "linear-gradient(135deg, #2A1844 0%, #3A2468 100%)",
               }}
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -865,7 +899,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave into recap */}
-        <div style={{ background: "#F7F2FF", marginBottom: "-1px" }}>
+        <div style={{ background: HALLOWEEN_THEME.skyPeach, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -875,16 +909,16 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,40 1080,0 1440,20 L1440,40 L0,40 Z"
-              fill={WIZARD_THEME.duneLight}
+              fill={HALLOWEEN_THEME.duneLight}
             />
           </svg>
         </div>
 
         {/* ─── WEEK RECAP ───────────────────────────────────────────────────── */}
-        <WeekRecapPreview className="bg-[#F7F2FF]" variant="light" />
+        <WeekRecapPreview className="bg-[#1A1030]" variant="dark" />
 
         {/* Wave out of recap */}
-        <div style={{ background: "#F7F2FF", marginTop: "-1px", marginBottom: "-1px" }}>
+        <div style={{ background: HALLOWEEN_THEME.skyPeach, marginTop: "-1px", marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -894,7 +928,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill={WIZARD_THEME.skyPeach}
+              fill={HALLOWEEN_THEME.skyPeach}
             />
           </svg>
         </div>
@@ -904,7 +938,7 @@ export default function FieldDayFridayPage() {
           id="reserve"
           className="py-20 px-3 sm:px-12 lg:px-16"
           style={{
-            background: `linear-gradient(180deg, ${WIZARD_THEME.skyPeach} 0%, ${WIZARD_THEME.duneLight} 100%)`,
+            background: `linear-gradient(180deg, ${HALLOWEEN_THEME.skyPeach} 0%, ${HALLOWEEN_THEME.duneLight} 100%)`,
           }}
         >
           <div ref={formRef} className="max-w-xl mx-auto">
@@ -916,23 +950,23 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-5xl mb-3">🪄</div>
+              <div className="text-5xl mb-3">🎃</div>
               <h2
                 className="font-heading font-bold mb-2"
-                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)", color: WIZARD_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.7rem, 4vw, 2.4rem)", color: "#FFF6EB" }}
               >
                 Reserve Your Spot
               </h2>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#E8D9FF] rounded-full mb-3">
-                <span className="text-[#7B4BB0] font-bold font-body text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#FFE4C7] rounded-full mb-3">
+                <span className="text-[#D4532B] font-bold font-body text-sm">
                   {`$${FRIDAY_DROPIN_DOLLARS} per child`}
                 </span>
-                <span className="text-[#5C3D8F]">·</span>
-                <span className="text-[#2E2444] font-body text-sm">
+                <span className="text-[#E85D04]">·</span>
+                <span className="text-[#4A2C2A] font-body text-sm">
                   No enrollment required
                 </span>
-                <span className="text-[#5C3D8F]">·</span>
-                <span className="text-[#2E2444] font-body text-sm">
+                <span className="text-[#E85D04]">·</span>
+                <span className="text-[#4A2C2A] font-body text-sm">
                   Limited spots
                 </span>
               </div>
@@ -943,8 +977,8 @@ export default function FieldDayFridayPage() {
                   key="form"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#E8D9FF]"
-                  style={{ borderTop: "4px solid #7B4BB0" }}
+                  className="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#FFE4C7]"
+                  style={{ borderTop: "4px solid #D4532B" }}
                 >
                   <SectionLabel>Your Info</SectionLabel>
                   <div className="space-y-4">
@@ -1004,7 +1038,7 @@ export default function FieldDayFridayPage() {
                         className="rounded-2xl border border-stone-200 bg-stone-50/50 p-4 space-y-3"
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <p className="text-xs font-bold text-[#7B4BB0]/70 font-body uppercase tracking-wide">
+                          <p className="text-xs font-bold text-[#D4532B]/70 font-body uppercase tracking-wide">
                             Child {i + 1}
                           </p>
                           {children.length > 1 && (
@@ -1058,8 +1092,8 @@ export default function FieldDayFridayPage() {
                     </button>
 
                     {children.length > 1 && (
-                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#E8D9FF] rounded-xl">
-                        <span className="text-sm font-bold text-[#7B4BB0] font-body">
+                      <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#FFE4C7] rounded-xl">
+                        <span className="text-sm font-bold text-[#D4532B] font-body">
                           {children.length} children · ${totalBase} total
                         </span>
                       </div>
@@ -1160,7 +1194,7 @@ export default function FieldDayFridayPage() {
                         <div
                           className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                             checked
-                              ? "bg-[#7B4BB0] border-[#7B4BB0]"
+                              ? "bg-[#D4532B] border-[#D4532B]"
                               : "border-stone-300 bg-white"
                           }`}
                         >
@@ -1196,7 +1230,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("card")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "card"
-                            ? "border-[#7B4BB0] bg-[#E8D9FF] text-[#7B4BB0]"
+                            ? "border-[#D4532B] bg-[#FFE4C7] text-[#D4532B]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1207,7 +1241,7 @@ export default function FieldDayFridayPage() {
                         onClick={() => setPaymentMethod("ach")}
                         className={`flex-1 px-3 py-2.5 rounded-xl text-sm font-semibold font-body border-2 transition-colors cursor-pointer ${
                           paymentMethod === "ach"
-                            ? "border-[#7B4BB0] bg-[#E8D9FF] text-[#7B4BB0]"
+                            ? "border-[#D4532B] bg-[#FFE4C7] text-[#D4532B]"
                             : "border-stone-200 text-slate-600 hover:bg-stone-50"
                         }`}
                       >
@@ -1223,7 +1257,7 @@ export default function FieldDayFridayPage() {
                       <div
                         className={`w-5 h-5 flex-shrink-0 rounded-md border-2 mt-0.5 flex items-center justify-center transition-all ${
                           coverFees
-                            ? "bg-[#7B4BB0] border-[#7B4BB0]"
+                            ? "bg-[#D4532B] border-[#D4532B]"
                             : "border-stone-300 bg-white"
                         }`}
                         onClick={() => setCoverFees((v) => !v)}
@@ -1263,7 +1297,7 @@ export default function FieldDayFridayPage() {
                         {agreementSigned ? (
                           <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
                         ) : (
-                          <PenLine className="w-5 h-5 text-[#7B4BB0] flex-shrink-0" />
+                          <PenLine className="w-5 h-5 text-[#D4532B] flex-shrink-0" />
                         )}
                         <div>
                           <p className="text-sm font-bold font-heading text-slate-800">
@@ -1299,15 +1333,15 @@ export default function FieldDayFridayPage() {
                       type="button"
                       onClick={handleSubmit}
                       disabled={!isFormValid || !agreementSigned || submitting}
-                      className="w-full wizard-cta px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
+                      className="w-full halloween-cta px-6 py-4 text-white font-bold rounded-2xl transition-all duration-200 font-body cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0"
                       style={{
                         background:
-                          "linear-gradient(135deg, #5C3D8F 0%, #7B4BB0 100%)",
+                          "linear-gradient(135deg, #E85D04 0%, #D4532B 100%)",
                       }}
                     >
                       {submitting
                         ? "Submitting…"
-                        : `🪄 Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
+                        : `🎃 Pay $${(FRIDAY_DROPIN_DOLLARS + processingFee).toFixed(2)} & Reserve My Spot →`}
                     </button>
                   </motion.div>
                 </motion.div>
@@ -1316,7 +1350,7 @@ export default function FieldDayFridayPage() {
         </section>
 
         {/* Wave before packing list */}
-        <div style={{ background: WIZARD_THEME.skyPeach, marginBottom: "-1px" }}>
+        <div style={{ background: HALLOWEEN_THEME.skyPeach, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1326,7 +1360,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C480,40 960,0 1440,20 L1440,40 L0,40 Z"
-              fill={WIZARD_THEME.duneMid}
+              fill={HALLOWEEN_THEME.duneLight}
             />
           </svg>
         </div>
@@ -1334,7 +1368,7 @@ export default function FieldDayFridayPage() {
         {/* ─── PACKING LIST ─────────────────────────────────────────────────── */}
         <section
           className="py-16 px-6 sm:px-12 lg:px-16"
-          style={{ background: WIZARD_THEME.duneLight }}
+          style={{ background: HALLOWEEN_THEME.duneLight }}
         >
           <div className="max-w-3xl mx-auto">
             <motion.div
@@ -1347,12 +1381,12 @@ export default function FieldDayFridayPage() {
               <div className="text-4xl mb-3">🧭</div>
               <h2
                 className="font-heading font-bold"
-                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", color: WIZARD_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.6rem, 3.5vw, 2.2rem)", color: "#FFF6EB" }}
               >
                 Expedition Checklist
               </h2>
-              <p className="text-sm font-body mt-1" style={{ color: `${WIZARD_THEME.inkBrown}99` }}>
-                Tap each item to check it off — don&apos;t forget anything for Wizard Academy!
+              <p className="text-sm font-body mt-1" style={{ color: "#FFF6EBCC" }}>
+                Tap each item to check it off — don&apos;t forget anything for Not-So-Scary Halloween!
               </p>
             </motion.div>
 
@@ -1366,8 +1400,8 @@ export default function FieldDayFridayPage() {
                     onClick={() => togglePacking(i)}
                     className={`flex items-center gap-4 rounded-2xl px-5 py-4 shadow-sm border transition-all duration-200 cursor-pointer select-none ${
                       isChecked
-                        ? "bg-[#E8D9FF] border-[#7B4BB0] opacity-70"
-                        : "bg-white border-[#E8D9FF] hover:shadow-md hover:-translate-y-0.5"
+                        ? "bg-[#FFE4C7] border-[#D4532B] opacity-70"
+                        : "bg-white border-[#FFE4C7] hover:shadow-md hover:-translate-y-0.5"
                     }`}
                     initial={{ opacity: 0, x: -12 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -1380,9 +1414,9 @@ export default function FieldDayFridayPage() {
                       className="w-1 h-8 rounded-full flex-shrink-0 transition-all duration-300"
                       style={{
                         background: isChecked
-                          ? "#7B4BB0"
+                          ? "#D4532B"
                           : i % 2 === 0
-                          ? "#5C3D8F"
+                          ? "#E85D04"
                           : "#5C7A3A",
                       }}
                     />
@@ -1404,10 +1438,10 @@ export default function FieldDayFridayPage() {
             {/* Expedition Ready Progress Bar */}
             <div className="mt-6 mb-2">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold font-body uppercase tracking-wide" style={{ color: WIZARD_THEME.inkBrown }}>
+                <span className="text-xs font-bold font-body uppercase tracking-wide" style={{ color: "#FFF6EB" }}>
                   Expedition Ready
                 </span>
-                <span className="text-xs font-body" style={{ color: `${WIZARD_THEME.inkBrown}99` }}>
+                <span className="text-xs font-body" style={{ color: "#FFF6EBCC" }}>
                   {packingChecked.size} / {PACKING_LIST.length} packed
                 </span>
               </div>
@@ -1418,7 +1452,7 @@ export default function FieldDayFridayPage() {
                   className="h-full rounded-full transition-all duration-500 ease-out"
                   style={{
                     width: `${(packingChecked.size / PACKING_LIST.length) * 100}%`,
-                    background: `linear-gradient(90deg, ${WIZARD_THEME.terracotta} 0%, ${WIZARD_THEME.duneDeep} 50%, ${WIZARD_THEME.duneMid} 100%)`,
+                    background: `linear-gradient(90deg, ${HALLOWEEN_THEME.terracotta} 0%, ${HALLOWEEN_THEME.duneDeep} 50%, ${HALLOWEEN_THEME.duneMid} 100%)`,
                     minWidth: packingChecked.size > 0 ? "20px" : "0px",
                   }}
                 />
@@ -1429,7 +1463,7 @@ export default function FieldDayFridayPage() {
                       left: `calc(${(packingChecked.size / PACKING_LIST.length) * 100}% - 12px)`,
                     }}
                   >
-                    🪄
+                    🎃
                   </span>
                 )}
               </div>
@@ -1439,24 +1473,24 @@ export default function FieldDayFridayPage() {
               {packingChecked.size === PACKING_LIST.length && (
                 <motion.p
                   className="text-center text-sm font-body mt-5 font-semibold"
-                  style={{ color: WIZARD_THEME.inkBrown }}
+                  style={{ color: "#FFF6EB" }}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                 >
-                  🪄 All packed! See you at the academy.
+                  🎃 All packed! See you Friday.
                 </motion.p>
               )}
             </AnimatePresence>
 
-            <p className="text-sm font-body text-center mt-6" style={{ color: `${WIZARD_THEME.inkBrown}80` }}>
+            <p className="text-sm font-body text-center mt-6" style={{ color: "#FFF6EBB3" }}>
               Questions? Text or call us: (512) 677-5872
             </p>
           </div>
         </section>
 
         {/* Wave before bottom CTA */}
-        <div style={{ background: WIZARD_THEME.duneLight, marginBottom: "-1px" }}>
+        <div style={{ background: HALLOWEEN_THEME.duneLight, marginBottom: "-1px" }}>
           <svg
             viewBox="0 0 1440 40"
             xmlns="http://www.w3.org/2000/svg"
@@ -1466,7 +1500,7 @@ export default function FieldDayFridayPage() {
           >
             <path
               d="M0,20 C360,0 1080,40 1440,20 L1440,40 L0,40 Z"
-              fill={WIZARD_THEME.duneMid}
+              fill={HALLOWEEN_THEME.skyPeach}
             />
           </svg>
         </div>
@@ -1475,7 +1509,7 @@ export default function FieldDayFridayPage() {
         <section
           className="py-24 px-6 sm:px-12 lg:px-16 relative overflow-hidden"
           style={{
-            background: `linear-gradient(160deg, ${WIZARD_THEME.duneMid} 0%, ${WIZARD_THEME.duneDeep} 50%, ${WIZARD_THEME.duneMid} 100%)`,
+            background: `linear-gradient(160deg, ${HALLOWEEN_THEME.duneLight} 0%, ${HALLOWEEN_THEME.skyPeach} 100%)`,
           }}
         >
           <div className="max-w-2xl mx-auto text-center relative z-10">
@@ -1485,31 +1519,32 @@ export default function FieldDayFridayPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.55 }}
             >
-              <div className="text-5xl mb-6 inline-block">🪄</div>
+              <div className="text-5xl mb-6 inline-block">🎃</div>
               <div className="inline-block px-4 py-1.5 bg-white/60 rounded-full mb-6">
-                <span className="text-xs font-semibold font-body uppercase tracking-wider" style={{ color: WIZARD_THEME.inkBrown }}>
-                  This Friday Only · Oct 9
+                <span className="text-xs font-semibold font-body uppercase tracking-wider" style={{ color: HALLOWEEN_THEME.inkBrown }}>
+                  This Friday Only · Oct 30
                 </span>
               </div>
               <h2
                 className="font-heading font-bold mb-4 leading-tight"
-                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: WIZARD_THEME.inkBrown }}
+                style={{ fontSize: "clamp(1.8rem, 4vw, 2.8rem)", color: "#FFF6EB" }}
               >
-                Don&apos;t miss Wizard Academy.
+                Don&apos;t miss Not-So-Scary Halloween.
               </h2>
-              <p className="font-body text-base mb-8 leading-relaxed max-w-md mx-auto" style={{ color: `${WIZARD_THEME.inkBrown}CC` }}>
-                October 9 is one day. Spots are limited. Reserve your child&apos;s
-                spot now and join us to make a wizard wand, mix potions, build
-                your own potion, and make a wizard hat at Sage Field.
+              <p className="font-body text-base mb-8 leading-relaxed max-w-md mx-auto" style={{ color: "#FFF6EBCC" }}>
+                October 30 is one day. Spots are limited. Reserve your child&apos;s
+                spot now and join us for pumpkin painting, witches brew, slime,
+                Halloween painting ornaments, Ghost freeze dance, and Mummy wrap
+                at Sage Field.
               </p>
               <button
                 onClick={scrollToForm}
-                className="px-10 py-4 bg-white font-bold rounded-2xl hover:bg-[#F7F2FF] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
-                style={{ color: WIZARD_THEME.terracotta }}
+                className="px-10 py-4 bg-white font-bold rounded-2xl hover:bg-[#FFF6EB] transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 font-body text-base cursor-pointer"
+                style={{ color: HALLOWEEN_THEME.terracotta }}
               >
                 {`Reserve Spot · $${FRIDAY_DROPIN_DOLLARS} →`}
               </button>
-              <p className="font-body text-xs mt-5" style={{ color: `${WIZARD_THEME.inkBrown}99` }}>
+              <p className="font-body text-xs mt-5" style={{ color: "#FFF6EBB3" }}>
                 {`One Friday. $${FRIDAY_DROPIN_DOLLARS}. No commitment.`}
               </p>
             </motion.div>
@@ -1528,12 +1563,12 @@ export default function FieldDayFridayPage() {
           <div
             className="rounded-2xl shadow-xl flex items-center justify-between px-5 py-3 gap-3"
             style={{
-              background: "linear-gradient(135deg, #5C3D8F 0%, #7B4BB0 100%)",
+              background: "linear-gradient(135deg, #E85D04 0%, #D4532B 100%)",
             }}
           >
             <div>
               <p className="text-white font-heading font-bold text-sm leading-tight">
-                🪄 Wizard Academy · Oct 9
+                🎃 Not-So-Scary Halloween · Oct 30
               </p>
               <p className="text-white/80 font-body text-xs">
                 {`$${FRIDAY_DROPIN_DOLLARS} drop-in — limited spots`}
@@ -1541,7 +1576,7 @@ export default function FieldDayFridayPage() {
             </div>
             <button
               onClick={scrollToForm}
-              className="flex-shrink-0 bg-white text-[#7B4BB0] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#E8D9FF] transition-colors duration-200 cursor-pointer"
+              className="flex-shrink-0 bg-white text-[#D4532B] font-bold text-sm font-body px-4 py-2 rounded-xl hover:bg-[#FFE4C7] transition-colors duration-200 cursor-pointer"
             >
               Reserve →
             </button>
@@ -1575,7 +1610,7 @@ export default function FieldDayFridayPage() {
                 <div className="flex-shrink-0 sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
                   <div>
                     <h2 className="text-base font-bold font-heading text-gray-800">
-                      Wizard Academy Participant Agreement
+                      Not-So-Scary Halloween Participant Agreement
                     </h2>
                     <p className="text-xs text-gray-400 font-body mt-0.5">
                       {agreementSigned ? "1" : "0"} of 1 sections signed
@@ -1598,7 +1633,7 @@ export default function FieldDayFridayPage() {
                         Sage Field Private Microschool
                       </p>
                       <p className="text-xs text-gray-500 font-body">
-                        Location: Round Rock, Texas · Wizard Academy: October 9,
+                        Location: Round Rock, Texas · Not-So-Scary Halloween: October 30,
                         2026
                       </p>
                     </div>
@@ -1652,7 +1687,7 @@ export default function FieldDayFridayPage() {
                     <div className="flex flex-col gap-3">
                       <AgreementSectionHeader title="1. Acknowledgment of Program Activities" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
-                        I understand that my child is participating in a Wizard Academy
+                        I understand that my child is participating in a Not-So-Scary Halloween
                         Field Day at an outdoor education program where
                         children learn through active exploration, hands-on
                         experiences, and supervised outdoor activities.
@@ -1683,7 +1718,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="2. Assumption of Risk" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         I knowingly and voluntarily assume all risks associated
-                        with my child&apos;s participation in the Wizard Academy
+                        with my child&apos;s participation in the Not-So-Scary Halloween
                         Field Day, including but not limited to:
                       </p>
                       <ul className="flex flex-col gap-1.5">
@@ -1709,7 +1744,7 @@ export default function FieldDayFridayPage() {
                       <AgreementSectionHeader title="3. Release of Liability" />
                       <p className="text-sm text-gray-600 font-body leading-relaxed">
                         In consideration of my child&apos;s participation in the
-                        Wizard Academy Field Day, I release and hold harmless the
+                        Not-So-Scary Halloween Field Day, I release and hold harmless the
                         School, its owners, directors, employees, contractors,
                         volunteers, agents, and representatives from any claims,
                         demands, causes of action, damages, losses, costs, or
@@ -1931,7 +1966,7 @@ export default function FieldDayFridayPage() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <PenLine className="w-4 h-4 text-[#7B4BB0]" />
+                      <PenLine className="w-4 h-4 text-[#D4532B]" />
                       <span className="text-sm text-gray-500 font-body">
                         Signature required to continue
                       </span>
