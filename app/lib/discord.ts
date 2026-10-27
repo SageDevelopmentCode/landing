@@ -1349,7 +1349,7 @@ export function createShadowDayBookingEmbed(data: {
 }
 
 /**
- * Creates a Discord embed for Beach Bash Day payment received
+ * Creates a Discord embed for Field Day Friday drop-in payment received (beach_bash_fee)
  */
 export function createBeachBashPaymentEmbed(data: {
   parentName: string;
@@ -1359,13 +1359,13 @@ export function createBeachBashPaymentEmbed(data: {
   amountCents: number;
 }): DiscordEmbed {
   return {
-    title: "🌊 Beach Bash Day Payment Received",
-    color: 0x0ea5e9,
+    title: "🎃 Field Day Friday Payment Received",
+    color: 0xe85d04,
     fields: [
       { name: "Parent", value: data.parentName, inline: true },
       { name: "Email", value: data.parentEmail, inline: true },
       { name: `Child${data.childCount > 1 ? "ren" : ""}`, value: data.childNames, inline: true },
-      { name: "Event", value: "Beach Bash Day — June 13, 2026", inline: true },
+      { name: "Event", value: "Not-So-Scary Halloween — October 30, 2026", inline: true },
       { name: "Amount Paid", value: `$${(data.amountCents / 100).toFixed(2)}`, inline: true },
     ],
     timestamp: new Date().toISOString(),

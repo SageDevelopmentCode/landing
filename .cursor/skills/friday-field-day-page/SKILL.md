@@ -2,13 +2,14 @@
 name: friday-field-day-page
 description: >-
   Roll the Field Day Friday landing page, Stripe checkout labels, success page,
-  and homepage promo for a new theme and date. Use when updating /friday,
-  Field Day Friday signup, or when the user provides a theme, date, and activities.
+  homepage promo, and post-payment confirmation email/Discord for a new theme
+  and date. Use when updating /friday, Field Day Friday signup, or when the user
+  provides a theme, date, and activities.
 ---
 
 # Friday Field Day Page
 
-Roll the live Field Day Friday signup experience for a new theme and date: landing page, Stripe checkout labels, success page, and homepage promo block.
+Roll the live Field Day Friday signup experience for a new theme and date: landing page, Stripe checkout labels, success page, homepage promo block, and post-payment parent email + Discord embed.
 
 **Content + visual workflow** — swaps theme copy and optionally forks the warm-illustration hero. For week highlights recap copy only, use [newsletter-highlights-page](../newsletter-highlights-page/SKILL.md). For parent newsletter email, use [school-year-newsletter-email](../school-year-newsletter-email/SKILL.md).
 
@@ -20,7 +21,7 @@ Roll the live Field Day Friday signup experience for a new theme and date: landi
 
 ## Prerequisites
 
-- User confirms theme name, display date, countdown ISO, hero tagline, and **4 activities**
+- User confirms theme name, display date, countdown ISO, hero tagline, and activities (typically 4 on the signup page; may be more)
 - Photo folder under `public/assets/highlights/` if updating hero/carousel images (optional — reuse current paths if omitted)
 - Visual direction decided: reuse current warm illustration or fork a new hero motif
 
@@ -34,7 +35,7 @@ Ask if not provided:
 | Date (display) | Friday, September 18, 2026 | Yes |
 | Countdown ISO | `2026-09-18T08:30:00-05:00` (8:30 AM CT drop-off) | Yes |
 | Hero tagline | One sentence under the theme title | Yes |
-| 4 activities | emoji, title, waypoint label, parent-friendly blurb | Yes |
+| Activities | emoji, title, waypoint label, parent-friendly blurb (all stations on the page) | Yes |
 | Photo folder | `public/assets/highlights/school_week_four` | Optional |
 | Visual direction | `reuse warm illustration` or brief motif (ocean, winter, safari…) | Optional |
 | Packing list tweaks | Theme-specific items only | Optional |
@@ -67,21 +68,22 @@ Packing tweaks (optional):
 Copy this checklist and track progress:
 
 ```
-- [ ] Step 1: Confirm inputs (theme, date, 4 activities, visual direction)
+- [ ] Step 1: Confirm inputs (theme, date, activities, visual direction)
 - [ ] Step 2: Visual theme — reuse or fork hero scene + palette
 - [ ] Step 3: Update app/friday/page.tsx content + styling tokens
 - [ ] Step 4: Update app/api/friday-register/route.ts Stripe labels
 - [ ] Step 5: Update app/friday/success/page.tsx confirmation copy
-- [ ] Step 6: Update app/page.tsx homepage Field Day promo block
-- [ ] Step 7: Grep for stale theme/date strings
-- [ ] Step 8: npx tsc --noEmit + spot-check /friday and homepage
+- [ ] Step 6: Update post-payment email + Discord (buildBeachBashConfirmationEmail, createBeachBashPaymentEmbed)
+- [ ] Step 7: Update app/page.tsx homepage Field Day promo block
+- [ ] Step 8: Grep for stale theme/date strings
+- [ ] Step 9: npx tsc --noEmit + spot-check /friday and homepage
 ```
 
 ### Step 1: Confirm inputs
 
 Before editing, verify:
 
-- Theme name and all 4 activity titles/descriptions
+- Theme name and all activity titles/descriptions on the Friday page
 - Display date variants needed: short (`Sept 18`), long (`September 18, 2026`), ordinal (`September 18th`)
 - Countdown ISO uses **8:30 AM Central** (`T08:30:00-05:00`) to match drop-off time
 - Photo folder exists if user wants new hero/carousel images
@@ -116,7 +118,7 @@ Key areas:
 | Area | What changes |
 | ---- | ------------ |
 | Countdown | `new Date("{ISO}")` in countdown effect |
-| Activity constant | 4 items with `emoji`, `title`, `waypoint`, `desc`, `accent`, `accentText` |
+| Activity constant | All stations with `emoji`, `title`, `waypoint`, `desc`, `accent`, `accentText` |
 | Hero | Theme title, tagline, date pills, sticky bar label |
 | Photos | `HERO_IMAGES` (3), `CAROUSEL_IMAGES` (6–8) |
 | Sections | Activity subtitle, packing intro, bottom CTA, agreement drawer |
@@ -147,10 +149,33 @@ Do not change pricing constants unless user explicitly requests a price change.
 In [`app/friday/success/page.tsx`](../../../app/friday/success/page.tsx):
 
 - Confirmation paragraph: date + theme name
-- One-line activity recap (comma-separated, derived from user's 4 activities)
+- Activity recap listing **all** stations on the page (comma-separated or sentence)
 - Accent border/icon colors aligned with theme palette
 
-### Step 6: Update homepage promo
+### Step 6: Post-payment confirmation
+
+After Stripe marks `beach_bash_fee` paid, the webhook sends Zoho email and a Discord embed. Update both each roll (function names are legacy `beach_bash`; do not rename unless asked).
+
+In [`app/lib/zoho.ts`](../../../app/lib/zoho.ts) — **`buildBeachBashConfirmationEmail`**:
+
+- Subject: `{Theme} — You're Registered!` (thematic emoji optional)
+- Intro: theme name + payment received (`opts` unchanged)
+- Event details: long date (`Friday, {Month} {Day}, {Year}`), 8:30 AM drop-off / 1:30 PM pick-up, registered children, campus address
+- Agenda table: one row per activity — emoji, **verbatim title**, and `desc` from `app/friday/page.tsx`
+- What to pack: mirror `PACKING_LIST` on the Friday page (including theme-specific last line)
+- Sign-off: Field Day at Sage Field (no old theme jokes)
+
+In [`app/lib/discord.ts`](../../../app/lib/discord.ts) — **`createBeachBashPaymentEmbed`**:
+
+- Title: Field Day Friday payment (theme emoji, not a prior week's motif)
+- **Event** field: `{Theme} — {Month Day, Year}` (e.g. `Not-So-Scary Halloween — October 30, 2026`)
+- Embed color: match current theme accent (e.g. pumpkin orange)
+
+Resend path: [`app/api/admin/resend-payment-email/route.ts`](../../../app/api/admin/resend-payment-email/route.ts) uses the same email builder — no separate copy.
+
+Admin pipeline labels (`beach_bash_fee: 'Beach Bash'`) are cosmetic; update only if the user asks.
+
+### Step 7: Update homepage promo
 
 In [`app/page.tsx`](../../../app/page.tsx) Field Day Friday Preview section:
 
@@ -158,27 +183,29 @@ In [`app/page.tsx`](../../../app/page.tsx) Field Day Friday Preview section:
 - Theme title + "Field Day" headline animation
 - Hero tagline paragraph
 - Date/time/price/ages pills
-- 4 activity chips (emoji + short title)
+- Activity chips (emoji + short title) for every station on the page
 - CTA button text can stay thematic (e.g. "Join the Expedition →") or match new theme
 - `DesertHeroScene compact` (or forked hero) + matching palette tokens
 
-### Step 7: Grep for stale strings
+### Step 8: Grep for stale strings
 
 Search and replace any leftover previous theme/date:
 
 ```bash
 rg "Desert Discovery|September 18|Sept 18|2026-09-18" app/friday app/api/friday-register app/page.tsx
+rg "Beach Bash Day|June 13" app/lib/zoho.ts app/lib/discord.ts
 ```
 
 Also grep the old hero component name if you forked a new one.
 
-### Step 8: Verify
+### Step 9: Verify
 
 1. `npx tsc --noEmit`
 2. Spot-check `/friday`: hero, flip cards, form, sticky bar, agreement drawer
 3. Spot-check homepage Field Day promo block
 4. Spot-check `/friday/success` copy
-5. Confirm `prefers-reduced-motion` still respected on homepage letter-drop animation
+5. Skim `buildBeachBashConfirmationEmail` agenda + packing vs Friday page
+6. Confirm `prefers-reduced-motion` still respected on homepage letter-drop animation
 
 ## Example usage
 
@@ -204,7 +231,7 @@ Agent actions:
 
 1. Read this skill + [reference.md](reference.md)
 2. Fork `OceanHeroScene.tsx` with ocean palette
-3. Update all four files with Ocean Explorers copy
+3. Update signup surfaces + email/Discord with Ocean Explorers copy
 4. Grep for stale Desert Discovery strings
 5. Typecheck and report ready for visual QA
 
@@ -222,6 +249,7 @@ Agent actions:
 - [ ] Countdown ISO matches user's date at 8:30 AM CT
 - [ ] Stripe product name + description updated
 - [ ] Success page date + activity recap updated
+- [ ] Post-payment email + Discord embed match theme, date, activities, packing
 - [ ] Homepage promo matches Friday page theme
 - [ ] No stale previous theme/date strings remain
 - [ ] Form logic, pricing, legal arrays unchanged

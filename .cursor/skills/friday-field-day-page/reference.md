@@ -8,11 +8,13 @@
 | `app/friday/components/{Theme}HeroScene.tsx` | Reuse `DesertHeroScene.tsx` or fork for new motif |
 | `app/api/friday-register/route.ts` | Stripe `product_data.name`, `description`, metadata |
 | `app/friday/success/page.tsx` | Confirmation copy + accent colors |
+| `app/lib/zoho.ts` | `buildBeachBashConfirmationEmail` — post-payment parent email |
+| `app/lib/discord.ts` | `createBeachBashPaymentEmbed` — staff Discord notification |
 | `app/page.tsx` | Field Day Friday Preview section (~lines 177–320) |
 
 ## Activity object schema
 
-Each Field Day has **exactly 4 activities**. Define a constant (currently `DESERT_DISCOVERY_ACTIVITIES`) at the top of `app/friday/page.tsx`:
+List every station on the signup page (often 4; may be 6 or more). Define a constant (e.g. `HALLOWEEN_ACTIVITIES`) at the top of `app/friday/page.tsx`:
 
 ```typescript
 const THEME_ACTIVITIES = [
@@ -73,12 +75,36 @@ description: "Desert Discovery Field Day Fee",
 
 Date format in `name`: `{Month} {Day}` without year. Full date with year in `description`.
 
+## Post-payment email (`app/lib/zoho.ts`)
+
+Triggered by Stripe webhook (`beach_bash_fee`) and admin resend. Update **`buildBeachBashConfirmationEmail`** each roll (legacy function name; keep unless user asks to rename).
+
+| Block | Notes |
+| ----- | ----- |
+| Subject | `{Theme} — You're Registered!` |
+| Event details | Long date, 8:30 AM / 1:30 PM, child names, campus address |
+| Agenda table | One row per activity from `app/friday/page.tsx` — emoji, verbatim `title`, `desc` |
+| What to pack | Mirror `PACKING_LIST` on Friday page |
+| Sign-off | Field Day at Sage Field |
+
+## Discord embed (`app/lib/discord.ts`)
+
+Update **`createBeachBashPaymentEmbed`** each roll:
+
+| Field | Notes |
+| ----- | ----- |
+| Title | Field Day Friday payment + theme emoji |
+| Event | `{Theme} — {Month Day, Year}` |
+| Color | Theme accent hex (e.g. `0xe85d04` for Halloween orange) |
+
+Webhook route unchanged; only the embed builder copy/colors.
+
 ## Success page (`app/friday/success/page.tsx`)
 
 Update:
 
 - Main paragraph: `We'll see you Friday, {ordinal date} for {Theme} at Sage Field...`
-- Activity recap sentence listing all 4 activities
+- Activity recap listing **all** activities on the Friday page
 - Optional: component export name (e.g. `DesertDiscoverySuccessPage` → `{Theme}SuccessPage`) — cosmetic only
 
 ## Homepage promo (`app/page.tsx`)
@@ -91,7 +117,7 @@ Field Day Friday Preview section — update in sync with Friday page:
 | Theme H2 | Theme name (fdf-desert-headline class — rename optional) |
 | Tagline | Same as or shorter than Friday hero tagline |
 | Pills | Date, 8:30 AM – 1:30 PM, price, Ages 4–11 |
-| Activity grid | 4 chips: emoji + short title |
+| Activity grid | One chip per station: emoji + short title |
 | CTA | `href="/friday"` |
 | Hero scene | `{Theme}HeroScene compact` |
 
@@ -142,6 +168,7 @@ After each roll, confirm zero hits for the **previous** theme:
 ```bash
 rg "Desert Discovery" app/friday app/api/friday-register app/page.tsx
 rg "September 18|Sept 18|2026-09-18" app/friday app/api/friday-register app/page.tsx
+rg "Beach Bash Day|June 13" app/lib/zoho.ts app/lib/discord.ts
 ```
 
 If hero was forked, also grep old component import:
