@@ -81,20 +81,29 @@ function mapClockSessionRow(row: {
   }
 }
 
-export async function clockInByUserId(userId: string, teacherName: string | null): Promise<ClockSession | null> {
-  const adminClient = createAdminClient()
-
-  const { data: existing } = await adminClient
+async function getOpenClockSessionForTeacher(
+  adminClient: ReturnType<typeof createAdminClient>,
+  userId: string,
+): Promise<ClockSession | null> {
+  const { data } = await adminClient
     .schema('teachers')
     .from('clock_sessions')
     .select('id, clock_in_at, clock_out_at, note')
     .eq('teacher_id', userId)
     .is('clock_out_at', null)
+    .order('clock_in_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
-  if (existing) {
-    return mapClockSessionRow(existing)
-  }
+  if (!data) return null
+  return mapClockSessionRow(data)
+}
+
+export async function clockInByUserId(userId: string, teacherName: string | null): Promise<ClockSession | null> {
+  const adminClient = createAdminClient()
+
+  const existing = await getOpenClockSessionForTeacher(adminClient, userId)
+  if (existing) return existing
 
   const { data, error } = await adminClient
     .schema('teachers')
@@ -103,19 +112,21 @@ export async function clockInByUserId(userId: string, teacherName: string | null
     .select('id, clock_in_at, clock_out_at, note')
     .single()
 
-  if (error || !data) return null
+  if (!error && data) {
+    const session = mapClockSessionRow(data)
 
-  const session = mapClockSessionRow(data)
+    sendDiscordNotification(
+      createTeacherClockInEmbed({
+        teacherName: teacherName ?? 'Unknown',
+        clockInAt: session.clockInAt,
+      }),
+      process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
+    )
 
-  sendDiscordNotification(
-    createTeacherClockInEmbed({
-      teacherName: teacherName ?? 'Unknown',
-      clockInAt: session.clockInAt,
-    }),
-    process.env.DISCORD_EMPLOYEE_WEBHOOK_URL,
-  )
+    return session
+  }
 
-  return session
+  return getOpenClockSessionForTeacher(adminClient, userId)
 }
 
 export async function clockOutByUserId(sessionId: string, userId: string, teacherName: string | null): Promise<string | null> {

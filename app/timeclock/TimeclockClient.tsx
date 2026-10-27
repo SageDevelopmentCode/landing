@@ -820,7 +820,11 @@ function ClockView({
     setClockActionPending(true);
     try {
       const session = await clockInByUserId(teacher.id, teacher.full_name);
-      if (!session) return;
+      if (!session) {
+        const sessions = await getTeacherSessionsByUserId(teacher.id);
+        setSessionsByDay(sessions);
+        return;
+      }
       const dateKey = toISOKey(new Date(session.clockInAt));
       setSessionsByDay((prev) => {
         const daySessions = prev[dateKey] ?? [];
