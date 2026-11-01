@@ -26,18 +26,20 @@ const FamilyMapView = dynamic(
 );
 
 type FamilyMapClientProps = {
-  school: SchoolLocation;
+  currentCampus: SchoolLocation;
+  newCampus: SchoolLocation;
   mappedFamilies: MappedFamilyPin[];
   unmappedFamilies: UnmappedFamily[];
   totalFamilies: number;
 };
 
-function formatDistance(distanceMiles: number): string {
-  return `${distanceMiles.toFixed(1)} mi`;
+function formatDriveMinutes(minutes: number): string {
+  return `${minutes} min`;
 }
 
 export function FamilyMapClient({
-  school,
+  currentCampus,
+  newCampus,
   mappedFamilies,
   unmappedFamilies,
   totalFamilies,
@@ -102,7 +104,15 @@ export function FamilyMapClient({
                     className="text-xs font-medium shrink-0 text-right"
                     style={{ color: colors.accentBright }}
                   >
-                    {formatDistance(family.distanceMiles)}
+                    {formatDriveMinutes(family.driveMinutesToNewCampus)}
+                    {family.driveTimeQuality === "estimated" && (
+                      <span
+                        className="block text-[10px]"
+                        style={{ color: colors.warning }}
+                      >
+                        est.
+                      </span>
+                    )}
                     {family.geocodeQuality === "approximate" && (
                       <span
                         className="block text-[10px]"
@@ -111,6 +121,13 @@ export function FamilyMapClient({
                         approx.
                       </span>
                     )}
+                    <span
+                      className="block text-[10px] font-normal mt-0.5"
+                      style={{ color: colors.textTertiary }}
+                    >
+                      {formatDriveMinutes(family.driveMinutesToCurrentCampus)}{" "}
+                      Gattis
+                    </span>
                   </span>
                 </div>
               </button>
@@ -175,14 +192,18 @@ export function FamilyMapClient({
           }}
         >
           <MapPin className="w-3.5 h-3.5" style={{ color: "#F59E0B" }} />
-          School
+          Current (Gattis)
+          <span style={{ color: colors.textTertiary }}>·</span>
+          <MapPin className="w-3.5 h-3.5" style={{ color: "#10B981" }} />
+          Future (Hutto)
           <span style={{ color: colors.textTertiary }}>·</span>
           <MapPin className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
-          Families
+          Families · drive time (OSRM)
         </div>
 
         <FamilyMapView
-          school={school}
+          currentCampus={currentCampus}
+          newCampus={newCampus}
           mappedFamilies={mappedFamilies}
           selectedParentId={selectedParentId}
           onSelectFamily={setSelectedParentId}

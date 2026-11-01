@@ -26,6 +26,7 @@ import { sendSchoolYearOctoberDueSoonDropInTuitionReminderEmail } from "@/app/ac
 import { sendSchoolYearOctoberDueSoonTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearOctoberDueSoonTuitionReminderGeneralEmail";
 import { sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail";
 import { sendSchoolYearOctoberDueSoonTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberDueSoonTuitionReminderEmail";
+import { sendSchoolYearNovemberTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearNovemberTuitionReminderGeneralEmail";
 import { sendSchoolYearOctoberTuitionReminderGeneralEmail } from "@/app/actions/sendSchoolYearOctoberTuitionReminderGeneralEmail";
 import { sendSchoolYearOctoberTuitionReminderEmail } from "@/app/actions/sendSchoolYearOctoberTuitionReminderEmail";
 import { sendSchoolYearSeptemberDropInTuitionReminderEmail } from "@/app/actions/sendSchoolYearSeptemberDropInTuitionReminderEmail";
@@ -521,6 +522,14 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
   "october-tuition-reminder-due-tomorrow-general": (app) =>
     withEmail(app, (email) =>
       sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "november-tuition-reminder-general": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearNovemberTuitionReminderGeneralEmail({
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,

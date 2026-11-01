@@ -1,14 +1,23 @@
 #!/usr/bin/env node
 import fs from 'node:fs'
 import path from 'node:path'
+import {
+  categorizeExpense,
+  DEFAULT_EXPENSE_CATEGORY,
+  summarizeByCategory,
+} from './lib/categorize-expense.mjs'
+import {
+  formatAmexDisplayName,
+  prependAmexDescription,
+} from './lib/format-amex-expense-name.mjs'
 
-const DEFAULT_CATEGORY = 'Supplies & Materials'
 const BATCH_SIZE = 32
 
 function parseArgs(argv) {
   const args = {
     csvPath: null,
-    category: DEFAULT_CATEGORY,
+    category: DEFAULT_EXPENSE_CATEGORY,
+    autoCategorize: true,
     dryRun: false,
     json: false,
     includePayments: false,
@@ -18,6 +27,7 @@ function parseArgs(argv) {
     if (arg === '--dry-run') args.dryRun = true
     else if (arg === '--json') args.json = true
     else if (arg === '--include-payments') args.includePayments = true
+    else if (arg === '--no-auto-categorize') args.autoCategorize = false
     else if (arg.startsWith('--category=')) {
       args.category = arg.slice('--category='.length)
     } else if (!arg.startsWith('-') && !args.csvPath) {
@@ -27,7 +37,7 @@ function parseArgs(argv) {
 
   if (!args.csvPath) {
     console.error(
-      'Usage: node scripts/amex-csv-to-expenses-sql.mjs <activity.csv> [--dry-run] [--json] [--category="Supplies & Materials"] [--include-payments]',
+      'Usage: node scripts/amex-csv-to-expenses-sql.mjs <activity.csv> [--dry-run] [--json] [--no-auto-categorize] [--category="Supplies & Materials"] [--include-payments]',
     )
     process.exit(1)
   }
@@ -106,7 +116,7 @@ function buildNotes(extended, category) {
   return parts.join('\n\n')
 }
 
-function parseAmexActivityCsv(csvPath, category, includePayments) {
+function parseAmexActivityCsv(csvPath, { category, autoCategorize, includePayments }) {
   const csv = fs.readFileSync(csvPath, 'utf8')
   const all = parseCSV(csv.trim())
   if (all.length < 2) {
@@ -136,16 +146,25 @@ function parseAmexActivityCsv(csvPath, category, includePayments) {
     const amount = parseAmount(cols[amountIdx])
     if (!includePayments && amount <= 0) continue
 
+    const notesBase = buildNotes(
+      extendedIdx >= 0 ? cols[extendedIdx] : '',
+      categoryIdx >= 0 ? cols[categoryIdx] : '',
+    )
+    const rawDescription = cols[descriptionIdx]
+    const notes = prependAmexDescription(rawDescription, notesBase)
+    const expense_name = formatAmexDisplayName(rawDescription, notes)
+    const resolvedCategory = autoCategorize
+      ? categorizeExpense(rawDescription, notesBase)
+      : category
+
     rows.push({
-      expense_name: cols[descriptionIdx],
+      rawDescription,
+      expense_name,
       amount,
       expense_date: parseExpenseDate(cols[dateIdx]),
       payment_method: `AMEX ${cols[accountIdx]}`,
-      category,
-      notes: buildNotes(
-        extendedIdx >= 0 ? cols[extendedIdx] : '',
-        categoryIdx >= 0 ? cols[categoryIdx] : '',
-      ),
+      category: resolvedCategory,
+      notes,
     })
   }
 
@@ -247,12 +266,13 @@ function main() {
     process.exit(1)
   }
 
-  const rows = parseAmexActivityCsv(
-    csvPath,
-    args.category,
-    args.includePayments,
-  )
+  const rows = parseAmexActivityCsv(csvPath, {
+    category: args.category,
+    autoCategorize: args.autoCategorize,
+    includePayments: args.includePayments,
+  })
   const total = rows.reduce((sum, row) => sum + row.amount, 0)
+  const categorySummary = summarizeByCategory(rows)
   const { minDate, maxDate, month } = summarizeDateRange(rows)
   const sql = buildInsertSql(rows)
   const batches = buildBatches(rows)
@@ -267,7 +287,9 @@ function main() {
       month,
       minDate,
       maxDate,
-      category: args.category,
+      autoCategorize: args.autoCategorize,
+      fallbackCategory: args.autoCategorize ? null : args.category,
+      categorySummary,
       includePayments: args.includePayments,
       rows,
       sql,
@@ -285,6 +307,8 @@ function main() {
     console.log(`Total: $${total.toFixed(2)}`)
     console.log(`Month: ${month ?? 'n/a'}`)
     console.log(`Date range: ${minDate ?? 'n/a'} to ${maxDate ?? 'n/a'}`)
+    console.log(`Auto-categorize: ${args.autoCategorize}`)
+    console.log('Category summary:', categorySummary)
     console.log(`Batches: ${batches.length}`)
     return
   }

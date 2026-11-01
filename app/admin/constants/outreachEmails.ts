@@ -216,6 +216,11 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     label: "Send October Tuition Reminder — Due Tonight at Midnight (General — Custom Pricing)",
     category: "schoolYear",
   },
+  {
+    id: "november-tuition-reminder-general",
+    label: "Send November Tuition Reminder — Due Sunday in 1 Day (General — Custom Pricing)",
+    category: "schoolYear",
+  },
   { id: "labor-day-reminder", label: "Send Labor Day Reminder", category: "schoolYear" },
   // Other
   { id: "free-friday-announcement", label: "Send Free Friday Announcement", category: "other" },

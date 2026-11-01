@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import L from "leaflet";
 import {
   CircleMarker,
   MapContainer,
+  Marker,
   Popup,
   TileLayer,
   Tooltip,
@@ -11,11 +13,12 @@ import {
 } from "react-leaflet";
 import type { LatLngBoundsExpression, LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { SCHOOL_LOCATION } from "@/app/lib/geocode";
 import type { MappedFamilyPin, SchoolLocation } from "./types";
+import styles from "./FamilyMapView.module.css";
 
 type FamilyMapViewProps = {
-  school: SchoolLocation;
+  currentCampus: SchoolLocation;
+  newCampus: SchoolLocation;
   mappedFamilies: MappedFamilyPin[];
   selectedParentId: string | null;
   onSelectFamily: (parentId: string) => void;
@@ -23,19 +26,21 @@ type FamilyMapViewProps = {
 
 function FitBounds({
   points,
+  fallbackCenter,
 }: {
   points: LatLngExpression[];
+  fallbackCenter: LatLngExpression;
 }) {
   const map = useMap();
 
   useEffect(() => {
     if (points.length === 0) {
-      map.setView([SCHOOL_LOCATION.lat, SCHOOL_LOCATION.lng], 11);
+      map.setView(fallbackCenter, 11);
       return;
     }
 
     map.fitBounds(points as LatLngBoundsExpression, { padding: [48, 48] });
-  }, [map, points]);
+  }, [map, points, fallbackCenter]);
 
   return null;
 }
@@ -67,92 +72,141 @@ function formatDistance(distanceMiles: number): string {
   return `${distanceMiles.toFixed(1)} mi`;
 }
 
+function formatDriveMinutes(minutes: number): string {
+  return `${minutes} min`;
+}
+
+function createFamilyMarkerIcon(
+  family: MappedFamilyPin,
+  isSelected: boolean,
+): L.DivIcon {
+  const estSuffix =
+    family.driveTimeQuality === "estimated" ? " ~" : "";
+
+  return L.divIcon({
+    className: styles.pinWrapper,
+    html: `
+      <div class="${styles.pin}">
+        <div class="${styles.labels}">
+          <span class="${styles.labelHutto}">${family.driveMinutesToNewCampus} min Hutto${estSuffix}</span>
+          <span class="${styles.labelGattis}">${family.driveMinutesToCurrentCampus} min Gattis${estSuffix}</span>
+        </div>
+        <div class="${styles.dot}${isSelected ? ` ${styles.dotSelected}` : ""}"></div>
+      </div>
+    `,
+    iconSize: [96, 54],
+    iconAnchor: [48, 46],
+  });
+}
+
+function CampusMarker({
+  campus,
+  color,
+}: {
+  campus: SchoolLocation;
+  color: string;
+}) {
+  return (
+    <>
+      <CircleMarker
+        center={[campus.lat, campus.lng]}
+        radius={18}
+        pathOptions={{
+          color,
+          fillColor: color,
+          fillOpacity: 0.2,
+          weight: 1,
+        }}
+      />
+      <CircleMarker
+        center={[campus.lat, campus.lng]}
+        radius={14}
+        pathOptions={{
+          color: "#FFFFFF",
+          fillColor: color,
+          fillOpacity: 1,
+          weight: 4,
+        }}
+      >
+        <Tooltip direction="top" offset={[0, -8]} opacity={1}>
+          {campus.name}
+        </Tooltip>
+        <Popup>
+          <div className="text-sm space-y-1">
+            <p className="font-semibold">{campus.name}</p>
+            <p>{campus.address}</p>
+          </div>
+        </Popup>
+      </CircleMarker>
+    </>
+  );
+}
+
 export function FamilyMapView({
-  school,
+  currentCampus,
+  newCampus,
   mappedFamilies,
   selectedParentId,
   onSelectFamily,
 }: FamilyMapViewProps) {
+  const fallbackCenter = useMemo(
+    () =>
+      [
+        (currentCampus.lat + newCampus.lat) / 2,
+        (currentCampus.lng + newCampus.lng) / 2,
+      ] as LatLngExpression,
+    [currentCampus.lat, currentCampus.lng, newCampus.lat, newCampus.lng],
+  );
+
   const points = useMemo(
     () => [
-      [school.lat, school.lng] as LatLngExpression,
+      [currentCampus.lat, currentCampus.lng] as LatLngExpression,
+      [newCampus.lat, newCampus.lng] as LatLngExpression,
       ...mappedFamilies.map(
         (family) => [family.lat, family.lng] as LatLngExpression,
       ),
     ],
-    [mappedFamilies, school.lat, school.lng],
+    [
+      mappedFamilies,
+      currentCampus.lat,
+      currentCampus.lng,
+      newCampus.lat,
+      newCampus.lng,
+    ],
   );
 
   return (
     <MapContainer
-      center={[school.lat, school.lng]}
+      center={fallbackCenter}
       zoom={11}
-      className="h-full w-full rounded-xl"
+      className={`h-full w-full rounded-xl ${styles.map}`}
       scrollWheelZoom
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <FitBounds points={points} />
+      <FitBounds points={points} fallbackCenter={fallbackCenter} />
       <FlyToSelection
         selectedParentId={selectedParentId}
         mappedFamilies={mappedFamilies}
       />
 
-      <CircleMarker
-        center={[school.lat, school.lng]}
-        radius={18}
-        pathOptions={{
-          color: "#F59E0B",
-          fillColor: "#F59E0B",
-          fillOpacity: 0.2,
-          weight: 1,
-        }}
-      />
-      <CircleMarker
-        center={[school.lat, school.lng]}
-        radius={14}
-        pathOptions={{
-          color: "#FFFFFF",
-          fillColor: "#F59E0B",
-          fillOpacity: 1,
-          weight: 4,
-        }}
-      >
-        <Tooltip direction="top" offset={[0, -8]} opacity={1}>
-          {school.name}
-        </Tooltip>
-        <Popup>
-          <div className="text-sm space-y-1">
-            <p className="font-semibold">{school.name}</p>
-            <p>{school.address}</p>
-          </div>
-        </Popup>
-      </CircleMarker>
+      <CampusMarker campus={currentCampus} color="#F59E0B" />
+      <CampusMarker campus={newCampus} color="#10B981" />
 
       {mappedFamilies.map((family) => {
         const isSelected = family.parentId === selectedParentId;
 
         return (
-          <CircleMarker
+          <Marker
             key={family.parentId}
-            center={[family.lat, family.lng]}
-            radius={isSelected ? 12 : 10}
-            pathOptions={{
-              color: "#FFFFFF",
-              fillColor: isSelected ? "#2563EB" : "#3B82F6",
-              fillOpacity: 1,
-              weight: isSelected ? 4 : 3,
-            }}
+            position={[family.lat, family.lng]}
+            icon={createFamilyMarkerIcon(family, isSelected)}
             eventHandlers={{
               click: () => onSelectFamily(family.parentId),
             }}
           >
-            <Tooltip direction="top" offset={[0, -8]} opacity={1}>
-              {family.parentName ?? "Family"} · {formatDistance(family.distanceMiles)}
-              {family.geocodeQuality === "approximate" ? " (approx.)" : ""}
-            </Tooltip>
             <Popup>
               <div className="text-sm space-y-2 min-w-[220px]">
                 <div>
@@ -174,10 +228,21 @@ export function FamilyMapView({
                 </div>
                 <p>{family.formattedAddress}</p>
                 <p className="font-medium">
-                  {formatDistance(family.distanceMiles)} from school
+                  {formatDriveMinutes(family.driveMinutesToNewCampus)} drive to
+                  future campus (Hutto)
+                  {family.driveTimeQuality === "estimated" ? " (est.)" : ""}
                   {family.geocodeQuality === "approximate"
-                    ? " (approximate location)"
+                    ? " · approximate location"
                     : ""}
+                </p>
+                <p className="text-gray-600">
+                  {formatDriveMinutes(family.driveMinutesToCurrentCampus)} drive
+                  to current campus (Gattis)
+                  {family.driveTimeQuality === "estimated" ? " (est.)" : ""}
+                </p>
+                <p className="text-gray-500 text-xs">
+                  {formatDistance(family.newCampusDistanceMiles)} straight-line
+                  to Hutto · {formatDistance(family.distanceMiles)} to Gattis
                 </p>
                 <a
                   href={`/admin/enrollment-summary/${family.students[0]?.applicationId}`}
@@ -189,7 +254,7 @@ export function FamilyMapView({
                 </a>
               </div>
             </Popup>
-          </CircleMarker>
+          </Marker>
         );
       })}
     </MapContainer>

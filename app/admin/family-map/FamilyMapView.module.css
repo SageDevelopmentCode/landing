@@ -1,0 +1,67 @@
+.map :global(.leaflet-div-icon) {
+  background: transparent;
+  border: none;
+}
+
+.pin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.labels {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  margin-bottom: 4px;
+  pointer-events: none;
+}
+
+.labelHutto,
+.labelGattis {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
+  pointer-events: none;
+}
+
+.labelHutto {
+  color: #047857;
+  background: rgb(255 255 255 / 95%);
+  border: 1px solid #10b981;
+}
+
+.labelGattis {
+  color: #b45309;
+  background: rgb(255 255 255 / 95%);
+  border: 1px solid #f59e0b;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #3b82f6;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.dotSelected {
+  width: 16px;
+  height: 16px;
+  background: #2563eb;
+  border-width: 4px;
+}
+
+.pinWrapper {
+  background: transparent !important;
+  border: none !important;
+}

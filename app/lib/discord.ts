@@ -872,6 +872,7 @@ export function createBudgetSummaryEmbed(data: {
     "Maintenance & Repairs": "🛠️",
     "Furniture & Equipment": "🪑",
     "Supplies & Materials": "📦",
+    "Food & Meals": "🍽️",
     Curriculum: "📚",
     "Field Trips": "🚌",
     "Technology & Software": "💻",
@@ -879,6 +880,7 @@ export function createBudgetSummaryEmbed(data: {
     Marketing: "📣",
     "Professional Services": "💼",
     Administrative: "📁",
+    "Fuel & Transportation": "⛽",
     Savings: "🏦",
     Other: "📎",
   };

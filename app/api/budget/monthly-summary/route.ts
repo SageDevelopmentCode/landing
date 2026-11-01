@@ -16,6 +16,7 @@ const CATEGORIES = [
   "Maintenance & Repairs",
   "Furniture & Equipment",
   "Supplies & Materials",
+  "Food & Meals",
   "Curriculum",
   "Field Trips",
   "Technology & Software",
@@ -23,6 +24,7 @@ const CATEGORIES = [
   "Marketing",
   "Professional Services",
   "Administrative",
+  "Fuel & Transportation",
   "Savings",
   "Other",
 ];
