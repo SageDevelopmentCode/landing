@@ -9,6 +9,7 @@ import { TourUnavailabilityView } from './TourUnavailabilityView'
 import { InfoSessionTable } from './InfoSessionTable'
 import { InfoSessionFAQView } from './InfoSessionFAQView'
 import { ShadowDayBookingsView } from './ShadowDayBookingsView'
+import { FieldFridaySignupsView } from './FieldFridaySignupsView'
 import { TestimonialsView } from './TestimonialsView'
 import { MeetMissJoyRSVPsView } from './MeetMissJoyRSVPsView'
 import { CommunityGardenDayRSVPsView } from './CommunityGardenDayRSVPsView'
@@ -27,6 +28,7 @@ import type {
   AdminReferral,
   ParentFeedback,
   MarketingTab,
+  SchoolYearFieldFridaySignup,
 } from './page'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
 
@@ -169,6 +171,7 @@ const subMenuItems: { id: MarketingTab; label: string; sublabel: string }[] = [
   { id: 'open-house', label: 'Open House', sublabel: 'April 25' },
   { id: 'tour-unavailability', label: 'Campus Tours', sublabel: 'Manage availability' },
   { id: 'shadow-day', label: 'Shadow Days', sublabel: 'Bookings & payments' },
+  { id: 'field-friday-signups', label: 'Field Friday', sublabel: 'School-year signups' },
   { id: 'referrals', label: 'Referrals', sublabel: 'Referral program' },
   { id: 'parent-feedback', label: 'Parent Feedback', sublabel: 'Parent submissions' },
   { id: 'info-session', label: 'Info Session', sublabel: 'April 18 RSVPs' },
@@ -187,6 +190,7 @@ export function MarketingClient({
   enrolledEmailsArr,
   infoSessionRsvps,
   shadowDayBookings,
+  fieldFridaySignups,
   testimonials,
   meetMissJoyRsvps,
   communityGardenDayRsvps,
@@ -201,6 +205,7 @@ export function MarketingClient({
   enrolledEmailsArr: { email: string; status: string }[]
   infoSessionRsvps: InfoSessionRsvp[]
   shadowDayBookings: ShadowDayBooking[]
+  fieldFridaySignups: SchoolYearFieldFridaySignup[]
   testimonials: Testimonial[]
   meetMissJoyRsvps: MeetMissJoyRsvp[]
   communityGardenDayRsvps: CommunityGardenDayRsvp[]
@@ -329,6 +334,28 @@ export function MarketingClient({
 
         {active === 'shadow-day' && (
           <ShadowDayBookingsView bookings={shadowDayBookings} />
+        )}
+
+        {active === 'field-friday-signups' && (
+          <div>
+            <div style={{ marginBottom: '28px' }}>
+              <h1
+                className={merriweather.className}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: 900,
+                  color: colors.textPrimary,
+                  marginBottom: '6px',
+                }}
+              >
+                Field Friday Signups
+              </h1>
+              <p style={{ fontSize: '13px', color: colors.textSecondary }}>
+                Parent portal Field Friday tuition and /friday page registrations
+              </p>
+            </div>
+            <FieldFridaySignupsView signups={fieldFridaySignups} />
+          </div>
         )}
 
         {active === 'referrals' && (

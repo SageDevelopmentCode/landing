@@ -1,0 +1,283 @@
+{
+  "from": "2026-09-01",
+  "to": "2026-11-01",
+  "changeCount": 191,
+  "distinctNewNames": [
+    "Amazon",
+    "Amex adjustment",
+    "Andy's - Rounround Rock",
+    "Bilia Eatery Castle Hills",
+    "Burrotes",
+    "Cava",
+    "Checkr",
+    "Cheesecake Factory",
+    "Chevron",
+    "Chick-fil-A",
+    "Chili's",
+    "China E Buffet Round",
+    "Chipotle",
+    "Dollar Tree",
+    "DoorDash",
+    "DoorDash — Dsan Francisco CA",
+    "DoorDash — Pokeworks",
+    "DoorDash — San Francisco CA",
+    "DoorDash — Wingstop",
+    "Dutch Bros",
+    "Facebook Ads",
+    "First Watch",
+    "Green Mountain Energy",
+    "Grey Orcround Rock TX",
+    "H-E-B #612",
+    "H-E-B Curbside",
+    "H-E-B Gas",
+    "Home Depot",
+    "In-N-Out",
+    "Instill Cofferound Rock",
+    "Jollibee",
+    "Lax",
+    "Lime",
+    "Little Caesars",
+    "McDonald's",
+    "Misaki Ramen Round Rock",
+    "Natural Grocegeorgetown",
+    "Olive Garden",
+    "Olmos Park, Tsan Antonio",
+    "Organic Nails",
+    "P. Terry's",
+    "Panda Express",
+    "Parking",
+    "PetSmart",
+    "QT 4127 Insidaustin",
+    "Round Rock Soround Rock",
+    "Rush Bowls",
+    "Salt Lick",
+    "Sharetea",
+    "Spicy House Austin",
+    "Spotify",
+    "Sprouts",
+    "Starbucks",
+    "Subway",
+    "Supabase",
+    "Taco Bell",
+    "Tacos Coria Round Rock",
+    "Target",
+    "USPS",
+    "Vanilla Gift",
+    "Walgreens",
+    "Wendy's",
+    "Whole Foods"
+  ],
+  "changes": [
+    {
+      "id": "57e9cd44-494f-4eec-a573-d186262095aa",
+      "expense_date": "2026-09-01",
+      "oldName": "AMAZON MARKEPLACE NA  PA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "01e91ef5-d94c-468e-9108-7e5311c9b816",
+      "expense_date": "2026-09-01",
+      "oldName": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "b24c5aaa-81c0-4db2-b03c-bf9189030b80",
+      "expense_date": "2026-09-01",
+      "oldName": "AplPay LIMEGREEN SOUAUSTIN              TX",
+      "newName": "Lime",
+      "notesChanged": true
+    },
+    {
+      "id": "216a96a8-7b70-4109-9e21-c6173f52c1e0",
+      "expense_date": "2026-09-01",
+      "oldName": "AplPay PLATINUMPARKIDALLAS              TX",
+      "newName": "Parking",
+      "notesChanged": true
+    },
+    {
+      "id": "51e9560f-f352-4ba8-8007-16ecd9b2695a",
+      "expense_date": "2026-09-01",
+      "oldName": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+      "newName": "H-E-B Curbside",
+      "notesChanged": true
+    },
+    {
+      "id": "df305951-6af3-4a8e-a53e-7954fe51915c",
+      "expense_date": "2026-09-01",
+      "oldName": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+      "newName": "H-E-B Curbside",
+      "notesChanged": true
+    },
+    {
+      "id": "63f98978-6b68-4096-b631-2ba9b12e276d",
+      "expense_date": "2026-09-02",
+      "oldName": "AplPay SPO*BURROSTEXROUND ROCK          TX",
+      "newName": "Burrotes",
+      "notesChanged": true
+    },
+    {
+      "id": "52901ad4-1453-44d4-ad0e-8f2053ba4b9d",
+      "expense_date": "2026-09-02",
+      "oldName": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+      "newName": "H-E-B Curbside",
+      "notesChanged": true
+    },
+    {
+      "id": "4d7593bb-52ba-431e-8be5-34a31eea1629",
+      "expense_date": "2026-09-03",
+      "oldName": "AplPay PANDA EXPRESSROUND ROCK          TX",
+      "newName": "Panda Express",
+      "notesChanged": true
+    },
+    {
+      "id": "cbab0520-c43d-4daa-82de-06ab334adcd8",
+      "expense_date": "2026-09-05",
+      "oldName": "AplPay IN-N-OUT YORBYORBA LINDA         CA",
+      "newName": "In-N-Out",
+      "notesChanged": true
+    },
+    {
+      "id": "08628ecc-2e77-449a-a3ce-cc68c47b91b2",
+      "expense_date": "2026-09-05",
+      "oldName": "CHECKR, INC CHECKR.CSAN FRANCISCO       CA",
+      "newName": "Checkr",
+      "notesChanged": true
+    },
+    {
+      "id": "ac7effa3-b414-418c-8f93-40264ff0f945",
+      "expense_date": "2026-09-06",
+      "oldName": "AMAZON MARKEPLACE NA  PA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "7edd8f26-4a6a-460e-baa5-442b08f842ae",
+      "expense_date": "2026-09-06",
+      "oldName": "AMAZON MARKEPLACE NA  PA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "044e9238-01ea-4913-a3b0-4786357b2d35",
+      "expense_date": "2026-09-06",
+      "oldName": "SUPABASE            SINGAPORE           SG",
+      "newName": "Supabase",
+      "notesChanged": true
+    },
+    {
+      "id": "ac6b982a-1fb2-4f27-8070-234c52177c4a",
+      "expense_date": "2026-09-07",
+      "oldName": "AMAZON MARKEPLACE NA  PA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "f7078241-2f66-4886-afb6-58cf391f4a57",
+      "expense_date": "2026-09-07",
+      "oldName": "AMAZON MARKEPLACE NA  PA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "480656b5-61e6-4308-adfc-391c78d11f1b",
+      "expense_date": "2026-09-07",
+      "oldName": "AplPay 91280 - AUSTIAUSTIN              TX",
+      "newName": "Parking",
+      "notesChanged": true
+    },
+    {
+      "id": "b07f78dd-2e7e-4b83-b201-1762c35b276a",
+      "expense_date": "2026-09-07",
+      "oldName": "AplPay CHIPOTLE 2634PFLUGERVILLE        TX",
+      "newName": "Chipotle",
+      "notesChanged": true
+    },
+    {
+      "id": "ebb2484c-47f9-48a6-9fec-b0014f83b26a",
+      "expense_date": "2026-09-07",
+      "oldName": "AplPay TST* LAX - T2LOS ANGELES         CA",
+      "newName": "Lax",
+      "notesChanged": true
+    },
+    {
+      "id": "3f2c2c12-3601-444e-addd-ef6689d8dfd6",
+      "expense_date": "2026-09-08",
+      "oldName": "AMAZON MARKEPLACE NA  PA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "23c92bc5-4a0e-4efe-b1cf-7ac69999127c",
+      "expense_date": "2026-09-08",
+      "oldName": "AMAZON.COM          AMZN.COM/BILL       WA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "5e3d5fc6-93c6-4c5f-9e23-f25742eb2ed7",
+      "expense_date": "2026-09-08",
+      "oldName": "AplPay H-E-B #612   ROUND ROCK          TX",
+      "newName": "H-E-B #612",
+      "notesChanged": true
+    },
+    {
+      "id": "c820035d-dfaa-44d2-be2a-1aac7bcd09c0",
+      "expense_date": "2026-09-08",
+      "oldName": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+      "newName": "H-E-B Curbside",
+      "notesChanged": true
+    },
+    {
+      "id": "587634e8-73ca-458e-84dc-f0520c1ac8b7",
+      "expense_date": "2026-09-08",
+      "oldName": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+      "newName": "H-E-B Curbside",
+      "notesChanged": true
+    },
+    {
+      "id": "33c060e5-2616-4826-9a07-b5f04f97b40f",
+      "expense_date": "2026-09-09",
+      "oldName": "AplPay PANDA EXPRESSROUND ROCK          TX",
+      "newName": "Panda Express",
+      "notesChanged": true
+    },
+    {
+      "id": "0c440883-b314-452c-bafd-3e44e805836f",
+      "expense_date": "2026-09-10",
+      "oldName": "AMAZON MARKEPLACE NA  PA",
+      "newName": "Amazon",
+      "notesChanged": true
+    },
+    {
+      "id": "43bb042b-5aae-470f-a7f6-6512ca3433b2",
+      "expense_date": "2026-09-10",
+      "oldName": "AplPay DOLLAR TREE 0ROUND ROCK          TX",
+      "newName": "Dollar Tree",
+      "notesChanged": true
+    },
+    {
+      "id": "7b35cf31-cd3e-4844-ab8f-f7d0314ff20d",
+      "expense_date": "2026-09-10",
+      "oldName": "H-E-B GAS/CAR WASH #ROUND ROCK          TX",
+      "newName": "H-E-B Gas",
+      "notesChanged": true
+    },
+    {
+      "id": "dc5c49a4-04cb-4667-97bb-3725ac73423a",
+      "expense_date": "2026-09-10",
+      "oldName": "TARGET.COM          800-591-3869        MN",
+      "newName": "Target",
+      "notesChanged": true
+    },
+    {
+      "id": "a711d800-abd7-4b96-adbd-2b7335d494fb",
+      "expense_date": "2026-09-10",
+      "oldName": "TARGET.COM          800-591-3869        MN",
+      "newName": "Target",
+      "notesChanged": true
+    }
+  ],
+  "updateSql": "UPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n2P1950OCPMX MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '57e9cd44-494f-4eec-a573-d186262095aa';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA\n\nE7AB8I9TWWR AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '01e91ef5-d94c-468e-9108-7e5311c9b816';\nUPDATE budget.expenses SET expense_name = 'Lime', notes = 'Amex: AplPay LIMEGREEN SOUAUSTIN TX\n\nCH_3UB29FRI +15127666756\nAplPay LIMEGREEN SOUTHEAST AS\nAUSTIN\nTX\n+15127666756\n\nCategory: Restaurant-Restaurant' WHERE id = 'b24c5aaa-81c0-4db2-b03c-bf9189030b80';\nUPDATE budget.expenses SET expense_name = 'Parking', notes = 'Amex: AplPay PLATINUMPARKIDALLAS TX\n\nCH_3UB0MLFM +14694532000\nAplPay PLATINUMPARKING.COM\nDALLAS\nTX\n+14694532000\n\nCategory: Business Services-Other Services' WHERE id = '216a96a8-7b70-4109-9e21-c6173f52c1e0';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:628200 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.2789\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '51e9560f-f352-4ba8-8007-16ecd9b2695a';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:628202 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.0356\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = 'df305951-6af3-4a8e-a53e-7954fe51915c';\nUPDATE budget.expenses SET expense_name = 'Burrotes', notes = 'Amex: AplPay SPO*BURROSTEXROUND ROCK TX\n\n99999996246 5123053881\nAplPay SPO*BURROSTEXMEXBARANDGRI 000010403\nROUND ROCK\nTX\n5123053881\n\nCategory: Restaurant-Restaurant' WHERE id = '63f98978-6b68-4096-b631-2ba9b12e276d';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:628672 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.3004\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '52901ad4-1453-44d4-ad0e-8f2053ba4b9d';\nUPDATE budget.expenses SET expense_name = 'Panda Express', notes = 'Amex: AplPay PANDA EXPRESSROUND ROCK TX\n\n410502      800-877-8988\nAplPay PANDA EXPRESS\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n800-877-8988\n\nCategory: Restaurant-Bar & Café' WHERE id = '4d7593bb-52ba-431e-8be5-34a31eea1629';\nUPDATE budget.expenses SET expense_name = 'In-N-Out', notes = 'Amex: AplPay IN-N-OUT YORBYORBA LINDA CA\n\n849595      FAST FOOD RESTAURANT\nAplPay IN-N-OUT YORBA LINDA\nYORBA LINDA\nCA\nFAST FOOD RESTAURANT\n\nCategory: Restaurant-Bar & Café' WHERE id = 'cbab0520-c43d-4daa-82de-06ab334adcd8';\nUPDATE budget.expenses SET expense_name = 'Checkr', notes = 'Amex: CHECKR, INC CHECKR.CSAN FRANCISCO CA\n\nCH_3UCGDF40 +18558333364\nCHECKR, INC CHECKR.COM\nSAN FRANCISCO\nCA\n+18558333364\n\nCategory: Merchandise & Supplies-Computer Supplies' WHERE id = '08628ecc-2e77-449a-a3ce-cc68c47b91b2';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n37JP9IXS67V MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'ac7effa3-b414-418c-8f93-40264ff0f945';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n18VU3BS41OG MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '7edd8f26-4a6a-460e-baa5-442b08f842ae';\nUPDATE budget.expenses SET expense_name = 'Supabase', notes = 'Amex: SUPABASE SINGAPORE SG\n\nCH_3UCDANJD +6587498462\nSUPABASE\nSINGAPORE\nSG\n+6587498462\n\nCategory: Merchandise & Supplies-Computer Supplies' WHERE id = '044e9238-01ea-4913-a3b0-4786357b2d35';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n10QODVGXFAK MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'ac6b982a-1fb2-4f27-8070-234c52177c4a';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n5O96BNN6C1T MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'f7078241-2f66-4886-afb6-58cf391f4a57';\nUPDATE budget.expenses SET expense_name = 'Parking', notes = 'Amex: AplPay 91280 - AUSTIAUSTIN TX\n\n000001089   3122742000\nAplPay 91280 - AUSTIN-BERGSTROM INTER SPRK\nAUSTIN\nTX\nDescription : PARKING FEES Price : 0.61\n3122742000\n\nCategory: Transportation-Parking Charges' WHERE id = '480656b5-61e6-4308-adfc-391c78d11f1b';\nUPDATE budget.expenses SET expense_name = 'Chipotle', notes = 'Amex: AplPay CHIPOTLE 2634PFLUGERVILLE TX\n\n014041      303-595-4000\nAplPay CHIPOTLE 2634 2634\nPFLUGERVILLE\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n303-595-4000\n\nCategory: Restaurant-Bar & Café' WHERE id = 'b07f78dd-2e7e-4b83-b201-1762c35b276a';\nUPDATE budget.expenses SET expense_name = 'Lax', notes = 'Amex: AplPay TST* LAX - T2LOS ANGELES CA\n\n99999996251 4222606016\nAplPay TST* LAX - T2 - JERSEY MI 000226833\nLOS ANGELES\nCA\nDescription : RESTAURANTS Price : 0.3067\n4222606016\n\nCategory: Restaurant-Restaurant' WHERE id = 'ebb2484c-47f9-48a6-9fec-b0014f83b26a';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n5OH1XUEX8EY MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '3f2c2c12-3601-444e-addd-ef6689d8dfd6';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA\n\n78T5QIZOSIC BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '23c92bc5-4a0e-4efe-b1cf-7ac69999127c';\nUPDATE budget.expenses SET expense_name = 'H-E-B #612', notes = 'Amex: AplPay H-E-B #612 ROUND ROCK TX\n\n000013368   8009874438\nAplPay H-E-B #612\nROUND ROCK\nTX\n8009874438\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '5e3d5fc6-93c6-4c5f-9e23-f25742eb2ed7';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:631461 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.2422\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = 'c820035d-dfaa-44d2-be2a-1aac7bcd09c0';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:631461 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.3944\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '587634e8-73ca-458e-84dc-f0520c1ac8b7';\nUPDATE budget.expenses SET expense_name = 'Panda Express', notes = 'Amex: AplPay PANDA EXPRESSROUND ROCK TX\n\n156403      800-877-8988\nAplPay PANDA EXPRESS\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n800-877-8988\n\nCategory: Restaurant-Bar & Café' WHERE id = '33c060e5-2616-4826-9a07-b5f04f97b40f';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n294V1OAR4HJ MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '0c440883-b314-452c-bafd-3e44e805836f';\nUPDATE budget.expenses SET expense_name = 'Dollar Tree', notes = 'Amex: AplPay DOLLAR TREE 0ROUND ROCK TX\n\n000202551018775308733\nVARIETY STORES\nAplPay DOLLAR TREE 000001162\nROUND ROCK\nTX\nVARIETY STORES\n8775308733\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '43bb042b-5aae-470f-a7f6-6512ca3433b2';\nUPDATE budget.expenses SET expense_name = 'H-E-B Gas', notes = 'Amex: H-E-B GAS/CAR WASH #ROUND ROCK TX\n\n000510323   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel' WHERE id = '7b35cf31-cd3e-4844-ab8f-f7d0314ff20d';\nUPDATE budget.expenses SET expense_name = 'Target', notes = 'Amex: TARGET.COM 800-591-3869 MN\n\n90200376030 800-591-3869\nTARGET.COM\n800-591-3869\nMN\n\"Description : APPAREL, HOUSEWARES Price : 0.00\"\n800-591-3869\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'dc5c49a4-04cb-4667-97bb-3725ac73423a';\nUPDATE budget.expenses SET expense_name = 'Target', notes = 'Amex: TARGET.COM 800-591-3869 MN\n\n10200376025 800-591-3869\nTARGET.COM\n800-591-3869\nMN\n\"Description : APPAREL, HOUSEWARES Price : 0.00\"\n800-591-3869\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'a711d800-abd7-4b96-adbd-2b7335d494fb';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n17K62RO2EOE MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '6f61d06f-1f6a-40a0-bac3-51d5e3945104';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA\n\nJ8O7SG8MIZE AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'd4cf6e3f-09e6-4a93-a1e4-70f6023d86f4';\nUPDATE budget.expenses SET expense_name = 'Home Depot', notes = 'Amex: AplPay THE HOME DEPOROUND ROCK TX\n\n09110050445 800-466-3337\nAplPay THE HOME DEPOT\nROUND ROCK\nTX\n800-466-3337\n\nCategory: Merchandise & Supplies-Hardware Supplies' WHERE id = '0c340f88-12ef-42f8-a0e6-35ff84d8408d';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:633527 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.1236\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = 'ab95acc2-3a88-4240-a872-ff87a06ff1f8';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:633126 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.4577\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '407500d3-711a-4c10-8ff8-cd32cb937835';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n4QPE9B2G6Q6 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '5fc777c0-3a0f-494c-a1dd-f7cd475ad27f';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n6RNAJDLEF1I MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '674e324b-b536-4edb-91a9-e5d981d7878d';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA\n\n692GZS0G4L4 AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '93800815-a147-401a-b7ca-f8501195acd4';\nUPDATE budget.expenses SET expense_name = 'Starbucks', notes = 'Amex: STARBUCKS STORE 6355ROUND ROCK TX\n\n33A26900719 FAST FOOD RESTAURANT\nSTARBUCKS STORE 6355\nROUND ROCK\nTX\nFAST FOOD RESTAURANT\n\nCategory: Restaurant-Bar & Café' WHERE id = 'fa0fc36a-cc04-46ca-a7f4-072cd5a68cb0';\nUPDATE budget.expenses SET expense_name = 'Salt Lick', notes = 'Amex: THE SALT LICK ROUND ROCK TX\n\n12573       5123861044\nTHE SALT LICK\nROUND ROCK\nTX\nDescription : N/A Price : 0.00\n5123861044\n\nCategory: Restaurant-Restaurant' WHERE id = 'e2d93887-514d-4ff4-b92b-121d9cbfc6c5';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n2FJITNK0V66 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '60c0b764-6190-43d8-9093-db3fa556edbd';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\nBBIZMRNBGCI MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'ef2ae960-9b84-4b59-8189-a1563ba67066';\nUPDATE budget.expenses SET expense_name = 'McDonald''s', notes = 'Amex: AplPay MCDONALD''S F2ROUND ROCK TX\n\n000552606   5123885378\nAplPay MCDONALD''S F27561 000000000804898\nROUND ROCK\nTX\n5123885378\n\nCategory: Restaurant-Bar & Café' WHERE id = 'bef2f039-2903-4b9d-b438-de48af233d18';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:634688 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.7643\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '0e355e59-c154-4b7f-a0c8-a1ad80082a9a';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:635415 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.217\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '58dca24a-f492-4379-94fa-e9a560a38115';\nUPDATE budget.expenses SET expense_name = 'DoorDash — Pokeworks', notes = 'Amex: AplPay BT*DD *DOORDASAN FRANCISCO CA\n\nMMWD9Q4W    8559731040\nAplPay BT*DD *DOORDASH POKEWORKS\nSAN FRANCISCO\nCA\n8559731040\n\nCategory: Restaurant-Restaurant' WHERE id = '87e28289-bf4f-43d7-a77d-857a039afc5e';\nUPDATE budget.expenses SET expense_name = 'Burrotes', notes = 'Amex: AplPay SPO*BURROSTEXROUND ROCK TX\n\n99999996260 5123053881\nAplPay SPO*BURROSTEXMEXBARANDGRI 000010403\nROUND ROCK\nTX\n5123053881\n\nCategory: Restaurant-Restaurant' WHERE id = 'd18bfbd4-250a-416e-ab36-abea467f48ed';\nUPDATE budget.expenses SET expense_name = 'Green Mountain Energy', notes = 'Amex: GREEN MOUNTAIN ENERGHOUSTON TX\n\n44554247STV000077380463     78664\nGREEN MOUNTAIN ENERG\nHOUSTON\nTX\n000077380463     78664\n\nCategory: Other-Utilities' WHERE id = '43fed816-4675-4014-bf67-d4e0bc276a48';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n2GAIVQ8OI8H MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '25d967d3-5399-4a43-a8e8-94dbc6e1414f';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA\n\nXNF4GIY8B1Z BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '96d5cc77-70c7-4a58-820e-fdc1c304778d';\nUPDATE budget.expenses SET expense_name = 'Chipotle', notes = 'Amex: AplPay CHIPOTLE 0117ROUND ROCK TX\n\n010146      512-828-0788\nAplPay CHIPOTLE 0117 0117\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n512-828-0788\n\nCategory: Restaurant-Bar & Café' WHERE id = '619080d7-507a-4094-af3c-a2d3e0c7ab4d';\nUPDATE budget.expenses SET expense_name = 'Facebook Ads', notes = 'Amex: FACEBK *WG64P7W7L4 MENLO PARK\n\n28811931705 650-543-4800 / paymen\n650-543-4800 / payment-pr\nFACEBK *WG64P7W7L4\nMENLO PARK\n650-543-4800 / payment-pr\n\nCategory: Business Services-Advertising Services' WHERE id = '6bcd2ccc-9b30-48a4-aba6-0667a57e045b';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:636543 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.1846\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '9762a644-9fce-432d-9838-1fc6aec716a7';\nUPDATE budget.expenses SET expense_name = 'Rush Bowls', notes = 'Amex: PY *RUSH BOWLS - ROUROUND ROCK TX\n\n99999996261 5126961946\nPY *RUSH BOWLS - ROUND RO 000032669\nROUND ROCK\nTX\n5126961946\n\nCategory: Restaurant-Bar & Café' WHERE id = 'bb5896d9-0aa7-4d0a-923f-ce6fb5d9c070';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n1B6URVUONSY MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '425d7f9a-60c9-4f0d-82d0-64db82a3cc87';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA\n\n23F4EUSV8MK BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '69739f48-4a9b-446a-a8d3-452f83d7af7e';\nUPDATE budget.expenses SET expense_name = 'DoorDash — Wingstop', notes = 'Amex: AplPay BT*DD *DOORDASAN FRANCISCO CA\n\n15ENPGKB    8559731040\nAplPay BT*DD *DOORDASH WINGSTOP\nSAN FRANCISCO\nCA\n8559731040\n\nCategory: Restaurant-Restaurant' WHERE id = '6424c08b-a3d1-4bb7-9558-ec874a4038c5';\nUPDATE budget.expenses SET expense_name = 'Starbucks', notes = 'Amex: AplPay STARBUCKS 557ROUND ROCK TX\n\n9587CC61309 8007827282\nAplPay STARBUCKS 55711 000055711\nROUND ROCK\nTX\nDescription : FAST FOOD REST. Price : 0.1321\n8007827282\n\nCategory: Restaurant-Bar & Café' WHERE id = '166a1d0a-5d95-4a44-bd30-8c7b33ccbd77';\nUPDATE budget.expenses SET expense_name = 'Taco Bell', notes = 'Amex: AplPay TACO BELL ROUND ROCK TX\n\nd92479      512-255-9841\nAplPay TACO BELL\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n512-255-9841\n\nCategory: Restaurant-Bar & Café' WHERE id = '5c85d505-7575-4f1f-b061-ee3092b91417';\nUPDATE budget.expenses SET expense_name = 'H-E-B Gas', notes = 'Amex: H-E-B GAS/CAR WASH #ROUND ROCK TX\n\n000076236   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel' WHERE id = '91257e56-b0e0-47f4-a109-e4ccce1ff384';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:637132 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.05\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '53a452cc-2029-443f-bd26-9d2812cee732';\nUPDATE budget.expenses SET expense_name = 'Sprouts', notes = 'Amex: SPROUTS FARMERS MARKCEDAR PARK TX\n\n000032612   9999999999\nSPROUTS FARMERS MARKET\nCEDAR PARK\nTX\n9999999999\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '99850941-a77f-4402-af94-42adc655dccf';\nUPDATE budget.expenses SET expense_name = 'Bilia Eatery Castle Hills', notes = 'Amex: AplPay BILIA EATERY CASTLE HILLS TX\n\npUqB66KTu12 squareup.com/receipts\nAplPay BILIA EATERY\nCASTLE HILLS\nTX\nsquareup.com/receipts\n\nCategory: Restaurant-Bar & Café' WHERE id = '1ab9c8ef-cd32-4705-9804-a4787bd80d18';\nUPDATE budget.expenses SET expense_name = 'Olmos Park, Tsan Antonio', notes = 'Amex: AplPay OLMOS PARK, TSan Antonio TX\n\nTTfbvUvHZ2X squareup.com/receipts\nAplPay OLMOS PARK, TX THE HONEY BEAN COFFE\nSan Antonio\nTX\nsquareup.com/receipts\n\nCategory: Restaurant-Bar & Café' WHERE id = '4f4ed010-fb25-4c4b-b635-a755209a7fc6';\nUPDATE budget.expenses SET expense_name = 'Jollibee', notes = 'Amex: AplPay US 3041 San ASAN ANTONIO TX\n\n6aaf13da0496AAF13DA049EFE51F78229\n2pc Chickenjoy w Palabok Fiesta\n2pc Chickenjoy w Jolly Spaghetti\nAplPay US 3041 San Antonio\nSAN ANTONIO\nTX\n2pc Chickenjoy w Palabok Fiesta\n2pc Chickenjoy w Jolly Spaghetti\n6AAF13DA049EFE51F78229\n\nCategory: Restaurant-Bar & Café' WHERE id = '3f2d4ada-de39-476e-b305-977207f9e528';\nUPDATE budget.expenses SET expense_name = 'H-E-B Gas', notes = 'Amex: H-E-B GAS/CAR WASH #ROUND ROCK TX\n\n000059642   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel' WHERE id = 'a091a5bc-b9fa-4057-9c7d-f682369f4267';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n3XCBVVLMGEZ MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'a6f2752a-1e53-4b75-ac7a-dcb51340e7dc';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\nSQSH8ZH7JXW MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '7cf093bd-c654-4bbb-873c-5289cf8721ad';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n71JVUVU88J4 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '623adca8-5055-4264-8dd5-76766cd45bc1';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n26NMBFZUGN4 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'acfdc92b-d980-47cb-9c09-06fd996e723c';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n7HI5QN2VU2R MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'ffae2ca6-88d6-4af4-8a55-bc83fbeff6a0';\nUPDATE budget.expenses SET expense_name = 'Subway', notes = 'Amex: AplPay SUBWAY 37288 ROUND ROCK TX\n\n43B0FB3B068 512-388-1548\nAplPay SUBWAY 37288 37288\nROUND ROCK\nTX\nDescription : RESTAURANT Price : 0.00\n512-388-1548\n\nCategory: Restaurant-Bar & Café' WHERE id = 'd6630570-6386-440c-b00d-bb33f837dcac';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:638625 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.7042\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = 'c6d382e2-4541-49c8-b90d-bff2a1bb7f0e';\nUPDATE budget.expenses SET expense_name = 'Supabase', notes = 'Amex: SUPABASE SINGAPORE SG\n\nCH_3UI3NIJD +6587498462\nSUPABASE\nSINGAPORE\nSG\n+6587498462\n\nCategory: Merchandise & Supplies-Computer Supplies' WHERE id = '69d8aaaa-0302-43f6-95fc-418aaa2c4ad8';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n712WAOILVKD MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '8041237f-85e9-4a57-934a-39bea4cae6b3';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:639374 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.2796\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '4669b712-b59a-439d-96c8-9e43501fc0b9';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA\n\nT4F94200JIH BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'cb48e56e-0523-424a-bbe6-0176db7c0b55';\nUPDATE budget.expenses SET expense_name = 'Olive Garden', notes = 'Amex: AplPay OLIVE GARDEN ROUND ROCK TX\n\n78597232499 512-341-8433\nAplPay OLIVE GARDEN\nROUND ROCK\nTX\nDescription : FOOD/BEVERAGE Price : 0.00\n512-341-8433\n\nCategory: Restaurant-Restaurant' WHERE id = '8b76d53f-5083-47cb-b2a9-1a3324810668';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:640495 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.0709\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = 'e26b44a0-5e6a-4587-bf9c-67da3860f9fc';\nUPDATE budget.expenses SET expense_name = 'Little Caesars', notes = 'Amex: LITTLE CAESAR''S 3335ROUND ROCK TX\n\n1236438     6199057070\nLITTLE CAESAR''S 3335-0002 000000002\nROUND ROCK\nTX\nDescription : FAST FOOD REST. Price : 0.3502\n6199057070\n\nCategory: Restaurant-Bar & Café' WHERE id = '98f45548-4610-4833-87ce-d2ce4f598c86';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n1PUT2XULKYT MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '5eff7be4-0115-4e5a-bab8-8caf7f2d545e';\nUPDATE budget.expenses SET expense_name = 'McDonald''s', notes = 'Amex: AplPay MCDONALD''S CEDAR PARK TX\n\n000009870   5123319590\nAplPay MCDONALD''S\nCEDAR PARK\nTX\n5123319590\n\nCategory: Restaurant-Bar & Café' WHERE id = '280ebb07-f387-476b-b99b-9eb33282fb44';\nUPDATE budget.expenses SET expense_name = 'PetSmart', notes = 'Amex: AplPay PETSMART CEDAR PARK TX\n\n1815910101  888-839-9638\nAplPay PETSMART\nCEDAR PARK\nTX\nDescription : PETS/SUPPLIES/ACC Price : 0.00\n888-839-9638\n\nCategory: Merchandise & Supplies-General Retail' WHERE id = '5599b5e1-66ad-40d4-8a55-6fd1308e1095';\nUPDATE budget.expenses SET expense_name = 'Sprouts', notes = 'Amex: AplPay SPROUTS FARMECEDAR PARK TX\n\n000065125   9999999999\nAplPay SPROUTS FARMERS MARKET\nCEDAR PARK\nTX\n9999999999\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = '57daeef2-ce50-4a64-8833-3908cbd16acf';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA\n\n9BKY2KSCX8D AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '9916915c-0e06-49c0-a193-4f829b5532ff';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA\n\nSFFH7DXSTUB AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = 'afcf5407-c9c9-43e8-9dbb-5d08f58c4efe';\nUPDATE budget.expenses SET expense_name = 'Spicy House Austin', notes = 'Amex: AplPay SPICY HOUSE AUSTIN TX\n\nCH_3UK5KCAP +13127305592\nAplPay SPICY HOUSE\nAUSTIN\nTX\n+13127305592\n\nCategory: Restaurant-Restaurant' WHERE id = '0eb7b66d-e7e2-4475-a19e-c065a65f4558';\nUPDATE budget.expenses SET expense_name = 'Instill Cofferound Rock', notes = 'Amex: AplPay INSTILL COFFERound Rock TX\n\n5azY9vkNKpe squareup.com/receipts\nAplPay INSTILL COFFEE CO\nRound Rock\nTX\nsquareup.com/receipts\n\nCategory: Restaurant-Bar & Café' WHERE id = '8ab83c28-630a-416b-bdc0-f86dcc3186fa';\nUPDATE budget.expenses SET expense_name = 'Round Rock Soround Rock', notes = 'Amex: AplPay ROUND ROCK SOROUND ROCK TX\n\nADA7UNW6ACC RESTAURANT\nAplPay ROUND ROCK SOUTH 754\nROUND ROCK\nTX\nRESTAURANT\n\nCategory: Restaurant-Bar & Café' WHERE id = 'e593501a-b2cc-4f00-b534-c737a5230279';\nUPDATE budget.expenses SET expense_name = 'Target', notes = 'Amex: AplPay TARGET ROUND ROCK TX\n\n62701066016 8004400680\nAplPay TARGET\nROUND ROCK\nTX\nDescription : REFER TO RECEIPT Price : 0.00\n8004400680\n\nCategory: Merchandise & Supplies-Wholesale Stores' WHERE id = '2c5117f8-ffd1-4cc7-b91b-cc3eb96ab56c';\nUPDATE budget.expenses SET expense_name = 'Amex adjustment', notes = 'Amex: DR ADJ REDIST CADV PRIN\n\nDR ADJ REDIST CADV PRIN\n\nCategory: Fees & Adjustments-Fees & Adjustments' WHERE id = '64904353-3e67-4ec5-b1e0-81cb9fa386b3';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0001:642368 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.5124\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = 'f9436aa5-589c-4c08-a0eb-46e22719e0bd';\nUPDATE budget.expenses SET expense_name = 'Starbucks', notes = 'Amex: AplPay STARBUCKS 800-782-7282 WA\n\n24K6SGXDOUH GIFT CARD\nAplPay STARBUCKS\n800-782-7282\nWA\nGIFT CARD\n\nCategory: Restaurant-Bar & Café' WHERE id = 'dc0acc14-894c-4eaf-978c-babdd3047452';\nUPDATE budget.expenses SET expense_name = 'H-E-B Gas', notes = 'Amex: H-E-B GAS/CAR WASH #ROUND ROCK TX\n\n000024722   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel' WHERE id = '2f9aa5a6-9dbc-4834-b744-4010304e0aab';\nUPDATE budget.expenses SET expense_name = 'Spotify', notes = 'Amex: SPOTIFY USA INC NEW YORK NY\n\nP475FDEAEC  8009525210 / sadams@s\n8009525210 / sadams@spoti\nSPOTIFY USA INC\nNEW YORK\nNY\n8009525210 / sadams@spoti\n\nCategory: Communications-Cable & Internet Comm' WHERE id = '7ba884a1-030c-419e-beb9-1355ee587987';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA\n\n713BJPS1J22 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '92ed5954-2bf0-45b2-a2c9-6fdcf96597ef';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA\n\n3TM09BE1K9W AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase' WHERE id = '6598fea1-e307-417c-957a-8fee93b1e2b2';\nUPDATE budget.expenses SET expense_name = 'Panda Express', notes = 'Amex: AplPay PANDA EXPRESSROUND ROCK TX\n\n117097      800-877-8988\nAplPay PANDA EXPRESS\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n800-877-8988\n\nCategory: Restaurant-Bar & Café' WHERE id = '0d96d464-d40d-454b-9d10-1180e38e582a';\nUPDATE budget.expenses SET expense_name = 'Sharetea', notes = 'Amex: AplPay SHARETEA ROUNROUND ROCK TX\n\n######WtIDY suyu@chowbus.com\nAplPay SHARETEA ROUND ROCK\nROUND ROCK\nTX\nsuyu@chowbus.com\n\nCategory: Restaurant-Restaurant' WHERE id = 'd1f9375b-95c7-402d-af08-7f259d9fd802';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX\n\n0002:279178 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.1892\n8004323113\n\nCategory: Merchandise & Supplies-Groceries' WHERE id = 'd4f19669-fd84-4af4-81ab-c5adfeb89ce0';\nUPDATE budget.expenses SET expense_name = 'Taco Bell', notes = 'Amex: AplPay TACO BELL ROUND ROCK TX\n\n2e9cfb      512-255-9841\nAplPay TACO BELL\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n512-255-9841\n\nCategory: Restaurant-Bar & Café' WHERE id = 'e297f8d1-340c-4cd5-86b4-82e99088724e';\nUPDATE budget.expenses SET expense_name = 'Parking', notes = 'Amex: DAM-A 43684556018360AUSTIN TX' WHERE id = '17d3318f-7087-4b50-8a5c-f1a3a253c78e';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA' WHERE id = '003134bf-0314-40a3-8e6e-c4854fa71826';\nUPDATE budget.expenses SET expense_name = 'H-E-B #612', notes = 'Amex: AplPay H-E-B #612 ROUND ROCK TX' WHERE id = '8090a9af-99ce-4a00-9d25-de0ac0a06fa0';\nUPDATE budget.expenses SET expense_name = 'Whole Foods', notes = 'Amex: AplPay WHOLEFDS GWY AUSTIN TX' WHERE id = 'b72d6dc7-c760-42fb-ae65-4266f3b76ab8';\nUPDATE budget.expenses SET expense_name = 'Cheesecake Factory', notes = 'Amex: CHEESECAKE AUSTIN 00AUSTIN TX' WHERE id = '2ea46130-b9d8-4bae-abe0-dd2668b045ea';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'e20a1d53-57f3-4c14-bad7-87132ab9d71a';\nUPDATE budget.expenses SET expense_name = 'Checkr', notes = 'Amex: CHECKR, INC CHECKR.CSAN FRANCISCO CA' WHERE id = 'a7bf7801-7ae2-4e55-abf8-077bbc46a80c';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '7e6766b8-7c37-494c-81e2-0b1632d56858';\nUPDATE budget.expenses SET expense_name = 'DoorDash — San Francisco CA', notes = 'Amex: AplPay DD *DOORDASH SAN FRANCISCO CA' WHERE id = 'bd40b96f-8781-43eb-82f3-f567430bf6b4';\nUPDATE budget.expenses SET expense_name = 'DoorDash — Dsan Francisco CA', notes = 'Amex: AplPay DD *DOORDASHDSAN FRANCISCO CA' WHERE id = '3d89eef5-3714-466a-8fe9-8a1b392dc8c7';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = 'd8e4dca4-3063-4989-9db9-d17ca1f4ded6';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '1e1d9758-92ea-4aec-99e0-5823c7a51761';\nUPDATE budget.expenses SET expense_name = 'Supabase', notes = 'Amex: SUPABASE SINGAPORE SG' WHERE id = '2e00a42b-6443-49b5-941c-036297e4b3f3';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA' WHERE id = '069247a2-fbe4-4b6d-813e-96ae306f62dd';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA' WHERE id = '907b81b6-2b63-4be8-a701-1a47bf74ce12';\nUPDATE budget.expenses SET expense_name = 'Chick-fil-A', notes = 'Amex: AplPay CHICK-FIL-A #ROUND ROCK TX' WHERE id = 'ef347d5c-344f-4031-89d0-a405dbc25d94';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = '42539531-d131-46d7-80a2-399fed4a3f91';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA' WHERE id = '0038e4fe-56bd-4cea-b64b-a53c98143320';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA' WHERE id = 'e6408732-5a3e-425b-a579-a889c3982ab1';\nUPDATE budget.expenses SET expense_name = 'Starbucks', notes = 'Amex: AplPay STARBUCKS 800-782-7282 WA' WHERE id = '4318f10a-5ecc-430e-9e51-7b93f5af4849';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = 'a8012d7f-cf9c-40fe-975b-eb0899f34c28';\nUPDATE budget.expenses SET expense_name = 'USPS', notes = 'Amex: AplPay USPS PO 48780ROUND ROCK TX' WHERE id = 'cc309408-b1b4-49e9-94a1-100dbab2de8d';\nUPDATE budget.expenses SET expense_name = 'DoorDash', notes = 'Amex: AplPay BT*DD *DOORDASAN FRANCISCO CA' WHERE id = 'dc5d1dce-adb4-4739-8d9f-c51f08b29531';\nUPDATE budget.expenses SET expense_name = 'Sharetea', notes = 'Amex: AplPay SHARETEA ROUNROUND ROCK TX' WHERE id = '74565ec0-a3e6-4fcb-9a76-8f28879b541e';\nUPDATE budget.expenses SET expense_name = 'Sprouts', notes = 'Amex: AplPay SPROUTS FARMEROUND ROCK TX' WHERE id = 'a0b763b0-5dfa-49cb-b8f1-45dedebc671d';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = '519643f1-433d-4e8a-86f7-b78a40fb5703';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA' WHERE id = '953bad4a-0984-47cb-92ad-51c711820165';\nUPDATE budget.expenses SET expense_name = 'H-E-B Gas', notes = 'Amex: H-E-B GAS/CAR WASH #ROUND ROCK TX' WHERE id = 'a8dfad64-d8a2-4b04-b5e0-cd5426fdd5e1';\nUPDATE budget.expenses SET expense_name = 'Salt Lick', notes = 'Amex: THE SALT LICK ROUND ROCK TX' WHERE id = 'b5895203-f1ea-4f78-8d73-ba4ccd861bbb';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = '2be3baa3-73ca-42d3-acaf-11fdb5cacca5';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'ad30d09d-a4a7-4020-b4e0-a7314852f6da';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'c8b32558-e9ad-4caf-90b1-e628b3a11849';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '098bb452-f1fc-48ed-bc32-bdc0eb570ab0';\nUPDATE budget.expenses SET expense_name = 'Dutch Bros', notes = 'Amex: AplPay DUTCH BROS TXROUND ROCK TX' WHERE id = '791117a0-03dc-478d-a536-fd72ad8cbe99';\nUPDATE budget.expenses SET expense_name = 'China E Buffet Round', notes = 'Amex: CHINA E BUFFET ROUND ROCK TX' WHERE id = 'b45336ed-0f19-411a-aabd-b63095393943';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '643957c7-97da-466a-9433-30a101a7f168';\nUPDATE budget.expenses SET expense_name = 'Cava', notes = 'Amex: AplPay 10235 CAVA GEGEORGETOWN TX' WHERE id = 'beb428a2-0590-45d4-b088-8ecfb6b1c3e1';\nUPDATE budget.expenses SET expense_name = 'Natural Grocegeorgetown', notes = 'Amex: AplPay NATURAL GROCEGEORGETOWN TX' WHERE id = '15bc3d86-7c83-4390-b879-1a09c9c9abf2';\nUPDATE budget.expenses SET expense_name = 'Organic Nails', notes = 'Amex: AplPay ORGANIC NAILSGEORGETOWN TX' WHERE id = '881731d1-f18f-48b6-9957-611f3b4e7f7b';\nUPDATE budget.expenses SET expense_name = 'Green Mountain Energy', notes = 'Amex: GREEN MOUNTAIN ENERGHOUSTON TX' WHERE id = 'a5faa03f-3c04-4072-b346-103ff7d944c3';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '143f091b-0b6c-4523-a3dc-406f04a0b048';\nUPDATE budget.expenses SET expense_name = 'McDonald''s', notes = 'Amex: AplPay MCDONALD''S CEDAR PARK TX' WHERE id = '9bc8a30f-bc68-4bb8-be9c-9248deae0c41';\nUPDATE budget.expenses SET expense_name = 'Panda Express', notes = 'Amex: AplPay PANDA EXPRESSROUND ROCK TX' WHERE id = 'ee2aa136-1068-46ff-98a5-6c9a6b5ec991';\nUPDATE budget.expenses SET expense_name = 'Target', notes = 'Amex: AplPay TARGET ROUND ROCK TX' WHERE id = 'c7424b8b-550d-4838-bff8-bd6ddc91ad83';\nUPDATE budget.expenses SET expense_name = 'Grey Orcround Rock TX', notes = 'Amex: AplPay TST* GREY ORCROUND ROCK TX' WHERE id = 'd783a485-9a3b-490e-85ca-a87dbd6b1c6d';\nUPDATE budget.expenses SET expense_name = 'Facebook Ads', notes = 'Amex: FACEBK *AWWSYA28L4 MENLO PARK' WHERE id = '9472be73-7e34-46f7-a3cf-26b039a7f564';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'c7fb83af-9bf7-42b7-b0e8-962885a66767';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = '1a3cfb31-e1b1-46a4-bed2-e76f9e1ad79e';\nUPDATE budget.expenses SET expense_name = 'In-N-Out', notes = 'Amex: AplPay IN-N-OUT ROUNROUND ROCK TX' WHERE id = 'bfecc2a4-be08-466c-af51-f5de479cd8b6';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'd180a5c8-65eb-4a1e-b76e-e5c3ed57cfd5';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'ddce879b-a0c5-4c6c-9119-03dd36643ca8';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = '5f201b6d-0ea8-4682-8c51-97c8f1533e59';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'd89473aa-9ec9-4f65-a625-aedf3a192086';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA' WHERE id = '250a7781-f931-4fb3-8b93-3260022a3e4c';\nUPDATE budget.expenses SET expense_name = 'Starbucks', notes = 'Amex: AplPay STARBUCKS 800-782-7282 WA' WHERE id = '877ab856-44e8-4cf4-9adc-d434b312f542';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'c9c71577-8e7c-4195-aaf6-f3edcc3048b5';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'e31a8f91-36e5-424a-9130-f9dc2e9d83d0';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA' WHERE id = 'bee99f74-ada3-49c3-8bf7-cb46c7645b73';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '949c7dcd-efa0-4fe4-88d7-fe5cb7cf5fad';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '3be66978-dbf2-4428-a28f-55ee316d5c22';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = '8d7cfd44-816c-42e1-a858-170e31085251';\nUPDATE budget.expenses SET expense_name = 'Misaki Ramen Round Rock', notes = 'Amex: AplPay MISAKI RAMEN Round Rock TX' WHERE id = '616aab52-f74a-4a35-951c-088edb00d9f5';\nUPDATE budget.expenses SET expense_name = 'Supabase', notes = 'Amex: SUPABASE SINGAPORE SG' WHERE id = '3e78a797-f240-41c0-8e43-3c041f903de7';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = 'c5adfbb4-b2d8-4f92-9c6b-c7115b310246';\nUPDATE budget.expenses SET expense_name = 'H-E-B #612', notes = 'Amex: AplPay H-E-B #612 ROUND ROCK TX' WHERE id = '948a3233-1fe6-40af-a0c5-26d7f69b6a41';\nUPDATE budget.expenses SET expense_name = 'Burrotes', notes = 'Amex: AplPay SPO*BURROSTEXROUND ROCK TX' WHERE id = '183710e6-2b8e-4e84-b730-86f55073a9d1';\nUPDATE budget.expenses SET expense_name = 'Andy''s - Rounround Rock', notes = 'Amex: AplPay ANDY''S - ROUNROUND ROCK TX' WHERE id = '7b326c27-fe8b-4994-b039-f7af9c2e219e';\nUPDATE budget.expenses SET expense_name = 'P. Terry''s', notes = 'Amex: AplPay P. Terry''s BuAustin TX' WHERE id = '5ba6545a-5b80-44aa-aca6-33df5974fa92';\nUPDATE budget.expenses SET expense_name = 'Sprouts', notes = 'Amex: AplPay SPROUTS FARMECEDAR PARK TX' WHERE id = '7e5edde1-7122-423b-8ca7-139bf77a34c8';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA' WHERE id = '65d7acfe-0c86-4850-934f-cbb433ee96fc';\nUPDATE budget.expenses SET expense_name = 'First Watch', notes = 'Amex: AplPay FIRST WATCH -ROUND ROCK TX' WHERE id = '29393133-20b5-4ad0-a573-da2b9698a275';\nUPDATE budget.expenses SET expense_name = 'H-E-B #612', notes = 'Amex: AplPay H-E-B #612 ROUND ROCK TX' WHERE id = '48e4927f-64e7-4bf1-a099-a7768b0e0b70';\nUPDATE budget.expenses SET expense_name = 'QT 4127 Insidaustin', notes = 'Amex: AplPay QT 4127 INSIDAUSTIN TX' WHERE id = '66621324-fc36-41a3-8d35-e95e9926eaa6';\nUPDATE budget.expenses SET expense_name = 'Tacos Coria Round Rock', notes = 'Amex: AplPay TACOS CORIA ROUND ROCK TX' WHERE id = '6674b860-3b65-4602-9654-27c8377013dc';\nUPDATE budget.expenses SET expense_name = 'Walgreens', notes = 'Amex: AplPay WALGREENS PFLUGERVILLE TX' WHERE id = '9e76b457-aff3-4539-aeaf-9363bea345f9';\nUPDATE budget.expenses SET expense_name = 'Little Caesars', notes = 'Amex: AplPay LITTLE CAESARROUND ROCK TX' WHERE id = '9e46b9ea-3dc5-4ddf-bc92-413e2ab24943';\nUPDATE budget.expenses SET expense_name = 'H-E-B Curbside', notes = 'Amex: HEB CURBSIDE 1111111SAN ANTONIO TX' WHERE id = '45b6b464-5ca6-4c1a-9f49-019af7870c07';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA' WHERE id = 'b2d80eb6-b7f5-42e5-ad1d-208c779795ee';\nUPDATE budget.expenses SET expense_name = 'Wendy''s', notes = 'Amex: AplPay WENDY''S AUSTIN TX' WHERE id = '5967db2e-ce2f-4444-b3e3-d59d72f79475';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON.COM AMZN.COM/BILL WA' WHERE id = '549c6bc7-0370-49b2-af04-d944ad85a347';\nUPDATE budget.expenses SET expense_name = 'Chili''s', notes = 'Amex: AplPay CHILI''S LAKELCEDAR PARK TX' WHERE id = 'aa417f6b-0d6d-4c63-8bea-3abba35dd19b';\nUPDATE budget.expenses SET expense_name = 'Amex adjustment', notes = 'Amex: DR ADJ REDIST CADV PRIN' WHERE id = '06e3c144-9e43-44c6-813c-7ad2b56d62d6';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKEPLACE NA PA' WHERE id = '79e50f44-d6e8-4f2c-b861-01deb3ef59cb';\nUPDATE budget.expenses SET expense_name = 'Amazon', notes = 'Amex: AMAZON MARKETPLACE PAMZN.COM/BILL WA' WHERE id = '16b725bd-0a43-448f-be5c-26bcf4d3ff08';\nUPDATE budget.expenses SET expense_name = 'DoorDash', notes = 'Amex: AplPay BT*DD *DOORDASAN FRANCISCO CA' WHERE id = '6e35ad2b-be31-4ff6-b8b7-7144e49e1373';\nUPDATE budget.expenses SET expense_name = 'DoorDash — Dsan Francisco CA', notes = 'Amex: AplPay DD *DOORDASHDSAN FRANCISCO CA' WHERE id = 'aa9e5059-90a2-437e-9eee-1984bd203d24';\nUPDATE budget.expenses SET expense_name = 'DoorDash', notes = 'Amex: AplPay BT*DD *DOORDASAN FRANCISCO CA' WHERE id = '39791303-a42a-4bd3-ac26-08f457caf20b';\nUPDATE budget.expenses SET expense_name = 'DoorDash', notes = 'Amex: AplPay BT*DD *DOORDASAN FRANCISCO CA' WHERE id = '383f84fc-f378-4dcf-9fb5-327a5f5dae18';\nUPDATE budget.expenses SET expense_name = 'Chevron', notes = 'Amex: AplPay CHEVRON 03765CEDAR PARK TX' WHERE id = '751ea5cd-bff8-4093-b1fd-22ff23b61f94';\nUPDATE budget.expenses SET expense_name = 'Vanilla Gift', notes = 'Amex: VANILLAGIFT.COM ATLANTA GA' WHERE id = '734d2f38-e970-4266-b8d6-7a2cefbaa566';"
+}

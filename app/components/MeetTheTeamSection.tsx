@@ -30,18 +30,18 @@ const TEAM_MEMBERS = [
       "Hello, Sage Field families!! My name is Zelinda and I am so excited to be a part of this incredible team. I have a deep love for children and a heart for nurturing their growth in a safe and encouraging environment. I look forward to supporting each child's learning journey and being a positive presence in their day.",
   },
   {
-    name: "Nicole Elias",
-    role: "Summer Program Coordinator",
-    image: "/assets/team/Nicole.jpg",
+    name: "Edith DeLuna",
+    role: "Primary and Lower Elementary Teacher Aide",
+    image: "/assets/team/Edith.jpg",
     description:
-      "My name is Nicole, and I am a teacher with a passion for hands-on, experiential learning. I believe every child deserves an education that sparks curiosity and joy. I am excited to bring creative, nature-inspired curriculum to our summer program and help children discover the world around them.",
+      "Edith has been working with children from a young age and has experience with both nannying and working in schools. She has been especially influenced by the Montessori method, which focuses on independence, curiosity, and hands-on learning. Her goal is to help each child build confidence, discover their strengths, and become more independent in a caring environment. Edith also loves spending time outdoors and enjoys making learning fun, meaningful, and engaging for children.",
   },
   {
-    name: "Taylor Elias",
-    role: "Summer Program Coordinator",
-    image: "/assets/team/Taylor.jpg",
+    name: "Craig Wilkerson",
+    role: "Music Teacher",
+    image: "/assets/team/Craig Wilkerson.JPG",
     description:
-      "My name is Taylor, and I recently completed my education studies with a focus on child development and outdoor learning. I am passionate about creating meaningful experiences for children that connect them to nature and inspire a love of learning. I am thrilled to join the Sage Field team this summer.",
+      "Craig Wilkerson is a singer-songwriter, music educator, husband, and father. He joins Sage Field as our music teacher for students ages 4–11, bringing experience as a pre-K music instructor alongside his work in administrative management and human resources at Opus One Music. His background in teaching and songwriting adds to Sage Field's emphasis on creative expression and hands-on learning.",
   },
   {
     name: "Julius Cecilia",

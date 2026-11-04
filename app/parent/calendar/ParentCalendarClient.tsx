@@ -23,7 +23,6 @@ import ParentAddEventSheet, {
   type ParentCalendarEventRecord,
 } from "./ParentAddEventSheet";
 import { deleteParentCalendarEvent } from "@/app/actions/deleteParentCalendarEvent";
-import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 // ─── Parent-only design tokens (light mode, fully standalone) ─────────────────
 const colors = {
@@ -42,11 +41,6 @@ const colors = {
 };
 const radius = { sm: '6px', md: '8px', lg: '12px', xl: '16px', full: '9999px' };
 const shadows = { soft: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' };
-
-const merriweather = Merriweather({
-  weight: ["300", "400", "700", "900"],
-  subsets: ["latin"],
-});
 
 type ProgramKey = "summer" | "school";
 type ViewMode = "monthly" | "weekly";
@@ -301,7 +295,7 @@ function OverlapPanel({
               </p>
             )}
             <h2
-              className={`text-base font-bold ${merriweather.className}`}
+              className={`text-base font-bold font-heading`}
               style={{ color: colors.textPrimary }}
             >
               {events.length} Events
@@ -473,7 +467,7 @@ function EventDetailPanel({
 
           {/* Title */}
           <h2
-            className={`text-xl font-bold leading-snug ${merriweather.className}`}
+            className={`text-xl font-bold leading-snug font-heading`}
             style={{ color: "white" }}
           >
             {event.title}
@@ -1495,7 +1489,7 @@ export default function ParentCalendarClient({
           >
             <Calendar className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.mistyForest }} />
             <span
-              className={`text-[13px] font-bold ${merriweather.className}`}
+              className={`text-[13px] font-bold font-heading`}
               style={{ color: colors.mistyForest }}
             >
               My Calendar
@@ -1659,7 +1653,7 @@ export default function ParentCalendarClient({
                 </div>
 
                 <h1
-                  className={`text-xl ${merriweather.className}`}
+                  className={`text-xl font-heading`}
                   style={{ color: colors.textPrimary, fontWeight: 700, lineHeight: 1 }}
                 >
                   {view === "monthly" ? (

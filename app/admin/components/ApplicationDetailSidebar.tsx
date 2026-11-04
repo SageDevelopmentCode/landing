@@ -53,6 +53,7 @@ import { sendSchoolYearWeekSevenNewsletterEmail } from '../../actions/sendSchool
 import { sendSchoolYearWeekEightNewsletterEmail } from '../../actions/sendSchoolYearWeekEightNewsletterEmail'
 import { sendSchoolYearWeekNineNewsletterEmail } from '../../actions/sendSchoolYearWeekNineNewsletterEmail'
 import { sendSchoolYearWeekTenNewsletterEmail } from '../../actions/sendSchoolYearWeekTenNewsletterEmail'
+import { sendSchoolYearWeekElevenNewsletterEmail } from '../../actions/sendSchoolYearWeekElevenNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -73,6 +74,8 @@ import { sendSchoolYearOctoberDueSoonTuitionReminderEmail } from '../../actions/
 import { sendSchoolYearOctoberDueSoonDropInTuitionReminderEmail } from '../../actions/sendSchoolYearOctoberDueSoonDropInTuitionReminderEmail'
 import { sendSchoolYearOctoberDueSoonTuitionReminderGeneralEmail } from '../../actions/sendSchoolYearOctoberDueSoonTuitionReminderGeneralEmail'
 import { sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail } from '../../actions/sendSchoolYearOctoberDueTomorrowTuitionReminderGeneralEmail'
+import { sendSchoolYearNovemberTuitionReminderGeneralEmail } from '../../actions/sendSchoolYearNovemberTuitionReminderGeneralEmail'
+import { sendSchoolYearNovemberDueTonightTuitionReminderGeneralEmail } from '../../actions/sendSchoolYearNovemberDueTonightTuitionReminderGeneralEmail'
 import { sendSchoolYearTuitionDueDateTodayReminderEmail } from '../../actions/sendSchoolYearTuitionDueDateTodayReminderEmail'
 import { sendHomeschoolDropInTuitionReminderEmail } from '../../actions/sendHomeschoolDropInTuitionReminderEmail'
 import { sendHomeschoolDropInClarificationEmail } from '../../actions/sendHomeschoolDropInClarificationEmail'
@@ -331,6 +334,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearWeekTenNewsletterSending, setSchoolYearWeekTenNewsletterSending] = useState(false)
   const [schoolYearWeekTenNewsletterSent, setSchoolYearWeekTenNewsletterSent] = useState(false)
   const [schoolYearWeekTenNewsletterError, setSchoolYearWeekTenNewsletterError] = useState<string | null>(null)
+  const [schoolYearWeekElevenNewsletterSending, setSchoolYearWeekElevenNewsletterSending] = useState(false)
+  const [schoolYearWeekElevenNewsletterSent, setSchoolYearWeekElevenNewsletterSent] = useState(false)
+  const [schoolYearWeekElevenNewsletterError, setSchoolYearWeekElevenNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -424,6 +430,12 @@ export function ApplicationDetailSidebar({
   const [schoolYearOctoberDueTomorrowTuitionReminderGeneralSending, setSchoolYearOctoberDueTomorrowTuitionReminderGeneralSending] = useState(false)
   const [schoolYearOctoberDueTomorrowTuitionReminderGeneralSent, setSchoolYearOctoberDueTomorrowTuitionReminderGeneralSent] = useState(false)
   const [schoolYearOctoberDueTomorrowTuitionReminderGeneralError, setSchoolYearOctoberDueTomorrowTuitionReminderGeneralError] = useState<string | null>(null)
+  const [schoolYearNovemberTuitionReminderGeneralSending, setSchoolYearNovemberTuitionReminderGeneralSending] = useState(false)
+  const [schoolYearNovemberTuitionReminderGeneralSent, setSchoolYearNovemberTuitionReminderGeneralSent] = useState(false)
+  const [schoolYearNovemberTuitionReminderGeneralError, setSchoolYearNovemberTuitionReminderGeneralError] = useState<string | null>(null)
+  const [schoolYearNovemberDueTonightTuitionReminderGeneralSending, setSchoolYearNovemberDueTonightTuitionReminderGeneralSending] = useState(false)
+  const [schoolYearNovemberDueTonightTuitionReminderGeneralSent, setSchoolYearNovemberDueTonightTuitionReminderGeneralSent] = useState(false)
+  const [schoolYearNovemberDueTonightTuitionReminderGeneralError, setSchoolYearNovemberDueTonightTuitionReminderGeneralError] = useState<string | null>(null)
   const [activityPrefReminderSending, setActivityPrefReminderSending] = useState(false)
   const [activityPrefReminderSent, setActivityPrefReminderSent] = useState(false)
   const [activityPrefReminderError, setActivityPrefReminderError] = useState<string | null>(null)
@@ -1578,6 +1590,42 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendSchoolYearNovemberTuitionReminderGeneral = async () => {
+    if (schoolYearNovemberTuitionReminderGeneralSending || !application.g1_email) return
+    setSchoolYearNovemberTuitionReminderGeneralSending(true)
+    setSchoolYearNovemberTuitionReminderGeneralError(null)
+    const result = await sendSchoolYearNovemberTuitionReminderGeneralEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearNovemberTuitionReminderGeneralSending(false)
+    if (result.success) {
+      setSchoolYearNovemberTuitionReminderGeneralSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearNovemberTuitionReminderGeneralError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearNovemberDueTonightTuitionReminderGeneral = async () => {
+    if (schoolYearNovemberDueTonightTuitionReminderGeneralSending || !application.g1_email) return
+    setSchoolYearNovemberDueTonightTuitionReminderGeneralSending(true)
+    setSchoolYearNovemberDueTonightTuitionReminderGeneralError(null)
+    const result = await sendSchoolYearNovemberDueTonightTuitionReminderGeneralEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearNovemberDueTonightTuitionReminderGeneralSending(false)
+    if (result.success) {
+      setSchoolYearNovemberDueTonightTuitionReminderGeneralSent(true)
+      setEmailThreadKey(k => k + 1)
+    } else {
+      setSchoolYearNovemberDueTonightTuitionReminderGeneralError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendLaborDayReminder = async () => {
     if (laborDayReminderSending || !application.g1_email) return
     setLaborDayReminderSending(true)
@@ -2028,6 +2076,25 @@ export function ApplicationDetailSidebar({
       setTimeout(() => setSchoolYearWeekTenNewsletterSent(false), 3000)
     } else {
       setSchoolYearWeekTenNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
+  const handleSendSchoolYearWeekElevenNewsletter = async () => {
+    if (schoolYearWeekElevenNewsletterSending || !application.g1_email) return
+    setSchoolYearWeekElevenNewsletterSending(true)
+    setSchoolYearWeekElevenNewsletterError(null)
+    const result = await sendSchoolYearWeekElevenNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearWeekElevenNewsletterSending(false)
+    if (result.success) {
+      setSchoolYearWeekElevenNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSchoolYearWeekElevenNewsletterSent(false), 3000)
+    } else {
+      setSchoolYearWeekElevenNewsletterError(result.error ?? 'Failed to send')
     }
   }
 
@@ -3013,6 +3080,17 @@ export function ApplicationDetailSidebar({
                 </div>
                 <div className="flex items-center gap-3">
                   <button
+                    onClick={handleSendSchoolYearWeekElevenNewsletter}
+                    disabled={schoolYearWeekElevenNewsletterSending || schoolYearWeekElevenNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearWeekElevenNewsletterSending ? 'Sending…' : schoolYearWeekElevenNewsletterSent ? '✓ Sent!' : 'Send School Year Week Eleven Newsletter'}
+                  </button>
+                  {schoolYearWeekElevenNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekElevenNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
                     onClick={handleSendSchoolYearSeptemberTuitionReminder}
                     disabled={schoolYearSeptemberTuitionReminderSending || schoolYearSeptemberTuitionReminderSent}
                     className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
@@ -3142,6 +3220,28 @@ export function ApplicationDetailSidebar({
                     {schoolYearOctoberDueTomorrowTuitionReminderGeneralSending ? 'Sending…' : schoolYearOctoberDueTomorrowTuitionReminderGeneralSent ? '✓ Sent!' : 'Send October Tuition Reminder — Due Tonight at Midnight (General — Custom Pricing)'}
                   </button>
                   {schoolYearOctoberDueTomorrowTuitionReminderGeneralError && <span className="text-xs text-red-600">{schoolYearOctoberDueTomorrowTuitionReminderGeneralError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearNovemberTuitionReminderGeneral}
+                    disabled={schoolYearNovemberTuitionReminderGeneralSending || schoolYearNovemberTuitionReminderGeneralSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearNovemberTuitionReminderGeneralSending ? 'Sending…' : schoolYearNovemberTuitionReminderGeneralSent ? '✓ Sent!' : 'Send November Tuition Reminder — Due Sunday in 1 Day (General — Custom Pricing)'}
+                  </button>
+                  {schoolYearNovemberTuitionReminderGeneralError && <span className="text-xs text-red-600">{schoolYearNovemberTuitionReminderGeneralError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearNovemberDueTonightTuitionReminderGeneral}
+                    disabled={schoolYearNovemberDueTonightTuitionReminderGeneralSending || schoolYearNovemberDueTonightTuitionReminderGeneralSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearNovemberDueTonightTuitionReminderGeneralSending ? 'Sending…' : schoolYearNovemberDueTonightTuitionReminderGeneralSent ? '✓ Sent!' : 'Send November Tuition Reminder — Due Tonight at Midnight (General — Custom Pricing)'}
+                  </button>
+                  {schoolYearNovemberDueTonightTuitionReminderGeneralError && <span className="text-xs text-red-600">{schoolYearNovemberDueTonightTuitionReminderGeneralError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button

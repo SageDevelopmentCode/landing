@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronLeft } from "lucide-react";
-import { Merriweather } from "next/font/google";
 import {
   PARENT_CALENDAR_ADD_EVENT_STEPS,
   defaultParentCalendarEventFormValues,
@@ -11,11 +10,6 @@ import {
 } from "@/shared/parent/parentCalendarAddEvent";
 import { saveParentCalendarEvent } from "@/app/actions/saveParentCalendarEvent";
 import { updateParentCalendarEvent } from "@/app/actions/updateParentCalendarEvent";
-
-const merriweather = Merriweather({
-  weight: ["400", "700"],
-  subsets: ["latin"],
-});
 
 const colors = {
   border: "#E4EDE7",
@@ -212,7 +206,7 @@ export default function ParentAddEventSheet({
               Step {stepIdx + 1} of {PARENT_CALENDAR_ADD_EVENT_STEPS.length}
             </p>
             <h2
-              className={`text-base font-bold mt-1 ${merriweather.className}`}
+              className={`text-base font-bold mt-1 font-heading`}
               style={{ color: colors.mistyForest }}
             >
               {isEdit ? "Edit event" : "Add to calendar"}
@@ -255,7 +249,7 @@ export default function ParentAddEventSheet({
               transition={{ duration: 0.2 }}
             >
               <h3
-                className={`text-xl font-bold mb-2 ${merriweather.className}`}
+                className={`text-xl font-bold mb-2 font-heading`}
                 style={{ color: colors.textPrimary }}
               >
                 {step.question}

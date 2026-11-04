@@ -127,6 +127,7 @@ const CATEGORIES = [
   "Furniture & Equipment",
   // Program
   "Supplies & Materials",
+  "Food & Meals",
   "Curriculum",
   "Field Trips",
   "Technology & Software",
@@ -135,6 +136,7 @@ const CATEGORIES = [
   "Marketing",
   "Professional Services",
   "Administrative",
+  "Fuel & Transportation",
   // Other
   "Savings",
   "Other",
@@ -152,6 +154,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   "Maintenance & Repairs": "🛠️",
   "Furniture & Equipment": "🪑",
   "Supplies & Materials": "📦",
+  "Food & Meals": "🍽️",
   Curriculum: "📚",
   "Field Trips": "🚌",
   "Technology & Software": "💻",
@@ -159,6 +162,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   Marketing: "📣",
   "Professional Services": "💼",
   Administrative: "📁",
+  "Fuel & Transportation": "⛽",
   Savings: "🏦",
   Other: "📎",
 };
@@ -1347,7 +1351,7 @@ function OverviewTab({
                     letterSpacing: "0.05em",
                   }}
                 >
-                  {title}
+                  Budget Breakdown
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -1461,9 +1465,15 @@ const CIRC = 2 * Math.PI * RADIUS;
 function BudgetPieChart({
   byCategory,
   total,
+  title = "Budget Breakdown",
+  embedded = false,
+  centerSubLabel = "monthly budget",
 }: {
   byCategory: Record<string, number>;
   total: number;
+  title?: string;
+  embedded?: boolean;
+  centerSubLabel?: string;
 }) {
   const cx = 110,
     cy = 110;
@@ -1504,14 +1514,16 @@ function BudgetPieChart({
 
   if (total === 0) return null;
 
-  return (
-    <div style={{ ...cardStyle, padding: "24px" }}>
-      <p
-        className="text-sm font-semibold mb-4"
-        style={{ color: colors.textPrimary }}
-      >
-        Budget Breakdown
-      </p>
+  const chartBody = (
+    <>
+      {!embedded && (
+        <p
+          className="text-sm font-semibold mb-4"
+          style={{ color: colors.textPrimary }}
+        >
+          {title}
+        </p>
+      )}
       <div className="flex flex-col md:flex-row gap-8 items-start">
         {/* Donut SVG */}
         <div style={{ flexShrink: 0 }}>
@@ -1562,12 +1574,13 @@ function BudgetPieChart({
               fontSize="10"
               fill={colors.textSecondary}
             >
-              monthly budget
+              {centerSubLabel}
             </text>
           </svg>
         </div>
 
         {/* Legend */}
+        {!embedded && (
         <div className="flex-1 space-y-3" style={{ minWidth: 0 }}>
           {slices.map((slice) => (
             <div key={slice.cat} className="space-y-1">
@@ -1626,6 +1639,159 @@ function BudgetPieChart({
               </div>
             </div>
           ))}
+        </div>
+        )}
+      </div>
+    </>
+  );
+
+  if (embedded) return chartBody;
+
+  return (
+    <div style={{ ...cardStyle, padding: "24px" }}>{chartBody}</div>
+  );
+}
+
+function ExpenseSpendingBreakdown({
+  byCategory,
+  total,
+  monthLabel,
+  onCategorySelect,
+}: {
+  byCategory: Record<string, number>;
+  total: number;
+  monthLabel?: string;
+  onCategorySelect?: (category: string) => void;
+}) {
+  if (total <= 0) return null;
+
+  const entries = Object.entries(byCategory)
+    .filter(([cat]) => cat !== "Savings")
+    .sort(([, a], [, b]) => b - a);
+
+  if (entries.length === 0) return null;
+
+  const chartTitle = monthLabel
+    ? `Actual spending — ${monthLabel}`
+    : "Actual spending by category";
+
+  return (
+    <div style={{ ...cardStyle, padding: "24px" }}>
+      <p
+        className="text-sm font-semibold mb-4"
+        style={{ color: colors.textPrimary }}
+      >
+        {chartTitle}
+      </p>
+      <div className="flex flex-col xl:flex-row gap-8 items-start">
+        <div style={{ flex: "0 0 auto", minWidth: 220 }}>
+          <BudgetPieChart
+            byCategory={Object.fromEntries(entries)}
+            total={total}
+            embedded
+            centerSubLabel="total spend"
+          />
+        </div>
+        <div className="flex-1 w-full min-w-0">
+          <p
+            className="text-sm font-semibold mb-3"
+            style={{ color: colors.textPrimary }}
+          >
+            Top categories
+          </p>
+          <div className="space-y-3">
+            {entries.map(([cat, val], i) => {
+              const pct = total > 0 ? val / total : 0;
+              const color = SLICE_COLORS[i % SLICE_COLORS.length];
+              const emoji = CATEGORY_EMOJI[cat] ?? "💰";
+              const rowInner = (
+                <>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span style={{ fontSize: 14 }}>{emoji}</span>
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span
+                      className="text-sm flex-1 truncate"
+                      style={{ color: colors.textSecondary }}
+                    >
+                      {cat}
+                    </span>
+                    <span
+                      className="text-sm font-semibold"
+                      style={{ color: colors.textPrimary }}
+                    >
+                      {fmt(val)}
+                    </span>
+                    <span
+                      className="text-xs"
+                      style={{
+                        color: colors.textTertiary,
+                        minWidth: 44,
+                        textAlign: "right",
+                      }}
+                    >
+                      {(pct * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      height: 6,
+                      borderRadius: 99,
+                      backgroundColor: colors.warmLinen,
+                      overflow: "hidden",
+                      marginLeft: 22,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${pct * 100}%`,
+                        height: "100%",
+                        borderRadius: 99,
+                        backgroundColor: color,
+                      }}
+                    />
+                  </div>
+                </>
+              );
+
+              if (!onCategorySelect) {
+                return <div key={cat}>{rowInner}</div>;
+              }
+
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  aria-label={`View ${cat} expenses`}
+                  onClick={() => onCategorySelect(cat)}
+                  className="w-full rounded-md transition-colors"
+                  style={{
+                    cursor: "pointer",
+                    border: "none",
+                    background: "transparent",
+                    padding: "6px 8px",
+                    margin: "-6px -8px",
+                    textAlign: "left",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = colors.warmLinen;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
+                >
+                  {rowInner}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -2308,6 +2474,7 @@ function ExpensesTab({
     new Date().toISOString().slice(0, 7),
   );
   const [filterCat, setFilterCat] = useState("");
+  const [categorySidebar, setCategorySidebar] = useState<string | null>(null);
   const [view, setView] = useState<"monthly" | "daily" | "category" | "trend">(
     "monthly",
   );
@@ -2384,6 +2551,10 @@ function ExpensesTab({
     }
     loadReceipts(editingId);
   }, [editingId]);
+
+  useEffect(() => {
+    setCategorySidebar(null);
+  }, [filterMonth, filterCat]);
 
   async function handleReceiptUpload(file: File) {
     if (!editingId) return;
@@ -2522,6 +2693,29 @@ function ExpensesTab({
     acc[cat] = (acc[cat] ?? 0) + Number(e.amount);
     return acc;
   }, {});
+
+  const categorySidebarExpenses = categorySidebar
+    ? filtered
+        .filter(
+          (e) => e.category === categorySidebar && e.category !== "Savings",
+        )
+        .sort(
+          (a, b) =>
+            b.expense_date.localeCompare(a.expense_date) ||
+            a.expense_name.localeCompare(b.expense_name),
+        )
+    : [];
+
+  const categorySidebarTotal = categorySidebarExpenses.reduce(
+    (s, e) => s + Number(e.amount),
+    0,
+  );
+
+  function openExpenseFromCategorySidebar(exp: BudgetExpense) {
+    setCategorySidebar(null);
+    setEditingId(exp.id);
+    setEditValues({ ...exp });
+  }
 
   // Budget vs. actual by category
   const plannedByCat = lineItems.reduce<Record<string, number>>((acc, item) => {
@@ -3050,6 +3244,102 @@ function ExpensesTab({
           </>
         )}
       </AnimatePresence>
+
+      <ExpenseSpendingBreakdown
+        byCategory={byCat}
+        total={total}
+        monthLabel={
+          filterMonth ? formatMonthLabel(filterMonth) : undefined
+        }
+        onCategorySelect={(cat) => setCategorySidebar(cat)}
+      />
+
+      <DetailSidebar
+        isOpen={categorySidebar !== null}
+        onClose={() => setCategorySidebar(null)}
+        title={
+          categorySidebar
+            ? `${CATEGORY_EMOJI[categorySidebar] ?? "💰"} ${categorySidebar}`
+            : ""
+        }
+      >
+        {categorySidebar && (
+          <div className="flex flex-col min-h-0">
+            <p
+              className="text-sm mb-4"
+              style={{ color: colors.textSecondary }}
+            >
+              {filterMonth
+                ? formatMonthLabel(filterMonth)
+                : "All months"}{" "}
+              · {categorySidebarExpenses.length} expense
+              {categorySidebarExpenses.length !== 1 ? "s" : ""} ·{" "}
+              {fmt(categorySidebarTotal)}
+            </p>
+            {categorySidebarExpenses.length === 0 ? (
+              <p
+                className="text-sm text-center py-8"
+                style={{ color: colors.textTertiary }}
+              >
+                No expenses in this filter.
+              </p>
+            ) : (
+              <div
+                className="flex-1 overflow-y-auto -mx-2"
+                style={{ maxHeight: "calc(100dvh - 180px)" }}
+              >
+                {categorySidebarExpenses.map((exp) => (
+                  <button
+                    key={exp.id}
+                    type="button"
+                    onClick={() => openExpenseFromCategorySidebar(exp)}
+                    className="w-full text-left px-2 py-3 transition-colors"
+                    style={{
+                      border: "none",
+                      borderBottom: `1px solid ${colors.border}`,
+                      background: "transparent",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = colors.warmLinen;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className="text-sm font-medium block truncate"
+                          style={{ color: colors.textPrimary }}
+                          title={exp.expense_name}
+                        >
+                          {exp.expense_name}
+                        </span>
+                        <span
+                          className="text-xs mt-0.5 block"
+                          style={{ color: colors.textTertiary }}
+                        >
+                          {exp.expense_date}
+                          {exp.payment_method
+                            ? ` · ${exp.payment_method}`
+                            : ""}
+                        </span>
+                      </div>
+                      <span
+                        className="text-sm font-semibold flex-shrink-0"
+                        style={{ color: colors.textPrimary }}
+                      >
+                        {fmt(Number(exp.amount))}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </DetailSidebar>
 
       {/* View toggle */}
       <div

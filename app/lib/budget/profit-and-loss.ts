@@ -88,6 +88,7 @@ export const EXPENSE_SECTIONS: { title: string; categories: string[] }[] = [
     title: "Program",
     categories: [
       "Supplies & Materials",
+      "Food & Meals",
       "Curriculum",
       "Field Trips",
       "Technology & Software",
@@ -100,6 +101,7 @@ export const EXPENSE_SECTIONS: { title: string; categories: string[] }[] = [
       "Marketing",
       "Professional Services",
       "Administrative",
+      "Fuel & Transportation",
     ],
   },
   {

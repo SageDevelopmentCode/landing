@@ -4,11 +4,21 @@ import { stripUnitFromStreet } from "@/app/lib/school-year-enrolled-families";
 import { formatAddress } from "@/app/lib/application-display";
 
 export const SCHOOL_LOCATION = {
-  name: "Sage Field",
+  name: "Current campus",
   address: "2760 Gattis School Rd, Round Rock, TX 78665",
   lat: 30.5167,
   lng: -97.6792,
 };
+
+/** Future Hutto property — coords from Nominatim (CR 100 segment; no exact building in OSM). */
+export const NEW_CAMPUS_LOCATION = {
+  name: "Future campus (Hutto)",
+  address: "2750 County Road 100, Hutto, TX 78634",
+  lat: 30.5859912,
+  lng: -97.5482778,
+};
+
+const MAP_ANCHOR_LOCATIONS = [SCHOOL_LOCATION, NEW_CAMPUS_LOCATION];
 
 export type GeocodeQuality = "exact" | "approximate";
 
@@ -104,14 +114,12 @@ function isValidGeocodeResult(
   const lat = Number(match.lat);
   const lng = Number(match.lon);
 
-  if (
-    haversineDistanceMiles(
-      SCHOOL_LOCATION.lat,
-      SCHOOL_LOCATION.lng,
-      lat,
-      lng,
-    ) > MAX_DISTANCE_FROM_SCHOOL_MILES
-  ) {
+  const withinAnchorRadius = MAP_ANCHOR_LOCATIONS.some(
+    (anchor) =>
+      haversineDistanceMiles(anchor.lat, anchor.lng, lat, lng) <=
+      MAX_DISTANCE_FROM_SCHOOL_MILES,
+  );
+  if (!withinAnchorRadius) {
     return false;
   }
 

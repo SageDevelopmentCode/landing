@@ -1,3 +1,5 @@
+// Keep in sync with shared/billing/student-month-enrollment.ts (web uses repo-root shared/).
+
 import type { StripeTxnLike } from "./school-year-attendance";
 import { tierToDays, type HomeschoolTier } from "./school-year";
 
@@ -9,6 +11,8 @@ export type StudentMonthEnrollment = {
 export type EnrollmentTxn = StripeTxnLike & {
   student_id: string;
 };
+
+const SCHOOL_YEAR_MONTH_COUNT = 10;
 
 function metaString(
   meta: Record<string, unknown> | null | undefined,
@@ -180,4 +184,41 @@ export function buildStudentMonthEnrollment(
   }
 
   return map;
+}
+
+export function getLatestPaidSchoolYearMonthIndex(
+  studentId: string,
+  txns: EnrollmentTxn[],
+): number | null {
+  let latest: number | null = null;
+  for (let monthIndex = 1; monthIndex <= SCHOOL_YEAR_MONTH_COUNT; monthIndex++) {
+    const map = buildStudentMonthEnrollment(txns, monthIndex);
+    if (map.get(studentId)?.isPaidForMonth) {
+      latest = monthIndex;
+    }
+  }
+  return latest;
+}
+
+/** Highest school-year month index (1–10) each student is paid through. */
+export function buildLatestPaidSchoolYearMonthByStudentId(
+  txns: EnrollmentTxn[],
+): Record<string, number> {
+  const byStudent = new Map<string, EnrollmentTxn[]>();
+  for (const txn of txns) {
+    const sid = txn.student_id;
+    if (!sid) continue;
+    const list = byStudent.get(sid);
+    if (list) list.push(txn);
+    else byStudent.set(sid, [txn]);
+  }
+
+  const result: Record<string, number> = {};
+  for (const [studentId, studentTxns] of byStudent) {
+    const latest = getLatestPaidSchoolYearMonthIndex(studentId, studentTxns);
+    if (latest != null) {
+      result[studentId] = latest;
+    }
+  }
+  return result;
 }

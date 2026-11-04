@@ -1,4 +1,6 @@
 import { createAdminClient } from '@/app/lib/supabase-server'
+import { getSchoolYearFieldFridaySignupsForAdmin } from '@/app/lib/admin-school-year-field-friday-signups'
+export type { SchoolYearFieldFridaySignup } from '@/app/lib/admin-school-year-field-friday-signups'
 import { MarketingClient } from './MarketingClient'
 import { updateReferralStatus } from './actions'
 import type { TourUnavailability } from '@/app/actions/tourUnavailability'
@@ -142,6 +144,7 @@ const VALID_TABS = [
   'open-house',
   'tour-unavailability',
   'shadow-day',
+  'field-friday-signups',
   'referrals',
   'parent-feedback',
   'info-session',
@@ -178,6 +181,7 @@ export default async function MarketingPage({
     { data: communityGardenDayRsvps },
     { data: referrals },
     { data: feedbackRows },
+    fieldFridaySignups,
   ] = await Promise.all([
     supabase
       .schema('marketing')
@@ -251,6 +255,7 @@ export default async function MarketingPage({
         )
       `)
       .order('created_at', { ascending: false }),
+    getSchoolYearFieldFridaySignupsForAdmin(),
   ])
 
   const enrolledEmailsArr: { email: string; status: string }[] = (enrolledApps ?? []).flatMap((app) => {
@@ -318,6 +323,7 @@ export default async function MarketingPage({
       enrolledEmailsArr={enrolledEmailsArr}
       infoSessionRsvps={(infoSessionRsvps as InfoSessionRsvp[]) ?? []}
       shadowDayBookings={(shadowDayBookings as ShadowDayBooking[]) ?? []}
+      fieldFridaySignups={fieldFridaySignups}
       testimonials={(testimonials as Testimonial[]) ?? []}
       meetMissJoyRsvps={(meetMissJoyRsvps as MeetMissJoyRsvp[]) ?? []}
       communityGardenDayRsvps={

@@ -2,8 +2,10 @@ import { createAdminClient } from "@/app/lib/supabase-server";
 import {
   geocodeAddressesWithCache,
   haversineDistanceMiles,
+  NEW_CAMPUS_LOCATION,
   SCHOOL_LOCATION,
 } from "@/app/lib/geocode";
+import { resolveFamilyDriveTimes } from "@/app/lib/family-map-drive-times";
 import { fetchSchoolYearEnrolledFamilies } from "@/app/lib/school-year-enrolled-families";
 import { FamilyMapClient } from "./FamilyMapClient";
 import type { MappedFamilyPin, UnmappedFamily } from "./types";
@@ -25,7 +27,14 @@ export default async function FamilyMapPage() {
 
   const geocodedByKey = await geocodeAddressesWithCache(db, uniqueEntries);
 
-  const mapped: MappedFamilyPin[] = [];
+  const mappedDrafts: Array<
+    Omit<
+      MappedFamilyPin,
+      | "driveMinutesToCurrentCampus"
+      | "driveMinutesToNewCampus"
+      | "driveTimeQuality"
+    > & { addressKey: string }
+  > = [];
   const unmapped: UnmappedFamily[] = [];
 
   for (const family of families) {
@@ -54,7 +63,8 @@ export default async function FamilyMapPage() {
       continue;
     }
 
-    mapped.push({
+    mappedDrafts.push({
+      addressKey: family.addressKey,
       parentId: family.parentId,
       parentName: family.parentName,
       parentEmail: family.parentEmail,
@@ -72,11 +82,53 @@ export default async function FamilyMapPage() {
         location.lat,
         location.lng,
       ),
+      newCampusDistanceMiles: haversineDistanceMiles(
+        NEW_CAMPUS_LOCATION.lat,
+        NEW_CAMPUS_LOCATION.lng,
+        location.lat,
+        location.lng,
+      ),
       geocodeQuality: location.quality,
     });
   }
 
-  mapped.sort((a, b) => a.distanceMiles - b.distanceMiles);
+  const driveTimesByKey = await resolveFamilyDriveTimes(
+    db,
+    mappedDrafts.map((draft) => ({
+      addressKey: draft.addressKey,
+      lat: draft.lat,
+      lng: draft.lng,
+      distanceMiles: draft.distanceMiles,
+      newCampusDistanceMiles: draft.newCampusDistanceMiles,
+    })),
+  );
+
+  const mapped: MappedFamilyPin[] = mappedDrafts.map(
+    ({ addressKey, ...pin }) => {
+      const drive =
+        driveTimesByKey.get(addressKey) ??
+        ({
+          driveMinutesToCurrentCampus: Math.round(
+            (pin.distanceMiles / 32) * 60,
+          ),
+          driveMinutesToNewCampus: Math.round(
+            (pin.newCampusDistanceMiles / 32) * 60,
+          ),
+          driveTimeQuality: "estimated" as const,
+        });
+
+      return {
+        ...pin,
+        driveMinutesToCurrentCampus: drive.driveMinutesToCurrentCampus,
+        driveMinutesToNewCampus: drive.driveMinutesToNewCampus,
+        driveTimeQuality: drive.driveTimeQuality,
+      };
+    },
+  );
+
+  mapped.sort(
+    (a, b) => a.driveMinutesToNewCampus - b.driveMinutesToNewCampus,
+  );
 
   return (
     <div className="space-y-4 pt-6 h-[calc(100vh-2rem)] flex flex-col">
@@ -88,13 +140,15 @@ export default async function FamilyMapPage() {
           Family Map
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--admin-text-tertiary)" }}>
-          School-year enrolled families with supply fee paid · relative to{" "}
+          School-year enrolled families with supply fee paid · drive time (OSRM)
+          to future campus {NEW_CAMPUS_LOCATION.address} · current{" "}
           {SCHOOL_LOCATION.address}
         </p>
       </div>
 
       <FamilyMapClient
-        school={SCHOOL_LOCATION}
+        currentCampus={SCHOOL_LOCATION}
+        newCampus={NEW_CAMPUS_LOCATION}
         mappedFamilies={mapped}
         unmappedFamilies={unmapped}
         totalFamilies={families.length}

@@ -2,58 +2,20 @@
 
 import React, { useState, useTransition, useEffect, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, ChevronRight, Pencil, Check, X, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, Pencil, Check, X, Plus, Trash2, FileText } from 'lucide-react'
 import { Table, TableRow, TableCell } from '../components/Table'
 import { cssColors as colors } from '../design-system'
 import { getClockSessionsForDate, getClockSessionsForRange, updateClockSession, createClockSessionForTeacher, deleteClockSession } from '@/app/actions/timeclock'
 import type { ClockSessionWithTeacher } from '@/app/actions/timeclock'
-
-function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-}
-
-function fmtDuration(clockIn: string, clockOut: string | null) {
-  if (!clockOut) return 'In progress'
-  const ms = new Date(clockOut).getTime() - new Date(clockIn).getTime()
-  const totalMins = Math.round(ms / 60000)
-  const hrs = Math.floor(totalMins / 60)
-  const mins = totalMins % 60
-  if (hrs === 0) return `${mins}m`
-  if (mins === 0) return `${hrs}h`
-  return `${hrs}h ${mins}m`
-}
-
-function fmtMins(totalMins: number) {
-  const hrs = Math.floor(totalMins / 60)
-  const mins = totalMins % 60
-  if (hrs === 0) return `${mins}m`
-  if (mins === 0) return `${hrs}h`
-  return `${hrs}h ${mins}m`
-}
-
-function fmtTotalTime(sessions: ClockSessionWithTeacher[]) {
-  const totalMins = sessions.reduce((sum, s) => {
-    if (!s.clock_out_at) return sum
-    return sum + Math.round((new Date(s.clock_out_at).getTime() - new Date(s.clock_in_at).getTime()) / 60000)
-  }, 0)
-  return fmtMins(totalMins)
-}
-
-function toLocalDateKey(iso: string): string {
-  const d = new Date(iso)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function fmtDayLabel(dateStr: string): string {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric',
-  })
-}
-
-function fmtSessionNoteLine(clockIn: string, clockOut: string | null, note: string): string {
-  const end = clockOut ? fmtTime(clockOut) : 'Active'
-  return `${fmtTime(clockIn)}–${end}: ${note}`
-}
+import {
+  buildEmployeeClockSummary,
+  fmtDayLabel,
+  fmtDuration,
+  fmtMins,
+  fmtTime,
+  fmtTotalTime,
+  type DayClockSummary,
+} from './clockSessionsSummary'
 
 function isoToTimeInput(iso: string): string {
   const d = new Date(iso)
@@ -195,74 +157,71 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
   }
 
   // Per-employee aggregation for summary mode — includes byDay breakdown
-  const employeeSummary = useMemo(() => {
-    const map = new Map<string, {
-      teacher_id: string
-      full_name: string | null
-      profile_image_url: string | null
-      totalMins: number
-      sessionCount: number
-      activeCount: number
-      noteCount: number
-      byDay: Map<string, {
-        mins: number
-        sessionCount: number
-        activeCount: number
-        notedSessions: Array<{
-          clock_in_at: string
-          clock_out_at: string | null
-          note: string
-        }>
-      }>
-    }>()
+  const employeeSummary = useMemo(
+    () => buildEmployeeClockSummary(rangeSessions),
+    [rangeSessions]
+  )
 
-    for (const s of rangeSessions) {
-      if (!map.has(s.teacher_id)) {
-        map.set(s.teacher_id, {
-          teacher_id: s.teacher_id,
-          full_name: s.full_name,
-          profile_image_url: s.profile_image_url,
-          totalMins: 0,
-          sessionCount: 0,
-          activeCount: 0,
-          noteCount: 0,
-          byDay: new Map(),
-        })
-      }
-      const entry = map.get(s.teacher_id)!
-      entry.sessionCount += 1
+  function openEmployeeReport(teacherId: string) {
+    const params = new URLSearchParams({
+      teacherId,
+      start: rangeStart,
+      end: rangeEnd,
+    })
+    window.open(`/admin/payroll/clock-sessions/report?${params.toString()}`, '_blank', 'noopener,noreferrer')
+  }
 
-      const dateKey = toLocalDateKey(s.clock_in_at)
-      if (!entry.byDay.has(dateKey)) {
-        entry.byDay.set(dateKey, { mins: 0, sessionCount: 0, activeCount: 0, notedSessions: [] })
-      }
-      const dayEntry = entry.byDay.get(dateKey)!
-      dayEntry.sessionCount += 1
-
-      const trimmedNote = s.note?.trim()
-      if (trimmedNote) {
-        entry.noteCount += 1
-        dayEntry.notedSessions.push({
-          clock_in_at: s.clock_in_at,
-          clock_out_at: s.clock_out_at,
-          note: trimmedNote,
-        })
-      }
-
-      if (s.clock_out_at) {
-        const mins = Math.round(
-          (new Date(s.clock_out_at).getTime() - new Date(s.clock_in_at).getTime()) / 60000
-        )
-        entry.totalMins += mins
-        dayEntry.mins += mins
-      } else {
-        entry.activeCount += 1
-        dayEntry.activeCount += 1
-      }
-    }
-
-    return [...map.values()].sort((a, b) => b.totalMins - a.totalMins)
-  }, [rangeSessions])
+  function renderDaySessionPanel(day: DayClockSummary) {
+    return (
+      <div
+        className="rounded-lg overflow-hidden tabular-nums"
+        style={{ border: `1px solid ${colors.border}`, background: colors.surface }}
+      >
+        <table className="w-full">
+          <thead>
+            <tr style={{ borderBottom: `1px solid ${colors.border}` }}>
+              {['In', 'Out', 'Duration', 'Note'].map((label) => (
+                <th
+                  key={label}
+                  className="px-3 py-1.5 text-left text-[10px] font-semibold uppercase tracking-wide"
+                  style={{ color: colors.textTertiary }}
+                >
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {day.sessions.map((session, idx) => (
+              <tr key={idx} style={{ borderBottom: idx < day.sessions.length - 1 ? `1px solid ${colors.border}` : undefined }}>
+                <td className="px-3 py-1.5 text-xs" style={{ color: colors.textPrimary }}>
+                  {fmtTime(session.clock_in_at)}
+                </td>
+                <td className="px-3 py-1.5 text-xs">
+                  {session.clock_out_at ? (
+                    <span style={{ color: colors.textPrimary }}>{fmtTime(session.clock_out_at)}</span>
+                  ) : (
+                    <span
+                      className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border"
+                      style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
+                    >
+                      Active
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-1.5 text-xs" style={{ color: colors.textSecondary }}>
+                  {fmtDuration(session.clock_in_at, session.clock_out_at)}
+                </td>
+                <td className="px-3 py-1.5 text-xs" style={{ color: session.note ? colors.textPrimary : colors.textTertiary }}>
+                  {session.note || '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
 
   const rangeTotalMins = employeeSummary.reduce((s, e) => s + e.totalMins, 0)
   const rangeTotalSessions = rangeSessions.length
@@ -719,7 +678,7 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
             </p>
           ) : (
             <div style={{ opacity: isRangePending ? 0.5 : 1, transition: 'opacity 0.15s' }}>
-              <Table headers={['Employee', 'Total Hours', 'Sessions', 'Notes']}>
+              <Table headers={['Employee', 'Total Hours', 'Sessions', 'Notes', '']}>
                 {employeeSummary.map((e, i) => {
                   const isExpanded = expandedEmployees.has(e.teacher_id)
                   const sortedDays = [...e.byDay.entries()].sort(([a], [b]) => a.localeCompare(b))
@@ -790,42 +749,62 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
                             <span style={{ color: colors.textTertiary }}>—</span>
                           )}
                         </TableCell>
+                        <TableCell>
+                          <button
+                            type="button"
+                            onClick={(ev) => {
+                              ev.stopPropagation()
+                              openEmployeeReport(e.teacher_id)
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors"
+                            style={{
+                              color: colors.accent,
+                              background: colors.accentLight,
+                              border: `1px solid ${colors.accent}33`,
+                            }}
+                            title="Open shareable report in new tab"
+                          >
+                            <FileText className="w-3 h-3" />
+                            Report
+                          </button>
+                        </TableCell>
                       </TableRow>
 
                       {/* Day breakdown sub-rows */}
                       {isExpanded && sortedDays.map(([date, day]) => (
-                        <tr key={`${e.teacher_id}-${date}`} style={{ background: colors.elevated }}>
-                          <td style={{ ...cellBase, paddingLeft: 52, color: colors.textSecondary }}>
-                            {fmtDayLabel(date)}
-                          </td>
-                          <td style={{ ...cellBase, color: day.mins > 0 ? colors.textPrimary : colors.textTertiary, fontWeight: day.mins > 0 ? 500 : 400 }}>
-                            {day.mins > 0 ? fmtMins(day.mins) : '—'}
-                          </td>
-                          <td style={{ ...cellBase, color: colors.textTertiary }}>
-                            {day.sessionCount}
-                            {day.activeCount > 0 && (
-                              <span
-                                className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border"
-                                style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
-                              >
-                                {day.activeCount} active
-                              </span>
-                            )}
-                          </td>
-                          <td style={{ ...cellBase, whiteSpace: 'normal', color: day.notedSessions.length > 0 ? colors.textPrimary : colors.textTertiary }}>
-                            {day.notedSessions.length > 0 ? (
-                              <div className="space-y-1">
-                                {day.notedSessions.map((session, idx) => (
-                                  <div key={idx}>
-                                    {fmtSessionNoteLine(session.clock_in_at, session.clock_out_at, session.note)}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                        </tr>
+                        <React.Fragment key={`${e.teacher_id}-${date}`}>
+                          <tr style={{ background: colors.elevated }}>
+                            <td style={{ ...cellBase, paddingLeft: 52, color: colors.textSecondary, fontWeight: 500 }}>
+                              {fmtDayLabel(date)}
+                            </td>
+                            <td style={{ ...cellBase, color: day.mins > 0 ? colors.textPrimary : colors.textTertiary, fontWeight: day.mins > 0 ? 600 : 400 }} className="tabular-nums">
+                              {day.mins > 0 ? fmtMins(day.mins) : '—'}
+                            </td>
+                            <td style={{ ...cellBase, color: colors.textTertiary }} className="tabular-nums">
+                              {day.sessionCount}
+                              {day.activeCount > 0 && (
+                                <span
+                                  className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border"
+                                  style={{ color: colors.success, backgroundColor: colors.successBg, borderColor: colors.successBorder }}
+                                >
+                                  {day.activeCount} active
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ ...cellBase, color: colors.textTertiary }} colSpan={2}>
+                              {day.sessions.some((s) => s.note) ? (
+                                <span className="text-[10px]">{day.sessions.filter((s) => s.note).length} note{day.sessions.filter((s) => s.note).length !== 1 ? 's' : ''}</span>
+                              ) : (
+                                '—'
+                              )}
+                            </td>
+                          </tr>
+                          <tr style={{ background: colors.elevated }}>
+                            <td colSpan={5} style={{ ...cellBase, paddingTop: 0, paddingBottom: 12, paddingLeft: 52, paddingRight: 16 }}>
+                              {renderDaySessionPanel(day)}
+                            </td>
+                          </tr>
+                        </React.Fragment>
                       ))}
                     </React.Fragment>
                   )
@@ -845,6 +824,9 @@ export function ClockSessionsTab({ initialSessions, initialDate, teachers }: Pro
                     <span className="text-xs font-semibold" style={{ color: colors.textPrimary }}>
                       {rangeTotalSessions}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>—</span>
                   </TableCell>
                   <TableCell>
                     <span className="text-xs font-semibold" style={{ color: colors.textTertiary }}>—</span>

@@ -16,12 +16,12 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/highlights/school_week_nine/EF809D8C-9404-455C-B3B8-5EBCEBC0C6E4.JPG",
-    title: "School Year Week 9 Highlights Are Live!",
+    image: "/assets/highlights/school_week_ten/E9C8665F-3A5D-4D42-BBEE-A304AE89650C 2.JPG",
+    title: "School Year Week 10 Highlights Are Live!",
     description:
-      "Force and motion inquiry, Summerween water play, subtraction and fractions, persuasive writing, and Little Scientists Field Friday.",
-    buttonLabel: "View Week 9 Recap →",
-    buttonHref: "/highlights/school-year/week-9",
+      "Ramps and speed, American symbols, unlike fractions, heart-rate science, butternut squash soup, and Fairytale Kingdom Field Friday.",
+    buttonLabel: "View Week 10 Recap →",
+    buttonHref: "/highlights/school-year/week-10",
   },
   {
     image: "/assets/Stock4.jpg",

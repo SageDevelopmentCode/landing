@@ -4,6 +4,7 @@ import { getStripe } from "@/app/lib/stripe";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { sendDiscordNotification, createErrorEmbed } from "@/app/lib/discord";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
+import { FRIDAY_PAGE_EVENT_DATE } from "@/shared/marketing/friday-page-event";
 
 const schema = z.object({
   parentName: z.string().min(1, "Parent name required"),
@@ -41,6 +42,16 @@ export async function POST(request: NextRequest) {
         ? BASE_AMOUNT_CENTS + Math.min(Math.round(BASE_AMOUNT_CENTS * 0.008), 500)
         : Math.round((BASE_AMOUNT_CENTS + 30) / (1 - 0.029))
       : BASE_AMOUNT_CENTS;
+
+    const [eventYear, eventMonth, eventDay] = FRIDAY_PAGE_EVENT_DATE.split("-").map(Number);
+    const eventDisplayDate = new Date(eventYear, eventMonth - 1, eventDay).toLocaleDateString(
+      "en-US",
+      { month: "long", day: "numeric", year: "numeric" },
+    );
+    const eventShortDay = new Date(eventYear, eventMonth - 1, eventDay).toLocaleDateString(
+      "en-US",
+      { month: "long", day: "numeric" },
+    );
 
     const adminClient = createAdminClient();
 
@@ -101,8 +112,8 @@ export async function POST(request: NextRequest) {
               ? Math.round(finalAmountCents / data.children.length)
               : PRICE_PER_CHILD_CENTS,
             product_data: {
-              name: "Not-So-Scary Halloween — October 30",
-              description: `Sage Field Private School · $${FUN_FRIDAY_DROPIN_CENTS / 100} per child · October 30, 2026`,
+              name: `Not-So-Scary Halloween — ${eventShortDay}`,
+              description: `Sage Field Private School · $${FUN_FRIDAY_DROPIN_CENTS / 100} per child · ${eventDisplayDate}`,
             },
           },
         },

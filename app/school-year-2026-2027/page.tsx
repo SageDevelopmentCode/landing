@@ -372,10 +372,7 @@ export default function SchoolYear20262027Page() {
       </section>
 
       {/* Meet the Team */}
-      <MeetTheTeamSection
-        featured={false}
-        exclude={["Nicole Elias", "Taylor Elias"]}
-      />
+      <MeetTheTeamSection featured={false} />
 
       {/* Full Enrollment Tuition */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">

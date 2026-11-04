@@ -15,6 +15,12 @@ import { approveApplication } from '../../actions/approveApplication'
 import { denyApplication } from '../../actions/denyApplication'
 import { updateApplicationTags } from '../../actions/updateApplicationTags'
 import { PRESET_TAGS } from '../constants/applicationTags'
+import { getLatestPaidSchoolYearMonths } from '@/app/actions/getLatestPaidSchoolYearMonths'
+import { isSchoolYearApp } from '@/app/lib/school-year-program'
+import {
+  schoolYearMonthLabel,
+  schoolYearMonthShort,
+} from '@/shared/billing/school-year'
 
 const merriweather = Poppins({
   weight: ['300', '400', '700', '900'],
@@ -381,6 +387,9 @@ export default function ApplicationsPage() {
   const [tableAgeRanges, setTableAgeRanges] = useState<Set<string>>(new Set())
   const [selectedAppIds, setSelectedAppIds] = useState<Set<string>>(new Set())
   const [outreachSidebarOpen, setOutreachSidebarOpen] = useState(false)
+  const [latestPaidMonthByStudentId, setLatestPaidMonthByStudentId] = useState<
+    Record<string, number>
+  >({})
   const pendingApp = useRef<Application | null>(null)
 
   const handleViewChange = (nextView: typeof view) => {
@@ -416,6 +425,30 @@ export default function ApplicationsPage() {
 
     fetchData()
   }, [activeTab])
+
+  useEffect(() => {
+    const studentIds = applications
+      .filter(
+        (app) =>
+          app.status === 'enrolled' &&
+          app.student_id != null &&
+          isSchoolYearApp(app),
+      )
+      .map((app) => app.student_id as string)
+
+    if (studentIds.length === 0) {
+      return
+    }
+
+    let cancelled = false
+    getLatestPaidSchoolYearMonths(studentIds).then((map) => {
+      if (!cancelled) setLatestPaidMonthByStudentId(map)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [applications])
 
   const handleApproved = (id: string) => {
     const now = new Date().toISOString()
@@ -1114,9 +1147,25 @@ export default function ApplicationsPage() {
                             aria-label={`Select ${app.child_legal_name ?? 'application'}`}
                           />
                         </div>
-                        {/* Child name */}
-                        <div className={`text-sm font-bold text-gray-900 leading-snug pr-6 ${merriweather.className}`}>
-                          {app.child_legal_name ?? '—'}
+                        {/* Child name + latest paid month */}
+                        <div
+                          className={`flex flex-wrap items-center gap-1.5 text-sm font-bold text-gray-900 leading-snug pr-6 ${merriweather.className}`}
+                        >
+                          <span>{app.child_legal_name ?? '—'}</span>
+                          {app.status === 'enrolled' &&
+                            app.student_id != null &&
+                            isSchoolYearApp(app) &&
+                            latestPaidMonthByStudentId[app.student_id] != null && (
+                              <span
+                                className="inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full bg-green-50 text-green-700 border border-green-200 normal-case tracking-normal"
+                                title={`Paid for ${schoolYearMonthLabel(latestPaidMonthByStudentId[app.student_id])}`}
+                              >
+                                Paid for{' '}
+                                {schoolYearMonthShort(
+                                  latestPaidMonthByStudentId[app.student_id],
+                                )}
+                              </span>
+                            )}
                         </div>
 
                         {/* Tags (replaces preferred name) */}

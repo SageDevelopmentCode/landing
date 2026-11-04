@@ -1,0 +1,1530 @@
+[
+  {
+    "id": "57e9cd44-494f-4eec-a573-d186262095aa",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "2P1950OCPMX MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-01",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "01e91ef5-d94c-468e-9108-7e5311c9b816",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "E7AB8I9TWWR AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-01",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "b24c5aaa-81c0-4db2-b03c-bf9189030b80",
+    "expense_name": "AplPay LIMEGREEN SOUAUSTIN              TX",
+    "notes": "CH_3UB29FRI +15127666756\nAplPay LIMEGREEN SOUTHEAST AS\nAUSTIN\nTX\n+15127666756\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-01",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "216a96a8-7b70-4109-9e21-c6173f52c1e0",
+    "expense_name": "AplPay PLATINUMPARKIDALLAS              TX",
+    "notes": "CH_3UB0MLFM +14694532000\nAplPay PLATINUMPARKING.COM\nDALLAS\nTX\n+14694532000\n\nCategory: Business Services-Other Services",
+    "expense_date": "2026-09-01",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "51e9560f-f352-4ba8-8007-16ecd9b2695a",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:628200 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.2789\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-01",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "df305951-6af3-4a8e-a53e-7954fe51915c",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:628202 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.0356\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-01",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "63f98978-6b68-4096-b631-2ba9b12e276d",
+    "expense_name": "AplPay SPO*BURROSTEXROUND ROCK          TX",
+    "notes": "99999996246 5123053881\nAplPay SPO*BURROSTEXMEXBARANDGRI 000010403\nROUND ROCK\nTX\n5123053881\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-02",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "52901ad4-1453-44d4-ad0e-8f2053ba4b9d",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:628672 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.3004\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-02",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "4d7593bb-52ba-431e-8be5-34a31eea1629",
+    "expense_name": "AplPay PANDA EXPRESSROUND ROCK          TX",
+    "notes": "410502      800-877-8988\nAplPay PANDA EXPRESS\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n800-877-8988\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-03",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "cbab0520-c43d-4daa-82de-06ab334adcd8",
+    "expense_name": "AplPay IN-N-OUT YORBYORBA LINDA         CA",
+    "notes": "849595      FAST FOOD RESTAURANT\nAplPay IN-N-OUT YORBA LINDA\nYORBA LINDA\nCA\nFAST FOOD RESTAURANT\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-05",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "08628ecc-2e77-449a-a3ce-cc68c47b91b2",
+    "expense_name": "CHECKR, INC CHECKR.CSAN FRANCISCO       CA",
+    "notes": "CH_3UCGDF40 +18558333364\nCHECKR, INC CHECKR.COM\nSAN FRANCISCO\nCA\n+18558333364\n\nCategory: Merchandise & Supplies-Computer Supplies",
+    "expense_date": "2026-09-05",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ac7effa3-b414-418c-8f93-40264ff0f945",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "37JP9IXS67V MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "7edd8f26-4a6a-460e-baa5-442b08f842ae",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "18VU3BS41OG MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "044e9238-01ea-4913-a3b0-4786357b2d35",
+    "expense_name": "SUPABASE            SINGAPORE           SG",
+    "notes": "CH_3UCDANJD +6587498462\nSUPABASE\nSINGAPORE\nSG\n+6587498462\n\nCategory: Merchandise & Supplies-Computer Supplies",
+    "expense_date": "2026-09-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ac6b982a-1fb2-4f27-8070-234c52177c4a",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "10QODVGXFAK MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "f7078241-2f66-4886-afb6-58cf391f4a57",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "5O96BNN6C1T MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "480656b5-61e6-4308-adfc-391c78d11f1b",
+    "expense_name": "AplPay 91280 - AUSTIAUSTIN              TX",
+    "notes": "000001089   3122742000\nAplPay 91280 - AUSTIN-BERGSTROM INTER SPRK\nAUSTIN\nTX\nDescription : PARKING FEES Price : 0.61\n3122742000\n\nCategory: Transportation-Parking Charges",
+    "expense_date": "2026-09-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "b07f78dd-2e7e-4b83-b201-1762c35b276a",
+    "expense_name": "AplPay CHIPOTLE 2634PFLUGERVILLE        TX",
+    "notes": "014041      303-595-4000\nAplPay CHIPOTLE 2634 2634\nPFLUGERVILLE\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n303-595-4000\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ebb2484c-47f9-48a6-9fec-b0014f83b26a",
+    "expense_name": "AplPay TST* LAX - T2LOS ANGELES         CA",
+    "notes": "99999996251 4222606016\nAplPay TST* LAX - T2 - JERSEY MI 000226833\nLOS ANGELES\nCA\nDescription : RESTAURANTS Price : 0.3067\n4222606016\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "3f2c2c12-3601-444e-addd-ef6689d8dfd6",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "5OH1XUEX8EY MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "23c92bc5-4a0e-4efe-b1cf-7ac69999127c",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "78T5QIZOSIC BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5e3d5fc6-93c6-4c5f-9e23-f25742eb2ed7",
+    "expense_name": "AplPay H-E-B #612   ROUND ROCK          TX",
+    "notes": "000013368   8009874438\nAplPay H-E-B #612\nROUND ROCK\nTX\n8009874438\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "c820035d-dfaa-44d2-be2a-1aac7bcd09c0",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:631461 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.2422\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "587634e8-73ca-458e-84dc-f0520c1ac8b7",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:631461 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.3944\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "33c060e5-2616-4826-9a07-b5f04f97b40f",
+    "expense_name": "AplPay PANDA EXPRESSROUND ROCK          TX",
+    "notes": "156403      800-877-8988\nAplPay PANDA EXPRESS\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n800-877-8988\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-09",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "0c440883-b314-452c-bafd-3e44e805836f",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "294V1OAR4HJ MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-10",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "43bb042b-5aae-470f-a7f6-6512ca3433b2",
+    "expense_name": "AplPay DOLLAR TREE 0ROUND ROCK          TX",
+    "notes": "000202551018775308733\nVARIETY STORES\nAplPay DOLLAR TREE 000001162\nROUND ROCK\nTX\nVARIETY STORES\n8775308733\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-10",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "7b35cf31-cd3e-4844-ab8f-f7d0314ff20d",
+    "expense_name": "H-E-B GAS/CAR WASH #ROUND ROCK          TX",
+    "notes": "000510323   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel",
+    "expense_date": "2026-09-10",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "dc5c49a4-04cb-4667-97bb-3725ac73423a",
+    "expense_name": "TARGET.COM          800-591-3869        MN",
+    "notes": "90200376030 800-591-3869\nTARGET.COM\n800-591-3869\nMN\n\"Description : APPAREL, HOUSEWARES Price : 0.00\"\n800-591-3869\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-10",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a711d800-abd7-4b96-adbd-2b7335d494fb",
+    "expense_name": "TARGET.COM          800-591-3869        MN",
+    "notes": "10200376025 800-591-3869\nTARGET.COM\n800-591-3869\nMN\n\"Description : APPAREL, HOUSEWARES Price : 0.00\"\n800-591-3869\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-10",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "6f61d06f-1f6a-40a0-bac3-51d5e3945104",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "17K62RO2EOE MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d4cf6e3f-09e6-4a93-a1e4-70f6023d86f4",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "J8O7SG8MIZE AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "0c340f88-12ef-42f8-a0e6-35ff84d8408d",
+    "expense_name": "AplPay THE HOME DEPOROUND ROCK          TX",
+    "notes": "09110050445 800-466-3337\nAplPay THE HOME DEPOT\nROUND ROCK\nTX\n800-466-3337\n\nCategory: Merchandise & Supplies-Hardware Supplies",
+    "expense_date": "2026-09-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ab95acc2-3a88-4240-a872-ff87a06ff1f8",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:633527 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.1236\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "407500d3-711a-4c10-8ff8-cd32cb937835",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:633126 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.4577\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5fc777c0-3a0f-494c-a1dd-f7cd475ad27f",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "4QPE9B2G6Q6 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "674e324b-b536-4edb-91a9-e5d981d7878d",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "6RNAJDLEF1I MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "93800815-a147-401a-b7ca-f8501195acd4",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "692GZS0G4L4 AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "fa0fc36a-cc04-46ca-a7f4-072cd5a68cb0",
+    "expense_name": "STARBUCKS STORE 6355ROUND ROCK          TX",
+    "notes": "33A26900719 FAST FOOD RESTAURANT\nSTARBUCKS STORE 6355\nROUND ROCK\nTX\nFAST FOOD RESTAURANT\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "e2d93887-514d-4ff4-b92b-121d9cbfc6c5",
+    "expense_name": "THE SALT LICK       ROUND ROCK          TX",
+    "notes": "12573       5123861044\nTHE SALT LICK\nROUND ROCK\nTX\nDescription : N/A Price : 0.00\n5123861044\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "60c0b764-6190-43d8-9093-db3fa556edbd",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "2FJITNK0V66 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ef2ae960-9b84-4b59-8189-a1563ba67066",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "BBIZMRNBGCI MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "bef2f039-2903-4b9d-b438-de48af233d18",
+    "expense_name": "AplPay MCDONALD'S F2ROUND ROCK          TX",
+    "notes": "000552606   5123885378\nAplPay MCDONALD'S F27561 000000000804898\nROUND ROCK\nTX\n5123885378\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "0e355e59-c154-4b7f-a0c8-a1ad80082a9a",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:634688 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.7643\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "58dca24a-f492-4379-94fa-e9a560a38115",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:635415 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.217\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-15",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "87e28289-bf4f-43d7-a77d-857a039afc5e",
+    "expense_name": "AplPay BT*DD *DOORDASAN FRANCISCO       CA",
+    "notes": "MMWD9Q4W    8559731040\nAplPay BT*DD *DOORDASH POKEWORKS\nSAN FRANCISCO\nCA\n8559731040\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-16",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d18bfbd4-250a-416e-ab36-abea467f48ed",
+    "expense_name": "AplPay SPO*BURROSTEXROUND ROCK          TX",
+    "notes": "99999996260 5123053881\nAplPay SPO*BURROSTEXMEXBARANDGRI 000010403\nROUND ROCK\nTX\n5123053881\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-16",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "43fed816-4675-4014-bf67-d4e0bc276a48",
+    "expense_name": "GREEN MOUNTAIN ENERGHOUSTON             TX",
+    "notes": "44554247STV000077380463     78664\nGREEN MOUNTAIN ENERG\nHOUSTON\nTX\n000077380463     78664\n\nCategory: Other-Utilities",
+    "expense_date": "2026-09-16",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "25d967d3-5399-4a43-a8e8-94dbc6e1414f",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "2GAIVQ8OI8H MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "96d5cc77-70c7-4a58-820e-fdc1c304778d",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "XNF4GIY8B1Z BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "619080d7-507a-4094-af3c-a2d3e0c7ab4d",
+    "expense_name": "AplPay CHIPOTLE 0117ROUND ROCK          TX",
+    "notes": "010146      512-828-0788\nAplPay CHIPOTLE 0117 0117\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n512-828-0788\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "6bcd2ccc-9b30-48a4-aba6-0667a57e045b",
+    "expense_name": "FACEBK *WG64P7W7L4  MENLO PARK",
+    "notes": "28811931705 650-543-4800 / paymen\n650-543-4800 / payment-pr\nFACEBK *WG64P7W7L4\nMENLO PARK\n650-543-4800 / payment-pr\n\nCategory: Business Services-Advertising Services",
+    "expense_date": "2026-09-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "9762a644-9fce-432d-9838-1fc6aec716a7",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:636543 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.1846\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "bb5896d9-0aa7-4d0a-923f-ce6fb5d9c070",
+    "expense_name": "PY *RUSH BOWLS - ROUROUND ROCK          TX",
+    "notes": "99999996261 5126961946\nPY *RUSH BOWLS - ROUND RO 000032669\nROUND ROCK\nTX\n5126961946\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "425d7f9a-60c9-4f0d-82d0-64db82a3cc87",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "1B6URVUONSY MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "69739f48-4a9b-446a-a8d3-452f83d7af7e",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "23F4EUSV8MK BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "6424c08b-a3d1-4bb7-9558-ec874a4038c5",
+    "expense_name": "AplPay BT*DD *DOORDASAN FRANCISCO       CA",
+    "notes": "15ENPGKB    8559731040\nAplPay BT*DD *DOORDASH WINGSTOP\nSAN FRANCISCO\nCA\n8559731040\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "166a1d0a-5d95-4a44-bd30-8c7b33ccbd77",
+    "expense_name": "AplPay STARBUCKS 557ROUND ROCK          TX",
+    "notes": "9587CC61309 8007827282\nAplPay STARBUCKS 55711 000055711\nROUND ROCK\nTX\nDescription : FAST FOOD REST. Price : 0.1321\n8007827282\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5c85d505-7575-4f1f-b061-ee3092b91417",
+    "expense_name": "AplPay TACO BELL    ROUND ROCK          TX",
+    "notes": "d92479      512-255-9841\nAplPay TACO BELL\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n512-255-9841\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "91257e56-b0e0-47f4-a109-e4ccce1ff384",
+    "expense_name": "H-E-B GAS/CAR WASH #ROUND ROCK          TX",
+    "notes": "000076236   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "53a452cc-2029-443f-bd26-9d2812cee732",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:637132 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.05\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "99850941-a77f-4402-af94-42adc655dccf",
+    "expense_name": "SPROUTS FARMERS MARKCEDAR PARK          TX",
+    "notes": "000032612   9999999999\nSPROUTS FARMERS MARKET\nCEDAR PARK\nTX\n9999999999\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "1ab9c8ef-cd32-4705-9804-a4787bd80d18",
+    "expense_name": "AplPay BILIA EATERY CASTLE HILLS        TX",
+    "notes": "pUqB66KTu12 squareup.com/receipts\nAplPay BILIA EATERY\nCASTLE HILLS\nTX\nsquareup.com/receipts\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "4f4ed010-fb25-4c4b-b635-a755209a7fc6",
+    "expense_name": "AplPay OLMOS PARK, TSan Antonio         TX",
+    "notes": "TTfbvUvHZ2X squareup.com/receipts\nAplPay OLMOS PARK, TX THE HONEY BEAN COFFE\nSan Antonio\nTX\nsquareup.com/receipts\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "3f2d4ada-de39-476e-b305-977207f9e528",
+    "expense_name": "AplPay US 3041 San ASAN ANTONIO         TX",
+    "notes": "6aaf13da0496AAF13DA049EFE51F78229\n2pc Chickenjoy w Palabok Fiesta\n2pc Chickenjoy w Jolly Spaghetti\nAplPay US 3041 San Antonio\nSAN ANTONIO\nTX\n2pc Chickenjoy w Palabok Fiesta\n2pc Chickenjoy w Jolly Spaghetti\n6AAF13DA049EFE51F78229\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a091a5bc-b9fa-4057-9c7d-f682369f4267",
+    "expense_name": "H-E-B GAS/CAR WASH #ROUND ROCK          TX",
+    "notes": "000059642   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel",
+    "expense_date": "2026-09-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a6f2752a-1e53-4b75-ac7a-dcb51340e7dc",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "3XCBVVLMGEZ MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "7cf093bd-c654-4bbb-873c-5289cf8721ad",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "SQSH8ZH7JXW MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "623adca8-5055-4264-8dd5-76766cd45bc1",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "71JVUVU88J4 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "acfdc92b-d980-47cb-9c09-06fd996e723c",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "26NMBFZUGN4 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ffae2ca6-88d6-4af4-8a55-bc83fbeff6a0",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "7HI5QN2VU2R MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d6630570-6386-440c-b00d-bb33f837dcac",
+    "expense_name": "AplPay SUBWAY 37288 ROUND ROCK          TX",
+    "notes": "43B0FB3B068 512-388-1548\nAplPay SUBWAY 37288 37288\nROUND ROCK\nTX\nDescription : RESTAURANT Price : 0.00\n512-388-1548\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "c6d382e2-4541-49c8-b90d-bff2a1bb7f0e",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:638625 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.7042\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "69d8aaaa-0302-43f6-95fc-418aaa2c4ad8",
+    "expense_name": "SUPABASE            SINGAPORE           SG",
+    "notes": "CH_3UI3NIJD +6587498462\nSUPABASE\nSINGAPORE\nSG\n+6587498462\n\nCategory: Merchandise & Supplies-Computer Supplies",
+    "expense_date": "2026-09-21",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "8041237f-85e9-4a57-934a-39bea4cae6b3",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "712WAOILVKD MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-22",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "4669b712-b59a-439d-96c8-9e43501fc0b9",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:639374 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.2796\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-22",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "cb48e56e-0523-424a-bbe6-0176db7c0b55",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "T4F94200JIH BOOK STORES\nAMAZON.COM\nAMZN.COM/BILL\nWA\nBOOK STORES\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "8b76d53f-5083-47cb-b2a9-1a3324810668",
+    "expense_name": "AplPay OLIVE GARDEN ROUND ROCK          TX",
+    "notes": "78597232499 512-341-8433\nAplPay OLIVE GARDEN\nROUND ROCK\nTX\nDescription : FOOD/BEVERAGE Price : 0.00\n512-341-8433\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "e26b44a0-5e6a-4587-bf9c-67da3860f9fc",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:640495 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.0709\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "98f45548-4610-4833-87ce-d2ce4f598c86",
+    "expense_name": "LITTLE CAESAR'S 3335ROUND ROCK          TX",
+    "notes": "1236438     6199057070\nLITTLE CAESAR'S 3335-0002 000000002\nROUND ROCK\nTX\nDescription : FAST FOOD REST. Price : 0.3502\n6199057070\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5eff7be4-0115-4e5a-bab8-8caf7f2d545e",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "1PUT2XULKYT MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-25",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "280ebb07-f387-476b-b99b-9eb33282fb44",
+    "expense_name": "AplPay MCDONALD'S   CEDAR PARK          TX",
+    "notes": "000009870   5123319590\nAplPay MCDONALD'S\nCEDAR PARK\nTX\n5123319590\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-25",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5599b5e1-66ad-40d4-8a55-6fd1308e1095",
+    "expense_name": "AplPay PETSMART     CEDAR PARK          TX",
+    "notes": "1815910101  888-839-9638\nAplPay PETSMART\nCEDAR PARK\nTX\nDescription : PETS/SUPPLIES/ACC Price : 0.00\n888-839-9638\n\nCategory: Merchandise & Supplies-General Retail",
+    "expense_date": "2026-09-25",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "57daeef2-ce50-4a64-8833-3908cbd16acf",
+    "expense_name": "AplPay SPROUTS FARMECEDAR PARK          TX",
+    "notes": "000065125   9999999999\nAplPay SPROUTS FARMERS MARKET\nCEDAR PARK\nTX\n9999999999\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-25",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "9916915c-0e06-49c0-a193-4f829b5532ff",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "9BKY2KSCX8D AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-26",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "afcf5407-c9c9-43e8-9dbb-5d08f58c4efe",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "SFFH7DXSTUB AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-26",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "0eb7b66d-e7e2-4475-a19e-c065a65f4558",
+    "expense_name": "AplPay SPICY HOUSE  AUSTIN              TX",
+    "notes": "CH_3UK5KCAP +13127305592\nAplPay SPICY HOUSE\nAUSTIN\nTX\n+13127305592\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-26",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "8ab83c28-630a-416b-bdc0-f86dcc3186fa",
+    "expense_name": "AplPay INSTILL COFFERound Rock          TX",
+    "notes": "5azY9vkNKpe squareup.com/receipts\nAplPay INSTILL COFFEE CO\nRound Rock\nTX\nsquareup.com/receipts\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-27",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "e593501a-b2cc-4f00-b534-c737a5230279",
+    "expense_name": "AplPay ROUND ROCK SOROUND ROCK          TX",
+    "notes": "ADA7UNW6ACC RESTAURANT\nAplPay ROUND ROCK SOUTH 754\nROUND ROCK\nTX\nRESTAURANT\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-27",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "2c5117f8-ffd1-4cc7-b91b-cc3eb96ab56c",
+    "expense_name": "AplPay TARGET       ROUND ROCK          TX",
+    "notes": "62701066016 8004400680\nAplPay TARGET\nROUND ROCK\nTX\nDescription : REFER TO RECEIPT Price : 0.00\n8004400680\n\nCategory: Merchandise & Supplies-Wholesale Stores",
+    "expense_date": "2026-09-27",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "64904353-3e67-4ec5-b1e0-81cb9fa386b3",
+    "expense_name": "DR ADJ REDIST CADV PRIN",
+    "notes": "DR ADJ REDIST CADV PRIN\n\nCategory: Fees & Adjustments-Fees & Adjustments",
+    "expense_date": "2026-09-27",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "f9436aa5-589c-4c08-a0eb-46e22719e0bd",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0001:642368 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.5124\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-27",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "dc0acc14-894c-4eaf-978c-babdd3047452",
+    "expense_name": "AplPay STARBUCKS    800-782-7282        WA",
+    "notes": "24K6SGXDOUH GIFT CARD\nAplPay STARBUCKS\n800-782-7282\nWA\nGIFT CARD\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-28",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "2f9aa5a6-9dbc-4834-b744-4010304e0aab",
+    "expense_name": "H-E-B GAS/CAR WASH #ROUND ROCK          TX",
+    "notes": "000024722   8009874438\nH-E-B GAS/CAR WASH #591 00000000087945\nROUND ROCK\nTX\n8009874438\n\nCategory: Transportation-Fuel",
+    "expense_date": "2026-09-28",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "7ba884a1-030c-419e-beb9-1355ee587987",
+    "expense_name": "SPOTIFY USA INC     NEW YORK            NY",
+    "notes": "P475FDEAEC  8009525210 / sadams@s\n8009525210 / sadams@spoti\nSPOTIFY USA INC\nNEW YORK\nNY\n8009525210 / sadams@spoti\n\nCategory: Communications-Cable & Internet Comm",
+    "expense_date": "2026-09-28",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "92ed5954-2bf0-45b2-a2c9-6fdcf96597ef",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "713BJPS1J22 MERCHANDISE\nAMAZON MARKETPLACE NA PA\nAMZN.COM/BILL\nWA\nMERCHANDISE\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "6598fea1-e307-417c-957a-8fee93b1e2b2",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "3TM09BE1K9W AMZN.COM/BILL\nAMAZON MARKETPLACE PAYMENTS\nAMZN.COM/BILL\nWA\nAMZN.COM/BILL\n\nCategory: Merchandise & Supplies-Internet Purchase",
+    "expense_date": "2026-09-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "0d96d464-d40d-454b-9d10-1180e38e582a",
+    "expense_name": "AplPay PANDA EXPRESSROUND ROCK          TX",
+    "notes": "117097      800-877-8988\nAplPay PANDA EXPRESS\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n800-877-8988\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d1f9375b-95c7-402d-af08-7f259d9fd802",
+    "expense_name": "AplPay SHARETEA ROUNROUND ROCK          TX",
+    "notes": "######WtIDY suyu@chowbus.com\nAplPay SHARETEA ROUND ROCK\nROUND ROCK\nTX\nsuyu@chowbus.com\n\nCategory: Restaurant-Restaurant",
+    "expense_date": "2026-09-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d4f19669-fd84-4af4-81ab-c5adfeb89ce0",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "0002:279178 8004323113\nHEB CURBSIDE 111111111\nSAN ANTONIO\nTX\nDescription : GROCERY STORES Price : 0.1892\n8004323113\n\nCategory: Merchandise & Supplies-Groceries",
+    "expense_date": "2026-09-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "e297f8d1-340c-4cd5-86b4-82e99088724e",
+    "expense_name": "AplPay TACO BELL    ROUND ROCK          TX",
+    "notes": "2e9cfb      512-255-9841\nAplPay TACO BELL\nROUND ROCK\nTX\nDescription : FAST FOOD RESTAURAN Price : 0.00\n512-255-9841\n\nCategory: Restaurant-Bar & Café",
+    "expense_date": "2026-09-30",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "17d3318f-7087-4b50-8a5c-f1a3a253c78e",
+    "expense_name": "DAM-A 43684556018360AUSTIN              TX",
+    "notes": "",
+    "expense_date": "2026-10-01",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "003134bf-0314-40a3-8e6e-c4854fa71826",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-02",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "8090a9af-99ce-4a00-9d25-de0ac0a06fa0",
+    "expense_name": "AplPay H-E-B #612   ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-02",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "b72d6dc7-c760-42fb-ae65-4266f3b76ab8",
+    "expense_name": "AplPay WHOLEFDS GWY AUSTIN              TX",
+    "notes": "",
+    "expense_date": "2026-10-04",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "2ea46130-b9d8-4bae-abe0-dd2668b045ea",
+    "expense_name": "CHEESECAKE AUSTIN 00AUSTIN              TX",
+    "notes": "",
+    "expense_date": "2026-10-04",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "e20a1d53-57f3-4c14-bad7-87132ab9d71a",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-05",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a7bf7801-7ae2-4e55-abf8-077bbc46a80c",
+    "expense_name": "CHECKR, INC CHECKR.CSAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-05",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "7e6766b8-7c37-494c-81e2-0b1632d56858",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-05",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "bd40b96f-8781-43eb-82f3-f567430bf6b4",
+    "expense_name": "AplPay DD *DOORDASH SAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "3d89eef5-3714-466a-8fe9-8a1b392dc8c7",
+    "expense_name": "AplPay DD *DOORDASHDSAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d8e4dca4-3063-4989-9db9-d17ca1f4ded6",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "1e1d9758-92ea-4aec-99e0-5823c7a51761",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "2e00a42b-6443-49b5-941c-036297e4b3f3",
+    "expense_name": "SUPABASE            SINGAPORE           SG",
+    "notes": "",
+    "expense_date": "2026-10-06",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "069247a2-fbe4-4b6d-813e-96ae306f62dd",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "907b81b6-2b63-4be8-a701-1a47bf74ce12",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ef347d5c-344f-4031-89d0-a405dbc25d94",
+    "expense_name": "AplPay CHICK-FIL-A #ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-07",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "42539531-d131-46d7-80a2-399fed4a3f91",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "0038e4fe-56bd-4cea-b64b-a53c98143320",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "e6408732-5a3e-425b-a579-a889c3982ab1",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "4318f10a-5ecc-430e-9e51-7b93f5af4849",
+    "expense_name": "AplPay STARBUCKS    800-782-7282        WA",
+    "notes": "",
+    "expense_date": "2026-10-08",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a8012d7f-cf9c-40fe-975b-eb0899f34c28",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-09",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "cc309408-b1b4-49e9-94a1-100dbab2de8d",
+    "expense_name": "AplPay USPS PO 48780ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-10",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "dc5d1dce-adb4-4739-8d9f-c51f08b29531",
+    "expense_name": "AplPay BT*DD *DOORDASAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "74565ec0-a3e6-4fcb-9a76-8f28879b541e",
+    "expense_name": "AplPay SHARETEA ROUNROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a0b763b0-5dfa-49cb-b8f1-45dedebc671d",
+    "expense_name": "AplPay SPROUTS FARMEROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-11",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "519643f1-433d-4e8a-86f7-b78a40fb5703",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "953bad4a-0984-47cb-92ad-51c711820165",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a8dfad64-d8a2-4b04-b5e0-cd5426fdd5e1",
+    "expense_name": "H-E-B GAS/CAR WASH #ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "b5895203-f1ea-4f78-8d73-ba4ccd861bbb",
+    "expense_name": "THE SALT LICK       ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-12",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "2be3baa3-73ca-42d3-acaf-11fdb5cacca5",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ad30d09d-a4a7-4020-b4e0-a7314852f6da",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "c8b32558-e9ad-4caf-90b1-e628b3a11849",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "098bb452-f1fc-48ed-bc32-bdc0eb570ab0",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-13",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "791117a0-03dc-478d-a536-fd72ad8cbe99",
+    "expense_name": "AplPay DUTCH BROS TXROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-14",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "b45336ed-0f19-411a-aabd-b63095393943",
+    "expense_name": "CHINA E BUFFET      ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-14",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "643957c7-97da-466a-9433-30a101a7f168",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-14",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "beb428a2-0590-45d4-b088-8ecfb6b1c3e1",
+    "expense_name": "AplPay 10235 CAVA GEGEORGETOWN          TX",
+    "notes": "",
+    "expense_date": "2026-10-15",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "15bc3d86-7c83-4390-b879-1a09c9c9abf2",
+    "expense_name": "AplPay NATURAL GROCEGEORGETOWN          TX",
+    "notes": "",
+    "expense_date": "2026-10-15",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "881731d1-f18f-48b6-9957-611f3b4e7f7b",
+    "expense_name": "AplPay ORGANIC NAILSGEORGETOWN          TX",
+    "notes": "",
+    "expense_date": "2026-10-15",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "a5faa03f-3c04-4072-b346-103ff7d944c3",
+    "expense_name": "GREEN MOUNTAIN ENERGHOUSTON             TX",
+    "notes": "",
+    "expense_date": "2026-10-15",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "143f091b-0b6c-4523-a3dc-406f04a0b048",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-15",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "9bc8a30f-bc68-4bb8-be9c-9248deae0c41",
+    "expense_name": "AplPay MCDONALD'S   CEDAR PARK          TX",
+    "notes": "",
+    "expense_date": "2026-10-16",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ee2aa136-1068-46ff-98a5-6c9a6b5ec991",
+    "expense_name": "AplPay PANDA EXPRESSROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-16",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "c7424b8b-550d-4838-bff8-bd6ddc91ad83",
+    "expense_name": "AplPay TARGET       ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-16",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d783a485-9a3b-490e-85ca-a87dbd6b1c6d",
+    "expense_name": "AplPay TST* GREY ORCROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "9472be73-7e34-46f7-a3cf-26b039a7f564",
+    "expense_name": "FACEBK *AWWSYA28L4  MENLO PARK",
+    "notes": "",
+    "expense_date": "2026-10-17",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "c7fb83af-9bf7-42b7-b0e8-962885a66767",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "1a3cfb31-e1b1-46a4-bed2-e76f9e1ad79e",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "bfecc2a4-be08-466c-af51-f5de479cd8b6",
+    "expense_name": "AplPay IN-N-OUT ROUNROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-18",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d180a5c8-65eb-4a1e-b76e-e5c3ed57cfd5",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "ddce879b-a0c5-4c6c-9119-03dd36643ca8",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5f201b6d-0ea8-4682-8c51-97c8f1533e59",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "d89473aa-9ec9-4f65-a625-aedf3a192086",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "250a7781-f931-4fb3-8b93-3260022a3e4c",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "877ab856-44e8-4cf4-9adc-d434b312f542",
+    "expense_name": "AplPay STARBUCKS    800-782-7282        WA",
+    "notes": "",
+    "expense_date": "2026-10-19",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "c9c71577-8e7c-4195-aaf6-f3edcc3048b5",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "e31a8f91-36e5-424a-9130-f9dc2e9d83d0",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "bee99f74-ada3-49c3-8bf7-cb46c7645b73",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "949c7dcd-efa0-4fe4-88d7-fe5cb7cf5fad",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "3be66978-dbf2-4428-a28f-55ee316d5c22",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-20",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "8d7cfd44-816c-42e1-a858-170e31085251",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-21",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "616aab52-f74a-4a35-951c-088edb00d9f5",
+    "expense_name": "AplPay MISAKI RAMEN Round Rock          TX",
+    "notes": "",
+    "expense_date": "2026-10-21",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "3e78a797-f240-41c0-8e43-3c041f903de7",
+    "expense_name": "SUPABASE            SINGAPORE           SG",
+    "notes": "",
+    "expense_date": "2026-10-21",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "c5adfbb4-b2d8-4f92-9c6b-c7115b310246",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-22",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "948a3233-1fe6-40af-a0c5-26d7f69b6a41",
+    "expense_name": "AplPay H-E-B #612   ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-22",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "183710e6-2b8e-4e84-b730-86f55073a9d1",
+    "expense_name": "AplPay SPO*BURROSTEXROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-22",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "7b326c27-fe8b-4994-b039-f7af9c2e219e",
+    "expense_name": "AplPay ANDY'S - ROUNROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-23",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5ba6545a-5b80-44aa-aca6-33df5974fa92",
+    "expense_name": "AplPay P. Terry's BuAustin              TX",
+    "notes": "",
+    "expense_date": "2026-10-23",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "7e5edde1-7122-423b-8ca7-139bf77a34c8",
+    "expense_name": "AplPay SPROUTS FARMECEDAR PARK          TX",
+    "notes": "",
+    "expense_date": "2026-10-23",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "65d7acfe-0c86-4850-934f-cbb433ee96fc",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "29393133-20b5-4ad0-a573-da2b9698a275",
+    "expense_name": "AplPay FIRST WATCH -ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "48e4927f-64e7-4bf1-a099-a7768b0e0b70",
+    "expense_name": "AplPay H-E-B #612   ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "66621324-fc36-41a3-8d35-e95e9926eaa6",
+    "expense_name": "AplPay QT 4127 INSIDAUSTIN              TX",
+    "notes": "",
+    "expense_date": "2026-10-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "6674b860-3b65-4602-9654-27c8377013dc",
+    "expense_name": "AplPay TACOS CORIA  ROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "9e76b457-aff3-4539-aeaf-9363bea345f9",
+    "expense_name": "AplPay WALGREENS    PFLUGERVILLE        TX",
+    "notes": "",
+    "expense_date": "2026-10-24",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "9e46b9ea-3dc5-4ddf-bc92-413e2ab24943",
+    "expense_name": "AplPay LITTLE CAESARROUND ROCK          TX",
+    "notes": "",
+    "expense_date": "2026-10-25",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "45b6b464-5ca6-4c1a-9f49-019af7870c07",
+    "expense_name": "HEB CURBSIDE 1111111SAN ANTONIO         TX",
+    "notes": "",
+    "expense_date": "2026-10-26",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "b2d80eb6-b7f5-42e5-ad1d-208c779795ee",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-27",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "5967db2e-ce2f-4444-b3e3-d59d72f79475",
+    "expense_name": "AplPay WENDY'S      AUSTIN              TX",
+    "notes": "",
+    "expense_date": "2026-10-27",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "549c6bc7-0370-49b2-af04-d944ad85a347",
+    "expense_name": "AMAZON.COM          AMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-28",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "aa417f6b-0d6d-4c63-8bea-3abba35dd19b",
+    "expense_name": "AplPay CHILI'S LAKELCEDAR PARK          TX",
+    "notes": "",
+    "expense_date": "2026-10-28",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "06e3c144-9e43-44c6-813c-7ad2b56d62d6",
+    "expense_name": "DR ADJ REDIST CADV PRIN",
+    "notes": "",
+    "expense_date": "2026-10-28",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "79e50f44-d6e8-4f2c-b861-01deb3ef59cb",
+    "expense_name": "AMAZON MARKEPLACE NA  PA",
+    "notes": "",
+    "expense_date": "2026-10-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "16b725bd-0a43-448f-be5c-26bcf4d3ff08",
+    "expense_name": "AMAZON MARKETPLACE PAMZN.COM/BILL       WA",
+    "notes": "",
+    "expense_date": "2026-10-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "6e35ad2b-be31-4ff6-b8b7-7144e49e1373",
+    "expense_name": "AplPay BT*DD *DOORDASAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "aa9e5059-90a2-437e-9eee-1984bd203d24",
+    "expense_name": "AplPay DD *DOORDASHDSAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-29",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "39791303-a42a-4bd3-ac26-08f457caf20b",
+    "expense_name": "AplPay BT*DD *DOORDASAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-30",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "383f84fc-f378-4dcf-9fb5-327a5f5dae18",
+    "expense_name": "AplPay BT*DD *DOORDASAN FRANCISCO       CA",
+    "notes": "",
+    "expense_date": "2026-10-30",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "751ea5cd-bff8-4093-b1fd-22ff23b61f94",
+    "expense_name": "AplPay CHEVRON 03765CEDAR PARK          TX",
+    "notes": "",
+    "expense_date": "2026-10-30",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  },
+  {
+    "id": "734d2f38-e970-4266-b8d6-7a2cefbaa566",
+    "expense_name": "VANILLAGIFT.COM     ATLANTA             GA",
+    "notes": "",
+    "expense_date": "2026-10-30",
+    "payment_method": "AMEX -31009",
+    "is_deleted": false
+  }
+]
