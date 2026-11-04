@@ -7,6 +7,7 @@ import { cssColors as colors, radius, cssShadows as shadows } from '../design-sy
 import { Table, TableRow, TableCell } from '../components/Table'
 import type { ShadowDayBooking } from './page'
 import { sendShadowDayThankYouEmail } from '@/app/actions/sendShadowDayThankYouEmail'
+import { sendSchoolYearWeekElevenNewsletterEmail } from '@/app/actions/sendSchoolYearWeekElevenNewsletterEmail'
 import { EmailThread } from '../components/EmailThread'
 
 const merriweather = Poppins({ weight: ['300', '400', '700', '900'], subsets: ['latin'] })
@@ -48,6 +49,9 @@ export function ShadowDayBookingsView({ bookings }: { bookings: ShadowDayBooking
   const [selected, setSelected] = useState<ShadowDayBooking | null>(null)
   const [thankYouSending, setThankYouSending] = useState(false)
   const [thankYouSent, setThankYouSent] = useState(false)
+  const [newsletterSending, setNewsletterSending] = useState(false)
+  const [newsletterSent, setNewsletterSent] = useState(false)
+  const [newsletterError, setNewsletterError] = useState<string | null>(null)
 
   const paidCount = bookings.filter(b => b.payment_status === 'paid').length
   const pendingCount = bookings.filter(b => b.payment_status === 'pending').length
@@ -64,9 +68,29 @@ export function ShadowDayBookingsView({ bookings }: { bookings: ShadowDayBooking
     if (res.success) setThankYouSent(true)
   }
 
+  async function handleSendWeekElevenNewsletter() {
+    if (!selected || newsletterSending || !selected.email) return
+    setNewsletterSending(true)
+    setNewsletterError(null)
+    const res = await sendSchoolYearWeekElevenNewsletterEmail({
+      g1FullName: `${selected.first_name} ${selected.last_name}`,
+      childLegalName: selected.child_name,
+      email: selected.email,
+    })
+    setNewsletterSending(false)
+    if (res.success) {
+      setNewsletterSent(true)
+      setTimeout(() => setNewsletterSent(false), 3000)
+    } else {
+      setNewsletterError(res.error ?? 'Failed to send')
+    }
+  }
+
   function closePanel() {
     setSelected(null)
     setThankYouSent(false)
+    setNewsletterSent(false)
+    setNewsletterError(null)
   }
 
   return (
@@ -268,6 +292,29 @@ export function ShadowDayBookingsView({ bookings }: { bookings: ShadowDayBooking
                 >
                   {thankYouSending ? 'Sending…' : thankYouSent ? 'Thank You Sent ✓' : 'Send Thank You Email'}
                 </button>
+                <button
+                  type="button"
+                  onClick={handleSendWeekElevenNewsletter}
+                  disabled={newsletterSending || newsletterSent}
+                  style={{
+                    width: '100%',
+                    marginTop: '10px',
+                    padding: '10px 0',
+                    backgroundColor: newsletterSent ? '#e8f0e8' : colors.mistyForest,
+                    color: newsletterSent ? colors.mistyForest : 'white',
+                    border: newsletterSent ? `1px solid ${colors.mistyForest}` : 'none',
+                    borderRadius: radius.md,
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    cursor: newsletterSending || newsletterSent ? 'default' : 'pointer',
+                    opacity: newsletterSending ? 0.7 : 1,
+                  }}
+                >
+                  {newsletterSending ? 'Sending…' : newsletterSent ? 'Newsletter Sent ✓' : 'Send School Year Week Eleven Newsletter'}
+                </button>
+                {newsletterError && (
+                  <p style={{ marginTop: '8px', fontSize: '12px', color: '#dc2626' }}>{newsletterError}</p>
+                )}
               </div>
 
               <div style={{ marginTop: '28px', borderTop: `1px solid ${colors.divider}`, paddingTop: '20px' }}>

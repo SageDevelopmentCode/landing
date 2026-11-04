@@ -157,6 +157,11 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     category: "schoolYear",
   },
   {
+    id: "school-year-week-eleven-newsletter",
+    label: "Send School Year Week Eleven Newsletter",
+    category: "schoolYear",
+  },
+  {
     id: "september-tuition-reminder-school-year",
     label: "Send September Tuition Reminder (School Year)",
     category: "schoolYear",
@@ -219,6 +224,11 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
   {
     id: "november-tuition-reminder-general",
     label: "Send November Tuition Reminder — Due Sunday in 1 Day (General — Custom Pricing)",
+    category: "schoolYear",
+  },
+  {
+    id: "november-tuition-reminder-due-tonight-general",
+    label: "Send November Tuition Reminder — Due Tonight at Midnight (General — Custom Pricing)",
     category: "schoolYear",
   },
   { id: "labor-day-reminder", label: "Send Labor Day Reminder", category: "schoolYear" },

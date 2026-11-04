@@ -12,6 +12,7 @@ import WeekRecapPreview from "../components/WeekRecapPreview";
 import HalloweenHeroScene, { HALLOWEEN_THEME } from "./components/HalloweenHeroScene";
 import { formatPhone } from "../utils/formatPhone";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
+import { FRIDAY_PAGE_EVENT_COUNTDOWN_ISO } from "@/shared/marketing/friday-page-event";
 
 const FRIDAY_DROPIN_DOLLARS = FUN_FRIDAY_DROPIN_CENTS / 100;
 
@@ -274,7 +275,7 @@ export default function FieldDayFridayPage() {
   }, []);
 
   useEffect(() => {
-    const target = new Date("2026-10-30T08:30:00-05:00");
+    const target = new Date(FRIDAY_PAGE_EVENT_COUNTDOWN_ISO);
     const tick = () => {
       const diff = target.getTime() - Date.now();
       if (diff <= 0) return;

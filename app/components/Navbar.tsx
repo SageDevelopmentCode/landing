@@ -318,6 +318,7 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
     (pathname === "/faq" ||
       pathname === "/about" ||
       pathname === "/apply" ||
+      pathname === "/interest" ||
       pathname === "/donate" ||
       pathname === "/donate/success" ||
       pathname === "/team" ||
@@ -493,13 +494,19 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
         ? "text-white/90 hover:text-white"
         : "text-gray-800/90 hover:text-gray-800";
 
+  const showMainBarBacking = useDarkStyle || scrolled;
+  const mainBarClass = !showMainBarBacking
+    ? ""
+    : scrolled
+      ? "bg-white/95 backdrop-blur-sm shadow-sm rounded-b-[28px]"
+      : "bg-white/95 backdrop-blur-sm border-b border-gray-100/80";
+
+  const enrollmentCtaBorderClass =
+    useDarkStyle && !scrolled ? "border-primary/20" : "border-white";
+
   return (
     <motion.nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-white/95 backdrop-blur-sm shadow-sm rounded-b-[28px]"
-          : ""
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" as const }}
@@ -538,7 +545,7 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
         </AnimatePresence>
       </div>
 
-      <div className="px-6 mx-auto">
+      <div className={`px-6 mx-auto transition-all duration-300 ${mainBarClass}`}>
         <div className="flex items-center justify-between h-20 relative">
           {/* Logo */}
           <motion.div
@@ -673,7 +680,7 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
           >
             <button
               onClick={() => setWaitlistDialogOpen(true)}
-              className="border-2 border-white bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer shadow-lg"
+              className={`border-2 ${enrollmentCtaBorderClass} bg-primary hover:bg-primary-hover text-white font-semibold px-6 py-2 rounded-lg transition-all duration-250 cursor-pointer shadow-lg`}
             >
               Open for Enrollment!
             </button>
