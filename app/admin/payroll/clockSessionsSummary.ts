@@ -1,7 +1,12 @@
 import type { ClockSessionWithTeacher } from '@/app/actions/timeclock'
+import { CHICAGO_TZ, getChicagoDateTimeParts } from '@/shared/staff/pickup-reminder'
 
 export function fmtTime(iso: string) {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: CHICAGO_TZ,
+  })
 }
 
 export function fmtDuration(clockIn: string, clockOut: string | null) {
@@ -27,16 +32,19 @@ export function fmtTotalTime(sessions: ClockSessionWithTeacher[]) {
   return fmtMins(totalMins)
 }
 
-export function toLocalDateKey(iso: string): string {
-  const d = new Date(iso)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+/** Calendar day (YYYY-MM-DD) for a clock timestamp in the school timezone. */
+export function toSchoolDateKey(iso: string): string {
+  return getChicagoDateTimeParts(new Date(iso)).ymd
 }
 
 export function fmtDayLabel(dateStr: string): string {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  const anchor = new Date(Date.UTC(year, month - 1, day, 12, 0, 0))
+  return anchor.toLocaleDateString('en-US', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   })
 }
 
@@ -91,7 +99,7 @@ export function buildEmployeeClockSummary(sessions: ClockSessionWithTeacher[]): 
     const entry = map.get(s.teacher_id)!
     entry.sessionCount += 1
 
-    const dateKey = toLocalDateKey(s.clock_in_at)
+    const dateKey = toSchoolDateKey(s.clock_in_at)
     if (!entry.byDay.has(dateKey)) {
       entry.byDay.set(dateKey, { mins: 0, sessionCount: 0, activeCount: 0, sessions: [] })
     }

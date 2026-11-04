@@ -39,6 +39,7 @@ export default async function ClockSessionsReportPage({
   const generatedAt = new Date().toLocaleString("en-US", {
     dateStyle: "long",
     timeStyle: "short",
+    timeZone: "America/Chicago",
   });
 
   return (

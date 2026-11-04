@@ -1,4 +1,5 @@
 "use server";
+import { assertSuperAdmin } from "@/app/lib/assertSuperAdmin";
 import {
   buildSchoolYearNovemberDueTonightTuitionReminderGeneralEmail,
   sendZohoEmail,
@@ -9,6 +10,9 @@ export async function sendSchoolYearNovemberDueTonightTuitionReminderGeneralEmai
   childLegalName?: string;
   email: string;
 }): Promise<{ success: boolean; error?: string }> {
+  const auth = await assertSuperAdmin();
+  if (!auth.ok) return { success: false, error: auth.error };
+
   const { subject, content } =
     await buildSchoolYearNovemberDueTonightTuitionReminderGeneralEmail(opts);
   return sendZohoEmail({ toAddress: opts.email, subject, content });
