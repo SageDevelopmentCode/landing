@@ -307,38 +307,37 @@ function InterestPageContent() {
       <Navbar />
 
       <div id="interest-form" className="pt-20 sm:pt-28 scroll-mt-24 sm:scroll-mt-32">
-        <EnrollmentCTASection />
-      </div>
-
-      {/* Mobile hero gallery — above program content */}
-      <div className="sm:hidden">
-        <div
-          ref={galleryRef}
-          className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
-          onTouchStart={handleGalleryInteractionStart}
-          onTouchEnd={handleGalleryInteractionEnd}
-          onMouseDown={handleGalleryInteractionStart}
-          onMouseUp={handleGalleryInteractionEnd}
-        >
-          {[
-            ...tabContent[activeTab].images,
-            ...tabContent[activeTab].images,
-          ].map((src, i) => (
-            <div
-              key={i}
-              className="relative w-[88%] flex-shrink-0 aspect-square overflow-hidden"
-            >
-              <Image
-                src={src}
-                alt="Program photo"
-                fill
-                className="object-cover"
-                sizes="88vw"
-                priority={i === 0}
-              />
-            </div>
-          ))}
+        {/* Mobile hero gallery — above interest form */}
+        <div className="sm:hidden">
+          <div
+            ref={galleryRef}
+            className="overflow-x-auto flex gap-0 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+            onTouchStart={handleGalleryInteractionStart}
+            onTouchEnd={handleGalleryInteractionEnd}
+            onMouseDown={handleGalleryInteractionStart}
+            onMouseUp={handleGalleryInteractionEnd}
+          >
+            {[
+              ...tabContent[activeTab].images,
+              ...tabContent[activeTab].images,
+            ].map((src, i) => (
+              <div
+                key={i}
+                className="relative w-[88%] flex-shrink-0 aspect-square overflow-hidden"
+              >
+                <Image
+                  src={src}
+                  alt="Program photo"
+                  fill
+                  className="object-cover"
+                  sizes="88vw"
+                  priority={i === 0}
+                />
+              </div>
+            ))}
+          </div>
         </div>
+        <EnrollmentCTASection />
       </div>
 
       {/* Two-Column Content Section */}
@@ -424,7 +423,7 @@ function InterestPageContent() {
                   ))}
                 </div>
 
-                {/* Image Gallery — desktop only (mobile version is above the heading) */}
+                {/* Image Gallery — desktop only (mobile carousel is above the interest form) */}
                 <div className="hidden sm:block mb-10">
                   <div className="sm:overflow-visible sm:grid sm:grid-cols-2 sm:gap-3">
                     {tabContent[activeTab].images.map((src, i) => (
@@ -629,7 +628,6 @@ function InterestPageContent() {
                   <div className="-mx-8 sm:-mx-12 lg:-mx-16 mb-10">
                     <MeetTheTeamSection
                       featured={false}
-                      exclude={["Nicole Elias", "Taylor Elias"]}
                     />
                   </div>
                 )}

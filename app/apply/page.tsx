@@ -729,7 +729,6 @@ export default function ApplyPage() {
                   <div className="-mx-8 sm:-mx-12 lg:-mx-16 mb-10">
                     <MeetTheTeamSection
                       featured={false}
-                      exclude={["Nicole Elias", "Taylor Elias"]}
                     />
                   </div>
                 )}
