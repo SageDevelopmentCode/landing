@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, Plus, X, Link2, Upload, Pencil, MapPin, Users, RefreshCw, Bell, Trash2, Calendar, Sun, BookOpen, Clock, Paperclip } from "lucide-react";
-import { Merriweather } from "next/font/google";
 import { motion, AnimatePresence } from "framer-motion";
 // ─── Teacher-only design tokens (light mode, fully standalone) ────────────────
 const colors = {
@@ -27,11 +26,6 @@ const shadows = { soft: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)'
 import { saveCalendarEvent } from "@/app/actions/saveCalendarEvent";
 import { updateCalendarEvent } from "@/app/actions/updateCalendarEvent";
 import { deleteCalendarEvent } from "@/app/actions/deleteCalendarEvent";
-
-const merriweather = Merriweather({
-  weight: ["300", "400", "700", "900"],
-  subsets: ["latin"],
-});
 
 type ProgramKey = "summer" | "school";
 type ViewMode = "monthly" | "weekly";
@@ -442,7 +436,7 @@ function AddEventPanel({
         >
           <div>
             <h2
-              className={`text-base font-bold leading-none ${merriweather.className}`}
+              className={`text-base font-bold leading-none font-heading`}
               style={{ color: colors.mistyForest }}
             >
               {isEditMode ? "Edit Event" : "New Event"}
@@ -1170,7 +1164,7 @@ function OverlapPanel({
             {timeLabel && (
               <p className="text-xs mb-0.5" style={{ color: colors.textSecondary }}>{timeLabel}</p>
             )}
-            <h2 className={`text-base font-bold ${merriweather.className}`} style={{ color: colors.textPrimary }}>
+            <h2 className={`text-base font-bold font-heading`} style={{ color: colors.textPrimary }}>
               {events.length} Events
             </h2>
           </div>
@@ -1357,7 +1351,7 @@ function EventDetailPanel({
               <X className="w-4 h-4" />
             </motion.button>
           </div>
-          <h2 className={`text-xl font-bold leading-snug ${merriweather.className}`} style={{ color: "white" }}>
+          <h2 className={`text-xl font-bold leading-snug font-heading`} style={{ color: "white" }}>
             {event.title}
           </h2>
           <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.82)" }}>
@@ -1647,7 +1641,7 @@ export default function TeacherCalendarClient({
           <div className="flex items-center gap-2 px-4 flex-shrink-0"
             style={{ height: 56, background: "linear-gradient(90deg, #F2F7F3 0%, white 100%)", borderBottom: `1px solid ${colors.border}` }}>
             <Calendar className="w-3.5 h-3.5 flex-shrink-0" style={{ color: colors.mistyForest }} />
-            <span className={`text-[13px] font-bold ${merriweather.className}`} style={{ color: colors.mistyForest }}>My Calendar</span>
+            <span className={`text-[13px] font-bold font-heading`} style={{ color: colors.mistyForest }}>My Calendar</span>
           </div>
 
           <p className="px-4 pt-5 pb-2 text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: colors.textTertiary }}>Programs</p>
@@ -1712,7 +1706,7 @@ export default function TeacherCalendarClient({
                   <NavButton onClick={handlePrev} disabled={prevDisabled} aria-label="Previous"><ChevronLeft className="w-5 h-5" /></NavButton>
                   <NavButton onClick={handleNext} disabled={nextDisabled} aria-label="Next"><ChevronRight className="w-5 h-5" /></NavButton>
                 </div>
-                <h1 className={`text-xl ${merriweather.className}`} style={{ color: colors.textPrimary, fontWeight: 700, lineHeight: 1 }}>
+                <h1 className={`text-xl font-heading`} style={{ color: colors.textPrimary, fontWeight: 700, lineHeight: 1 }}>
                   {view === "monthly" ? (
                     <><span>{MONTHS[currentDate.getMonth()]}</span>{" "}<span style={{ fontWeight: 300, color: colors.textSecondary }}>{currentDate.getFullYear()}</span></>
                   ) : <span style={{ fontSize: 16 }}>{navLabel}</span>}

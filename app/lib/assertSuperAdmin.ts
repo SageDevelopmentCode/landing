@@ -1,8 +1,8 @@
 import { createAdminClient, createServerSupabaseClient } from '@/app/lib/supabase-server'
 
-export async function assertSuperAdmin():
-  | Promise<{ ok: true }>
-  | Promise<{ ok: false; error: string }> {
+export async function assertSuperAdmin(): Promise<
+  { ok: true } | { ok: false; error: string }
+> {
   const supabase = await createServerSupabaseClient()
   const {
     data: { user },
