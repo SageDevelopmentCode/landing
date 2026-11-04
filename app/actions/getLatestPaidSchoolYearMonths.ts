@@ -1,6 +1,9 @@
 "use server";
 
-import { createAdminClient } from "@/app/lib/supabase-server";
+import {
+  createAdminClient,
+  createServerSupabaseClient,
+} from "@/app/lib/supabase-server";
 import {
   buildLatestPaidSchoolYearMonthByStudentId,
   type EnrollmentTxn,
@@ -13,14 +16,38 @@ const SCHOOL_YEAR_PAYMENT_TYPES = [
   "homeschool",
 ] as const;
 
+async function assertSuperAdmin() {
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false as const, error: "Not authenticated" };
+
+  const adminClient = createAdminClient();
+  const { data: adminUser } = await adminClient
+    .schema("admin")
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (adminUser?.role !== "super_admin") {
+    return { ok: false as const, error: "Unauthorized" };
+  }
+
+  return { ok: true as const, adminClient };
+}
+
 export async function getLatestPaidSchoolYearMonths(
   studentIds: string[],
 ): Promise<Record<string, number>> {
+  const auth = await assertSuperAdmin();
+  if (!auth.ok) return {};
+
   const uniqueIds = [...new Set(studentIds.filter(Boolean))];
   if (uniqueIds.length === 0) return {};
 
-  const client = createAdminClient();
-  const { data, error } = await client
+  const { data, error } = await auth.adminClient
     .schema("billing")
     .from("stripe_transactions")
     .select("student_id, payment_type, metadata")
