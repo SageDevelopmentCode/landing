@@ -437,7 +437,6 @@ export default function ApplicationsPage() {
       .map((app) => app.student_id as string)
 
     if (studentIds.length === 0) {
-      setLatestPaidMonthByStudentId({})
       return
     }
 
