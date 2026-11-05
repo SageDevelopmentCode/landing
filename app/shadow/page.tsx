@@ -56,98 +56,108 @@ const WEEK10_IMAGES = [
   "/assets/highlights/school_week_ten/B7159973-EEFB-4EFD-8D26-FA00FCE67452 2.JPG",
 ];
 
-const WEEK9_IMAGES = [
-  "/assets/highlights/school_week_nine/EF809D8C-9404-455C-B3B8-5EBCEBC0C6E4.JPG",
-  "/assets/highlights/school_week_nine/5B61166D-C91A-4B79-ADD8-FF06B9A30B0F.JPG",
-  "/assets/highlights/school_week_nine/6B50348E-40ED-4F55-B432-7FF6D9CA7C78.JPG",
-  "/assets/highlights/school_week_nine/1F53EF70-F050-4AC6-A304-822E5EE2EDFF.JPG",
-  "/assets/highlights/school_week_nine/11366F5C-7187-4C36-AD89-0687FBD291F0.JPG",
-  "/assets/highlights/school_week_nine/F32080E0-3521-4AFF-A57D-54150F08E7B3.JPG",
-  "/assets/highlights/school_week_nine/4D18C974-C767-4B38-82A3-5789268778A9.JPG",
-  "/assets/highlights/school_week_nine/C86640D6-7F20-421C-89B3-6775099A18B3.JPG",
-  "/assets/highlights/school_week_nine/1DF11F47-FF45-4C6C-ACBF-8FA1737F6448.JPG",
-  "/assets/highlights/school_week_nine/23D69F7B-0A07-4C1F-A85B-881631471A46.JPG",
-  "/assets/highlights/school_week_nine/3C9B5D66-E3A1-4F28-BE70-4524DB18BD5D.JPG",
-  "/assets/highlights/school_week_nine/5AFDF08A-7240-47DD-B624-BB700019463A.JPG",
-  "/assets/highlights/school_week_nine/8349A5F5-F987-4F93-A954-E193A45B76ED.JPG",
-  "/assets/highlights/school_week_nine/A4819157-73A1-4806-A16B-B3B8BF7B24E0.JPG",
-  "/assets/highlights/school_week_nine/A8D2814B-BFF0-4078-ADB0-1269ACDB72B5.JPG",
-  "/assets/highlights/school_week_nine/B983A704-FB05-4F6D-B8BF-B27961F5D816.JPG",
-  "/assets/highlights/school_week_nine/E6076A38-FD2A-4161-BB15-DAEDBC9F368B.JPG",
+const WEEK11_IMAGES = [
+  "/assets/highlights/school_week_eleven/2D1BA87C-3BA1-4596-857A-D62FFFD3AEF6.JPG",
+  "/assets/highlights/school_week_eleven/06323F77-4E26-4A28-AC58-36B018A0831D.JPG",
+  "/assets/highlights/school_week_eleven/A27CDDBC-D55F-4D28-B423-25A007194873.JPG",
+  "/assets/highlights/school_week_eleven/CFCC1BF1-A38B-494A-A5CC-EEFB52A70DCF.JPG",
+  "/assets/highlights/school_week_eleven/1D2A5D92-CD84-4A03-BE62-245B61BBAB7C.JPG",
+  "/assets/highlights/school_week_eleven/55E07E7B-A294-4309-BD0D-0A6F80407C09.JPG",
+  "/assets/highlights/school_week_eleven/BB5BE812-A57A-479A-9518-EA35163807C1.JPG",
+  "/assets/highlights/school_week_eleven/84536C72-8BDE-4317-BC8D-DBF847371B06.JPG",
+  "/assets/highlights/school_week_eleven/12AA3FB4-39F5-4C0F-AE00-9333FA3F0C51.JPG",
+  "/assets/highlights/school_week_eleven/2556ABDA-EB7C-4195-91C4-02B8ADFDFDDD.JPG",
+  "/assets/highlights/school_week_eleven/284E3969-ABB3-4FE9-8058-77EC8EF3EBCE.JPG",
+  "/assets/highlights/school_week_eleven/4730BACD-4FC9-43B0-91CB-9B8B291DA3EF.JPG",
+  "/assets/highlights/school_week_eleven/4C5C311E-D73B-4828-B490-D5B89A4EEA4E.JPG",
+  "/assets/highlights/school_week_eleven/57847C9B-0702-4522-A6A4-7D8505A532D4.JPG",
+  "/assets/highlights/school_week_eleven/59C54FC7-BC37-44F1-8A21-BA69BFAC9332.JPG",
+  "/assets/highlights/school_week_eleven/5E2F84E7-04BA-4559-B923-E80B20E89938.JPG",
+  "/assets/highlights/school_week_eleven/5FBD2189-56B1-4A9A-87CF-8C71AF4D892A.JPG",
+  "/assets/highlights/school_week_eleven/61B5F293-E511-4D59-9E3E-9B91175A283F.JPG",
+  "/assets/highlights/school_week_eleven/98947A25-7134-47E8-91AB-7159066B8AC2.JPG",
+  "/assets/highlights/school_week_eleven/A64B6AD5-4EDE-455D-B908-F3B7CBAD96A5.JPG",
+  "/assets/highlights/school_week_eleven/CFAA206B-D9A7-4A14-B1DD-85361140163B.JPG",
+  "/assets/highlights/school_week_eleven/D210D1F5-2433-42D7-B9CD-13A91277D0B0.JPG",
+  "/assets/highlights/school_week_eleven/D5140BFA-7ABC-4F92-96A7-8CCB732C546A.JPG",
+  "/assets/highlights/school_week_eleven/D785E404-2B65-43B0-BB5E-567E14434AD7.JPG",
+  "/assets/highlights/school_week_eleven/DB2777F7-2C5A-4DCB-9E13-8E339309622E.JPG",
+  "/assets/highlights/school_week_eleven/E7C3B417-1770-412A-BF5A-5C5DEE0AB62B.JPG",
+  "/assets/highlights/school_week_eleven/E85EDE1E-ADFE-4F0D-861C-1427EB58E8AB.JPG",
 ];
 
-const CAROUSEL_IMAGES = [...WEEK9_IMAGES, ...WEEK10_IMAGES];
+const CAROUSEL_IMAGES = [...WEEK10_IMAGES, ...WEEK11_IMAGES];
 
 const GALLERY_INITIAL_COUNT = 9;
 
-// ─── Week 9 Highlights ────────────────────────────────────────────────────────
+// ─── Week 11 Highlights ───────────────────────────────────────────────────────
 
-const WEEK9_PRIMARY_HIGHLIGHTS = [
+const WEEK11_PRIMARY_HIGHLIGHTS = [
   {
-    emoji: "🚛",
-    label: "Force & Motion",
-    desc: "Garbage trucks, speed, and community helpers who keep neighborhoods clean",
+    emoji: "🏎️",
+    label: "F1 Speed Recap",
+    desc: "Lap counting, stopwatch timing, and speedometer talk after the racing inquiry",
   },
   {
-    emoji: "♻️",
-    label: "Recycling & Literacy",
-    desc: "Counting, number recognition, and CVC spelling tied to real-world inquiry",
+    emoji: "🍧",
+    label: "Juice-Pop Plans",
+    desc: "Young entrepreneurs mapped steps and pricing questions for a product idea",
   },
-  {
-    emoji: "👀",
-    label: "Skid-Mark Science",
-    desc: "Noticing pavement marks sparked talk about fast and slow movement",
-  },
-  {
-    emoji: "🎵",
-    label: "Music & Movement",
-    desc: "Songs on log cushions and joyful rhythm in the Primary space",
-  },
-];
-
-const WEEK9_LOWER_ELEM_HIGHLIGHTS = [
   {
     emoji: "🎃",
-    label: "Summerween",
-    desc: "Pumpkin muffins in the morning and one last sunny water day",
+    label: "Papier-Mâché",
+    desc: "Halloween hands-on building with newspaper, paste, and imagination",
   },
   {
-    emoji: "➖",
-    label: "Subtraction Stories",
-    desc: "Word problems with pictures, expanded form, and standard subtraction",
-  },
-  {
-    emoji: "🇺🇸",
-    label: "American Symbols",
-    desc: "Statue of Liberty and the bald eagle on currency, seals, and documents",
-  },
-  {
-    emoji: "⚗️",
-    label: "Matter Changes",
-    desc: "Physical vs. chemical change with real-life examples",
+    emoji: "🚗",
+    label: "Future Transport",
+    desc: "Flying-car sketches sparked big questions about how cities might move",
   },
 ];
 
-const WEEK9_UPPER_ELEM_HIGHLIGHTS = [
+const WEEK11_LOWER_ELEM_HIGHLIGHTS = [
+  {
+    emoji: "➖",
+    label: "Subtraction Review",
+    desc: "Math games and a brain check closed out October number work",
+  },
+  {
+    emoji: "🔤",
+    label: "CVC Wrap-Up",
+    desc: "Building, spelling, and reading consonant-vowel-consonant words all week",
+  },
+  {
+    emoji: "🧪",
+    label: "Pumpkin Science",
+    desc: "Carved mini pumpkins powered elephant-toothpaste eruptions outdoors",
+  },
+  {
+    emoji: "👻",
+    label: "Halloween Field Friday",
+    desc: "Pumpkin paint, spooky slime, witches’ brew, and yard games before pick-up",
+  },
+];
+
+const WEEK11_UPPER_ELEM_HIGHLIGHTS = [
   {
     emoji: "🍕",
-    label: "Fraction Stations",
-    desc: "Small-group lessons and review with hands-on fraction tools",
+    label: "Fraction Fluency",
+    desc: "Like and unlike denominators, multiplication, equivalents, and ordering",
   },
   {
-    emoji: "✍️",
-    label: "Persuasive Writing",
-    desc: "Convincing paragraphs with reasons — creative Halloween opinions",
+    emoji: "📓",
+    label: "Notebooking",
+    desc: "I Think, I Notice, I Wonder responses turned reading into research",
   },
   {
-    emoji: "💤",
-    label: "Why We Dream",
-    desc: "Reading comprehension with highlighted key details on anchor charts",
+    emoji: "🔤",
+    label: "Word Study",
+    desc: "Compound words plus in-, im-, and dis- prefixes in vocabulary work",
   },
   {
-    emoji: "🎨",
-    label: "Clay & Music",
-    desc: "Sculpting in art and live guitar songs during music time",
+    emoji: "🥧",
+    label: "Pies & Dot Art",
+    desc: "Mini apple pies, spiral dot drawings, music, and a classroom celebration",
   },
 ];
 
@@ -833,7 +843,7 @@ export default function ShadowPage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-md">
                 <Image
-                  src="/assets/highlights/school_week_ten/E9C8665F-3A5D-4D42-BBEE-A304AE89650C 2.JPG"
+                  src="/assets/highlights/school_week_eleven/2D1BA87C-3BA1-4596-857A-D62FFFD3AEF6.JPG"
                   alt="Students at Sage Field"
                   fill
                   className="object-cover"
@@ -844,7 +854,7 @@ export default function ShadowPage() {
               <div className="flex flex-col gap-2">
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
                   <Image
-                    src="/assets/highlights/school_week_nine/EF809D8C-9404-455C-B3B8-5EBCEBC0C6E4.JPG"
+                    src="/assets/highlights/school_week_ten/E9C8665F-3A5D-4D42-BBEE-A304AE89650C 2.JPG"
                     alt="Students at Sage Field"
                     fill
                     className="object-cover"
@@ -854,7 +864,7 @@ export default function ShadowPage() {
                 </div>
                 <div className="relative aspect-square rounded-2xl overflow-hidden shadow-md">
                   <Image
-                    src="/assets/highlights/school_week_ten/738F9C06-0FA2-4123-84DB-F02E783177C6 2.JPG"
+                    src="/assets/highlights/school_week_eleven/A27CDDBC-D55F-4D28-B423-25A007194873.JPG"
                     alt="Students at Sage Field"
                     fill
                     className="object-cover"
@@ -903,15 +913,15 @@ export default function ShadowPage() {
             transition={{ duration: 0.5 }}
           >
             <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4 font-body">
-              Weeks 9 &amp; 10 in Review
+              Weeks 10 &amp; 11 in Review
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-2">
               A Glimpse of What Kids Do Here
             </h2>
             <p className="text-base text-gray-500 font-body leading-relaxed max-w-2xl">
-              Weeks nine and ten — here&apos;s a real look at what your child
-              would experience at Sage Field. Real academics, real cooking, real
-              community.
+              Weeks ten and eleven — here&apos;s a real look at what your child
+              would experience at Sage Field. October wrap-ups, Halloween Field
+              Friday, and real community.
             </p>
           </motion.div>
         </div>
@@ -994,24 +1004,24 @@ export default function ShadowPage() {
                 title: "Primary",
                 subtitle: "Pre-K & Kindergarten",
                 iconBg: "bg-primary/10",
-                week9: WEEK9_PRIMARY_HIGHLIGHTS,
                 week10: WEEK10_PRIMARY_HIGHLIGHTS,
+                week11: WEEK11_PRIMARY_HIGHLIGHTS,
               },
               {
                 emoji: "✨",
                 title: "Lower Elementary",
                 subtitle: "1st & 2nd Grade",
                 iconBg: "bg-sage-100",
-                week9: WEEK9_LOWER_ELEM_HIGHLIGHTS,
                 week10: WEEK10_LOWER_ELEM_HIGHLIGHTS,
+                week11: WEEK11_LOWER_ELEM_HIGHLIGHTS,
               },
               {
                 emoji: "📐",
                 title: "Upper Elementary",
                 subtitle: "3rd & 4th Grade",
                 iconBg: "bg-sky-100",
-                week9: WEEK9_UPPER_ELEM_HIGHLIGHTS,
                 week10: WEEK10_UPPER_ELEM_HIGHLIGHTS,
+                week11: WEEK11_UPPER_ELEM_HIGHLIGHTS,
               },
             ].map((band) => (
               <div key={band.title} className="bg-sage-50 rounded-2xl p-5">
@@ -1034,11 +1044,11 @@ export default function ShadowPage() {
                   <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <div className="mb-2">
                       <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full font-body">
-                        Week 9
+                        Week 10
                       </span>
                     </div>
                     <ul className="space-y-1.5">
-                      {band.week9.map((item) => (
+                      {band.week10.map((item) => (
                         <li key={item.label} className="flex items-start gap-2">
                           <span className="text-sm leading-none mt-0.5 flex-shrink-0">
                             {item.emoji}
@@ -1058,11 +1068,11 @@ export default function ShadowPage() {
                   <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
                     <div className="mb-2">
                       <span className="inline-block px-2 py-0.5 bg-sage-100 text-sage-700 text-[10px] font-bold rounded-full font-body">
-                        Week 10
+                        Week 11
                       </span>
                     </div>
                     <ul className="space-y-1.5">
-                      {band.week10.map((item) => (
+                      {band.week11.map((item) => (
                         <li key={item.label} className="flex items-start gap-2">
                           <span className="text-sm leading-none mt-0.5 flex-shrink-0">
                             {item.emoji}
@@ -1092,16 +1102,16 @@ export default function ShadowPage() {
             transition={{ duration: 0.4, delay: 0.18 }}
           >
             <Link
-              href="/highlights/school-year/week-9"
+              href="/highlights/school-year/week-10"
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 shadow-md hover:shadow-lg font-body text-sm"
             >
-              View Full Week 9 Recap →
+              View Full Week 10 Recap →
             </Link>
             <Link
-              href="/highlights/school-year/week-10"
+              href="/highlights/school-year/week-11"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-800 font-semibold rounded-lg border border-gray-200 hover:bg-sage-50 transition-colors duration-200 shadow-sm hover:shadow-md font-body text-sm"
             >
-              View Full Week 10 Recap →
+              View Full Week 11 Recap →
             </Link>
           </motion.div>
         </div>

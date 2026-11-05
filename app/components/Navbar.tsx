@@ -711,24 +711,24 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile CTA strip — slides in when scrolled */}
-      <div
-        className={`lg:hidden overflow-hidden transition-all duration-200 px-4 flex gap-2 ${scrolled ? "max-h-20 opacity-100 pb-3" : "max-h-0 opacity-0"}`}
-      >
-        <Link
-          href="/apply"
-          className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
+        {/* Mobile CTA strip — slides in when scrolled */}
+        <div
+          className={`lg:hidden overflow-hidden transition-all duration-200 flex gap-2 ${scrolled ? "max-h-20 opacity-100 pb-3" : "max-h-0 opacity-0"}`}
         >
-          Enroll Today!
-        </Link>
-        <Link
-          href="/tour"
-          className="flex-1 flex items-center justify-center px-3 py-2.5 bg-indigo-500 text-white text-sm font-semibold rounded-2xl"
-        >
-          Schedule a Tour
-        </Link>
+          <Link
+            href="/apply"
+            className="flex-1 flex items-center justify-center px-4 py-2.5 bg-sage-600 text-white text-sm font-semibold rounded-2xl"
+          >
+            Enroll Today!
+          </Link>
+          <Link
+            href="/tour"
+            className="flex-1 flex items-center justify-center px-3 py-2.5 bg-indigo-500 text-white text-sm font-semibold rounded-2xl"
+          >
+            Schedule a Tour
+          </Link>
+        </div>
       </div>
 
       {/* Mobile Menu */}

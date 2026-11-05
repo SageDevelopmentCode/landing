@@ -16,12 +16,12 @@ const slides = [
     buttonAction: "waitlist" as const,
   },
   {
-    image: "/assets/highlights/school_week_ten/E9C8665F-3A5D-4D42-BBEE-A304AE89650C 2.JPG",
-    title: "School Year Week 10 Highlights Are Live!",
+    image: "/assets/highlights/school_week_eleven/2D1BA87C-3BA1-4596-857A-D62FFFD3AEF6.JPG",
+    title: "School Year Week 11 Highlights Are Live!",
     description:
-      "Ramps and speed, American symbols, unlike fractions, heart-rate science, butternut squash soup, and Fairytale Kingdom Field Friday.",
-    buttonLabel: "View Week 10 Recap →",
-    buttonHref: "/highlights/school-year/week-10",
+      "F1 speed recap, juice-pop entrepreneurship, October unit wrap-ups, fraction fluency, mini apple pies, and Halloween Field Friday.",
+    buttonLabel: "View Week 11 Recap →",
+    buttonHref: "/highlights/school-year/week-11",
   },
   {
     image: "/assets/Stock4.jpg",

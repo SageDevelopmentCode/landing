@@ -191,7 +191,7 @@ Agent actions:
 
 - SQL queries + HTML skeleton: [reference.md](reference.md)
 - Welcome Message markdown from class updates: [school-year-newsletter-welcome-message](../school-year-newsletter-welcome-message/SKILL.md)
-- Social carousel slides (heading + body): [newsletter-carousel-highlights](../newsletter-carousel-highlights/SKILL.md)
+- Social carousel slides (heading + caption): [newsletter-carousel-highlights](../newsletter-carousel-highlights/SKILL.md)
 - Highlights page + WeekRecapPreview: [newsletter-highlights-page](../newsletter-highlights-page/SKILL.md)
 - Canonical email: `app/lib/zoho.ts` → `buildSchoolYearWeekOneNewsletterEmail`
 - Newsletter schema: `supabase/migrations/20260801012118_remote_schema.sql` (`newsletters` schema)
