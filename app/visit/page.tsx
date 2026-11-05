@@ -171,19 +171,20 @@ export default function VisitPage() {
   const rafRef = useRef<number | null>(null);
   const isPausedRef = useRef(false);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const galleryScrollPosRef = useRef(0);
 
   useEffect(() => {
     const el = galleryRef.current;
     if (!el) return;
     el.scrollLeft = 0;
+    galleryScrollPosRef.current = 0;
 
-    let pos = el.scrollLeft;
     const tick = () => {
       if (!isPausedRef.current && el) {
-        pos += 0.5;
-        el.scrollLeft = Math.round(pos);
+        galleryScrollPosRef.current += 0.5;
+        el.scrollLeft = Math.round(galleryScrollPosRef.current);
         if (el.scrollLeft >= el.scrollWidth / 2) {
-          pos = 0;
+          galleryScrollPosRef.current = 0;
           el.scrollLeft = 0;
         }
       }
@@ -204,6 +205,10 @@ export default function VisitPage() {
   const handleGalleryInteractionEnd = () => {
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
     resumeTimerRef.current = setTimeout(() => {
+      const gallery = galleryRef.current;
+      if (gallery) {
+        galleryScrollPosRef.current = gallery.scrollLeft;
+      }
       isPausedRef.current = false;
     }, 2500);
   };
