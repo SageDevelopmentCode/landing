@@ -22,6 +22,13 @@ export type SchoolYearFieldFridaySignup = {
   fridayPageRegistrationId: string | null;
   phone: string | null;
   referralSource: string | null;
+  childAge: number | null;
+  emergencyName: string | null;
+  emergencyPhone: string | null;
+  consentOutdoor: boolean | null;
+  consentPhoto: boolean | null;
+  signatureName: string | null;
+  notes: string | null;
 };
 
 function metaString(
@@ -185,6 +192,13 @@ async function loadPortalSignups(
       fridayPageRegistrationId: null,
       phone: null,
       referralSource: null,
+      childAge: null,
+      emergencyName: null,
+      emergencyPhone: null,
+      consentOutdoor: null,
+      consentPhoto: null,
+      signatureName: null,
+      notes: null,
     });
   }
 
@@ -200,7 +214,7 @@ async function loadFridayPageSignups(
     .schema("marketing")
     .from("beach_bash_registrations")
     .select(
-      "id, parent_name, email, phone, children, child_count, payment_status, referral_source, created_at, updated_at",
+      "id, parent_name, email, phone, children, child_count, payment_status, referral_source, emergency_name, emergency_phone, consent_outdoor, consent_photo, signature_name, notes, created_at, updated_at",
     )
     .eq("source", "friday_page")
     .order("created_at", { ascending: false });
@@ -239,6 +253,13 @@ async function loadFridayPageSignups(
         fridayPageRegistrationId: row.id as string,
         phone: (row.phone as string | null) ?? null,
         referralSource: (row.referral_source as string | null) ?? null,
+        childAge: typeof child.age === "number" ? child.age : null,
+        emergencyName: (row.emergency_name as string | null) ?? null,
+        emergencyPhone: (row.emergency_phone as string | null) ?? null,
+        consentOutdoor: row.consent_outdoor as boolean,
+        consentPhoto: row.consent_photo as boolean,
+        signatureName: (row.signature_name as string | null) ?? null,
+        notes: (row.notes as string | null) ?? null,
       });
     });
   }
@@ -291,6 +312,13 @@ function mergePortalAndFridayPageSignups(
       referralSource:
         existing.referralSource ?? fridayRow.referralSource,
       program: existing.program ?? fridayRow.program,
+      childAge: existing.childAge ?? fridayRow.childAge,
+      emergencyName: existing.emergencyName ?? fridayRow.emergencyName,
+      emergencyPhone: existing.emergencyPhone ?? fridayRow.emergencyPhone,
+      consentOutdoor: existing.consentOutdoor ?? fridayRow.consentOutdoor,
+      consentPhoto: existing.consentPhoto ?? fridayRow.consentPhoto,
+      signatureName: existing.signatureName ?? fridayRow.signatureName,
+      notes: existing.notes ?? fridayRow.notes,
     });
   }
 

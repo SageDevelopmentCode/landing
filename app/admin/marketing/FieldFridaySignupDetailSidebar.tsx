@@ -27,6 +27,15 @@ function formatFridayDate(dateStr: string) {
   })
 }
 
+function formatEmergencyContact(
+  name: string | null | undefined,
+  phone: string | null | undefined,
+): string {
+  if (!name && !phone) return '—'
+  if (name && phone) return `${name} · ${phone}`
+  return name ?? phone ?? '—'
+}
+
 const REFERRAL_LABELS: Record<string, string> = {
   google: 'Google',
   social_media: 'Social Media',
@@ -134,6 +143,45 @@ export function FieldFridaySignupDetailSidebar({
             value={formatDate(signup.lastPaymentAt)}
           />
         </SidebarSection>
+
+        {signup.fridayPageRegistrationId != null && (
+          <SidebarSection title="Registration responses">
+            <SidebarField
+              label="Child Age"
+              value={
+                signup.childAge != null ? String(signup.childAge) : '—'
+              }
+            />
+            <SidebarField
+              label="Emergency Contact"
+              value={formatEmergencyContact(
+                signup.emergencyName,
+                signup.emergencyPhone,
+              )}
+            />
+            <SidebarField
+              label="Outdoor Activity Consent"
+              value={
+                signup.consentOutdoor
+                  ? '✅ Given'
+                  : '❌ Not given'
+              }
+            />
+            <SidebarField
+              label="Photo / Social Media Consent"
+              value={
+                signup.consentPhoto
+                  ? '✅ Authorized'
+                  : '❌ Not authorized'
+              }
+            />
+            <SidebarField
+              label="Signature"
+              value={signup.signatureName ?? '—'}
+            />
+            <SidebarField label="Notes" value={signup.notes ?? '—'} />
+          </SidebarSection>
+        )}
 
         <SidebarSection title="Outreach">
           <div className="flex items-center gap-3 flex-wrap">

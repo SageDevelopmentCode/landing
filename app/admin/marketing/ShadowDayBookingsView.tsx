@@ -45,6 +45,54 @@ function formatCreatedAt(iso: string): string {
   })
 }
 
+function formatEmergencyContact(
+  name: string | null | undefined,
+  phone: string | null | undefined,
+): string {
+  if (!name && !phone) return '—'
+  if (name && phone) return `${name} · ${phone}`
+  return name ?? phone ?? '—'
+}
+
+function bookingDetailFields(selected: ShadowDayBooking): { label: string; value: string }[] {
+  return [
+    { label: 'Shadow Date', value: formatShadowDate(selected.shadow_date) },
+    { label: 'Email', value: selected.email },
+    { label: 'Phone', value: selected.phone ?? '—' },
+    { label: 'Child Name', value: selected.child_name },
+    { label: 'Child Grade', value: selected.child_grade ?? '—' },
+    {
+      label: 'Child Age',
+      value: selected.child_age != null ? String(selected.child_age) : '—',
+    },
+    {
+      label: 'Emergency Contact',
+      value: formatEmergencyContact(selected.emergency_name, selected.emergency_phone),
+    },
+    {
+      label: 'Outdoor Activity Consent',
+      value: selected.consent_outdoor ? '✅ Given' : '❌ Not given',
+    },
+    {
+      label: 'Photo / Social Media Consent',
+      value: selected.consent_photo ? '✅ Authorized' : '❌ Not authorized',
+    },
+    {
+      label: 'Interested in Enrollment',
+      value: selected.interested_in_enrollment ? '✅ Yes' : 'No',
+    },
+    { label: 'Signature', value: selected.signature_name ?? '—' },
+    {
+      label: 'Referral Source',
+      value: selected.referral_source
+        ? (REFERRAL_LABELS[selected.referral_source] ?? selected.referral_source)
+        : '—',
+    },
+    { label: 'Notes', value: selected.notes ?? '—' },
+    { label: 'Booked At', value: formatCreatedAt(selected.created_at) },
+  ]
+}
+
 export function ShadowDayBookingsView({ bookings }: { bookings: ShadowDayBooking[] }) {
   const [selected, setSelected] = useState<ShadowDayBooking | null>(null)
   const [thankYouSending, setThankYouSending] = useState(false)
@@ -254,16 +302,7 @@ export function ShadowDayBookingsView({ bookings }: { bookings: ShadowDayBooking
                 </span>
               </div>
 
-              {[
-                { label: 'Shadow Date', value: formatShadowDate(selected.shadow_date) },
-                { label: 'Email', value: selected.email },
-                { label: 'Phone', value: selected.phone ?? '—' },
-                { label: 'Child Name', value: selected.child_name },
-                { label: 'Child Grade', value: selected.child_grade ?? '—' },
-                { label: 'Referral Source', value: selected.referral_source ? (REFERRAL_LABELS[selected.referral_source] ?? selected.referral_source) : '—' },
-                { label: 'Notes', value: selected.notes ?? '—' },
-                { label: 'Booked At', value: formatCreatedAt(selected.created_at) },
-              ].map(({ label, value }) => (
+              {bookingDetailFields(selected).map(({ label, value }) => (
                 <div key={label} style={{ borderBottom: `1px solid ${colors.divider}`, paddingBottom: '14px', marginBottom: '14px' }}>
                   <p style={{ fontSize: '11px', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>
                     {label}

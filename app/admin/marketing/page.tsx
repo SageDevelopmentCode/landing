@@ -61,9 +61,17 @@ export type ShadowDayBooking = {
   phone: string | null
   child_name: string
   child_grade: string | null
+  child_age: number | null
+  emergency_name: string | null
+  emergency_phone: string | null
+  consent_outdoor: boolean
+  consent_photo: boolean
+  interested_in_enrollment: boolean
+  signature_name: string | null
   referral_source: string | null
   notes: string | null
   payment_status: 'pending' | 'paid'
+  source: string | null
   created_at: string
   updated_at: string
 }

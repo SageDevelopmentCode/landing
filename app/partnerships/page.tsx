@@ -8,75 +8,76 @@ import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import ContactUsSection from "../components/ContactUsSection";
 import { ExternalLink } from "lucide-react";
+import { ENCLAVE_HREF, PARTNERS } from "@/app/lib/partnerships-data";
 
-const PARTNERS = [
-  {
-    name: "Ally Medical ER",
-    logo: "/assets/AllyLogo.jpg",
-    href: "https://www.allymedical.com/locations/round-rock-emergency-room/",
-    fbEmbed:
-      "https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fsagefield.co%2Fposts%2Fpfbid0kU7sghZ3iWpHtxsbvcvP2ZMBwmWrkdSQ3nx1GfM4T3mwiwpvuCGzX7nrdJaxEwx2l&show_text=true&width=500",
-    fbHeight: 776,
-    pullQuote:
-      'Sending your children to an outdoor-focused school where they are encouraged to try "dangerous things safely" — climbing trees, testing their balance, building confidence, and racing down slip n\' slides — comes with a big responsibility: keeping them safe while they explore.',
-    body: (
-      <>
-        We&apos;re so grateful to have a partnership with{" "}
+const PARTNER_BODIES: Record<string, React.ReactNode> = {
+  "The Enclave at Round Rock Senior Living": (
+    <>
+      <p className="mb-4">
+        We&apos;re partnering with{" "}
         <a
-          href="https://www.allymedical.com/locations/round-rock-emergency-room/"
+          href={ENCLAVE_HREF}
           target="_blank"
           rel="noopener noreferrer"
           className="font-bold text-primary hover:underline"
         >
-          Ally Medical ER Round Rock
+          The Enclave at Round Rock Senior Living
         </a>
-        , just 6 minutes from our school, who generously gifted us two fully
-        stocked first aid kits and additional supplies to help keep our students
-        prepared, protected, and cared for. It truly takes a village, and
-        we&apos;re thankful to have community partners who support adventurous
-        childhoods as much as we do. 🌿🩹💚
-      </>
-    ),
-    ctaLabel: "Visit Ally Medical ER",
-  },
-  {
-    name: "VELA Education Fund",
-    logo: "/assets/VelaLogo.png",
-    href: "https://vela.org/",
-    fbEmbed:
-      "https://www.facebook.com/plugins/post.php?href=https%3A%2F%2Fwww.facebook.com%2Fsagefield.co%2Fposts%2Fpfbid06oUp4XqQcFjcEgoWoxaUXczcRnxdtpFDNHAd5C1g3Ehnx9eHEpPgCMRa4RQXWpu3l&show_text=true&width=500",
-    fbHeight: 737,
-    pullQuote:
-      "Proud to be part of the VELA Founder Network — a national community of education entrepreneurs building small, human-centered learning environments outside the traditional school system.",
-    body: (
-      <>
-        <p className="mb-4">
-          Sage Field is a VELA Microgrant Recipient and part of the VELA
-          Founder Network, a national community of founders building small,
-          human-centered learning environments outside the traditional school
-          system.
-        </p>
-        <p>
-          <a
-            href="https://vela.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold text-primary hover:underline"
-          >
-            VELA Education Fund
-          </a>{" "}
-          is a national nonprofit that invests in &ldquo;indie&rdquo; education
-          models — microschools, homeschool co&#8209;ops, after&#8209;school
-          programs, and more — through flexible grants, technology, and a
-          growing network of peers. Their support helps us expand our
-          outdoor-based, small-group programs and reach more families who are
-          looking for a different kind of school experience.
-        </p>
-      </>
-    ),
-    ctaLabel: "Visit VELA Education Fund",
-  },
-];
+        , operated by Spectrum Retirement Communities, to connect our students
+        with residents through shared activities and conversation across
+        generations — from sewing days and creative making to time together on
+        campus.
+      </p>
+      <p>
+        For us, community isn&apos;t just a topic. It&apos;s something we want
+        our students to participate in. 🌱
+      </p>
+    </>
+  ),
+  "Ally Medical ER": (
+    <>
+      We&apos;re so grateful to have a partnership with{" "}
+      <a
+        href="https://www.allymedical.com/locations/round-rock-emergency-room/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-bold text-primary hover:underline"
+      >
+        Ally Medical ER Round Rock
+      </a>
+      , just 6 minutes from our school, who generously gifted us two fully
+      stocked first aid kits and additional supplies to help keep our students
+      prepared, protected, and cared for. It truly takes a village, and
+      we&apos;re thankful to have community partners who support adventurous
+      childhoods as much as we do. 🌿🩹💚
+    </>
+  ),
+  "VELA Education Fund": (
+    <>
+      <p className="mb-4">
+        Sage Field is a VELA Microgrant Recipient and part of the VELA Founder
+        Network, a national community of founders building small, human-centered
+        learning environments outside the traditional school system.
+      </p>
+      <p>
+        <a
+          href="https://vela.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-primary hover:underline"
+        >
+          VELA Education Fund
+        </a>{" "}
+        is a national nonprofit that invests in &ldquo;indie&rdquo; education
+        models — microschools, homeschool co&#8209;ops, after&#8209;school
+        programs, and more — through flexible grants, technology, and a growing
+        network of peers. Their support helps us expand our outdoor-based,
+        small-group programs and reach more families who are looking for a
+        different kind of school experience.
+      </p>
+    </>
+  ),
+};
 
 export default function PartnershipsPage() {
   return (
@@ -135,7 +136,8 @@ export default function PartnershipsPage() {
               >
                 {/* Facebook post embed */}
                 <div
-                  className={`min-h-[${partner.fbHeight}px] w-full overflow-hidden flex items-center justify-center bg-gray-50 ${reversed ? "lg:order-2" : "lg:order-1"}`}
+                  className={`w-full overflow-hidden flex items-center justify-center bg-gray-50 ${reversed ? "lg:order-2" : "lg:order-1"}`}
+                  style={{ minHeight: partner.fbHeight }}
                 >
                   <iframe
                     src={partner.fbEmbed}
@@ -154,12 +156,17 @@ export default function PartnershipsPage() {
                   className={`p-8 sm:p-10 flex flex-col justify-center ${reversed ? "lg:order-1" : "lg:order-2"}`}
                 >
                   {/* Logo */}
-                  <div className="relative h-14 w-44 mb-6">
+                  <div
+                    className={
+                      partner.logoClassName ?? "relative h-14 w-44 mb-6"
+                    }
+                  >
                     <Image
                       src={partner.logo}
                       alt={`${partner.name} logo`}
                       fill
                       className="object-contain object-left"
+                      unoptimized={partner.logo.endsWith(".svg")}
                     />
                   </div>
 
@@ -174,14 +181,18 @@ export default function PartnershipsPage() {
                     initial={{ opacity: 0, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
+                    transition={{
+                      duration: 0.5,
+                      delay: 0.15,
+                      ease: "easeOut",
+                    }}
                   >
                     &ldquo;{partner.pullQuote}&rdquo;
                   </motion.blockquote>
 
                   {/* Body */}
                   <div className="text-gray-600 font-body text-sm md:text-base leading-relaxed mb-8">
-                    {partner.body}
+                    {PARTNER_BODIES[partner.name]}
                   </div>
 
                   {/* CTA */}

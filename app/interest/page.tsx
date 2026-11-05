@@ -14,9 +14,11 @@ const ContactDialog = dynamic(() => import("../components/ContactDialog"), {
 });
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
+import PartnershipsPreviewSection from "../components/PartnershipsPreviewSection";
 import WeeklySchedule from "../components/WeeklySchedule";
 import FAQAccordion from "../components/FAQAccordion";
 import WeekRecapPreview from "../components/WeekRecapPreview";
+import { SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
 
 type Tab = "school-year" | "homeschool";
 
@@ -94,21 +96,7 @@ const tabContent = {
       { label: "Schedule", value: "Up to 4 days/week" },
       { label: "Term", value: "6-month commitment" },
     ],
-    images: [
-      "/assets/Stock1.jpg",
-      "/assets/Kid1.png",
-      "/assets/Kid2.jpg",
-      // "/assets/Stock2.jpg",
-      "/assets/Stock3.jpg",
-      "/assets/Stock4.jpg",
-      "/assets/Stock5.jpg",
-      "/assets/Stock6.jpg",
-      "/assets/Stock7.jpg",
-      "/assets/Stock8.jpg",
-      "/assets/Stock9.jpg",
-      "/assets/Stock10.jpg",
-      "/assets/Stock11.jpg",
-    ],
+    images: SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES,
   },
   homeschool: {
     badge: "Homeschool Drop-In",
@@ -123,21 +111,7 @@ const tabContent = {
       { label: "Fridays", value: "Field Days" },
       { label: "Class Size", value: "~10 Kids" },
     ],
-    images: [
-      "/assets/Stock1.jpg",
-      "/assets/Kid1.png",
-      "/assets/Kid2.jpg",
-      // "/assets/Stock2.jpg",
-      "/assets/Stock3.jpg",
-      "/assets/Stock4.jpg",
-      "/assets/Stock5.jpg",
-      "/assets/Stock6.jpg",
-      "/assets/Stock7.jpg",
-      "/assets/Stock8.jpg",
-      "/assets/Stock9.jpg",
-      "/assets/Stock10.jpg",
-      "/assets/Stock11.jpg",
-    ],
+    images: SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES,
   },
 };
 
@@ -327,7 +301,7 @@ function InterestPageContent() {
               >
                 <Image
                   src={src}
-                  alt="Program photo"
+                  alt="Sage Field school week 11"
                   fill
                   className="object-cover"
                   sizes="88vw"
@@ -433,7 +407,7 @@ function InterestPageContent() {
                       >
                         <Image
                           src={src}
-                          alt="Program photo"
+                          alt="Sage Field school week 11"
                           fill
                           className="object-cover hover:scale-[1.02] transition-transform duration-500"
                           sizes="(max-width: 1024px) 50vw, 33vw"
@@ -452,11 +426,6 @@ function InterestPageContent() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: "easeOut" as const }}
                   >
-                    {/* Badge */}
-                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
-                      How We Learn
-                    </span>
-
                     {/* Heading */}
                     <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
                       How We Learn
@@ -588,9 +557,6 @@ function InterestPageContent() {
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, ease: "easeOut" as const }}
                   >
-                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
-                      What We Offer
-                    </span>
                     <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
                       What We Offer
                     </h2>
@@ -628,9 +594,12 @@ function InterestPageContent() {
                   <div className="-mx-8 sm:-mx-12 lg:-mx-16 mb-10">
                     <MeetTheTeamSection
                       featured={false}
+                      showBadge={false}
                     />
                   </div>
                 )}
+
+                {activeTab === "school-year" && <PartnershipsPreviewSection />}
 
                 {/* Homeschool-specific content */}
                 {activeTab === "homeschool" && (
@@ -642,9 +611,6 @@ function InterestPageContent() {
                     transition={{ duration: 0.6, ease: "easeOut" as const }}
                   >
                     {/* Flexible Scheduling */}
-                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
-                      Flexible Scheduling
-                    </span>
                     <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
                       Choose Your Schedule
                     </h2>
@@ -682,9 +648,6 @@ function InterestPageContent() {
 
                     {/* Friday Field Days */}
                     <div className="text-center mb-14">
-                      <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
-                        Every Friday
-                      </span>
                       <h2 className="text-3xl md:text-4xl font-bold text-gray-800 font-heading mb-4">
                         <span className="text-primary">Field Day</span> Fridays
                       </h2>
@@ -714,9 +677,6 @@ function InterestPageContent() {
                     </div>
 
                     {/* Why Microschool Pillars */}
-                    <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-6">
-                      Why Sage Field?
-                    </span>
                     <h2 className="text-2xl md:text-3xl font-bold text-black font-heading mb-3">
                       Why Microschool for Homeschoolers?
                     </h2>
@@ -759,8 +719,10 @@ function InterestPageContent() {
 
                     {/* Meet the Team */}
                     <div className="-mx-8 sm:-mx-12 lg:-mx-16">
-                      <MeetTheTeamSection featured={false} />
+                      <MeetTheTeamSection featured={false} showBadge={false} />
                     </div>
+
+                    <PartnershipsPreviewSection />
                   </motion.div>
                 )}
 
@@ -807,11 +769,6 @@ function InterestPageContent() {
       {/* FAQ Section */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">
         <div className="max-w-4xl mx-auto">
-          <div className="flex justify-center mb-8">
-            <span className="inline-block px-6 py-2 bg-badge-bg text-black text-sm font-semibold rounded-full">
-              FAQ
-            </span>
-          </div>
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 font-heading text-gray-800">
             Frequently Asked Questions
           </h2>
@@ -854,9 +811,6 @@ function InterestPageContent() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: "easeOut" as const }}
           >
-            <span className="inline-block px-5 py-1.5 bg-badge-bg text-black text-sm font-semibold rounded-full mb-4">
-              Questions?
-            </span>
             <h2 className="text-2xl font-bold text-gray-800 font-heading mb-2">
               Have any questions?
             </h2>

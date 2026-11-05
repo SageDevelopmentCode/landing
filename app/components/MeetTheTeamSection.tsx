@@ -55,9 +55,11 @@ const TEAM_MEMBERS = [
 export default function MeetTheTeamSection({
   featured = true,
   exclude = [],
+  showBadge = true,
 }: {
   featured?: boolean;
   exclude?: string[];
+  showBadge?: boolean;
 }) {
   const [selectedMember, setSelectedMember] = useState<
     (typeof TEAM_MEMBERS)[0] | null
@@ -70,20 +72,21 @@ export default function MeetTheTeamSection({
   return (
     <section className="bg-welcome-bg py-16 px-8 sm:px-12 lg:px-16 min-h-[80vh] flex items-center">
       <div className="max-w-7xl mx-auto w-full">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
-          className="inline-block mb-8"
-        >
-          <div className="bg-badge-bg px-6 py-2 rounded-full">
-            <span className="text-sm font-semibold text-text-gray font-body">
-              The Team
-            </span>
-          </div>
-        </motion.div>
+        {showBadge && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" as const }}
+            className="inline-block mb-8"
+          >
+            <div className="bg-badge-bg px-6 py-2 rounded-full">
+              <span className="text-sm font-semibold text-text-gray font-body">
+                The Team
+              </span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Title */}
         <motion.h2
