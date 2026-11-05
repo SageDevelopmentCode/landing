@@ -1371,14 +1371,11 @@ export async function buildWaitlistConfirmationEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   const firstName = opts.parentName.split(" ")[0] || opts.parentName;
 
-  const emailProgramKey =
-    opts.programInterest === "homeschool_drop_in"
-      ? "homeschool_drop_in"
-      : "school-year-2026";
-
   const programLabels: Record<string, string> = {
     "school-year-2026": "School Year 2026–2027",
     homeschool_drop_in: "Homeschool Drop-In",
+    "summer-2027": "Summer 2027",
+    "school-year-2027-2028": "School Year 2027–2028",
   };
 
   const programDetails: Record<string, string> = {
@@ -1386,9 +1383,15 @@ export async function buildWaitlistConfirmationEmail(opts: {
       "Starts Aug 17, 2026 &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; 6-month commitment",
     homeschool_drop_in:
       "1–3 Days/Week &nbsp;·&nbsp; Ages 4–11 &nbsp;·&nbsp; Fridays are Field Days &nbsp;·&nbsp; Group of ~10",
+    "summer-2027":
+      "Ages 4–11 &nbsp;·&nbsp; Mon–Thu &nbsp;·&nbsp; Small-group outdoor summer program",
+    "school-year-2027-2028":
+      "Ages 4–11 &nbsp;·&nbsp; Up to 4 days/week &nbsp;·&nbsp; Full-year microschool experience",
   };
 
-  const selectedLabel = programLabels[emailProgramKey];
+  const emailProgramKey = opts.programInterest;
+  const selectedLabel =
+    programLabels[emailProgramKey] || opts.programInterest;
   const selectedDetails = programDetails[emailProgramKey] || "";
 
   const subject = "We received your interest form — Sage Field School";

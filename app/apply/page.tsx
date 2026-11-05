@@ -299,7 +299,9 @@ export default function ApplyPage() {
         childAge: parseInt(inlineFormData.childAge),
         programInterest: inlineFormData.programInterest as
           | "school-year-2026"
-          | "homeschool_drop_in",
+          | "homeschool_drop_in"
+          | "summer-2027"
+          | "school-year-2027-2028",
         specialInterests: inlineFormData.specialInterests || undefined,
       });
       if (result.success) {
@@ -993,7 +995,11 @@ export default function ApplyPage() {
                           School Year 2026-2027
                         </option>
                         <option value="homeschool_drop_in">
-                          Homeschool Drop-In
+                          Homeschool Drop-in
+                        </option>
+                        <option value="summer-2027">Summer 2027</option>
+                        <option value="school-year-2027-2028">
+                          School Year 2027-2028
                         </option>
                       </select>
                     </div>
