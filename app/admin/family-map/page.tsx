@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import {
   geocodeAddressesWithCache,
+  getGoogleMapsApiKey,
   haversineDistanceMiles,
   NEW_CAMPUS_LOCATION,
   SCHOOL_LOCATION,
@@ -130,6 +131,8 @@ export default async function FamilyMapPage() {
     (a, b) => a.driveMinutesToNewCampus - b.driveMinutesToNewCampus,
   );
 
+  const usesTrafficDriveTimes = getGoogleMapsApiKey() != null;
+
   return (
     <div className="space-y-4 pt-6 h-[calc(100vh-2rem)] flex flex-col">
       <div>
@@ -140,13 +143,17 @@ export default async function FamilyMapPage() {
           Family Map
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--admin-text-tertiary)" }}>
-          School-year enrolled families with supply fee paid · drive time (OSRM)
+          School-year enrolled families with supply fee paid ·{" "}
+          {usesTrafficDriveTimes
+            ? "weekday 7:45 AM drive time (Google traffic)"
+            : "drive time (OSRM, no traffic)"}{" "}
           to future campus {NEW_CAMPUS_LOCATION.address} · current{" "}
           {SCHOOL_LOCATION.address}
         </p>
       </div>
 
       <FamilyMapClient
+        usesTrafficDriveTimes={usesTrafficDriveTimes}
         currentCampus={SCHOOL_LOCATION}
         newCampus={NEW_CAMPUS_LOCATION}
         mappedFamilies={mapped}

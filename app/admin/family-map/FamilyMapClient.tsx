@@ -26,6 +26,7 @@ const FamilyMapView = dynamic(
 );
 
 type FamilyMapClientProps = {
+  usesTrafficDriveTimes: boolean;
   currentCampus: SchoolLocation;
   newCampus: SchoolLocation;
   mappedFamilies: MappedFamilyPin[];
@@ -38,6 +39,7 @@ function formatDriveMinutes(minutes: number): string {
 }
 
 export function FamilyMapClient({
+  usesTrafficDriveTimes,
   currentCampus,
   newCampus,
   mappedFamilies,
@@ -113,6 +115,15 @@ export function FamilyMapClient({
                         est.
                       </span>
                     )}
+                    {usesTrafficDriveTimes &&
+                      family.driveTimeQuality === "osrm" && (
+                        <span
+                          className="block text-[10px]"
+                          style={{ color: colors.textTertiary }}
+                        >
+                          no traffic
+                        </span>
+                      )}
                     {family.geocodeQuality === "approximate" && (
                       <span
                         className="block text-[10px]"
@@ -198,10 +209,14 @@ export function FamilyMapClient({
           Future (Hutto)
           <span style={{ color: colors.textTertiary }}>·</span>
           <MapPin className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
-          Families · drive time (OSRM)
+          Families ·{" "}
+          {usesTrafficDriveTimes
+            ? "weekday 7:45 AM drive (traffic)"
+            : "drive time (OSRM, no traffic)"}
         </div>
 
         <FamilyMapView
+          usesTrafficDriveTimes={usesTrafficDriveTimes}
           currentCampus={currentCampus}
           newCampus={newCampus}
           mappedFamilies={mappedFamilies}

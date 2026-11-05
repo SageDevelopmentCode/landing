@@ -14,7 +14,7 @@ export type MappedFamilyPin = {
   newCampusDistanceMiles: number;
   driveMinutesToCurrentCampus: number;
   driveMinutesToNewCampus: number;
-  driveTimeQuality: "osrm" | "estimated";
+  driveTimeQuality: "traffic" | "osrm" | "estimated";
   geocodeQuality: "exact" | "approximate";
 };
 
