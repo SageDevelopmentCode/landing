@@ -5,17 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import {
-  ArrowDown,
-  ArrowRight,
-  Calendar,
-  ChevronDown,
-  Clock,
-  MapPin,
-  Sparkles,
-  Sun,
-  Users,
-} from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import FloatingSMSButton from "@/app/components/FloatingSMSButton";
@@ -25,16 +15,9 @@ import MeetTheTeamSection from "@/app/components/MeetTheTeamSection";
 import FAQAccordion from "@/app/components/FAQAccordion";
 import { SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
 
-const ContactDialog = dynamic(
-  () => import("@/app/components/ContactDialog"),
-  { ssr: false },
-);
-
-const GALLERY_IMAGES = [
-  "/assets/Stock3.jpg",
-  "/assets/Kid1.png",
-  ...SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES.slice(0, 8),
-];
+const ContactDialog = dynamic(() => import("@/app/components/ContactDialog"), {
+  ssr: false,
+});
 
 const BENTO_IMAGES = [
   "/assets/Stock3.jpg",
@@ -47,7 +30,7 @@ const VISIT_FAQS = [
   {
     question: "Can we do both a tour and a shadow day?",
     answer:
-      "Absolutely — and many families do. A campus tour is a great first step to see the space and meet Ms. Sabrina. A shadow day goes deeper: your child spends a full school day in class. There is no required order; choose what fits your timeline.",
+      "Absolutely — and many families do. A campus tour is a great first step to see the space. A shadow day goes deeper: your child spends a full school day in class. There is no required order; choose what fits your timeline.",
   },
   {
     question: "What ages do you serve for visits?",
@@ -225,18 +208,11 @@ export default function VisitPage() {
     }, 2500);
   };
 
-  const scrollToChoose = () => {
-    document.getElementById("choose-path")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
   return (
     <div className="min-h-screen bg-welcome-bg">
       <Navbar darkStyle />
 
-      {/* Mobile gallery strip */}
+      {/* Mobile hero gallery */}
       <div className="sm:hidden pt-20">
         <div
           ref={galleryRef}
@@ -246,14 +222,17 @@ export default function VisitPage() {
           onMouseDown={handleGalleryInteractionStart}
           onMouseUp={handleGalleryInteractionEnd}
         >
-          {[...GALLERY_IMAGES, ...GALLERY_IMAGES].map((src, i) => (
+          {[
+            ...SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES,
+            ...SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES,
+          ].map((src, i) => (
             <div
               key={`${src}-${i}`}
               className="relative w-[88%] flex-shrink-0 aspect-square overflow-hidden"
             >
               <Image
                 src={src}
-                alt="Sage Field students learning outdoors"
+                alt="Sage Field school week 11"
                 fill
                 className="object-cover"
                 sizes="88vw"
@@ -264,96 +243,10 @@ export default function VisitPage() {
         </div>
       </div>
 
-      {/* Hero */}
-      <section className="relative pt-8 sm:pt-28 pb-12 sm:pb-16 px-6 sm:px-12 lg:px-16 bg-welcome-bg overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-12 -left-12 w-72 h-72 bg-sage-100/60 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center relative">
-          <div className="text-center lg:text-left">
-            <motion.span
-              className="inline-block px-5 py-2 bg-badge-bg border border-primary/20 text-black text-sm font-semibold rounded-full mb-5 font-body"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45 }}
-            >
-              Visit Sage Field
-            </motion.span>
-
-            <motion.h1
-              className="text-4xl md:text-5xl lg:text-6xl font-bold font-heading text-gray-800 leading-tight mb-5"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.45, delay: 0.08 }}
-            >
-              We&apos;d Love to Show You Around
-            </motion.h1>
-
-            <motion.p
-              className="text-lg text-gray-600 font-body leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.45, delay: 0.16 }}
-            >
-              Sage Field is an outdoor-focused microschool in Round Rock. Come
-              walk our campus with Ms. Sabrina — or let your child live a real
-              school day alongside classmates. Two paths, same warm welcome.
-            </motion.p>
-
-            <motion.button
-              type="button"
-              onClick={scrollToChoose}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.24 }}
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white font-semibold font-body px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
-            >
-              Choose Your Visit
-              <ArrowDown className="w-4 h-4" />
-            </motion.button>
-          </div>
-
-          <motion.div
-            className="relative hidden sm:block w-full h-[380px] lg:h-[520px] rounded-3xl overflow-hidden shadow-2xl"
-            initial={{ opacity: 0, x: 24, scale: 0.97 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.55, delay: 0.15 }}
-          >
-            <Image
-              src="/assets/Stock3.jpg"
-              alt="Children learning outdoors at Sage Field"
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 1024px) 90vw, 50vw"
-            />
-            <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
-            <div className="absolute bottom-5 left-5 bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-                <Image
-                  src="/assets/team/sabrina.jpg"
-                  alt="Ms. Sabrina"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-gray-800 font-body">
-                  Ms. Sabrina
-                </p>
-                <p className="text-[10px] text-gray-500 font-body">
-                  Lead Teacher & Director
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Path cards */}
       <section
         id="choose-path"
-        className="py-16 sm:py-20 px-6 sm:px-12 lg:px-16 scroll-mt-24 bg-gradient-to-b from-welcome-bg to-white"
+        className="pt-8 sm:pt-40 lg:pt-44 pb-16 sm:pb-20 px-6 sm:px-12 lg:px-16 scroll-mt-24 sm:scroll-mt-40 bg-gradient-to-b from-welcome-bg to-white"
       >
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -363,12 +256,12 @@ export default function VisitPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.45 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
+            <h1 className="text-3xl md:text-4xl font-bold font-heading text-gray-800 mb-3">
               How Would You Like to Visit?
-            </h2>
+            </h1>
             <p className="text-base text-gray-500 font-body max-w-xl mx-auto">
-              Pick the experience that fits where you are in your search. You can
-              always come back for the other.
+              Pick the experience that fits where you are in your search. You
+              can always come back for the other.
             </p>
           </motion.div>
 
@@ -392,9 +285,6 @@ export default function VisitPage() {
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                  <span className="absolute top-4 left-4 bg-white/95 text-sage-800 text-xs font-bold px-3 py-1.5 rounded-full font-body shadow-sm">
-                    Free · No pressure
-                  </span>
                 </div>
                 <div className="flex flex-col flex-1 p-6 sm:p-8">
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -405,27 +295,11 @@ export default function VisitPage() {
                       <ArrowRight className="w-5 h-5 text-sage-600 group-hover:text-white transition-colors" />
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 font-body leading-relaxed mb-6 flex-1">
-                    A private, ~45-minute walk through our outdoor campus. Meet
-                    Ms. Sabrina, see the learning spaces, and feel whether Sage
-                    Field feels like home.
+                  <p className="text-sm text-gray-600 font-body leading-relaxed flex-1">
+                    A private, ~45-minute walk through our outdoor campus. See
+                    the learning spaces, and feel whether Sage Field feels like
+                    home.
                   </p>
-                  <ul className="flex flex-wrap gap-2">
-                    {[
-                      { icon: Clock, text: "~45 min" },
-                      { icon: Users, text: "Whole family" },
-                      { icon: MapPin, text: "Outdoor campus" },
-                      { icon: Sparkles, text: "Meet educators" },
-                    ].map(({ icon: Icon, text }) => (
-                      <li
-                        key={text}
-                        className="flex items-center gap-1.5 bg-sage-50 border border-sage-100 rounded-full px-3 py-1.5 text-xs font-semibold text-gray-700 font-body"
-                      >
-                        <Icon className="w-3.5 h-3.5 text-sage-600" />
-                        {text}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </Link>
             </motion.div>
@@ -449,9 +323,6 @@ export default function VisitPage() {
                     sizes="(max-width: 768px) 100vw, 50vw"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-                  <span className="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-full font-body shadow-sm">
-                    Save $500
-                  </span>
                 </div>
                 <div className="flex flex-col flex-1 p-6 sm:p-8">
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -462,26 +333,10 @@ export default function VisitPage() {
                       <ArrowRight className="w-5 h-5 text-primary group-hover:text-white transition-colors" />
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 font-body leading-relaxed mb-6 flex-1">
+                  <p className="text-sm text-gray-600 font-body leading-relaxed flex-1">
                     Not a tour — an experience. Your child joins real lessons,
                     outdoor time, and lunch with classmates. Mon–Thu, full day.
                   </p>
-                  <ul className="flex flex-wrap gap-2">
-                    {[
-                      { icon: Sun, text: "9 AM – 3 PM" },
-                      { icon: Calendar, text: "Mon – Thu" },
-                      { icon: Users, text: "Ages 4–11" },
-                      { icon: Sparkles, text: "$20 per child" },
-                    ].map(({ icon: Icon, text }) => (
-                      <li
-                        key={text}
-                        className="flex items-center gap-1.5 bg-primary/5 border border-primary/15 rounded-full px-3 py-1.5 text-xs font-semibold text-gray-700 font-body"
-                      >
-                        <Icon className="w-3.5 h-3.5 text-primary" />
-                        {text}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </Link>
             </motion.div>
@@ -516,7 +371,9 @@ export default function VisitPage() {
               <div
                 key={row.label}
                 className={`grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-0 p-4 sm:p-5 ${
-                  i < COMPARISON_ROWS.length - 1 ? "border-b border-gray-100" : ""
+                  i < COMPARISON_ROWS.length - 1
+                    ? "border-b border-gray-100"
+                    : ""
                 }`}
               >
                 <p className="text-sm font-bold text-gray-800 font-body sm:col-span-1">
@@ -557,16 +414,17 @@ export default function VisitPage() {
               Small Classes. Big Outdoors. Real Community.
             </h2>
             <p className="text-base text-gray-600 font-body leading-relaxed mb-4">
-              Pictures only go so far. When you visit Sage Field, you see
-              mixed-age groups working together, children outside for science and
-              play, and educators who know every student by name — not a
-              polished showroom, but a living school day.
+              Sage Field is a working microschool—not a staged open house. On a
+              visit you&apos;ll see mixed-age groups in real lessons, kids
+              moving between garden and trail, and teachers who greet every
+              child by name. What you feel walking the campus matters more than
+              any photo gallery.
             </p>
             <p className="text-base text-gray-600 font-body leading-relaxed">
-              Whether you start with a tour or a shadow day, you&apos;ll leave
-              with a clearer sense of whether our rhythm, values, and community
-              fit your family. No sales pitch — just an honest look at how we
-              learn.
+              A campus tour is a relaxed first walk through our outdoor spaces.
+              A shadow day lets your child spend a full school day in class.
+              Both are no-pressure; we&apos;d rather you know the fit early than
+              enroll somewhere that isn&apos;t right.
             </p>
           </motion.div>
 
@@ -594,37 +452,6 @@ export default function VisitPage() {
               </div>
             ))}
           </motion.div>
-        </div>
-      </section>
-
-      {/* Trust strip */}
-      <section className="py-12 px-6 sm:px-12 lg:px-16 bg-white border-y border-sage-100">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 text-center sm:text-left">
-          <div className="flex items-center gap-4">
-            <div className="relative w-14 h-14 rounded-full overflow-hidden ring-2 ring-sage-200 flex-shrink-0">
-              <Image
-                src="/assets/team/sabrina.jpg"
-                alt="Ms. Sabrina"
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-gray-800 font-body">
-                Ms. Sabrina welcomes every visit
-              </p>
-              <p className="text-xs text-gray-500 font-body">
-                Lead Teacher & Director
-              </p>
-            </div>
-          </div>
-          <div className="hidden sm:block w-px h-12 bg-sage-200" />
-          <div className="flex items-start gap-2 max-w-sm">
-            <MapPin className="w-4 h-4 text-sage-600 mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-gray-600 font-body">
-              2760 Gattis School Rd, Round Rock, TX 78664
-            </p>
-          </div>
         </div>
       </section>
 
