@@ -32,7 +32,7 @@ const defaultForm = {
   phone: '',
   childName: '',
   childAge: '',
-  programInterest: '' as '' | 'summer-2026' | 'school-year-2026' | 'both' | 'homeschool_drop_in',
+  programInterest: '' as '' | 'school-year-2026' | 'homeschool_drop_in' | 'summer-2027' | 'school-year-2027-2028',
   specialInterests: '',
   status: 'new_inquiry' as LeadStatus,
 }
@@ -103,7 +103,7 @@ export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarP
         phone: form.phone || undefined,
         childName: form.childName,
         childAge: Number(form.childAge),
-        programInterest: form.programInterest as 'summer-2026' | 'school-year-2026' | 'both' | 'homeschool_drop_in',
+        programInterest: form.programInterest as 'school-year-2026' | 'homeschool_drop_in' | 'summer-2027' | 'school-year-2027-2028',
         specialInterests: form.specialInterests || undefined,
         status: form.status,
       })
@@ -216,10 +216,10 @@ export function AddLeadSidebar({ isOpen, onClose, onLeadAdded }: AddLeadSidebarP
             style={inputStyle}
           >
             <option value="">Select a program...</option>
-            <option value="summer-2026">Summer 2026</option>
-            <option value="school-year-2026">School Year 2026</option>
-            <option value="both">Both</option>
+            <option value="school-year-2026">School Year 2026-2027</option>
             <option value="homeschool_drop_in">Homeschool Drop-in</option>
+            <option value="summer-2027">Summer 2027</option>
+            <option value="school-year-2027-2028">School Year 2027-2028</option>
           </select>
         ))}
 

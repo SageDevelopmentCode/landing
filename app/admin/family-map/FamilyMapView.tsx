@@ -17,6 +17,7 @@ import type { MappedFamilyPin, SchoolLocation } from "./types";
 import styles from "./FamilyMapView.module.css";
 
 type FamilyMapViewProps = {
+  usesTrafficDriveTimes: boolean;
   currentCampus: SchoolLocation;
   newCampus: SchoolLocation;
   mappedFamilies: MappedFamilyPin[];
@@ -74,6 +75,17 @@ function formatDistance(distanceMiles: number): string {
 
 function formatDriveMinutes(minutes: number): string {
   return `${minutes} min`;
+}
+
+function driveQualitySuffix(
+  family: MappedFamilyPin,
+  usesTrafficDriveTimes: boolean,
+): string {
+  if (family.driveTimeQuality === "estimated") return " (est.)";
+  if (usesTrafficDriveTimes && family.driveTimeQuality === "osrm") {
+    return " (no traffic)";
+  }
+  return "";
 }
 
 function createFamilyMarkerIcon(
@@ -143,6 +155,7 @@ function CampusMarker({
 }
 
 export function FamilyMapView({
+  usesTrafficDriveTimes,
   currentCampus,
   newCampus,
   mappedFamilies,
@@ -230,7 +243,7 @@ export function FamilyMapView({
                 <p className="font-medium">
                   {formatDriveMinutes(family.driveMinutesToNewCampus)} drive to
                   future campus (Hutto)
-                  {family.driveTimeQuality === "estimated" ? " (est.)" : ""}
+                  {driveQualitySuffix(family, usesTrafficDriveTimes)}
                   {family.geocodeQuality === "approximate"
                     ? " · approximate location"
                     : ""}
@@ -238,7 +251,7 @@ export function FamilyMapView({
                 <p className="text-gray-600">
                   {formatDriveMinutes(family.driveMinutesToCurrentCampus)} drive
                   to current campus (Gattis)
-                  {family.driveTimeQuality === "estimated" ? " (est.)" : ""}
+                  {driveQualitySuffix(family, usesTrafficDriveTimes)}
                 </p>
                 <p className="text-gray-500 text-xs">
                   {formatDistance(family.newCampusDistanceMiles)} straight-line

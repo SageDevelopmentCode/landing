@@ -43,10 +43,6 @@ const FOOTER_COLUMNS: NavColumn[] = [
     heading: "Programs & Tuition",
     items: [
       {
-        label: "Summer Program 2026",
-        action: { kind: "link", href: "/summer-2026" },
-      },
-      {
         label: "School Year 2026-2027",
         action: { kind: "link", href: "/school-year-2026-2027" },
       },
@@ -85,7 +81,6 @@ const FOOTER_COLUMNS: NavColumn[] = [
         action: { kind: "link", href: "/academic-calendar" },
       },
       { label: "Tour", action: { kind: "link", href: "/tour" } },
-      { label: "Info Session", action: { kind: "link", href: "/info" } },
       { label: "FAQ", action: { kind: "link", href: "/faq" } },
       { label: "Donate", action: { kind: "link", href: "/donate" } },
       { label: "Parent Login", action: { kind: "link", href: "/login" } },

@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { AlertTriangle, MapPin } from "lucide-react";
+import { AlertTriangle, Check, Copy, MapPin } from "lucide-react";
 import { cssColors as colors, radius } from "../design-system";
 import type { MappedFamilyPin, SchoolLocation, UnmappedFamily } from "./types";
 
@@ -26,6 +26,7 @@ const FamilyMapView = dynamic(
 );
 
 type FamilyMapClientProps = {
+  usesTrafficDriveTimes: boolean;
   currentCampus: SchoolLocation;
   newCampus: SchoolLocation;
   mappedFamilies: MappedFamilyPin[];
@@ -37,7 +38,44 @@ function formatDriveMinutes(minutes: number): string {
   return `${minutes} min`;
 }
 
+function CopyAddressButton({ address }: { address: string }) {
+  const [copied, setCopied] = useState(false);
+
+  if (!address.trim()) {
+    return null;
+  }
+
+  const handleCopy = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    navigator.clipboard.writeText(address).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title="Copy address"
+      aria-label="Copy address"
+      className="shrink-0 p-1 rounded transition-colors hover:opacity-80"
+      style={{
+        color: copied ? colors.accentBright : colors.textTertiary,
+        borderRadius: radius.sm,
+      }}
+    >
+      {copied ? (
+        <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+      ) : (
+        <Copy className="w-3.5 h-3.5" />
+      )}
+    </button>
+  );
+}
+
 export function FamilyMapClient({
+  usesTrafficDriveTimes,
   currentCampus,
   newCampus,
   mappedFamilies,
@@ -71,11 +109,18 @@ export function FamilyMapClient({
             const isSelected = family.parentId === selectedParentId;
 
             return (
-              <button
+              <div
                 key={family.parentId}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedParentId(family.parentId)}
-                className="w-full text-left px-4 py-3 border-b transition-colors"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setSelectedParentId(family.parentId);
+                  }
+                }}
+                className="w-full text-left px-4 py-3 border-b transition-colors cursor-pointer"
                 style={{
                   borderColor: colors.border,
                   backgroundColor: isSelected ? colors.accentLight : "transparent",
@@ -93,12 +138,15 @@ export function FamilyMapClient({
                     >
                       {family.students.map((student) => student.name).join(", ")}
                     </p>
-                    <p
-                      className="text-xs mt-1 truncate"
-                      style={{ color: colors.textTertiary }}
-                    >
-                      {family.formattedAddress}
-                    </p>
+                    <div className="flex items-center gap-1 mt-1 min-w-0">
+                      <p
+                        className="text-xs truncate flex-1 min-w-0"
+                        style={{ color: colors.textTertiary }}
+                      >
+                        {family.formattedAddress}
+                      </p>
+                      <CopyAddressButton address={family.formattedAddress} />
+                    </div>
                   </div>
                   <span
                     className="text-xs font-medium shrink-0 text-right"
@@ -113,6 +161,15 @@ export function FamilyMapClient({
                         est.
                       </span>
                     )}
+                    {usesTrafficDriveTimes &&
+                      family.driveTimeQuality === "osrm" && (
+                        <span
+                          className="block text-[10px]"
+                          style={{ color: colors.textTertiary }}
+                        >
+                          no traffic
+                        </span>
+                      )}
                     {family.geocodeQuality === "approximate" && (
                       <span
                         className="block text-[10px]"
@@ -130,7 +187,7 @@ export function FamilyMapClient({
                     </span>
                   </span>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -164,7 +221,12 @@ export function FamilyMapClient({
                     {family.parentName ?? "Family"}
                   </p>
                   <p>{family.students.join(", ")}</p>
-                  <p className="text-xs mt-1">{family.formattedAddress || "—"}</p>
+                  <div className="flex items-center gap-1 mt-1 min-w-0">
+                    <p className="text-xs flex-1 min-w-0">
+                      {family.formattedAddress || "—"}
+                    </p>
+                    <CopyAddressButton address={family.formattedAddress} />
+                  </div>
                   <p className="text-xs mt-1" style={{ color: colors.warning }}>
                     {family.reason}
                   </p>
@@ -198,10 +260,14 @@ export function FamilyMapClient({
           Future (Hutto)
           <span style={{ color: colors.textTertiary }}>·</span>
           <MapPin className="w-3.5 h-3.5" style={{ color: "#3B82F6" }} />
-          Families · drive time (OSRM)
+          Families ·{" "}
+          {usesTrafficDriveTimes
+            ? "weekday 7:45 AM drive (traffic)"
+            : "drive time (OSRM, no traffic)"}
         </div>
 
         <FamilyMapView
+          usesTrafficDriveTimes={usesTrafficDriveTimes}
           currentCampus={currentCampus}
           newCampus={newCampus}
           mappedFamilies={mappedFamilies}

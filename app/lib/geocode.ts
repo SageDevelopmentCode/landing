@@ -10,12 +10,12 @@ export const SCHOOL_LOCATION = {
   lng: -97.6792,
 };
 
-/** Future Hutto property — coords from Nominatim (CR 100 segment; no exact building in OSM). */
+/** Future Hutto property — coords are the property entrance (not in OSM; geocoders miss it by miles). */
 export const NEW_CAMPUS_LOCATION = {
   name: "Future campus (Hutto)",
   address: "2750 County Road 100, Hutto, TX 78634",
-  lat: 30.5859912,
-  lng: -97.5482778,
+  lat: 30.61545621585893,
+  lng: -97.58082232883542,
 };
 
 const MAP_ANCHOR_LOCATIONS = [SCHOOL_LOCATION, NEW_CAMPUS_LOCATION];
@@ -53,18 +53,44 @@ type NominatimResult = {
   address?: NominatimAddressDetails;
 };
 
+type GoogleGeocodeResult = {
+  formatted_address: string;
+  geometry: {
+    location: { lat: number; lng: number };
+    location_type: string;
+  };
+  address_components: Array<{
+    long_name: string;
+    short_name: string;
+    types: string[];
+  }>;
+};
+
 const NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org/search";
+const GOOGLE_GEOCODE_URL = "https://maps.googleapis.com/maps/api/geocode/json";
 const GEOCODE_DELAY_MS = 1100;
+const GOOGLE_SOURCE = "google";
 const APPROXIMATE_SOURCE = "nominatim_zip_centroid";
+/** ZIP centroid that Google also could not resolve; not retried on every page load. */
+const APPROXIMATE_GOOGLE_MISS_SOURCE = "nominatim_zip_centroid_google_miss";
+const GOOGLE_EXACT_LOCATION_TYPES = new Set(["ROOFTOP", "RANGE_INTERPOLATED"]);
 const CENTRAL_TX_VIEWBOX = "-98.2,31.0,-97.2,30.0";
 const MAX_DISTANCE_FROM_SCHOOL_MILES = 80;
+
+export function getGoogleMapsApiKey(): string | null {
+  return process.env.GOOGLE_MAPS_API_KEY?.trim() || null;
+}
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isApproximateSource(source: string): boolean {
+  return source === APPROXIMATE_SOURCE || source === APPROXIMATE_GOOGLE_MISS_SOURCE;
+}
+
 function qualityFromSource(source: string): GeocodeQuality {
-  return source === APPROXIMATE_SOURCE ? "approximate" : "exact";
+  return isApproximateSource(source) ? "approximate" : "exact";
 }
 
 export function haversineDistanceMiles(
@@ -123,7 +149,7 @@ function isValidGeocodeResult(
     return false;
   }
 
-  if (source === APPROXIMATE_SOURCE) {
+  if (isApproximateSource(source)) {
     const resultZip = getResultPostcode(match);
     return (
       resultZip === address.zip || match.display_name.includes(address.zip)
@@ -195,6 +221,53 @@ async function nominatimSearch(
   return results[0] ?? null;
 }
 
+/** Returns only street-level Google matches, shaped like Nominatim so validation is shared. */
+async function googleGeocodeSearch(
+  apiKey: string,
+  address: string,
+): Promise<NominatimResult | null> {
+  const url = new URL(GOOGLE_GEOCODE_URL);
+  url.searchParams.set("address", address);
+  url.searchParams.set("components", "country:US");
+  url.searchParams.set("key", apiKey);
+
+  const response = await fetch(url.toString(), { cache: "no-store" });
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as {
+    status: string;
+    results?: GoogleGeocodeResult[];
+    error_message?: string;
+  };
+  if (data.status !== "OK") {
+    if (data.status !== "ZERO_RESULTS") {
+      console.warn("Google geocode failed:", data.status, data.error_message);
+    }
+    return null;
+  }
+
+  const result = data.results?.[0];
+  if (!result || !GOOGLE_EXACT_LOCATION_TYPES.has(result.geometry.location_type)) {
+    return null;
+  }
+
+  const component = (type: string) =>
+    result.address_components.find((c) => c.types.includes(type))?.long_name;
+
+  return {
+    lat: String(result.geometry.location.lat),
+    lon: String(result.geometry.location.lng),
+    display_name: result.formatted_address,
+    address: {
+      postcode: component("postal_code"),
+      city: component("locality"),
+      state: component("administrative_area_level_1"),
+    },
+  };
+}
+
 function toGeocodedLocation(
   match: NominatimResult,
   source: string,
@@ -222,10 +295,20 @@ export async function geocodeAddressWithFallbacks(
   const formatted = formatAddress(address);
   const streetWithoutUnit = stripUnitFromStreet(address.street);
 
+  const googleApiKey = getGoogleMapsApiKey();
+
   const strategies: Array<{
     source: string;
     run: () => Promise<NominatimResult | null>;
   }> = [
+    ...(googleApiKey
+      ? [
+          {
+            source: GOOGLE_SOURCE,
+            run: () => googleGeocodeSearch(googleApiKey, formatted),
+          },
+        ]
+      : []),
     {
       source: "nominatim_full",
       run: () => nominatimSearch({ q: formatted }),
@@ -257,15 +340,17 @@ export async function geocodeAddressWithFallbacks(
     },
   ];
 
-  let usedRemote = false;
+  let usedNominatim = false;
 
   for (const strategy of strategies) {
-    if (usedRemote) {
-      await sleep(GEOCODE_DELAY_MS);
+    if (strategy.source !== GOOGLE_SOURCE) {
+      if (usedNominatim) {
+        await sleep(GEOCODE_DELAY_MS);
+      }
+      usedNominatim = true;
     }
 
     const match = await strategy.run();
-    usedRemote = true;
 
     if (match && isValidGeocodeResult(match, address, strategy.source)) {
       return toGeocodedLocation(match, strategy.source);
@@ -326,6 +411,27 @@ async function writeGeocodeCache(
   }
 }
 
+async function upgradeApproximateGeocode(
+  db: SupabaseClient,
+  addressKey: string,
+  address: NormalizedAddress,
+  cached: GeocodedLocation,
+): Promise<GeocodedLocation> {
+  const googleApiKey = getGoogleMapsApiKey();
+  if (cached.source !== APPROXIMATE_SOURCE || !googleApiKey) {
+    return cached;
+  }
+
+  const match = await googleGeocodeSearch(googleApiKey, formatAddress(address));
+  const upgraded =
+    match && isValidGeocodeResult(match, address, GOOGLE_SOURCE)
+      ? toGeocodedLocation(match, GOOGLE_SOURCE)
+      : { ...cached, source: APPROXIMATE_GOOGLE_MISS_SOURCE };
+
+  await writeGeocodeCache(db, addressKey, upgraded);
+  return upgraded;
+}
+
 export async function geocodeWithCache(
   db: SupabaseClient,
   addressKey: string,
@@ -333,7 +439,7 @@ export async function geocodeWithCache(
 ): Promise<GeocodedLocation | null> {
   const cached = await readGeocodeCache(db, addressKey, address);
   if (cached) {
-    return cached;
+    return upgradeApproximateGeocode(db, addressKey, address, cached);
   }
 
   const geocoded = await geocodeAddressWithFallbacks(address);
@@ -350,21 +456,24 @@ export async function geocodeAddressesWithCache(
   entries: Array<{ addressKey: string; address: NormalizedAddress }>,
 ): Promise<Map<string, GeocodedLocation>> {
   const results = new Map<string, GeocodedLocation>();
-  let usedRemoteGeocoder = false;
+  let usedNominatim = false;
 
   for (const entry of entries) {
     const cached = await readGeocodeCache(db, entry.addressKey, entry.address);
     if (cached) {
-      results.set(entry.addressKey, cached);
+      results.set(
+        entry.addressKey,
+        await upgradeApproximateGeocode(db, entry.addressKey, entry.address, cached),
+      );
       continue;
     }
 
-    if (usedRemoteGeocoder) {
+    if (usedNominatim) {
       await sleep(GEOCODE_DELAY_MS);
     }
 
     const geocoded = await geocodeAddressWithFallbacks(entry.address);
-    usedRemoteGeocoder = true;
+    usedNominatim = geocoded?.source !== GOOGLE_SOURCE;
 
     if (!geocoded) {
       continue;

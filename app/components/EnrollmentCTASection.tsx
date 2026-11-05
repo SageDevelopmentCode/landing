@@ -36,10 +36,10 @@ export default function EnrollmentCTASection() {
         childName: formData.childName,
         childAge: parseInt(formData.childAge),
         programInterest: formData.programInterest as
-          | "summer-2026"
           | "school-year-2026"
-          | "both"
-          | "homeschool_drop_in",
+          | "homeschool_drop_in"
+          | "summer-2027"
+          | "school-year-2027-2028",
         specialInterests: formData.specialInterests || undefined,
       });
 
@@ -269,10 +269,12 @@ export default function EnrollmentCTASection() {
                          disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="">Select a program...</option>
-                <option value="summer-2026">Summer 2026</option>
                 <option value="school-year-2026">School Year 2026-2027</option>
-                <option value="both">Both Programs</option>
-                <option value="homeschool_drop_in">Homeschool Drop-In</option>
+                <option value="homeschool_drop_in">Homeschool Drop-in</option>
+                <option value="summer-2027">Summer 2027</option>
+                <option value="school-year-2027-2028">
+                  School Year 2027-2028
+                </option>
               </select>
             </div>
 
