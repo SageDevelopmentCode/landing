@@ -1,8 +1,9 @@
 'use server'
 import { createAdminClient } from '@/app/lib/supabase-server'
 
-const VALID_DROP_IN_PROGRAMS = ['summer_26', 'school_year_26_27', 'both'] as const
-type DropInProgramValue = typeof VALID_DROP_IN_PROGRAMS[number]
+import { ALL_DROP_IN_PROGRAM_VALUES, type DropInProgramValue } from '@/app/lib/application-programs'
+
+const VALID_DROP_IN_PROGRAMS: readonly string[] = ALL_DROP_IN_PROGRAM_VALUES
 
 export async function updateApplicationDropInProgram(id: string, dropInProgram: DropInProgramValue) {
   if (!VALID_DROP_IN_PROGRAMS.includes(dropInProgram)) {

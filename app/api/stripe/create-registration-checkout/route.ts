@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
+import {
+  ALL_PROGRAM_VALUES,
+  ALL_DROP_IN_PROGRAM_VALUES,
+  getRegistrationFeeLines,
+  getBillingProgramLabel,
+} from "@/app/lib/application-programs";
 
 const schema = z.object({
   parentId: z.string(),
@@ -10,11 +16,9 @@ const schema = z.object({
   applicationId: z.string(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
-  program: z
-    .enum(["summer_26", "school_year_26_27", "both", "homeschool_drop_in"])
-    .default("summer_26"),
+  program: z.enum(ALL_PROGRAM_VALUES).default("summer_26"),
   dropInProgram: z
-    .enum(["summer_26", "school_year_26_27", "both"])
+    .enum(ALL_DROP_IN_PROGRAM_VALUES)
     .nullable()
     .optional(),
 });
@@ -35,153 +39,51 @@ export async function POST(request: NextRequest) {
       dropInProgram,
     } = validated;
 
-    const billingProgram =
-      program === "homeschool_drop_in"
-        ? (dropInProgram ?? "summer_26")
-        : program;
+    const feeLines = getRegistrationFeeLines(program, dropInProgram);
+    const totalBaseCents = feeLines.reduce((sum, l) => sum + l.cents, 0);
 
-    const summerCents = 7500;
-    const schoolCents = 50000;
-    const totalBaseCents =
-      billingProgram === "both"
-        ? summerCents + schoolCents
-        : billingProgram === "school_year_26_27"
-          ? schoolCents
-          : summerCents;
-
-    const description =
-      billingProgram === "both"
-        ? "Summer 2026 + School Year 2026–27 Registration Fees"
-        : billingProgram === "school_year_26_27"
-          ? "School Year 2026–27 Registration Fee"
-          : "Summer 2026 Registration Fee";
+    const description = `${getBillingProgramLabel(program, dropInProgram)} Registration Fee${feeLines.length > 1 ? "s" : ""}`;
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
 
-    let lineItems;
+    const feeCents = coverFees
+      ? paymentMethod === "ach"
+        ? Math.min(Math.round(totalBaseCents * 0.008), 500)
+        : Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents
+      : 0;
 
-    if (billingProgram === "both") {
-      const feeCents = coverFees
-        ? paymentMethod === "ach"
-          ? Math.min(Math.round(totalBaseCents * 0.008), 500)
-          : Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents
-        : 0;
-      lineItems = [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: summerCents,
-            product_data: {
-              name: "Summer 2026 Registration Fee",
-              description:
-                "Sage Field Private School — Summer 2026 program registration",
-            },
+    const processingFeeName =
+      paymentMethod === "ach"
+        ? "ACH processing fee"
+        : feeLines.length > 1
+          ? "Registration fee processing fee"
+          : "Card processing fee";
+
+    const lineItems = [
+      ...feeLines.map((line) => ({
+        quantity: 1,
+        price_data: {
+          currency: "usd",
+          unit_amount: line.cents,
+          product_data: {
+            name: line.name,
+            description: line.description,
           },
         },
-        {
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: schoolCents,
-            product_data: {
-              name: "School Year 2026–27 Registration Fee",
-              description:
-                "Sage Field Private School — 2026–27 school year registration",
-            },
-          },
-        },
-        ...(coverFees
-          ? [
-              {
-                quantity: 1,
-                price_data: {
-                  currency: "usd",
-                  unit_amount: feeCents,
-                  product_data: {
-                    name:
-                      paymentMethod === "ach"
-                        ? "ACH processing fee"
-                        : "Registration fee processing fee",
-                  },
-                },
-              } as const,
-            ]
-          : []),
-      ];
-    } else {
-      const productName =
-        billingProgram === "school_year_26_27"
-          ? "School Year 2026–27 Registration Fee"
-          : "Summer 2026 Registration Fee";
-      const productDescription =
-        billingProgram === "school_year_26_27"
-          ? "Sage Field Private School — 2026–27 school year registration"
-          : "Sage Field Private School — Summer 2026 program registration";
-
-      if (coverFees && paymentMethod === "ach") {
-        const feeCents = Math.min(Math.round(totalBaseCents * 0.008), 500);
-        lineItems = [
-          {
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: totalBaseCents,
-              product_data: {
-                name: productName,
-                description: productDescription,
+      })),
+      ...(coverFees
+        ? [
+            {
+              quantity: 1,
+              price_data: {
+                currency: "usd",
+                unit_amount: feeCents,
+                product_data: { name: processingFeeName },
               },
             },
-          },
-          {
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: feeCents,
-              product_data: { name: "ACH processing fee" },
-            },
-          },
-        ];
-      } else if (coverFees && paymentMethod === "card") {
-        const feeCents =
-          Math.round((totalBaseCents + 30) / (1 - 0.029)) - totalBaseCents;
-        lineItems = [
-          {
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: totalBaseCents,
-              product_data: {
-                name: productName,
-                description: productDescription,
-              },
-            },
-          },
-          {
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: feeCents,
-              product_data: { name: "Card processing fee" },
-            },
-          },
-        ];
-      } else {
-        lineItems = [
-          {
-            quantity: 1,
-            price_data: {
-              currency: "usd",
-              unit_amount: totalBaseCents,
-              product_data: {
-                name: productName,
-                description: productDescription,
-              },
-            },
-          },
-        ];
-      }
-    }
+          ]
+        : []),
+    ];
 
     const stripeCustomerId = await getOrCreateStripeCustomer(
       parentId,

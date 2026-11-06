@@ -4,16 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateApplication } from "@/app/actions/updateApplication";
+import {
+  PROGRAM_LABELS,
+  PROGRAM_OPTIONS,
+  DROP_IN_PROGRAM_OPTIONS,
+  withCurrentOption,
+} from "@/app/lib/application-programs";
 
 type App = Record<string, string | null | boolean>;
 
 // ─── Program label map ───────────────────────────────────────────────────────
-const PROGRAM_LABELS: Record<string, string> = {
-  summer_26: "Summer 2026",
-  school_year_26_27: "School Year 2026-2027",
-  both: "Both",
-  homeschool_drop_in: "Homeschool Drop-In",
-};
 
 function formatProgram(value: string | null | boolean | undefined) {
   if (!value || typeof value === "boolean") return null;
@@ -293,12 +293,14 @@ function SlideOver({
                     <option value="" disabled>
                       Select program
                     </option>
-                    <option value="summer_26">Summer 2026</option>
-                    <option value="school_year_26_27">
-                      School Year 2026-2027
-                    </option>
-                    <option value="both">Both</option>
-                    <option value="homeschool_drop_in">Homeschool Drop-In</option>
+                    {withCurrentOption(
+                      PROGRAM_OPTIONS,
+                      draft["program"] == null ? null : String(draft["program"]),
+                    ).map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 {String(draft["program"]) === "homeschool_drop_in" && (
@@ -314,11 +316,16 @@ function SlideOver({
                       <option value="" disabled>
                         Select drop-in program
                       </option>
-                      <option value="summer_26">Summer 2026</option>
-                      <option value="school_year_26_27">
-                        School Year 2026-2027
-                      </option>
-                      <option value="both">Both</option>
+                      {withCurrentOption(
+                        DROP_IN_PROGRAM_OPTIONS,
+                        draft["drop_in_program"] == null
+                          ? null
+                          : String(draft["drop_in_program"]),
+                      ).map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}

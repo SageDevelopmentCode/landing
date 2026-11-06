@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
+import {
+  ALL_PROGRAM_VALUES,
+  ALL_DROP_IN_PROGRAM_VALUES,
+  getRegistrationFeeCents,
+  getRegistrationFeeLines,
+} from "@/app/lib/application-programs";
 
 const schema = z.object({
   parentId: z.string(),
@@ -12,22 +18,12 @@ const schema = z.object({
     z.object({
       studentId: z.string(),
       applicationId: z.string(),
-      program: z.enum(["summer_26", "school_year_26_27", "both", "homeschool_drop_in"]),
-      dropInProgram: z.enum(["summer_26", "school_year_26_27", "both"]).nullable().optional(),
+      program: z.enum(ALL_PROGRAM_VALUES),
+      dropInProgram: z.enum(ALL_DROP_IN_PROGRAM_VALUES).nullable().optional(),
       childName: z.string(),
     }),
   ),
 });
-
-const summerCents = 7500;
-const schoolCents = 50000;
-
-function programCents(program: string, dropInProgram?: string | null): number {
-  const billing = program === "homeschool_drop_in" ? (dropInProgram ?? "summer_26") : program;
-  if (billing === "both") return summerCents + schoolCents;
-  if (billing === "school_year_26_27") return schoolCents;
-  return summerCents;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +33,7 @@ export async function POST(request: NextRequest) {
     const { parentId, parentEmail, coverFees, paymentMethod, children } = validated;
 
     const totalBaseCents = children.reduce(
-      (sum, c) => sum + programCents(c.program, c.dropInProgram),
+      (sum, c) => sum + getRegistrationFeeCents(c.program, c.dropInProgram),
       0,
     );
 
@@ -55,47 +51,16 @@ export async function POST(request: NextRequest) {
     }[] = [];
 
     for (const child of children) {
-      const billing = child.program === "homeschool_drop_in" ? (child.dropInProgram ?? "summer_26") : child.program;
-      if (billing === "both") {
+      for (const line of getRegistrationFeeLines(child.program, child.dropInProgram)) {
         lineItems.push({
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: summerCents,
+            unit_amount: line.cents,
             product_data: {
-              name: `${child.childName} — Summer 2026 Registration Fee`,
-              description:
-                "Sage Field Private School — Summer 2026 program registration",
+              name: `${child.childName} — ${line.name}`,
+              description: line.description,
             },
-          },
-        });
-        lineItems.push({
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: schoolCents,
-            product_data: {
-              name: `${child.childName} — School Year 2026–27 Registration Fee`,
-              description:
-                "Sage Field Private School — 2026–27 school year registration",
-            },
-          },
-        });
-      } else {
-        const name =
-          billing === "school_year_26_27"
-            ? `${child.childName} — School Year 2026–27 Registration Fee`
-            : `${child.childName} — Summer 2026 Registration Fee`;
-        const description =
-          billing === "school_year_26_27"
-            ? "Sage Field Private School — 2026–27 school year registration"
-            : "Sage Field Private School — Summer 2026 program registration";
-        lineItems.push({
-          quantity: 1,
-          price_data: {
-            currency: "usd",
-            unit_amount: programCents(child.program, child.dropInProgram),
-            product_data: { name, description },
           },
         });
       }

@@ -6,6 +6,14 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { saveApplicationStep1 } from "@/app/actions/saveApplicationStep1";
+import {
+  PROGRAM_OPTIONS,
+  DROP_IN_PROGRAM_OPTIONS,
+  withCurrentOption,
+  SUMMER_27_SY_27_28,
+  type ProgramValue,
+  type DropInProgramValue,
+} from "@/app/lib/application-programs";
 
 const gradeOptions = [
   "Pre-K",
@@ -55,12 +63,17 @@ export default function Step1Form({
   refCode?: string | null;
 }) {
   const d = initialData;
-  const [program, setProgram] = useState<
-    "summer_26" | "school_year_26_27" | "both" | "homeschool_drop_in" | ""
-  >((d?.program as "summer_26" | "school_year_26_27" | "both" | "homeschool_drop_in") ?? "");
-  const [dropInProgram, setDropInProgram] = useState<
-    "summer_26" | "school_year_26_27" | "both" | ""
-  >((d?.drop_in_program as "summer_26" | "school_year_26_27" | "both") ?? "");
+  const [program, setProgram] = useState<ProgramValue | "">(
+    (d?.program as ProgramValue | null | undefined) ?? "",
+  );
+  const [dropInProgram, setDropInProgram] = useState<DropInProgramValue | "">(
+    (d?.drop_in_program as DropInProgramValue | null | undefined) ?? "",
+  );
+
+  // Legacy values (e.g. Summer 2026) are no longer offered, but if a saved
+  // draft still has one, keep it visible so the selection isn't silently lost.
+  const programOptions = withCurrentOption(PROGRAM_OPTIONS, program);
+  const dropInOptions = withCurrentOption(DROP_IN_PROGRAM_OPTIONS, dropInProgram);
   const [childLegalName, setChildLegalName] = useState(
     d?.child_legal_name ?? "",
   );
@@ -240,15 +253,7 @@ export default function Step1Form({
                 Program Interest
               </label>
               <div className="flex flex-col gap-2">
-                {[
-                  { value: "summer_26", label: "Summer 2026" },
-                  {
-                    value: "school_year_26_27",
-                    label: "School Year 2026-2027",
-                  },
-                  { value: "both", label: "Both" },
-                  { value: "homeschool_drop_in", label: "Homeschool Drop-In" },
-                ].map((option) => (
+                {programOptions.map((option) => (
                   <button
                     key={option.value}
                     type="button"
@@ -270,20 +275,20 @@ export default function Step1Form({
                   </button>
                 ))}
               </div>
+              {program === SUMMER_27_SY_27_28 && (
+                <p className="mt-2 text-xs text-gray-400 font-body">
+                  &ldquo;Both&rdquo; covers Summer 2027 and next year&apos;s
+                  school year (2027-2028), not the current 2026-2027 school
+                  year.
+                </p>
+              )}
               {program === "homeschool_drop_in" && (
                 <div className="mt-3">
                   <label className="block text-sm font-semibold text-gray-700 font-body mb-2">
                     Which program(s) are you interested in dropping in for?
                   </label>
                   <div className="flex flex-col gap-2">
-                    {[
-                      { value: "summer_26", label: "Summer 2026" },
-                      {
-                        value: "school_year_26_27",
-                        label: "School Year 2026-2027",
-                      },
-                      { value: "both", label: "Both" },
-                    ].map((option) => (
+                    {dropInOptions.map((option) => (
                       <button
                         key={option.value}
                         type="button"
@@ -309,6 +314,11 @@ export default function Step1Form({
                       </button>
                     ))}
                   </div>
+                  <p className="mt-2 text-xs text-gray-400 font-body">
+                    &ldquo;Both&rdquo; covers Summer 2027 and next year&apos;s
+                    school year (2027-2028), not the current 2026-2027 school
+                    year.
+                  </p>
                 </div>
               )}
             </div>

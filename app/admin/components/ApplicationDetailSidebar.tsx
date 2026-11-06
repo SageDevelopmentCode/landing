@@ -89,6 +89,15 @@ import { updateApplicationTags } from '../../actions/updateApplicationTags'
 import { updateApplicationDropInProgram } from '../../actions/updateApplicationDropInProgram'
 import { updateApplicationHomeschoolPricing } from '../../actions/updateApplicationHomeschoolPricing'
 import { PRESET_TAGS } from '../constants/applicationTags'
+import {
+  PROGRAM_LABELS,
+  PROGRAM_OPTIONS,
+  DROP_IN_PROGRAM_OPTIONS,
+  getRegistrationFeeCents,
+  withCurrentOption,
+  type ProgramValue,
+  type DropInProgramValue,
+} from '../../lib/application-programs'
 
 export type CachedEnrollmentData = AdminEnrollmentData & {
   registrationFeePaidByStudent: Record<string, boolean>
@@ -96,19 +105,12 @@ export type CachedEnrollmentData = AdminEnrollmentData & {
 }
 const enrollmentCache = new Map<string, CachedEnrollmentData>()
 
-const PROGRAM_LABELS: Record<string, string> = {
-  summer_26: 'Summer 2026',
-  school_year_26_27: 'School Year 2026-2027',
-  both: 'Both',
-  homeschool_drop_in: 'Homeschool Drop-In',
-}
-
-const PROGRAM_FEES: Record<string, string> = {
-  summer_26: '$75',
-  school_year_26_27: '$500',
-  both: '$575',
-  homeschool_drop_in: 'varies',
-}
+const PROGRAM_FEES: Record<string, string> = Object.fromEntries(
+  Object.keys(PROGRAM_LABELS).map((value) => [
+    value,
+    value === 'homeschool_drop_in' ? 'varies' : `$${getRegistrationFeeCents(value) / 100}`,
+  ]),
+)
 
 function formatProgram(value: string | null): string {
   if (!value) return '—'
@@ -715,7 +717,7 @@ export function ApplicationDetailSidebar({
     setProgramUpdateError(null)
     const result = await updateApplicationProgram(
       application.id,
-      selectedProgram as 'summer_26' | 'school_year_26_27' | 'both' | 'homeschool_drop_in'
+      selectedProgram as ProgramValue
     )
     setIsUpdatingProgram(false)
     if (result.success) {
@@ -735,7 +737,7 @@ export function ApplicationDetailSidebar({
     setDropInUpdateError(null)
     const result = await updateApplicationDropInProgram(
       application.id,
-      selectedDropIn as 'summer_26' | 'school_year_26_27' | 'both'
+      selectedDropIn as DropInProgramValue
     )
     setIsUpdatingDropIn(false)
     if (result.success) {
@@ -2258,9 +2260,9 @@ export function ApplicationDetailSidebar({
                     className="text-sm text-gray-900 border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] disabled:opacity-60"
                   >
                     <option value="">— select —</option>
-                    {(['summer_26', 'school_year_26_27', 'both'] as const).map((value) => (
+                    {withCurrentOption(DROP_IN_PROGRAM_OPTIONS, application.drop_in_program).map(({ value, label }) => (
                       <option key={value} value={value}>
-                        {PROGRAM_LABELS[value]}
+                        {label}
                       </option>
                     ))}
                   </select>
@@ -2325,7 +2327,7 @@ export function ApplicationDetailSidebar({
                     disabled={isUpdatingProgram}
                     className="text-sm text-gray-900 border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-[#2C5F2E]/30 focus:border-[#2C5F2E] disabled:opacity-60"
                   >
-                    {Object.entries(PROGRAM_LABELS).map(([value, label]) => (
+                    {withCurrentOption(PROGRAM_OPTIONS, application.program).map(({ value, label }) => (
                       <option key={value} value={value}>
                         {label} — {PROGRAM_FEES[value] ?? 'varies'}
                       </option>
