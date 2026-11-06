@@ -1,8 +1,9 @@
 'use server'
 import { createAdminClient } from '@/app/lib/supabase-server'
 
-const VALID_PROGRAMS = ['summer_26', 'school_year_26_27', 'both', 'homeschool_drop_in'] as const
-type ProgramValue = typeof VALID_PROGRAMS[number]
+import { ALL_PROGRAM_VALUES, type ProgramValue } from '@/app/lib/application-programs'
+
+const VALID_PROGRAMS: readonly string[] = ALL_PROGRAM_VALUES
 
 export async function updateApplicationProgram(id: string, program: ProgramValue) {
   if (!VALID_PROGRAMS.includes(program)) {

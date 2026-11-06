@@ -8,6 +8,7 @@ import {
   SCHOOL_YEAR_TUITION_UPPER_CENTS,
   formatSchoolYearMonthIndices,
 } from "@/shared/billing/school-year";
+import { PROGRAM_LABELS as SHARED_PROGRAM_LABELS } from "./application-programs";
 import { createServerSupabaseClient } from "./supabase-server";
 import { HOLIDAYS } from "./academic-calendar-data";
 
@@ -943,7 +944,7 @@ export async function buildApprovalEmail(opts: {
     if (program === "summer_26") return "Summer 2026";
     if (program === "school_year_26_27") return "School Year 2026-2027";
     if (program === "homeschool_drop_in") return "Homeschool Drop-In";
-    return program;
+    return SHARED_PROGRAM_LABELS[program] ?? program;
   }
 
   const subject =
@@ -1008,7 +1009,7 @@ export async function buildEnrollmentReminderEmail(opts: {
     if (program === "summer_26") return "Summer 2026";
     if (program === "school_year_26_27") return "School Year 2026-2027";
     if (program === "homeschool_drop_in") return "Homeschool Drop-In";
-    return program;
+    return SHARED_PROGRAM_LABELS[program] ?? program;
   }
 
   const subject = `A reminder to complete ${opts.childLegalName}'s enrollment at Sage Field`;
@@ -1131,7 +1132,7 @@ export async function buildEnrollmentConfirmationEmail(opts: {
     if (program === "summer_26") return "Summer 2026";
     if (program === "school_year_26_27") return "School Year 2026-2027";
     if (program === "homeschool_drop_in") return "Homeschool Drop-In";
-    return program;
+    return SHARED_PROGRAM_LABELS[program] ?? program;
   }
 
   const programLabel = formatProgram(opts.program);

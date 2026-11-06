@@ -20,6 +20,7 @@ import {
 import { recordMobilePaymentIntent } from "@/app/lib/record-mobile-payment-intent";
 import { isMobilePaymentIntent } from "@/app/lib/is-mobile-payment-intent";
 import { notifySchoolYearTuitionPayment } from "@/app/lib/stripe-school-year-tuition-notify";
+import { SY_26_27_SUMMER_27 } from "@/app/lib/application-programs";
 import {
   buildRegistrationFeeConfirmationEmail,
   buildSummerTuitionConfirmationEmail,
@@ -122,8 +123,11 @@ export async function POST(request: NextRequest) {
 
         const programMap: Record<string, string> = {
           summer_26: "Summer 2026",
+          summer_27: "Summer 2027",
           school_year_26_27: "School Year 2026-27",
+          school_year_27_28: "School Year 2027-28",
           both: "Summer 2026 & School Year 2026-27",
+          [SY_26_27_SUMMER_27]: "School Year 2026-27 & Summer 2027",
           homeschool_drop_in: "Homeschool Drop-In",
         };
 
@@ -216,8 +220,26 @@ export async function POST(request: NextRequest) {
         const metaProgram = session.metadata?.program;
         const metaDropInProgram = session.metadata?.drop_in_program;
         if (metaProgram === "homeschool_drop_in" && metaDropInProgram === "school_year_26_27") {
-          updatePayload.drop_in_program = "both";
-          updatePayload.updated_at = new Date().toISOString();
+          const { data: currentDropInApp } = await supabase
+            .schema("parent_app")
+            .from("applications")
+            .select("drop_in_program")
+            .eq("id", applicationId)
+            .single();
+
+          const currentDropIn = currentDropInApp?.drop_in_program;
+          if (currentDropIn === "summer_27") {
+            updatePayload.drop_in_program = SY_26_27_SUMMER_27;
+            updatePayload.updated_at = new Date().toISOString();
+          } else if (
+            currentDropIn !== "school_year_26_27" &&
+            currentDropIn !== "both" &&
+            currentDropIn !== SY_26_27_SUMMER_27
+          ) {
+            // Legacy summer 2026 drop-in (or unset) committing to school year
+            updatePayload.drop_in_program = "both";
+            updatePayload.updated_at = new Date().toISOString();
+          }
         }
 
         // NEW: Full-time summer parent committing to school year (fixed client sends program="school_year_26_27" directly)
@@ -231,6 +253,9 @@ export async function POST(request: NextRequest) {
 
           if (currentApp?.program === "summer_26") {
             updatePayload.program = "both";
+            updatePayload.updated_at = new Date().toISOString();
+          } else if (currentApp?.program === "summer_27") {
+            updatePayload.program = SY_26_27_SUMMER_27;
             updatePayload.updated_at = new Date().toISOString();
           }
         }
@@ -265,8 +290,11 @@ export async function POST(request: NextRequest) {
 
         const programMap: Record<string, string> = {
           summer_26: "Summer 2026",
+          summer_27: "Summer 2027",
           school_year_26_27: "School Year 2026-27",
+          school_year_27_28: "School Year 2027-28",
           both: "Summer 2026 & School Year 2026-27",
+          [SY_26_27_SUMMER_27]: "School Year 2026-27 & Summer 2027",
           homeschool_drop_in: "Homeschool Drop-In",
         };
         const programLabel =

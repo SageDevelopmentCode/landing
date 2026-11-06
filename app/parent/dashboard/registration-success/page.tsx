@@ -1,6 +1,7 @@
 import { getStripe } from "@/app/lib/stripe";
 import Link from "next/link";
 import { CheckCircle } from "lucide-react";
+import { getBillingProgramLabel } from "@/app/lib/application-programs";
 
 interface Props {
   searchParams: Promise<{ session_id?: string }>;
@@ -27,13 +28,9 @@ export default async function RegistrationSuccessPage({ searchParams }: Props) {
       } else {
         const program = session.metadata?.program ?? "summer_26";
         programLabel =
-          program === "both"
-            ? "Summer 2026 and the 2026–27 School Year"
-            : program === "school_year_26_27"
-            ? "the 2026–27 School Year"
-            : program === "homeschool_drop_in"
+          program === "homeschool_drop_in"
             ? "Homeschool Drop-In"
-            : "Summer 2026";
+            : getBillingProgramLabel(program);
       }
     } catch (err) {
       console.error("Failed to retrieve Stripe session:", err);
