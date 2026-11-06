@@ -10,6 +10,7 @@ import {
   PROGRAM_OPTIONS,
   DROP_IN_PROGRAM_OPTIONS,
   withCurrentOption,
+  SUMMER_27_SY_27_28,
   type ProgramValue,
   type DropInProgramValue,
 } from "@/app/lib/application-programs";
@@ -274,6 +275,13 @@ export default function Step1Form({
                   </button>
                 ))}
               </div>
+              {program === SUMMER_27_SY_27_28 && (
+                <p className="mt-2 text-xs text-gray-400 font-body">
+                  &ldquo;Both&rdquo; covers Summer 2027 and next year&apos;s
+                  school year (2027-2028), not the current 2026-2027 school
+                  year.
+                </p>
+              )}
               {program === "homeschool_drop_in" && (
                 <div className="mt-3">
                   <label className="block text-sm font-semibold text-gray-700 font-body mb-2">
@@ -306,6 +314,11 @@ export default function Step1Form({
                       </button>
                     ))}
                   </div>
+                  <p className="mt-2 text-xs text-gray-400 font-body">
+                    &ldquo;Both&rdquo; covers Summer 2027 and next year&apos;s
+                    school year (2027-2028), not the current 2026-2027 school
+                    year.
+                  </p>
                 </div>
               )}
             </div>

@@ -22,7 +22,7 @@ export type ProgramValue =
   | "school_year_26_27"
   | "school_year_27_28"
   | "both"
-  | "school_year_26_27_summer_27"
+  | "summer_27_school_year_27_28"
   | "homeschool_drop_in";
 
 export type DropInProgramValue =
@@ -30,10 +30,10 @@ export type DropInProgramValue =
   | "summer_27"
   | "school_year_26_27"
   | "both"
-  | "school_year_26_27_summer_27";
+  | "summer_27_school_year_27_28";
 
-/** Combo value for SY 2026-27 + Summer 2027 (shown as "Both" for drop-in). */
-export const SY_26_27_SUMMER_27 = "school_year_26_27_summer_27" as const;
+/** Combo value for Summer 2027 + SY 2027-28 (shown as "Both" for drop-in). */
+export const SUMMER_27_SY_27_28 = "summer_27_school_year_27_28" as const;
 
 /** Options offered in the Step 1 "Program Interest" list. */
 export const PROGRAM_OPTIONS: { value: ProgramValue; label: string }[] = [
@@ -41,6 +41,10 @@ export const PROGRAM_OPTIONS: { value: ProgramValue; label: string }[] = [
   { value: "homeschool_drop_in", label: "Homeschool Drop-In" },
   { value: "summer_27", label: "Summer 2027" },
   { value: "school_year_27_28", label: "School Year 2027-2028" },
+  {
+    value: SUMMER_27_SY_27_28,
+    label: "Both: Summer 2027 + School Year 2027-2028",
+  },
 ];
 
 /** Options offered for "Which program(s) are you dropping in for?". */
@@ -50,7 +54,10 @@ export const DROP_IN_PROGRAM_OPTIONS: {
 }[] = [
   { value: "school_year_26_27", label: "School Year 2026-2027" },
   { value: "summer_27", label: "Summer 2027" },
-  { value: SY_26_27_SUMMER_27, label: "Both" },
+  {
+    value: SUMMER_27_SY_27_28,
+    label: "Both: Summer 2027 + School Year 2027-2028",
+  },
 ];
 
 /** Full label map (includes legacy values). */
@@ -60,7 +67,7 @@ export const PROGRAM_LABELS: Record<string, string> = {
   school_year_26_27: "School Year 2026-2027",
   school_year_27_28: "School Year 2027-2028",
   both: "Summer 2026 + School Year 2026-2027",
-  school_year_26_27_summer_27: "School Year 2026-2027 + Summer 2027",
+  summer_27_school_year_27_28: "Summer 2027 + School Year 2027-2028",
   homeschool_drop_in: "Homeschool Drop-In",
 };
 
@@ -134,7 +141,7 @@ const BILLING_COMPONENTS: Record<string, FeeComponent[]> = {
   school_year_26_27: ["school_year_26_27"],
   school_year_27_28: ["school_year_27_28"],
   both: ["summer_26", "school_year_26_27"],
-  [SY_26_27_SUMMER_27]: ["school_year_26_27", "summer_27"],
+  [SUMMER_27_SY_27_28]: ["summer_27", "school_year_27_28"],
 };
 
 /** Legacy fallback for rows with no/unknown program (same $75 as before). */
@@ -238,7 +245,7 @@ export const ALL_PROGRAM_VALUES = [
   "school_year_26_27",
   "school_year_27_28",
   "both",
-  SY_26_27_SUMMER_27,
+  SUMMER_27_SY_27_28,
   "homeschool_drop_in",
 ] as const;
 
@@ -248,5 +255,5 @@ export const ALL_DROP_IN_PROGRAM_VALUES = [
   "summer_27",
   "school_year_26_27",
   "both",
-  SY_26_27_SUMMER_27,
+  SUMMER_27_SY_27_28,
 ] as const;
