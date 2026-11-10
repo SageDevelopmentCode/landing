@@ -18,4 +18,7 @@ Super admins can also preview at `/admin/email-previews/community-channel-unread
 
 ## Production
 
-Run `supabase/migrations/20261110160000_community_channel_digest_log.sql` in the **Supabase SQL editor** before the cron sends digests.
+Run these in the **Supabase SQL editor** before the cron sends digests:
+
+1. `supabase/migrations/20261110160000_community_channel_digest_log.sql`
+2. `supabase/migrations/20261110170000_get_last_community_channel_digest_sent.sql` (latest send per parent; required for correct dedupe at scale)

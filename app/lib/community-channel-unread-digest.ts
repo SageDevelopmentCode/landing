@@ -80,20 +80,16 @@ async function fetchLastDigestSentByUser(
 ): Promise<Map<string, string>> {
   if (userIds.length === 0) return new Map();
 
-  const { data, error } = await db
-    .schema("parent_app")
-    .from("community_channel_digest_log")
-    .select("user_id, sent_at")
-    .in("user_id", userIds)
-    .order("sent_at", { ascending: false });
+  const { data, error } = await db.rpc(
+    "get_last_community_channel_digest_sent",
+    { p_user_ids: userIds },
+  );
 
   if (error) throw new Error(error.message);
 
   const map = new Map<string, string>();
   for (const row of data ?? []) {
-    if (!map.has(row.user_id as string)) {
-      map.set(row.user_id as string, row.sent_at as string);
-    }
+    map.set(row.user_id as string, row.sent_at as string);
   }
   return map;
 }
@@ -103,6 +99,7 @@ async function buildDigestChannelsForUser(
   userId: string,
   lastSentAt: string | null,
   channelsWithUnread: ChannelMetaRow[],
+  digestCutoffIso?: string,
 ): Promise<CommunityChannelDigestChannel[]> {
   const digestChannels: CommunityChannelDigestChannel[] = [];
   const cutoff = lastSentAt ?? "1970-01-01T00:00:00.000Z";
@@ -122,14 +119,21 @@ async function buildDigestChannelsForUser(
       Math.max(new Date(readFloor).getTime(), new Date(cutoff).getTime()),
     ).toISOString();
 
-    const { data: msgs, error } = await db
+    let msgQuery = db
       .schema("messaging")
       .from("channel_messages")
       .select("id, sender_id, body, image_url, file_url, file_name, created_at")
       .eq("channel_id", ch.channel_id)
       .neq("sender_id", userId)
-      .gt("created_at", floorIso)
-      .order("created_at", { ascending: true });
+      .gt("created_at", floorIso);
+
+    if (digestCutoffIso) {
+      msgQuery = msgQuery.lte("created_at", digestCutoffIso);
+    }
+
+    const { data: msgs, error } = await msgQuery.order("created_at", {
+      ascending: true,
+    });
 
     if (error) throw new Error(error.message);
 
@@ -177,6 +181,7 @@ export async function buildCommunityChannelDigestForUser(
   db: SupabaseClient,
   userId: string,
   lastSentAt: string | null,
+  digestCutoffIso?: string,
 ): Promise<CommunityChannelDigestChannel[] | null> {
   const { data: meta, error } = await db.rpc("get_channels_with_meta", {
     p_user_id: userId,
@@ -195,6 +200,7 @@ export async function buildCommunityChannelDigestForUser(
     userId,
     lastSentAt,
     withUnread,
+    digestCutoffIso,
   );
 
   if (channels.length === 0) return null;
@@ -267,10 +273,12 @@ export async function maybeSendCommunityChannelUnreadDigests(
 
     try {
       const lastSentAt = lastSentMap.get(userId) ?? null;
+      const digestCutoffIso = new Date().toISOString();
       const channels = await buildCommunityChannelDigestForUser(
         db,
         userId,
         lastSentAt,
+        digestCutoffIso,
       );
 
       if (!channels?.length) {
@@ -304,6 +312,7 @@ export async function maybeSendCommunityChannelUnreadDigests(
           user_id: userId,
           message_count: messageCount,
           channel_ids: channels.map((c) => c.channelId),
+          sent_at: digestCutoffIso,
         });
 
       if (logRes.error) {
