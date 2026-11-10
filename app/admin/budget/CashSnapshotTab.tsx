@@ -1,7 +1,8 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { Download, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Download, FileText, RefreshCw } from "lucide-react";
 import {
   cssColors as colors,
   radius,
@@ -140,6 +141,12 @@ export function CashSnapshotTab() {
     return buildCashSnapshot(accounts, fetchedAt);
   }, [accounts, fetchedAt]);
 
+  const combinedStatementPeriod = useMemo(() => {
+    const now = new Date();
+    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    return `${prev.getUTCFullYear()}-${String(prev.getUTCMonth() + 1).padStart(2, "0")}`;
+  }, []);
+
   const netColor =
     (report?.netCashPosition ?? 0) >= 0 ? colors.success : colors.error;
 
@@ -242,6 +249,25 @@ export function CashSnapshotTab() {
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             Refresh
           </button>
+          <Link
+            href={`/admin/budget/combined-statement?period=${combinedStatementPeriod}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              backgroundColor: colors.mistyForest,
+              color: "white",
+              border: "none",
+              borderRadius: radius.sm,
+              padding: "6px 12px",
+              fontSize: "13px",
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            <FileText size={14} />
+            Combined statement
+          </Link>
           <button
             type="button"
             onClick={handleExportCsv}

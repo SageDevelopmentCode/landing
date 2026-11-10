@@ -60,6 +60,9 @@ apps/mobile/.expo
 apps/mobile/dist
 apps/mobile/expo-env.d.ts
 apps/mobile/google-service-account.json
+# Firebase Admin private key for FCM v1. google-services.json is the public client file and stays tracked.
+apps/mobile/*-firebase-adminsdk-*.json
+apps/mobile/fcm-service-account.json
 apps/mobile/ios
 apps/mobile/android
 

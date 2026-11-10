@@ -253,7 +253,6 @@ export default function ChannelChatArea({
   }, [channel.isMember]);
 
   useEffect(() => {
-    if (!isMember) { setLoadingMessages(false); return; }
     setLoadingMessages(true);
     setMessages([]);
     getChannelMessages(channel.id, userId).then((data) => {
@@ -262,7 +261,9 @@ export default function ChannelChatArea({
       });
       setMessages(data);
       setLoadingMessages(false);
-      markChannelRead(channel.id, userId);
+      if (isMember) {
+        markChannelRead(channel.id, userId);
+      }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel.id, isMember]);
@@ -273,7 +274,6 @@ export default function ChannelChatArea({
 
   // Real-time subscription
   useEffect(() => {
-    if (!isMember) return;
     const supabase = createClient();
     const sub = supabase
       .channel(`channel-messages:${channel.id}`)
@@ -506,6 +506,7 @@ export default function ChannelChatArea({
   };
 
   const handleReact = async (msgId: string, emoji: string) => {
+    if (!isMember) return;
     setReactionPickerMsgId(null);
     setReactionSheetMsgId(null);
     const updated = await toggleReaction(msgId, emoji);
@@ -595,30 +596,7 @@ export default function ChannelChatArea({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto py-4">
         <div className="max-w-4xl mx-auto px-6">
-        {!isMember ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-4">
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center text-white"
-              style={{ backgroundColor: green }}
-            >
-              <Hash className="w-6 h-6" />
-            </div>
-            <div className="text-center">
-              <p className="text-sm font-semibold font-body text-gray-800">#{channel.name}</p>
-              {channel.description && (
-                <p className="text-xs text-gray-400 font-body mt-1">{channel.description}</p>
-              )}
-            </div>
-            <button
-              onClick={handleJoin}
-              disabled={joining}
-              className="px-5 py-2 rounded-xl text-sm font-semibold font-body text-white transition-colors cursor-pointer disabled:opacity-50"
-              style={{ backgroundColor: green }}
-            >
-              {joining ? "Joining..." : "Join Channel"}
-            </button>
-          </div>
-        ) : loadingMessages ? (
+        {loadingMessages ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
           </div>

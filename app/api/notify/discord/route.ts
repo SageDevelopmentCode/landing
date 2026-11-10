@@ -19,6 +19,10 @@ import {
   createTestimonialEmbed,
   createParentMessageEmbed,
 } from "@/app/lib/discord";
+import {
+  notifyPushDelivery,
+  type PushDeliveryEvent,
+} from "@/app/lib/push-email-discord-log";
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +31,12 @@ export async function POST(request: NextRequest) {
 
     const notifyKey = request.headers.get("x-notify-key");
     if (notifyKey && notifyKey === process.env.DISCORD_NOTIFY_KEY) {
-      const ANON_ALLOWED = ["login_otp_sent", "android_download_request", "parent_message"];
+      const ANON_ALLOWED = [
+        "login_otp_sent",
+        "android_download_request",
+        "parent_message",
+        "push_delivery",
+      ];
       const { type, data } = await request.json();
       if (!ANON_ALLOWED.includes(type)) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -98,6 +107,22 @@ export async function POST(request: NextRequest) {
           embed,
           process.env.DISCORD_MESSAGES_WEBHOOK_URL,
         );
+        return NextResponse.json({ success: true });
+      }
+
+      if (type === "push_delivery") {
+        const event = data as PushDeliveryEvent;
+        if (
+          !event?.source ||
+          !event.pushTitle ||
+          !Array.isArray(event.recipients)
+        ) {
+          return NextResponse.json(
+            { error: "push_delivery requires source, pushTitle, recipients" },
+            { status: 400 },
+          );
+        }
+        await notifyPushDelivery(event);
         return NextResponse.json({ success: true });
       }
     }
