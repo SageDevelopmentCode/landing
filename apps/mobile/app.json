@@ -17,6 +17,7 @@
     },
     "android": {
       "package": "co.sagefield.mobile",
+      "runtimeVersion": "1.0.6",
       "adaptiveIcon": {
         "backgroundColor": "#F5EFE8",
         "foregroundImage": "./assets/images/AppIcon.png"
@@ -25,7 +26,8 @@
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",

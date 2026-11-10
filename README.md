@@ -34,3 +34,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+### Discord webhooks (Vercel)
+
+Set on the Vercel project (not committed to the repo):
+
+- `DISCORD_PUSH_EMAIL_SENT_WEBHOOK_URL` — logs Expo push delivery and activity-preference cron email/push outcomes (per-parent embeds). Supabase edge functions post via `/api/notify/discord` with `DISCORD_NOTIFY_KEY` (`type: push_delivery`).

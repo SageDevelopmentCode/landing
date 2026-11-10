@@ -197,18 +197,17 @@ export default function StaffChannelScreen() {
         });
       }
 
+      const msgs = await getChannelMessages(channelId, user.id);
+      msgs.forEach((m) => {
+        if (!senderCacheRef.current.has(m.sender_id)) {
+          senderCacheRef.current.set(m.sender_id, {
+            sender_name: m.sender_name,
+            sender_image_url: m.sender_image_url,
+          });
+        }
+      });
+      setMessages(msgs);
       if (isMemberState) {
-        const msgs = await getChannelMessages(channelId, user.id);
-        // Populate sender cache from initial load
-        msgs.forEach((m) => {
-          if (!senderCacheRef.current.has(m.sender_id)) {
-            senderCacheRef.current.set(m.sender_id, {
-              sender_name: m.sender_name,
-              sender_image_url: m.sender_image_url,
-            });
-          }
-        });
-        setMessages(msgs);
         await markChannelRead(channelId, user.id);
       }
 
@@ -225,10 +224,8 @@ export default function StaffChannelScreen() {
     }
   }, [loading, messages.length]);
 
-  // Real-time subscription (only while member)
+  // Real-time subscription (members and lurkers)
   useEffect(() => {
-    if (!isMemberState) return;
-
     const insertHandler = async (payload: any) => {
       const raw = payload.new as {
         id: string; channel_id: string; sender_id: string;
@@ -269,7 +266,11 @@ export default function StaffChannelScreen() {
         ];
       });
 
-      if (raw.sender_id !== currentUserIdRef.current && currentUserIdRef.current) {
+      if (
+        isMemberState &&
+        raw.sender_id !== currentUserIdRef.current &&
+        currentUserIdRef.current
+      ) {
         markChannelRead(channelId, currentUserIdRef.current);
       }
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
@@ -427,7 +428,7 @@ export default function StaffChannelScreen() {
   }
 
   async function handleSheetReaction(emoji: string) {
-    if (!selectedMsg || !currentUserIdRef.current) return;
+    if (!isMemberState || !selectedMsg || !currentUserIdRef.current) return;
     messageSheetRef.current?.dismiss();
     const updated = await toggleReaction(selectedMsg.id, emoji, currentUserIdRef.current);
     if (updated) {
@@ -438,7 +439,7 @@ export default function StaffChannelScreen() {
   }
 
   async function handlePillReaction(messageId: string, emoji: string) {
-    if (!currentUserIdRef.current) return;
+    if (!isMemberState || !currentUserIdRef.current) return;
     const updated = await toggleReaction(messageId, emoji, currentUserIdRef.current);
     if (updated) {
       setMessages((prev) =>
@@ -733,23 +734,6 @@ export default function StaffChannelScreen() {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Brand.sage700} />
           </View>
-        ) : !isMemberState ? (
-          <View style={styles.notMemberContainer}>
-            <Ionicons name="lock-closed-outline" size={40} color="#d1d5db" />
-            <Text style={styles.notMemberTitle}>Join to see messages</Text>
-            <Text style={styles.notMemberBody}>Become a member to read and participate in #{channelName}.</Text>
-            <Pressable
-              style={({ pressed }) => [styles.joinLargeBtn, pressed && styles.pressed]}
-              onPress={handleJoin}
-              disabled={joining}
-            >
-              {joining ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.joinLargeBtnText}>Join Channel</Text>
-              )}
-            </Pressable>
-          </View>
         ) : (
           <FlatList
             ref={flatListRef}
@@ -792,7 +776,21 @@ export default function StaffChannelScreen() {
         )}
 
         {/* Input bar */}
-        {isMemberState && (
+        {!isMemberState ? (
+          <View style={[styles.joinComposerRow, { paddingBottom: safeBottom || 12 }]}>
+            <Pressable
+              style={({ pressed }) => [styles.joinLargeBtn, pressed && styles.pressed, { flex: 1, marginTop: 0 }]}
+              onPress={handleJoin}
+              disabled={joining}
+            >
+              {joining ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.joinLargeBtnText}>Join to participate</Text>
+              )}
+            </Pressable>
+          </View>
+        ) : (
           <View style={[styles.inputRow, (pendingImage || pendingFile) && styles.inputRowNoTopBorder, { paddingBottom: safeBottom || 12 }]}>
             <Pressable
               style={({ pressed }) => [styles.attachBtn, pressed && styles.pressed]}
@@ -1335,6 +1333,13 @@ const styles = StyleSheet.create({
   },
 
   // Input bar
+  joinComposerRow: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f3f4f6",
+    backgroundColor: "#fff",
+  },
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",

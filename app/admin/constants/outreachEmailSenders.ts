@@ -47,6 +47,7 @@ import { sendSchoolYearWeekEightNewsletterEmail } from "@/app/actions/sendSchool
 import { sendSchoolYearWeekNineNewsletterEmail } from "@/app/actions/sendSchoolYearWeekNineNewsletterEmail";
 import { sendSchoolYearWeekTenNewsletterEmail } from "@/app/actions/sendSchoolYearWeekTenNewsletterEmail";
 import { sendSchoolYearWeekElevenNewsletterEmail } from "@/app/actions/sendSchoolYearWeekElevenNewsletterEmail";
+import { sendSchoolYearWeekTwelveNewsletterEmail } from "@/app/actions/sendSchoolYearWeekTwelveNewsletterEmail";
 import { sendSummerFirstDayEmail } from "@/app/actions/sendSummerFirstDayEmail";
 import { sendSummerStartingEmail } from "@/app/actions/sendSummerStartingEmail";
 import { sendSummerTuitionConfirmationEmail } from "@/app/actions/sendSummerTuitionConfirmationEmail";
@@ -433,6 +434,14 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
   "school-year-week-eleven-newsletter": (app) =>
     withEmail(app, (email) =>
       sendSchoolYearWeekElevenNewsletterEmail({
+        g1FullName: app.g1_full_name ?? "",
+        childLegalName: app.child_legal_name ?? "",
+        email,
+      }),
+    ),
+  "school-year-week-twelve-newsletter": (app) =>
+    withEmail(app, (email) =>
+      sendSchoolYearWeekTwelveNewsletterEmail({
         g1FullName: app.g1_full_name ?? "",
         childLegalName: app.child_legal_name ?? "",
         email,

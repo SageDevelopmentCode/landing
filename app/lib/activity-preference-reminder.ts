@@ -5,6 +5,7 @@ import {
   createActivityPreferenceRemindersSentEmbed,
   sendDiscordNotification,
 } from "@/app/lib/discord";
+import { notifyPushDelivery } from "@/app/lib/push-email-discord-log";
 import { getChicagoDateTimeParts } from "@/shared/staff/pickup-reminder";
 import {
   buildActivityPreferenceReminderEmail,
@@ -316,19 +317,41 @@ export async function sendActivityPreferenceReminder(opts: {
   });
   const emailSent = emailResult.success;
 
+  const pushTitle = "Activity preference needed";
+  const shortDate = activityDate
+    ? formatActivityDateShort(activityDate)
+    : "Date TBD";
+  const pushBody = `${activityTitle} · ${shortDate}`;
+
   let pushSent = false;
-  if (pushToken && activityId) {
-    const shortDate = activityDate
-      ? formatActivityDateShort(activityDate)
-      : "Date TBD";
-    pushSent = await sendExpoPush(
-      pushToken,
-      activityId,
-      `${activityTitle} · ${shortDate}`,
-    );
+  let pushSkipReason: string | undefined;
+  if (!pushToken) {
+    pushSkipReason = "no_push_token";
+  } else if (activityId) {
+    pushSent = await sendExpoPush(pushToken, activityId, pushBody);
+    if (!pushSent) pushSkipReason = "expo_ticket_error";
   }
 
   const success = emailSent || pushSent;
+
+  await notifyPushDelivery({
+    source: "activity_preference_reminder",
+    pushTitle,
+    pushBody,
+    recipients: [
+      {
+        parentName: g1FullName,
+        parentEmail: email,
+        studentNames: [childLegalName],
+        pushStatus: pushSent ? "sent" : "skipped",
+        skipReason: pushSent ? undefined : pushSkipReason,
+        emailStatus: emailSent ? "sent" : "failed",
+        emailSubject: subject,
+      },
+    ],
+    metadata: activityId ? { activityId } : undefined,
+  });
+
   return {
     success,
     emailSent,

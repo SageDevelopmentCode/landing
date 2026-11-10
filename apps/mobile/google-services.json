@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "458504677167",
+    "project_id": "sage-field-mobile",
+    "storage_bucket": "sage-field-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:458504677167:android:d2bec6d0eb99fe2c5123da",
+        "android_client_info": {
+          "package_name": "co.sagefield.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkwf_LmquTtYcAr9ytYgul2vsDQr8V0Qc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
