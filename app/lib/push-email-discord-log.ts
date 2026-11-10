@@ -49,6 +49,12 @@ const SOURCE_COLOR: Record<PushDeliverySource, number> = {
   staff_broadcast: 0x9b59b6,
 };
 
+const DISCORD_EMBED_FIELD_VALUE_MAX = 1024;
+
+function truncationSuffix(count: number): string {
+  return count > 0 ? `\n_+${count} more_` : "";
+}
+
 function formatRecipientLine(r: PushDeliveryRecipient): string {
   const students =
     r.studentNames?.length ? ` · ${r.studentNames.join(", ")}` : "";
@@ -71,23 +77,33 @@ function buildRecipientField(
   if (!filtered.length) return null;
 
   const lines: string[] = [];
-  let truncated = 0;
   for (const r of filtered) {
     const line = formatRecipientLine(r);
     const next = [...lines, line].join("\n");
-    if (next.length > 1020) {
-      truncated = filtered.length - lines.length;
+    const remainingAfterPush = filtered.length - lines.length - 1;
+    const projectedLength =
+      remainingAfterPush > 0
+        ? next.length + truncationSuffix(remainingAfterPush).length
+        : next.length;
+    if (projectedLength > DISCORD_EMBED_FIELD_VALUE_MAX) {
       break;
     }
     lines.push(line);
   }
 
-  let value = lines.join("\n");
-  if (truncated > 0) {
-    value += `\n_+${truncated} more_`;
+  let truncated = filtered.length - lines.length;
+  while (lines.length > 0) {
+    const value = lines.join("\n") + truncationSuffix(truncated);
+    if (value.length <= DISCORD_EMBED_FIELD_VALUE_MAX) {
+      return { name: `${label} (${filtered.length})`, value, inline: false };
+    }
+    lines.pop();
+    truncated = filtered.length - lines.length;
   }
 
-  return { name: `${label} (${filtered.length})`, value, inline: false };
+  const fallback =
+    truncationSuffix(truncated).slice(0, DISCORD_EMBED_FIELD_VALUE_MAX) || "—";
+  return { name: `${label} (${filtered.length})`, value: fallback, inline: false };
 }
 
 export function createPushDeliveryEmbed(event: PushDeliveryEvent) {

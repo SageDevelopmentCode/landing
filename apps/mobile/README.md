@@ -55,11 +55,14 @@ If you ship a new native release:
 
 ## Android push
 
-Message, channel, and activity notifications already save an Expo push token through the `save-push-token` edge function and send it with the Expo push API. Android cannot register that token until Firebase Cloud Messaging is configured. There is no `google-services.json` in this repo yet, so `expo.android.googleServicesFile` is not set. After you download that client file from Firebase (package `co.sagefield.mobile`):
+Message, channel, and activity notifications already save an Expo push token through the `save-push-token` edge function and send it with the Expo push API. Android cannot register that token until Firebase Cloud Messaging is configured.
 
-1. Place it at `apps/mobile/google-services.json` and set `expo.android.googleServicesFile` to `./google-services.json`.
-2. Upload the Firebase Admin private key with `eas credentials` (Android, production, Google Service Account, FCM V1). Do not commit that key. `*-firebase-adminsdk-*.json` and `fcm-service-account.json` are gitignored. It is a different file from `google-service-account.json`, which is only for Play submit.
-3. Ship a new production Android binary. FCM is native, so an OTA cannot turn push on for the current Play build. After install, login saves the token and the existing Supabase functions deliver it.
+Client configuration is already in place: `apps/mobile/google-services.json` is tracked in the repo, and `expo.android.googleServicesFile` is set to `./google-services.json` in `app.json` (package `co.sagefield.mobile`).
+
+To finish enabling push on device:
+
+1. Upload the Firebase Admin private key with `eas credentials` (Android, production, Google Service Account, FCM V1). Do not commit that key. `*-firebase-adminsdk-*.json` and `fcm-service-account.json` are gitignored. It is a different file from `google-service-account.json`, which is only for Play submit.
+2. Ship a new production Android binary. FCM is native, so an OTA cannot turn push on for the current Play build. After install, login saves the token and the existing Supabase functions deliver it.
 
 `admin.users` stores one `push_token` per user. A later login on the other platform replaces it.
 

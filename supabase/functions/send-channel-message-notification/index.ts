@@ -1,5 +1,27 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+function runInBackground(promise: Promise<unknown>): void {
+  const waitUntil = (
+    globalThis as { EdgeRuntime?: { waitUntil: (p: Promise<unknown>) => void } }
+  ).EdgeRuntime?.waitUntil;
+  if (waitUntil) waitUntil(promise);
+  else void promise;
+}
+
+function postJsonInBackground(
+  url: string,
+  headers: Record<string, string>,
+  body: unknown,
+): void {
+  runInBackground(
+    fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    }).catch(() => {}),
+  );
+}
+
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const DEFAULT_NOTIFY_EMAIL = "sabrina.sagefield@gmail.com";
 const NOTIFY_API_URL = "https://sagefield.co/api/notify/discord";
@@ -11,14 +33,14 @@ function syncCommunityChannelFeedPost(messageId: string): void {
   const secret = Deno.env.get("WEBHOOK_SECRET");
   if (!secret) return;
 
-  void fetch(FEED_AUTO_CHANNEL_MESSAGE_URL, {
-    method: "POST",
-    headers: {
+  postJsonInBackground(
+    FEED_AUTO_CHANNEL_MESSAGE_URL,
+    {
       "Content-Type": "application/json",
       "x-webhook-secret": secret,
     },
-    body: JSON.stringify({ messageId }),
-  }).catch(() => {});
+    { messageId },
+  );
 }
 
 function notifyParentMessageDiscord(data: {
@@ -33,17 +55,14 @@ function notifyParentMessageDiscord(data: {
   const notifyKey = Deno.env.get("DISCORD_NOTIFY_KEY");
   if (!notifyKey) return;
 
-  void fetch(NOTIFY_API_URL, {
-    method: "POST",
-    headers: {
+  postJsonInBackground(
+    NOTIFY_API_URL,
+    {
       "Content-Type": "application/json",
       "x-notify-key": notifyKey,
     },
-    body: JSON.stringify({
-      type: "parent_message",
-      data,
-    }),
-  }).catch(() => {});
+    { type: "parent_message", data },
+  );
 }
 
 type PushDeliveryRecipient = {
@@ -65,14 +84,14 @@ function notifyPushDeliveryDiscord(data: {
   const notifyKey = Deno.env.get("DISCORD_NOTIFY_KEY");
   if (!notifyKey) return;
 
-  void fetch(NOTIFY_API_URL, {
-    method: "POST",
-    headers: {
+  postJsonInBackground(
+    NOTIFY_API_URL,
+    {
       "Content-Type": "application/json",
       "x-notify-key": notifyKey,
     },
-    body: JSON.stringify({ type: "push_delivery", data }),
-  }).catch(() => {});
+    { type: "push_delivery", data },
+  );
 }
 
 async function studentNamesByParentId(

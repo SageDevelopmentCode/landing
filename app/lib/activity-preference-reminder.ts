@@ -334,7 +334,7 @@ export async function sendActivityPreferenceReminder(opts: {
 
   const success = emailSent || pushSent;
 
-  void notifyPushDelivery({
+  await notifyPushDelivery({
     source: "activity_preference_reminder",
     pushTitle,
     pushBody,

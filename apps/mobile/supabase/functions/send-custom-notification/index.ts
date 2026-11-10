@@ -1,5 +1,27 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+function runInBackground(promise: Promise<unknown>): void {
+  const waitUntil = (
+    globalThis as { EdgeRuntime?: { waitUntil: (p: Promise<unknown>) => void } }
+  ).EdgeRuntime?.waitUntil;
+  if (waitUntil) waitUntil(promise);
+  else void promise;
+}
+
+function postJsonInBackground(
+  url: string,
+  headers: Record<string, string>,
+  body: unknown,
+): void {
+  runInBackground(
+    fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    }).catch(() => {}),
+  );
+}
+
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 const NOTIFY_API_URL = "https://sagefield.co/api/notify/discord";
 
@@ -22,14 +44,14 @@ function notifyPushDeliveryDiscord(data: {
   const notifyKey = Deno.env.get("DISCORD_NOTIFY_KEY");
   if (!notifyKey) return;
 
-  void fetch(NOTIFY_API_URL, {
-    method: "POST",
-    headers: {
+  postJsonInBackground(
+    NOTIFY_API_URL,
+    {
       "Content-Type": "application/json",
       "x-notify-key": notifyKey,
     },
-    body: JSON.stringify({ type: "push_delivery", data }),
-  }).catch(() => {});
+    { type: "push_delivery", data },
+  );
 }
 
 async function studentNamesByParentId(
@@ -72,6 +94,16 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json" },
     });
   }
+  if (!count_only) {
+    const titleStr = title as string;
+    const bodyStr = body as string;
+    if (titleStr.length > 100 || bodyStr.length > 500) {
+      return new Response(
+        JSON.stringify({ error: "title max 100 characters, body max 500 characters" }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+  }
 
   const anon = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -112,21 +144,33 @@ Deno.serve(async (req) => {
 
   const allParents = parents ?? [];
 
-  if (!allParents.length || count_only) {
+  const withToken = allParents.filter(
+    (p: { push_token: string | null }) => p.push_token,
+  );
+  const withoutToken = allParents.filter(
+    (p: { push_token: string | null }) => !p.push_token,
+  );
+
+  if (count_only) {
     return new Response(
-      JSON.stringify({ ok: true, count: allParents.length, sent: 0 }),
+      JSON.stringify({ ok: true, count: withToken.length, sent: 0 }),
+      { headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  if (!allParents.length) {
+    return new Response(
+      JSON.stringify({ ok: true, count: 0, sent: 0 }),
       { headers: { "Content-Type": "application/json" } },
     );
   }
 
   const pushTitle = title as string;
-  const pushBody = (body as string).slice(0, 140);
+  const pushBody = body as string;
   const parentIds = allParents.map((p: { id: string }) => p.id);
   const studentMap = await studentNamesByParentId(admin, parentIds);
 
   const deliveryRecipients: PushDeliveryRecipient[] = [];
-  const withToken = allParents.filter((p: { push_token: string | null }) => p.push_token);
-  const withoutToken = allParents.filter((p: { push_token: string | null }) => !p.push_token);
 
   for (const p of withoutToken as {
     id: string;
