@@ -737,6 +737,7 @@ export default function StaffChannelScreen() {
         ) : (
           <FlatList
             ref={flatListRef}
+            style={styles.flex}
             data={listItems}
             keyExtractor={(item) => item.key}
             contentContainerStyle={styles.messageList}
@@ -779,7 +780,7 @@ export default function StaffChannelScreen() {
         {!isMemberState ? (
           <View style={[styles.joinComposerRow, { paddingBottom: safeBottom || 12 }]}>
             <Pressable
-              style={({ pressed }) => [styles.joinLargeBtn, pressed && styles.pressed, { flex: 1, marginTop: 0 }]}
+              style={({ pressed }) => [styles.joinLargeBtn, pressed && styles.pressed]}
               onPress={handleJoin}
               disabled={joining}
             >
@@ -1103,9 +1104,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 28,
     paddingVertical: 12,
-    marginTop: 8,
-    minWidth: 160,
+    minHeight: 48,
+    alignSelf: "stretch",
     alignItems: "center",
+    justifyContent: "center",
   },
   joinLargeBtnText: {
     fontFamily: FontFamilies.bodySemiBold,

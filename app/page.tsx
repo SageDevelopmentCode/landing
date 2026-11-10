@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Shield, Clock, Calendar, Star, BookOpen } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Bebas_Neue } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import WelcomeSection from "./components/WelcomeSection";
@@ -25,21 +24,12 @@ import WaitlistDialog from "./components/WaitlistDialog";
 import FloatingSMSButton from "./components/FloatingSMSButton";
 import EnrollmentAnnouncementPopup from "./components/EnrollmentAnnouncementPopup";
 import WeekRecapPreview from "./components/WeekRecapPreview";
-import HalloweenHeroScene, { HALLOWEEN_THEME } from "./friday/components/HalloweenHeroScene";
+import FridayRacePreview from "./friday/components/race/FridayRacePreview";
 import WeekCardsGrid from "./components/WeekCardsGrid";
 import {
   LIVE_SUMMER_WEEKS,
   SCHOOL_YEAR_WEEKS,
 } from "@/app/lib/highlights/weeks";
-import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
-
-const bebasNeue = Bebas_Neue({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-bebas-neue",
-});
-
-const FRIDAY_DROPIN_DOLLARS = FUN_FRIDAY_DROPIN_CENTS / 100;
 
 
 interface LatestPost {
@@ -169,199 +159,12 @@ export default function Home() {
     },
   ];
   return (
-    <div className={bebasNeue.variable}>
+    <div>
       <Navbar />
       <Hero />
       <WelcomeSection />
 
-      {/* ── Field Day Friday Preview ── */}
-      <style>{`
-        @keyframes fdf-letter-drop {
-          0%   { opacity: 0; transform: translateY(-16px) scale(0.92); filter: blur(3px); }
-          60%  { opacity: 1; transform: translateY(2px) scale(1.02); filter: blur(0); }
-          100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-        }
-        .fdf-desert-headline {
-          color: ${HALLOWEEN_THEME.inkBrown};
-          text-shadow: 0 2px 16px rgba(244, 162, 97, 0.45);
-        }
-        .fdf-letter-drop span {
-          display: inline-block;
-          opacity: 0;
-          animation: fdf-letter-drop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
-        }
-        @keyframes halloween-sheen {
-          0%, 62%, 100% { background-position: 0% 50%; }
-          38% { background-position: 100% 50%; }
-        }
-        .halloween-sheen {
-          background-image: linear-gradient(110deg, #4A2C2A 0%, #4A2C2A 38%, #F4A261 50%, #4A2C2A 62%, #4A2C2A 100%);
-          background-size: 220% 100%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          animation: halloween-sheen 7s ease-in-out infinite;
-        }
-        @keyframes halloween-cta-glow {
-          0%, 100% { box-shadow: 0 10px 24px rgba(232, 93, 4, 0.28); }
-          50% { box-shadow: 0 14px 32px rgba(244, 162, 97, 0.48); }
-        }
-        .halloween-cta { animation: halloween-cta-glow 2.8s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) {
-          .fdf-letter-drop span { animation: none !important; opacity: 1 !important; transform: none !important; }
-          .halloween-sheen {
-            animation: none !important;
-            background: none !important;
-            color: ${HALLOWEEN_THEME.inkBrown} !important;
-            -webkit-text-fill-color: ${HALLOWEEN_THEME.inkBrown} !important;
-          }
-          .halloween-cta { animation: none !important; }
-        }
-      `}</style>
-
-      <div style={{ background: "#FFF9F5", marginBottom: "-1px" }}>
-        <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C240,56 480,0 720,28 C960,56 1200,0 1440,28 L1440,56 L0,56 Z" fill={HALLOWEEN_THEME.skyPeach} />
-        </svg>
-      </div>
-
-      <section className="relative overflow-hidden py-16 px-8 sm:px-12 lg:px-16 min-h-[420px]">
-        <HalloweenHeroScene compact />
-
-        <div className="relative max-w-5xl mx-auto z-10">
-          <motion.div
-            className="text-center mb-8"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <span
-              className="inline-flex items-center gap-2 px-5 py-2 bg-white/80 backdrop-blur-sm border border-[#F4A261]/40 rounded-full text-xs font-semibold font-body uppercase tracking-wide"
-              style={{ color: HALLOWEEN_THEME.inkBrown }}
-            >
-              This Friday · Oct 30 · Limited Spots
-            </span>
-          </motion.div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55 }}
-              className="rounded-3xl border border-white/60 bg-white/75 backdrop-blur-md shadow-xl px-6 sm:px-8 py-8"
-            >
-              <h2
-                className="font-heading font-bold leading-tight mb-3"
-                style={{ fontSize: "clamp(1.9rem, 4vw, 3rem)" }}
-              >
-                <span
-                  className="block fdf-desert-headline halloween-sheen"
-                  style={{
-                    fontFamily: "var(--font-bebas-neue), sans-serif",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  Not-So-Scary Halloween
-                </span>
-                <span className="fdf-letter-drop block" style={{ color: HALLOWEEN_THEME.duneDeep }}>
-                  {Array.from("Field Day").map((ch, i) => (
-                    <span key={i} style={{ animationDelay: `${0.3 + i * 0.06}s` }}>
-                      {ch === " " ? " " : ch}
-                    </span>
-                  ))}
-                </span>
-              </h2>
-              <p className="font-body text-base leading-relaxed mb-6 max-w-md" style={{ color: HALLOWEEN_THEME.inkBrown }}>
-                Paint mini pumpkins, brew a potion, and play not-so-scary games at Sage Field.
-              </p>
-
-              <div className="flex flex-wrap gap-2 mb-7">
-                {[
-                  { icon: "📅", text: "Oct 30, 2026" },
-                  { icon: "🕗", text: "8:30 AM – 1:30 PM" },
-                  { icon: "💰", text: `$${FRIDAY_DROPIN_DOLLARS} / child` },
-                  { icon: "👧", text: "Ages 4–11" },
-                ].map((pill) => (
-                  <span
-                    key={pill.text}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/90 border border-[#F4A261]/40 rounded-full text-xs font-semibold font-body shadow-sm"
-                    style={{ color: HALLOWEEN_THEME.inkBrown }}
-                  >
-                    {pill.icon} {pill.text}
-                  </span>
-                ))}
-              </div>
-
-              <Link
-                href="/friday"
-                className="halloween-cta inline-flex items-center gap-2 px-7 py-3.5 font-bold font-body rounded-2xl text-white text-sm shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200"
-                style={{ background: `linear-gradient(135deg, ${HALLOWEEN_THEME.duneDeep} 0%, ${HALLOWEEN_THEME.terracotta} 100%)` }}
-              >
-                Join the Fun →
-              </Link>
-              <p className="text-xs font-body mt-3" style={{ color: HALLOWEEN_THEME.duneDeep }}>
-                No enrollment required · One-time drop-in
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55, delay: 0.1 }}
-            >
-              <div className="flex flex-wrap justify-center gap-3">
-                {[
-                  { emoji: "🎃", title: "pumpkin painting", accent: "#FFE4C7" },
-                  { emoji: "🧪", title: "witches brew", accent: "#FFF6EB" },
-                  { emoji: "✨", title: "slime", accent: "#FFF8DC" },
-                  { emoji: "🎨", title: "Halloween painting ornaments", accent: "#FFE4C7" },
-                  { emoji: "👻", title: "Ghost freeze dance", accent: "#FFF6EB" },
-                  { emoji: "🧻", title: "Mummy wrap", accent: "#FFF8DC" },
-                ].map((act, i) => (
-                  <motion.div
-                    key={act.title}
-                    className="bg-white/85 backdrop-blur-sm border border-[#F4A261]/30 rounded-2xl p-4 flex flex-col items-center text-center gap-2 shadow-sm w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.5rem)]"
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    whileHover={{ y: -4, transition: { delay: 0, duration: 0.25 } }}
-                    transition={{ duration: 0.4, delay: 0.15 + i * 0.1 }}
-                  >
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                      style={{ background: act.accent }}
-                    >
-                      {act.emoji}
-                    </div>
-                    <p className="text-xs font-bold font-body leading-tight" style={{ color: HALLOWEEN_THEME.inkBrown }}>
-                      {act.title}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-              <motion.p
-                className="text-center text-xs font-body mt-4"
-                style={{ color: HALLOWEEN_THEME.inkBrown }}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: 0.45 }}
-              >
-                All activities included · Paint, play, and take your creations home!
-              </motion.p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      <div style={{ background: HALLOWEEN_THEME.skyPeach, marginBottom: "-1px" }}>
-        <svg viewBox="0 0 1440 56" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full block" style={{ height: "56px" }}>
-          <path d="M0,28 C360,0 1080,56 1440,28 L1440,56 L0,56 Z" fill="#FFF9F5" />
-        </svg>
-      </div>
+      <FridayRacePreview />
 
       <WeekRecapPreview className="bg-welcome-bg" />
 

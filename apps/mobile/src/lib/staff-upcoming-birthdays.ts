@@ -7,6 +7,18 @@ import {
 
 export const UPCOMING_BIRTHDAY_DAYS = 7;
 
+export const TEAM_MEMBER_BIRTHDAYS = [
+  { id: "team:joy-paige", name: "Joy Paige", dobMonth: "12", dobDay: "29" },
+  { id: "team:edith-deluna", name: "Edith DeLuna", dobMonth: "7", dobDay: "26" },
+  { id: "team:julius-cecilia", name: "Julius Cecilia", dobMonth: "5", dobDay: "30" },
+  {
+    id: "team:sabrina-obnamia",
+    name: "Sabrina Obnamia",
+    dobMonth: "11",
+    dobDay: "29",
+  },
+] as const;
+
 export type StaffBirthday = {
   studentId: string;
   name: string;
@@ -18,6 +30,7 @@ export type StaffBirthday = {
   daysUntil: number;
   turningAge: number;
   currentAge: number;
+  isTeamMember?: boolean;
 };
 
 /** @deprecated Use StaffBirthday */
@@ -160,7 +173,14 @@ export function formatBirthdayDate(birthday: StaffBirthday): string {
   });
 }
 
+export function formatBirthdayMonthDay(birthday: StaffBirthday): string {
+  return formatBirthdayDate(birthday);
+}
+
 export function formatFullDob(birthday: StaffBirthday): string {
+  if (birthday.isTeamMember) {
+    return formatBirthdayMonthDay(birthday);
+  }
   const month = parseInt(birthday.dobMonth, 10);
   const day = parseInt(birthday.dobDay, 10);
   const year = parseInt(birthday.dobYear, 10);
@@ -254,6 +274,35 @@ export function buildStaffBirthdaysFromApps(
   return birthdays.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export function buildTeamMemberBirthdays(todayYmd: string): StaffBirthday[] {
+  const birthdays: StaffBirthday[] = [];
+
+  for (const member of TEAM_MEMBER_BIRTHDAYS) {
+    const timing = getDaysUntilBirthday(
+      member.dobMonth,
+      member.dobDay,
+      todayYmd,
+    );
+    if (!timing) continue;
+
+    birthdays.push({
+      studentId: member.id,
+      name: member.name,
+      profileImageUrl: null,
+      dobMonth: member.dobMonth,
+      dobDay: member.dobDay,
+      dobYear: "2000",
+      birthdayYmd: timing.birthdayYmd,
+      daysUntil: timing.daysUntil,
+      turningAge: 0,
+      currentAge: 0,
+      isTeamMember: true,
+    });
+  }
+
+  return birthdays.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export async function fetchStaffBirthdays(
   todayYmd = getChicagoDateTimeParts().ymd,
 ): Promise<StaffBirthday[]> {
@@ -277,24 +326,31 @@ export async function fetchStaffBirthdays(
     )
     .map((app) => app.student_id);
 
-  if (!eligibleIds.length) return [];
+  let studentBirthdays: StaffBirthday[] = [];
 
-  const { data: studentsData, error: studentsError } = await supabase
-    .schema("admin")
-    .from("students")
-    .select("id, profile_image_url")
-    .in("id", eligibleIds);
+  if (eligibleIds.length) {
+    const { data: studentsData, error: studentsError } = await supabase
+      .schema("admin")
+      .from("students")
+      .select("id, profile_image_url")
+      .in("id", eligibleIds);
 
-  if (studentsError) throw studentsError;
+    if (studentsError) throw studentsError;
 
-  const profileMap = new Map(
-    (studentsData ?? []).map((s) => [
-      s.id,
-      s.profile_image_url as string | null,
-    ]),
+    const profileMap = new Map(
+      (studentsData ?? []).map((s) => [
+        s.id,
+        s.profile_image_url as string | null,
+      ]),
+    );
+
+    studentBirthdays = buildStaffBirthdaysFromApps(apps, todayYmd, profileMap);
+  }
+
+  const teamBirthdays = buildTeamMemberBirthdays(todayYmd);
+  return [...studentBirthdays, ...teamBirthdays].sort((a, b) =>
+    a.name.localeCompare(b.name),
   );
-
-  return buildStaffBirthdaysFromApps(apps, todayYmd, profileMap);
 }
 
 export async function fetchStaffUpcomingBirthdays(

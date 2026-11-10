@@ -61,21 +61,10 @@ function BirthdayRow({ birthday }: { birthday: StaffBirthday }) {
     birthday.birthdayYmd,
   );
   const isToday = birthday.daysUntil === 0;
+  const isTeamMember = Boolean(birthday.isTeamMember);
 
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.row,
-        isToday && styles.rowToday,
-        pressed && { opacity: 0.85 },
-      ]}
-      onPress={() =>
-        router.push({
-          pathname: "/(staff)/students/[studentId]" as any,
-          params: { studentId: birthday.studentId },
-        })
-      }
-    >
+  const content = (
+    <>
       <View style={[styles.avatar, { backgroundColor: color }]}>
         {birthday.profileImageUrl ? (
           <Image
@@ -93,7 +82,9 @@ function BirthdayRow({ birthday }: { birthday: StaffBirthday }) {
           {shortName(birthday.name)}
         </Text>
         <Text style={styles.rowMeta} numberOfLines={1}>
-          {relativeDay} · Turning {birthday.turningAge}
+          {isTeamMember
+            ? relativeDay
+            : `${relativeDay} · Turning ${birthday.turningAge}`}
         </Text>
       </View>
 
@@ -101,9 +92,33 @@ function BirthdayRow({ birthday }: { birthday: StaffBirthday }) {
         <View style={styles.todayBadge}>
           <Text style={styles.todayBadgeText}>Today</Text>
         </View>
-      ) : (
+      ) : !isTeamMember ? (
         <Ionicons name="chevron-forward" size={16} color={HomeTheme.meta} />
-      )}
+      ) : null}
+    </>
+  );
+
+  if (isTeamMember) {
+    return (
+      <View style={[styles.row, isToday && styles.rowToday]}>{content}</View>
+    );
+  }
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.row,
+        isToday && styles.rowToday,
+        pressed && { opacity: 0.85 },
+      ]}
+      onPress={() =>
+        router.push({
+          pathname: "/(staff)/students/[studentId]" as any,
+          params: { studentId: birthday.studentId },
+        })
+      }
+    >
+      {content}
     </Pressable>
   );
 }
@@ -157,7 +172,7 @@ export function StaffUpcomingBirthdaysSection({
           onPress={onViewAll}
         >
           <Text style={styles.viewAllText}>
-            View all ({totalCount} students)
+            View all ({totalCount})
           </Text>
           <Ionicons name="chevron-forward" size={16} color={Brand.sage700} />
         </Pressable>

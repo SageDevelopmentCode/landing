@@ -2396,7 +2396,7 @@ export async function buildBeachBashConfirmationEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   const childLabel =
     opts.childCount > 1 ? `${opts.childCount} children` : opts.childNames;
-  const subject = "Not-So-Scary Halloween — You're Registered! 🎃";
+  const subject = "Race Cars and Speedsters — You're Registered! 🏎️";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -2404,11 +2404,11 @@ export async function buildBeachBashConfirmationEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${opts.parentName},</p>
 
-  <p>Your registration for <strong>${opts.childNames}</strong> is confirmed and your payment of <strong>$${opts.amountDollars}</strong> has been received. We can&apos;t wait to see you at <strong>Not-So-Scary Halloween</strong> Field Day${opts.childCount > 1 ? " with the whole crew" : ""}!</p>
+  <p>Your registration for <strong>${opts.childNames}</strong> is confirmed and your payment of <strong>$${opts.amountDollars}</strong> has been received. We can&apos;t wait to see you at <strong>Race Cars and Speedsters</strong> Field Day${opts.childCount > 1 ? " with the whole crew" : ""}!</p>
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">Event Details</h2>
   <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
-    <tr><td style="padding: 6px 0; width: 28px;">📅</td><td style="padding: 6px 0;"><strong>Date:</strong> Friday, October 30, 2026</td></tr>
+    <tr><td style="padding: 6px 0; width: 28px;">📅</td><td style="padding: 6px 0;"><strong>Date:</strong> Friday, November 13, 2026</td></tr>
     <tr><td style="padding: 6px 0;">🕗</td><td style="padding: 6px 0;"><strong>Drop-off:</strong> 8:30 AM &nbsp;·&nbsp; <strong>Pick-up:</strong> 1:30 PM</td></tr>
     <tr><td style="padding: 6px 0;">👧</td><td style="padding: 6px 0;"><strong>Registered:</strong> ${childLabel}</td></tr>
     <tr><td style="padding: 6px 0;">📍</td><td style="padding: 6px 0;"><strong>Location:</strong> 2760 Gattis School Rd, Round Rock, TX</td></tr>
@@ -2416,12 +2416,10 @@ export async function buildBeachBashConfirmationEmail(opts: {
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What&apos;s on the Agenda</h2>
   <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
-    <tr><td style="padding: 5px 0; width: 28px;">🎃</td><td style="padding: 5px 0;"><strong>pumpkin painting</strong> — Paint mini pumpkins.</td></tr>
-    <tr><td style="padding: 5px 0;">🧪</td><td style="padding: 5px 0;"><strong>witches brew</strong> — A potion experiment with mini cauldrons.</td></tr>
-    <tr><td style="padding: 5px 0;">✨</td><td style="padding: 5px 0;"><strong>slime</strong> — Make slime with glitter or mini charms.</td></tr>
-    <tr><td style="padding: 5px 0;">🎨</td><td style="padding: 5px 0;"><strong>Halloween painting ornaments</strong> — Paint Halloween ornaments.</td></tr>
-    <tr><td style="padding: 5px 0;">👻</td><td style="padding: 5px 0;"><strong>Ghost freeze dance</strong> — Dance like a ghost, then freeze when the music stops.</td></tr>
-    <tr><td style="padding: 5px 0;">🧻</td><td style="padding: 5px 0;"><strong>Mummy wrap</strong> — Wrap a kid in toilet paper under 30 seconds.</td></tr>
+    <tr><td style="padding: 5px 0; width: 28px;">🏁</td><td style="padding: 5px 0;"><strong>Pit Crew Relay</strong> — Team up for a pit-stop relay: swap “tires,” grab a flag, and send your speedster back out.</td></tr>
+    <tr><td style="padding: 5px 0;">🚗</td><td style="padding: 5px 0;"><strong>Cardboard Speedsters</strong> — Decorate a cardboard race car, add a number, and take it for a roll.</td></tr>
+    <tr><td style="padding: 5px 0;">⏱️</td><td style="padding: 5px 0;"><strong>Speed Trials</strong> — Friendly timed dashes and rolling races across the field.</td></tr>
+    <tr><td style="padding: 5px 0;">🎨</td><td style="padding: 5px 0;"><strong>Checkered Flag Art</strong> — Paint flags, numbers, and racing stripes to wave or wear.</td></tr>
   </table>
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What to Pack</h2>
@@ -2433,7 +2431,7 @@ export async function buildBeachBashConfirmationEmail(opts: {
     <tr><td style="padding: 5px 0;">🥪</td><td style="padding: 5px 0;">Snack + lunch from home</td></tr>
     <tr><td style="padding: 5px 0;">👕</td><td style="padding: 5px 0;">Old clothes for outdoor play</td></tr>
     <tr><td style="padding: 5px 0;">🎒</td><td style="padding: 5px 0;">Small backpack for paintings &amp; creations</td></tr>
-    <tr><td style="padding: 5px 0;">🎃</td><td style="padding: 5px 0;">Optional costume or not-so-scary accessory</td></tr>
+    <tr><td style="padding: 5px 0;">🏁</td><td style="padding: 5px 0;">Optional racing colors or a checkered accessory</td></tr>
   </table>
 
   <p style="margin-top: 28px;">Questions before Friday? Reach us at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
@@ -7446,6 +7444,114 @@ export async function buildActivityPreferenceReminderEmail(opts: {
   </div>
 
   <p style="margin-bottom: 8px; font-size: 14px; color: #555;">You can also set preferences in the <strong>Sage Field mobile app</strong> from your home screen.</p>
+
+  <p style="margin-top: 32px; margin-bottom: 4px;">With warmth,</p>
+  <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>
+
+</body>
+</html>
+  `.trim();
+
+  return { subject, content };
+}
+
+function escapeDigestHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function truncateDigestPreview(text: string, maxLen = 120): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (t.length <= maxLen) return t;
+  return `${t.slice(0, maxLen - 1)}…`;
+}
+
+function formatDigestMessageTime(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString("en-US", {
+    timeZone: "America/Chicago",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+export async function buildCommunityChannelUnreadDigestEmail(
+  opts: {
+    parentFullName: string;
+    channels: import("./community-channel-digest-types").CommunityChannelDigestChannel[];
+    messagesUrl?: string;
+  },
+): Promise<{ subject: string; content: string }> {
+  const firstName = opts.parentFullName?.split(" ")[0] ?? "there";
+  const messagesUrl =
+    opts.messagesUrl ?? "https://www.sagefield.co/parent/messages?tab=community";
+
+  const totalNew = opts.channels.reduce((s, ch) => s + ch.messages.length, 0);
+  const channelNames = opts.channels.map((c) => c.channelName.split(" —")[0].trim());
+
+  const subject =
+    totalNew === 1
+      ? `New community message in ${channelNames[0] ?? "your channel"} — Sage Field`
+      : channelNames.length === 1
+        ? `${totalNew} new community messages in ${channelNames[0]} — Sage Field`
+        : `${totalNew} new community messages — Sage Field`;
+
+  const channelBlocks = opts.channels
+    .map((ch) => {
+      const messageRows = ch.messages
+        .map((m) => {
+          const preview = escapeDigestHtml(truncateDigestPreview(m.preview));
+          const sender = escapeDigestHtml(m.senderName);
+          const when = escapeDigestHtml(formatDigestMessageTime(m.createdAt));
+          return `
+        <div style="border-bottom: 1px solid #e8e4dc; padding: 12px 0;">
+          <p style="margin: 0 0 4px 0; font-size: 13px; color: #6b6b6b;">
+            <strong style="color: #2c2c2c;">${sender}</strong> · ${when}
+          </p>
+          <p style="margin: 0; font-size: 14px; color: #2c2c2c;">${preview}</p>
+        </div>`;
+        })
+        .join("");
+
+      const moreLine =
+        ch.moreUnreadCount > 0
+          ? `<p style="margin: 8px 0 0 0; font-size: 13px; color: #5a7a5a; font-style: italic;">+${ch.moreUnreadCount} more unread in this channel</p>`
+          : "";
+
+      return `
+    <div style="background: #f7f4f0; border-left: 3px solid #a8c5a0; padding: 16px 20px; margin: 20px 0; border-radius: 4px;">
+      <p style="margin: 0 0 12px 0; font-weight: bold; font-size: 15px; color: #2C5F2E;">
+        # ${escapeDigestHtml(ch.channelName)}
+        <span style="display: inline-block; margin-left: 8px; background: #c45c5c; color: #fff; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 10px; vertical-align: middle;">${ch.unreadCount}</span>
+      </p>
+      ${messageRows}
+      ${moreLine}
+    </div>`;
+    })
+    .join("");
+
+  const content = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
+
+  <p style="margin-bottom: 24px;">Hi ${escapeDigestHtml(firstName)},</p>
+
+  <p style="margin-bottom: 16px;">You have new messages waiting in the Sage Field <strong>Community</strong> channels you're part of. Here's a quick digest:</p>
+
+  ${channelBlocks}
+
+  <div style="text-align: center; margin: 28px 0;">
+    <a href="${messagesUrl}" style="background: #2C5F2E; color: #fff; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-family: Georgia, serif; font-size: 15px; display: inline-block;">Open Community Messages →</a>
+  </div>
+
+  <p style="margin-bottom: 8px; font-size: 14px; color: #555;">You can also read and reply in the <strong>Sage Field mobile app</strong> under Messages → Community. <a href="https://www.sagefield.co/download" style="color: #5a7a5a;">Download the app →</a></p>
 
   <p style="margin-top: 32px; margin-bottom: 4px;">With warmth,</p>
   <p style="margin-top: 4px;"><strong>Sabrina</strong><br />Sage Field School<br /><a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a></p>

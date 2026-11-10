@@ -53,21 +53,15 @@ function BirthdayCard({ birthday }: { birthday: StaffBirthday }) {
   const isToday = birthday.daysUntil === 0;
   const isSoon = birthday.daysUntil > 0 && birthday.daysUntil <= UPCOMING_BIRTHDAY_DAYS;
   const dateLabel = formatBirthdayDate(birthday);
+  const isTeamMember = Boolean(birthday.isTeamMember);
 
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        styles.card,
-        (isToday || isSoon) && styles.cardHighlight,
-        pressed && { opacity: 0.85 },
-      ]}
-      onPress={() =>
-        router.push({
-          pathname: "/(staff)/students/[studentId]" as any,
-          params: { studentId: birthday.studentId },
-        })
-      }
-    >
+  const cardStyle = [
+    styles.card,
+    (isToday || isSoon) && styles.cardHighlight,
+  ] as const;
+
+  const inner = (
+    <>
       <View style={[styles.avatar, { backgroundColor: avatarColor(birthday.studentId) }]}>
         {birthday.profileImageUrl ? (
           <Image
@@ -83,9 +77,12 @@ function BirthdayCard({ birthday }: { birthday: StaffBirthday }) {
       <View style={styles.cardBody}>
         <Text style={styles.cardName} numberOfLines={1}>{birthday.name}</Text>
         <Text style={styles.cardDob}>{formatFullDob(birthday)}</Text>
-        <Text style={styles.cardMeta}>
-          Age {birthday.currentAge} · Turns {birthday.turningAge} on {dateLabel}
-        </Text>
+        {!isTeamMember && (
+          <Text style={styles.cardMeta}>
+            Age {birthday.currentAge} · Turns {birthday.turningAge} on{" "}
+            {dateLabel}
+          </Text>
+        )}
       </View>
 
       {isToday ? (
@@ -96,9 +93,27 @@ function BirthdayCard({ birthday }: { birthday: StaffBirthday }) {
         <View style={styles.badgeSoon}>
           <Text style={styles.badgeSoonText}>Soon</Text>
         </View>
-      ) : (
+      ) : !isTeamMember ? (
         <Ionicons name="chevron-forward" size={16} color="#9ca3af" />
-      )}
+      ) : null}
+    </>
+  );
+
+  if (isTeamMember) {
+    return <View style={cardStyle}>{inner}</View>;
+  }
+
+  return (
+    <Pressable
+      style={({ pressed }) => [...cardStyle, pressed && { opacity: 0.85 }]}
+      onPress={() =>
+        router.push({
+          pathname: "/(staff)/students/[studentId]" as any,
+          params: { studentId: birthday.studentId },
+        })
+      }
+    >
+      {inner}
     </Pressable>
   );
 }
@@ -107,6 +122,8 @@ export const StaffAllBirthdaysSheet = forwardRef<BottomSheetModal, Props>(
   function StaffAllBirthdaysSheet({ birthdays, loading }, ref) {
     const monthGroups = groupBirthdaysByMonth(birthdays);
     const upcomingCount = getUpcomingBirthdays(birthdays).length;
+    const studentCount = birthdays.filter((b) => !b.isTeamMember).length;
+    const staffCount = birthdays.filter((b) => b.isTeamMember).length;
 
     return (
       <BottomSheetModal
@@ -125,8 +142,8 @@ export const StaffAllBirthdaysSheet = forwardRef<BottomSheetModal, Props>(
         handleIndicatorStyle={{ backgroundColor: "#C4D9C8" }}
       >
         <BottomSheetScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>All Student Birthdays</Text>
-          <Text style={styles.subtitle}>School year enrollments</Text>
+          <Text style={styles.title}>All Birthdays</Text>
+          <Text style={styles.subtitle}>Students & staff</Text>
 
           {loading ? (
             <View style={styles.loadingStack}>
@@ -136,14 +153,14 @@ export const StaffAllBirthdaysSheet = forwardRef<BottomSheetModal, Props>(
               ))}
             </View>
           ) : birthdays.length === 0 ? (
-            <Text style={styles.emptyText}>No student birthdays found.</Text>
+            <Text style={styles.emptyText}>No birthdays found.</Text>
           ) : (
             <>
               <View style={styles.summaryRow}>
                 <View style={styles.summaryChip}>
                   <Ionicons name="people-outline" size={14} color={Brand.sage700} />
                   <Text style={styles.summaryChipText}>
-                    {birthdays.length} students
+                    {studentCount} students · {staffCount} staff
                   </Text>
                 </View>
                 {upcomingCount > 0 && (
