@@ -1,0 +1,110 @@
+/* Sage Field "Garden" design system — warm, playful, premium.
+   Everything is scoped to .sf-garden (applied by app/_garden/GardenRoot.tsx),
+   so pages opt in and nothing leaks to pages that haven't. */
+
+.sf-garden {
+  --sf-cream: #fff8ef;
+  --sf-ink: #2b2a26;
+  --sf-soft: #5b5850;
+  --sf-coral: #f29a8f;
+  --sf-coral-deep: #e07a6e;
+  --sf-sage: #6b9474;
+  --sf-sage-deep: #4a6354;
+  --sf-butter: #ffe58a;
+  --sf-mint: #cdeed5;
+  --sf-sky: #cfe6fb;
+  --sf-lav: #e8d8f1;
+  --sf-peach: #ffdcc7;
+  font-family: var(--font-sf-body), ui-rounded, system-ui, sans-serif;
+  background: var(--sf-cream);
+  color: var(--sf-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.sf-display {
+  font-family: var(--font-sf-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+
+.sf-hand {
+  font-family: var(--font-sf-hand), "Comic Sans MS", cursive;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Polaroid */
+.sf-polaroid {
+  background: #fff;
+  padding: 10px 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(43, 42, 38, 0.06), 0 18px 40px -18px rgba(43, 42, 38, 0.45);
+}
+
+/* Washi tape */
+.sf-tape::before {
+  content: "";
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  width: 84px;
+  height: 24px;
+  transform: translateX(-50%) rotate(-3deg);
+  background: rgba(255, 229, 138, 0.85);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-radius: 2px;
+}
+
+/* Morphing organic blob mask */
+@keyframes sf-blob {
+  0%, 100% { border-radius: 58% 42% 38% 62% / 52% 38% 62% 48%; }
+  33%      { border-radius: 40% 60% 62% 38% / 44% 58% 42% 56%; }
+  66%      { border-radius: 62% 38% 46% 54% / 60% 46% 54% 40%; }
+}
+.sf-blob {
+  border-radius: 58% 42% 38% 62% / 52% 38% 62% 48%;
+  animation: sf-blob 14s ease-in-out infinite;
+}
+
+/* Notebook paper for the form */
+.sf-paper {
+  background-color: #fffdf8;
+  background-image: linear-gradient(rgba(107, 148, 116, 0.12) 1px, transparent 1px);
+  background-size: 100% 34px;
+}
+
+/* Ticket notches */
+.sf-ticket {
+  -webkit-mask: radial-gradient(circle 18px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 18px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+  mask: radial-gradient(circle 18px at 0 50%, #0000 98%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 18px at 100% 50%, #0000 98%, #000) right / 51% 100% no-repeat;
+}
+
+/* Flip cards */
+.sf-flip { perspective: 1400px; }
+.sf-flip-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sf-flip[data-flipped="true"] .sf-flip-inner { transform: rotateY(180deg); }
+@media (hover: hover) {
+  .sf-flip:hover .sf-flip-inner { transform: rotateY(180deg); }
+}
+.sf-face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.sf-back { transform: rotateY(180deg); }
+
+@keyframes sf-wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+.sf-wiggle:hover { animation: sf-wiggle 0.5s ease-in-out infinite; }
+
+@keyframes sf-spin { to { transform: rotate(360deg); } }
+.sf-spin-slow { animation: sf-spin 40s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-blob, .sf-spin-slow { animation: none; }
+  .sf-wiggle:hover { animation: none; }
+  .sf-flip-inner { transition: none; }
+}
