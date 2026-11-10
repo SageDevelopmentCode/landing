@@ -43,6 +43,10 @@ app-example
 /ios
 /android
 
+# Firebase Admin private key for FCM v1. google-services.json is the public client file and stays tracked.
+*-firebase-adminsdk-*.json
+fcm-service-account.json
+
 .claude-account3
 .claude-account1
 .claude-account2
