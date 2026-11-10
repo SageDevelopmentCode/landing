@@ -2,6 +2,7 @@ import { sendDiscordNotification } from "@/app/lib/discord";
 
 export type PushDeliverySource =
   | "activity_preference_reminder"
+  | "community_channel_digest"
   | "dm_message"
   | "channel_message"
   | "activity_published"
@@ -35,6 +36,7 @@ export type PushDeliveryEvent = {
 
 const SOURCE_LABEL: Record<PushDeliverySource, string> = {
   activity_preference_reminder: "Activity preference reminder",
+  community_channel_digest: "Community channel unread digest (email)",
   dm_message: "Direct message push",
   channel_message: "Community channel push",
   activity_published: "New activity push",
@@ -43,6 +45,7 @@ const SOURCE_LABEL: Record<PushDeliverySource, string> = {
 
 const SOURCE_COLOR: Record<PushDeliverySource, number> = {
   activity_preference_reminder: 0x4a7c59,
+  community_channel_digest: 0x6b8a6b,
   dm_message: 0x5865f2,
   channel_message: 0x6b8a6b,
   activity_published: 0xe07a3a,

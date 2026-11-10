@@ -1,4 +1,5 @@
 import { sendActivityPreferenceReminderPreview } from "@/app/actions/sendActivityPreferenceReminderEmail";
+import { sendCommunityChannelUnreadDigestPreview } from "@/app/actions/sendCommunityChannelUnreadDigestPreview";
 import { sendCommunityGardenDayInviteEmail } from "@/app/actions/sendCommunityGardenDayInviteEmail";
 import { sendEnrollmentChecklistDeadlineReminderEmail } from "@/app/actions/sendEnrollmentChecklistDeadlineReminderEmail";
 import { sendEnrollmentConfirmationEmail } from "@/app/actions/sendEnrollmentConfirmationEmail";
@@ -619,6 +620,16 @@ const OUTREACH_EMAIL_SENDERS: Record<string, OutreachEmailSender> = {
       email: app.g1_email,
       g1FullName: app.g1_full_name ?? "",
       childLegalName: app.child_legal_name ?? "your child",
+    });
+  },
+  "community-channel-unread-digest": (app) => {
+    if (!app.g1_email) {
+      return Promise.resolve({ success: false, error: "No parent email" });
+    }
+    return sendCommunityChannelUnreadDigestPreview({
+      email: app.g1_email,
+      g1FullName: app.g1_full_name ?? "",
+      userId: app.user_id,
     });
   },
   "ptc-reschedule": (app) =>

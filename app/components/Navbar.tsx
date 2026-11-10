@@ -690,7 +690,7 @@ export default function Navbar({ darkStyle, lightText }: { darkStyle?: boolean; 
           <div className="lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`${(pathname === "/" || lightText) && !scrolled ? "text-white" : "text-gray-900"} focus:outline-none cursor-pointer`}
+              className={`${((pathname === "/" && !darkStyle) || lightText) && !scrolled ? "text-white" : "text-gray-900"} focus:outline-none cursor-pointer`}
               aria-label="Toggle menu"
             >
               <svg

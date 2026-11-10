@@ -39,4 +39,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 Set on the Vercel project (not committed to the repo):
 
-- `DISCORD_PUSH_EMAIL_SENT_WEBHOOK_URL` — logs Expo push delivery and activity-preference cron email/push outcomes (per-parent embeds). Supabase edge functions post via `/api/notify/discord` with `DISCORD_NOTIFY_KEY` (`type: push_delivery`).
+- `DISCORD_PUSH_EMAIL_SENT_WEBHOOK_URL` — logs Expo push delivery, activity-preference cron email/push outcomes, and community channel unread digest emails (per-parent embeds). Supabase edge functions post via `/api/notify/discord` with `DISCORD_NOTIFY_KEY` (`type: push_delivery`).

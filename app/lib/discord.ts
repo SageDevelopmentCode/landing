@@ -1363,13 +1363,13 @@ export function createBeachBashPaymentEmbed(data: {
   amountCents: number;
 }): DiscordEmbed {
   return {
-    title: "🎃 Field Day Friday Payment Received",
-    color: 0xe85d04,
+    title: "🏎️ Field Day Friday Payment Received",
+    color: 0xd62828,
     fields: [
       { name: "Parent", value: data.parentName, inline: true },
       { name: "Email", value: data.parentEmail, inline: true },
       { name: `Child${data.childCount > 1 ? "ren" : ""}`, value: data.childNames, inline: true },
-      { name: "Event", value: "Not-So-Scary Halloween — October 30, 2026", inline: true },
+      { name: "Event", value: "Race Cars and Speedsters — November 13, 2026", inline: true },
       { name: "Amount Paid", value: `$${(data.amountCents / 100).toFixed(2)}`, inline: true },
     ],
     timestamp: new Date().toISOString(),
@@ -2567,6 +2567,34 @@ export function createActivityPreferenceRemindersSentEmbed(data: {
     description: `**${data.reminders.length} reminder${data.reminders.length !== 1 ? "s" : ""}** sent on ${data.date}`,
     color: 0x4a7c59,
     fields,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createCommunityChannelDigestSentEmbed(data: {
+  date: string;
+  digests: Array<{
+    parentName: string;
+    parentEmail: string;
+    channelNames: string[];
+    messageCount: number;
+    emailSent: boolean;
+  }>;
+}): DiscordEmbed {
+  const lines = data.digests.map((d) => {
+    const channels = d.channelNames.map((n) => n.split(" —")[0]).join(", ");
+    return `• **${d.parentName}** (${d.parentEmail}) — ${d.messageCount} msg${d.messageCount !== 1 ? "s" : ""} in ${channels}${d.emailSent ? " [email]" : ""}`;
+  });
+  let value = lines.join("\n");
+  if (value.length > 1024) {
+    value = value.substring(0, 1021) + "...";
+  }
+
+  return {
+    title: "💬 Community Channel Digests Sent",
+    description: `**${data.digests.length} digest${data.digests.length !== 1 ? "s" : ""}** sent on ${data.date}`,
+    color: 0x6b8a6b,
+    fields: [{ name: "Families", value, inline: false }],
     timestamp: new Date().toISOString(),
   };
 }

@@ -248,6 +248,11 @@ export const OUTREACH_EMAIL_CATALOG: OutreachEmailCatalogEntry[] = [
     label: "Send Activity Preference Reminder",
     category: "other",
   },
+  {
+    id: "community-channel-unread-digest",
+    label: "Send Community Unread Digest (live)",
+    category: "other",
+  },
   { id: "ptc-reschedule", label: "Send PTC Reschedule Email", category: "other" },
   {
     id: "community-garden-day-invite",

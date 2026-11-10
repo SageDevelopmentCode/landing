@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { maybeSendUnpickedPickupReminder } from "@/app/lib/pickup-reminder";
 import { maybeSendActivityPreferenceReminders } from "@/app/lib/activity-preference-reminder";
+import { maybeSendCommunityChannelUnreadDigests } from "@/app/lib/community-channel-unread-digest";
 import { sendDiscordNotification, createBudgetSummaryEmbed, createRentReminderEmbed, createRevenueReportEmbed, createDailyToursEmbed, createDailyHoursSummaryEmbed, createPayrollReminderEmbed } from "@/app/lib/discord";
 
 const CATEGORIES = [
@@ -158,6 +159,9 @@ export async function GET(request: NextRequest) {
     let activityPrefReminders: Awaited<
       ReturnType<typeof maybeSendActivityPreferenceReminders>
     > | null = null;
+    let communityChannelDigests: Awaited<
+      ReturnType<typeof maybeSendCommunityChannelUnreadDigests>
+    > | null = null;
     if (notify) {
       const todayStr = now.toISOString().split("T")[0];
       const sevenDaysStr = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
@@ -247,6 +251,10 @@ export async function GET(request: NextRequest) {
       const payrollReminder = createPayrollReminderEmbed();
       const pickupPromise = maybeSendUnpickedPickupReminder(db, now);
       const activityPrefPromise = maybeSendActivityPreferenceReminders(db, now);
+      const communityDigestPromise = maybeSendCommunityChannelUnreadDigests(
+        db,
+        now,
+      );
       await Promise.all([
         sendDiscordNotification(embed, process.env.DISCORD_BUDGET_WEBHOOK_URL),
         sendDiscordNotification(rentEmbed, process.env.DISCORD_BUDGET_WEBHOOK_URL, rentContent),
@@ -258,13 +266,17 @@ export async function GET(request: NextRequest) {
           : []),
         pickupPromise,
         activityPrefPromise,
+        communityDigestPromise,
       ]);
       pickupReminder = await pickupPromise;
       activityPrefReminders = await activityPrefPromise;
+      communityChannelDigests = await communityDigestPromise;
     }
 
     return NextResponse.json(
-      notify ? { ...summary, pickupReminder, activityPrefReminders } : summary,
+      notify
+        ? { ...summary, pickupReminder, activityPrefReminders, communityChannelDigests }
+        : summary,
     );
   } catch (error) {
     console.error("Error fetching budget summary:", error);
