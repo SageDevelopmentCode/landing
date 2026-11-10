@@ -95,11 +95,11 @@ export default function Hero() {
         <span className="sf-hand text-2xl text-[var(--sf-sage)]">hello, friends!</span>
         <h1 className="sf-display mt-2 text-[15vw] leading-[0.88] sm:text-7xl lg:text-[7.4rem]">
           Welcome to{" "}
-          <span className="relative inline-block text-[var(--sf-coral)]">
-            Sage Field!
-            <Draw className="absolute -bottom-3 left-0 w-full" delay={0.4}>
+          <span className="relative isolate inline-block text-[var(--sf-coral)]">
+            <Draw className="pointer-events-none absolute -bottom-3 left-0 z-0 w-full" delay={0.4}>
               <Squiggle className="w-full" color="var(--sf-butter)" />
             </Draw>
+            <span className="relative z-10">Sage Field!</span>
           </span>
         </h1>
         <p className="mx-auto mt-8 max-w-md text-lg font-semibold text-[var(--sf-soft)]">{WELCOME.description}</p>
@@ -113,7 +113,7 @@ export default function Hero() {
       </div>
 
       {/* Polaroid notes: every hero slide, as a link */}
-      <div className="no-scrollbar mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 pb-6 pt-4 lg:absolute lg:inset-0 lg:m-0 lg:block lg:overflow-visible lg:p-0">
+      <div className="no-scrollbar mt-14 flex snap-x snap-mandatory gap-10 overflow-x-auto px-6 pb-8 pt-4 lg:absolute lg:inset-0 lg:m-0 lg:block lg:gap-5 lg:overflow-visible lg:p-0 lg:pb-6">
         {NOTES.map((s, i) => {
           const spot = SPOTS[i];
           const inner = (

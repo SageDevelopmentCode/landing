@@ -13,10 +13,9 @@ const CIRCUIT =
 
 /** Where the car parks for each station, and where its pin sits in the infield. */
 const STOPS: Record<StationId, { road: [number, number]; pin: [number, number] }> = {
-  relay: { road: [380, 58], pin: [380, 132] },
-  cardboard: { road: [342, 252], pin: [446, 288] },
-  trials: { road: [260, 392], pin: [250, 318] },
-  art: { road: [90, 160], pin: [172, 168] },
+  paintCars: { road: [342, 252], pin: [446, 288] },
+  checkeredFlags: { road: [90, 160], pin: [172, 168] },
+  puzzles: { road: [260, 392], pin: [250, 318] },
 };
 
 export default function StationsCircuit({

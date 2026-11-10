@@ -3,7 +3,7 @@
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { useRef, type RefObject } from "react";
 import SpeedsterCar from "./SpeedsterCar";
-import { liveryFor, type CarChoice } from "./data";
+import { liveryFor, stationTitleList, type CarChoice } from "./data";
 
 export function MobileReserveBar({
   price,
@@ -72,7 +72,7 @@ export default function FinishLine({
         <h2 className="rc-h2">Don&apos;t miss Race Cars and Speedsters.</h2>
         <p className="rc-finish-copy">
           November 13 is one day. Spots are limited. Reserve your child&apos;s spot now and join us for
-          Pit Crew Relay, Cardboard Speedsters, Speed Trials, and Checkered Flag Art at Sage Field.
+          {`${stationTitleList()} at Sage Field.`}
         </p>
         <button type="button" onClick={onReserve} className="rc-btn rc-btn-red">
           {`Reserve Spot · $${price} →`}

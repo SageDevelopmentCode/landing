@@ -59,7 +59,7 @@ export const PHOTOS = [
   `${WEEK_FOUR}/E10B5084-3A5E-44CC-B113-2CD6FD96A460.JPG`,
 ];
 
-export type StationId = "relay" | "cardboard" | "trials" | "art";
+export type StationId = "paintCars" | "checkeredFlags" | "puzzles";
 
 export const STATIONS: {
   id: StationId;
@@ -69,34 +69,35 @@ export const STATIONS: {
   color: string;
 }[] = [
   {
-    id: "relay",
-    title: "Pit Crew Relay",
-    waypoint: "Pit Lane",
-    desc: "Team up for a pit-stop relay: swap “tires,” grab a flag, and send your speedster back out.",
-    color: "#FFC800",
-  },
-  {
-    id: "cardboard",
-    title: "Cardboard Speedsters",
-    waypoint: "Garage Bay",
-    desc: "Decorate a cardboard race car, add a number, and take it for a roll.",
+    id: "paintCars",
+    title: "Paint little race cars",
+    waypoint: "Paint Pit",
+    desc: "Paint and decorate little race cars to take home.",
     color: "#8FC7FF",
   },
   {
-    id: "trials",
-    title: "Speed Trials",
-    waypoint: "Time Trials",
-    desc: "Friendly timed dashes and rolling races across the field.",
-    color: "#FF9A8F",
+    id: "checkeredFlags",
+    title: "Checkered Flags",
+    waypoint: "Flag Bay",
+    desc: "Make checkered flags to wave, hang, or show off.",
+    color: "#FFC800",
   },
   {
-    id: "art",
-    title: "Checkered Flag Art",
-    waypoint: "Art Bay",
-    desc: "Paint flags, numbers, and racing stripes to wave or wear.",
+    id: "puzzles",
+    title: "Paint car themed puzzles",
+    waypoint: "Puzzle Lane",
+    desc: "Paint car-themed puzzles for a take-home keepsake.",
     color: "#7FE0B4",
   },
 ];
+
+/** Comma-separated station titles for success page, CTA copy, etc. */
+export function stationTitleList(): string {
+  if (STATIONS.length === 0) return "";
+  if (STATIONS.length === 1) return STATIONS[0].title;
+  const head = STATIONS.slice(0, -1).map((s) => s.title).join(", ");
+  return `${head}, and ${STATIONS[STATIONS.length - 1].title}`;
+}
 
 export const MAPS_URL =
   "https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd%2C+Round+Rock+TX";

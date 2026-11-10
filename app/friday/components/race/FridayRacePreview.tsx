@@ -27,7 +27,7 @@ export default function FridayRacePreview() {
               <span className="rc-title-tag">Field Day</span>
             </h2>
             <p className="rc-promo-lede">
-              Rev up for relays, cardboard race cars, and checkered-flag fun at Sage Field.
+              Paint little race cars, checkered flags, and car-themed puzzles at Sage Field.
             </p>
             <dl className="rc-specs">
               {[
@@ -67,7 +67,7 @@ export default function FridayRacePreview() {
                 <span className="rc-promo-tile-title">{station.title}</span>
               </Link>
             ))}
-            <p className="rc-promo-caption">All activities included · Race, build, and wave your flag home!</p>
+            <p className="rc-promo-caption">All activities included · Paint, puzzle, and wave your flag home!</p>
           </div>
         </div>
       </section>

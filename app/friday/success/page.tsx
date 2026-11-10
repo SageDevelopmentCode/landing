@@ -13,6 +13,7 @@ import {
   MAPS_URL,
   liveryFor,
   loadCarChoice,
+  stationTitleList,
   type CarChoice,
 } from "../components/race/data";
 import { kanit } from "../components/race/fonts";
@@ -65,7 +66,7 @@ export default function RaceCarsSuccessPage() {
             <h1 className="rc-done-title">You&apos;re registered!</h1>
             <p className="rc-done-lede">
               We&apos;ll see you Friday, November 13th for Race Cars and Speedsters at Sage Field. Get
-              ready for Pit Crew Relay, Cardboard Speedsters, Speed Trials, and Checkered Flag Art!
+              {`ready for ${stationTitleList()}!`}
             </p>
           </div>
 

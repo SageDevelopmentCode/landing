@@ -21,6 +21,11 @@
   -webkit-font-smoothing: antialiased;
 }
 
+.sf-garden.sf-garden-ink {
+  background: var(--sf-ink);
+  color: var(--sf-cream);
+}
+
 .sf-display {
   font-family: var(--font-sf-display), ui-sans-serif, system-ui, sans-serif;
   letter-spacing: -0.035em;

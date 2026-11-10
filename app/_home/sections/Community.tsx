@@ -13,7 +13,6 @@ const R = CONTINUITY.roots.map((r) => r.image);
 const LEFT = [R[0], PHOTO_POOL[10], PHOTO_POOL[13], R[1], PHOTO_POOL[16], PHOTO_POOL[19]];
 const RIGHT = [PHOTO_POOL[11], R[2], PHOTO_POOL[14], PHOTO_POOL[17], R[3], PHOTO_POOL[21]];
 const TAPES = ["var(--sf-butter)", "var(--sf-mint)", "var(--sf-sky)", "var(--sf-lav)"];
-const ROOT_TINTS = ["bg-[var(--sf-butter)]", "bg-[var(--sf-mint)]", "bg-white", "bg-[var(--sf-lav)]"];
 const OUTCOME_TINTS = ["bg-[var(--sf-coral)]/30", "bg-[var(--sf-mint)]", "bg-white", "bg-[var(--sf-lav)]"];
 
 function Polaroid({ src, i, alt, className = "" }: { src: string; i: number; alt: string; className?: string }) {
@@ -109,18 +108,6 @@ export function Continuity() {
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Roots */}
-          <div className="mt-4 grid grid-cols-2 xl:grid-cols-4 gap-2 text-left">
-            {CONTINUITY.roots.map((r, i) => (
-              <div key={r.title} className={`rounded-2xl p-3 shadow-[0_6px_0_0_rgba(43,42,38,0.06)] ${ROOT_TINTS[i]}`}>
-                <p className="text-sm font-extrabold leading-tight">
-                  <span aria-hidden="true">{r.icon}</span> {r.title}
-                </p>
-                <p className="mt-0.5 text-xs text-[var(--sf-soft)]">{r.description}</p>
-              </div>
-            ))}
           </div>
 
           {/* Outcomes */}

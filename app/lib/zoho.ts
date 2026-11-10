@@ -2416,10 +2416,9 @@ export async function buildBeachBashConfirmationEmail(opts: {
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What&apos;s on the Agenda</h2>
   <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
-    <tr><td style="padding: 5px 0; width: 28px;">🏁</td><td style="padding: 5px 0;"><strong>Pit Crew Relay</strong> — Team up for a pit-stop relay: swap “tires,” grab a flag, and send your speedster back out.</td></tr>
-    <tr><td style="padding: 5px 0;">🚗</td><td style="padding: 5px 0;"><strong>Cardboard Speedsters</strong> — Decorate a cardboard race car, add a number, and take it for a roll.</td></tr>
-    <tr><td style="padding: 5px 0;">⏱️</td><td style="padding: 5px 0;"><strong>Speed Trials</strong> — Friendly timed dashes and rolling races across the field.</td></tr>
-    <tr><td style="padding: 5px 0;">🎨</td><td style="padding: 5px 0;"><strong>Checkered Flag Art</strong> — Paint flags, numbers, and racing stripes to wave or wear.</td></tr>
+    <tr><td style="padding: 5px 0; width: 28px;">🎨</td><td style="padding: 5px 0;"><strong>Paint little race cars</strong> — Paint and decorate little race cars to take home.</td></tr>
+    <tr><td style="padding: 5px 0;">🏁</td><td style="padding: 5px 0;"><strong>Checkered Flags</strong> — Make checkered flags to wave, hang, or show off.</td></tr>
+    <tr><td style="padding: 5px 0;">🧩</td><td style="padding: 5px 0;"><strong>Paint car themed puzzles</strong> — Paint car-themed puzzles for a take-home keepsake.</td></tr>
   </table>
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What to Pack</h2>

@@ -2,9 +2,21 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Mail, MapPin, Phone, Instagram, Facebook } from "lucide-react";
+import { CONTACT, SOCIAL } from "@/app/_home/content";
+import { gardenFontVariables } from "@/app/_garden/fonts";
+import "@/app/_garden/garden.css";
+import { useDialogs } from "@/app/_garden/GardenShell";
+import { btnPop, Draw, Leaf } from "@/app/_garden/ui";
 import ContactDialog from "./ContactDialog";
 import WaitlistDialog from "./WaitlistDialog";
+
+const navLinkClass =
+  "rounded-sm text-sm font-semibold text-[var(--sf-cream)]/75 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--sf-ink)]";
+
+const btnOutlineOnInk =
+  "inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-white/90 bg-transparent px-7 py-3.5 text-sm font-extrabold text-white shadow-[0_6px_0_0_rgba(255,255,255,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_0_0_rgba(255,255,255,0.25)] active:translate-y-1 active:shadow-[0_2px_0_0_rgba(255,255,255,0.15)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 cursor-pointer";
 
 type NavAction =
   | { kind: "link"; href: string }
@@ -89,18 +101,59 @@ const FOOTER_COLUMNS: NavColumn[] = [
   },
 ];
 
-export default function Footer() {
+const CONTACT_ROWS: {
+  Icon: typeof Mail;
+  label: string;
+  value: string;
+  href: string;
+  tint: string;
+  external?: boolean;
+}[] = [
+  {
+    Icon: Mail,
+    label: "Email",
+    value: CONTACT.email,
+    href: `mailto:${CONTACT.email}`,
+    tint: "bg-[var(--sf-butter)]",
+  },
+  {
+    Icon: Phone,
+    label: "Phone",
+    value: CONTACT.phoneDisplay,
+    href: CONTACT.phoneHref,
+    tint: "bg-[var(--sf-mint)]",
+  },
+  {
+    Icon: MapPin,
+    label: "Location",
+    value: CONTACT.address,
+    href: CONTACT.mapsHref,
+    tint: "bg-[var(--sf-sky)]",
+    external: true,
+  },
+];
+
+export default function Footer({
+  useShellDialogs = false,
+}: {
+  useShellDialogs?: boolean;
+}) {
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
   const [isWaitlistDialogOpen, setIsWaitlistDialogOpen] = useState(false);
+  const shellDialogs = useDialogs();
+
+  const openWaitlist = useShellDialogs
+    ? shellDialogs.openWaitlist
+    : () => setIsWaitlistDialogOpen(true);
+  const openContact = useShellDialogs
+    ? shellDialogs.openContact
+    : () => setIsContactDialogOpen(true);
 
   function renderItem(item: NavLeaf) {
-    const base =
-      "text-gray-400 hover:text-white transition-colors font-body text-sm";
-
     if (item.action.kind === "disabled") {
       return (
         <li key={item.label}>
-          <span className="text-gray-600 font-body text-sm cursor-not-allowed select-none">
+          <span className="cursor-not-allowed select-none text-sm font-semibold text-[var(--sf-cream)]/40">
             {item.label}
           </span>
         </li>
@@ -110,22 +163,19 @@ export default function Footer() {
     if (item.action.kind === "link" || item.action.kind === "smooth-scroll") {
       return (
         <li key={item.label}>
-          <Link href={item.action.href} className={base}>
+          <Link href={item.action.href} className={navLinkClass}>
             {item.label}
           </Link>
         </li>
       );
     }
 
-    // dialog
-    const openDialog =
-      item.action.target === "waitlist"
-        ? () => setIsWaitlistDialogOpen(true)
-        : () => setIsContactDialogOpen(true);
+    const onDialog =
+      item.action.target === "waitlist" ? openWaitlist : openContact;
 
     return (
       <li key={item.label}>
-        <button onClick={openDialog} className={`${base} cursor-pointer`}>
+        <button type="button" onClick={onDialog} className={`${navLinkClass} cursor-pointer text-left`}>
           {item.label}
         </button>
       </li>
@@ -133,151 +183,131 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-screen-xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
-        {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
-          {/* Logo & Description */}
+    <footer
+      className={`${gardenFontVariables} sf-garden sf-garden-ink relative overflow-hidden`}
+    >
+      <Draw className="pointer-events-none absolute -right-4 bottom-24 opacity-20 lg:right-8">
+        <Leaf className="h-24 w-24" color="var(--sf-sage)" />
+      </Draw>
+
+      <div className="relative mx-auto max-w-7xl px-6 sm:px-10 lg:px-16 py-16 lg:py-20">
+        <div className="mb-12 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-1">
-            <Link href="/">
-              <img
+            <Link href="/" className="inline-block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">
+              <Image
                 src="/assets/Logo.png"
                 alt="SageField logo"
-                className="h-12 mb-4 cursor-pointer"
+                width={160}
+                height={48}
+                className="h-12 w-auto object-contain"
+                sizes="160px"
               />
             </Link>
-            {/* <p className="text-gray-400 text-sm font-body leading-relaxed italic">
-              Children are not meant to rot in classrooms. Choose outdoor
-              learning.
-            </p> */}
           </div>
 
-          {/* Nav Columns */}
           {FOOTER_COLUMNS.map((col) => (
             <div key={col.heading}>
-              <h3 className="text-lg font-semibold font-heading mb-4">
-                {col.heading}
-              </h3>
+              <h3 className="sf-display mb-4 text-lg text-[var(--sf-cream)]">{col.heading}</h3>
               <ul className="space-y-3">{col.items.map(renderItem)}</ul>
             </div>
           ))}
 
-          {/* Contact & CTA */}
           <div>
-            <h3 className="text-lg font-semibold font-heading mb-4">
-              Get in Touch
-            </h3>
-            <div className="space-y-3 mb-6">
-              <a
-                href="mailto:sabrina@sagefield.co"
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-body text-sm"
-              >
-                <Mail className="w-4 h-4 flex-shrink-0" />
-                <span>sabrina@sagefield.co</span>
-              </a>
-              <a
-                href="tel:+15126775872"
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-body text-sm"
-              >
-                <Phone className="w-4 h-4 flex-shrink-0" />
-                <span>(512) 677-5872</span>
-              </a>
-              <a
-                href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors font-body text-sm"
-              >
-                <MapPin className="w-4 h-4 flex-shrink-0" />
-                <span>2760 Gattis School Rd, Round Rock, TX 78664</span>
-              </a>
+            <h3 className="sf-display mb-4 text-lg text-[var(--sf-cream)]">Get in Touch</h3>
+            <div className="mb-6 space-y-3">
+              {CONTACT_ROWS.map(({ Icon, label, value, href, tint, external }) => (
+                <a
+                  key={label}
+                  href={href}
+                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  className="group flex items-center gap-3 rounded-3xl bg-white p-3 text-[var(--sf-ink)] shadow-[0_6px_0_0_rgba(0,0,0,0.12)] transition-transform hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-coral)]/40"
+                >
+                  <span
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${tint} transition-transform duration-300 group-hover:rotate-6`}
+                  >
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[10px] font-extrabold uppercase tracking-wide text-[var(--sf-soft)]">
+                      {label}
+                    </span>
+                    <span className="block truncate text-sm font-extrabold">{value}</span>
+                  </span>
+                </a>
+              ))}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="space-y-3">
-              <Link
-                href="/apply"
-                className="block w-full px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-hover transition-colors duration-200 font-body cursor-pointer text-sm text-center"
-              >
+            <div className="flex flex-col gap-3">
+              <Link href="/apply" className={`${btnPop} w-full py-3.5 text-sm text-center`}>
                 Enroll Now
               </Link>
-              <button
-                onClick={() => setIsContactDialogOpen(true)}
-                className="w-full px-4 py-2 border-2 border-gray-600 bg-transparent hover:bg-gray-800 text-white font-semibold rounded-lg transition-colors duration-200 font-body cursor-pointer text-sm"
-              >
+              <button type="button" onClick={openContact} className={btnOutlineOnInk}>
                 Contact Us
               </button>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:grid md:grid-cols-3 items-center gap-4">
-            <div className="flex flex-col items-center md:items-start gap-1">
-              <p className="text-gray-400 text-sm font-body">
-                © 2026 Sage Field. All rights reserved.
-              </p>
-              <div className="flex items-center gap-x-3">
-                <Link
-                  href="/privacy"
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  Privacy Policy
-                </Link>
-                <span className="text-gray-600 text-sm">·</span>
-                <Link
-                  href="/terms"
-                  className="text-gray-400 hover:text-white transition-colors font-body text-sm"
-                >
-                  Terms of Use
-                </Link>
+        <div className="border-t border-white/10 pt-8">
+            <div className="flex flex-col items-center gap-6 md:grid md:grid-cols-3 md:gap-4">
+              <div className="flex flex-col items-center gap-1 md:items-start">
+                <p className="text-sm text-[var(--sf-cream)]/75">© 2026 Sage Field. All rights reserved.</p>
+                <div className="flex items-center gap-x-3">
+                  <Link href="/privacy" className={navLinkClass}>
+                    Privacy Policy
+                  </Link>
+                  <span className="text-sm text-[var(--sf-cream)]/35">·</span>
+                  <Link href="/terms" className={navLinkClass}>
+                    Terms of Use
+                  </Link>
+                </div>
               </div>
-            </div>
 
-            {/* Social Media Links */}
-            <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center justify-center gap-3">
+                <a
+                  href={SOCIAL.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#E4405F] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_5px_0_0_#b02d47] transition-transform hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#E4405F]/40"
+                >
+                  <Instagram className="h-4 w-4" aria-hidden="true" />
+                  Instagram
+                </a>
+                <a
+                  href={SOCIAL.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-[#1877F2] px-5 py-2.5 text-sm font-extrabold text-white shadow-[0_5px_0_0_#0f56b3] transition-transform hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#1877F2]/40"
+                >
+                  <Facebook className="h-4 w-4" aria-hidden="true" />
+                  Facebook
+                </a>
+              </div>
+
               <a
-                href="https://www.instagram.com/sagefield.co"
+                href={CONTACT.mapsHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors duration-200"
-                aria-label="Follow us on Instagram"
+                className={`${navLinkClass} text-center md:text-right`}
               >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="https://www.facebook.com/sagefield.co"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors duration-200"
-                aria-label="Follow us on Facebook"
-              >
-                <Facebook className="w-5 h-5" />
+                {CONTACT.address}
               </a>
             </div>
-
-            <a
-              href="https://www.google.com/maps/search/?api=1&query=2760+Gattis+School+Rd,+Round+Rock,+TX+78664"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 text-sm font-body text-center md:text-right hover:text-white transition-colors"
-            >
-              2760 Gattis School Rd, Round Rock, TX 78664
-            </a>
           </div>
-        </div>
       </div>
 
-      {/* Dialogs */}
-      <ContactDialog
-        isOpen={isContactDialogOpen}
-        onClose={() => setIsContactDialogOpen(false)}
-      />
-      <WaitlistDialog
-        isOpen={isWaitlistDialogOpen}
-        onClose={() => setIsWaitlistDialogOpen(false)}
-      />
+      {!useShellDialogs && (
+        <>
+          <ContactDialog
+            isOpen={isContactDialogOpen}
+            onClose={() => setIsContactDialogOpen(false)}
+          />
+          <WaitlistDialog
+            isOpen={isWaitlistDialogOpen}
+            onClose={() => setIsWaitlistDialogOpen(false)}
+          />
+        </>
+      )}
     </footer>
   );
 }

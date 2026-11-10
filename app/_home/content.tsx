@@ -287,6 +287,7 @@ export const CONTINUITY = {
     { lead: "Familiar structure", rest: "= lower cortisol and anxiety" },
     { lead: "Consistent friendships", rest: "= healthy social bonds" },
     { lead: "Trusted educators", rest: "= emotional safety and confidence" },
+    { lead: "Same learning flow", rest: "= familiar learning approach" },
   ],
   roots: [
     { icon: "🏫", image: "/assets/Kid1.png", title: "Familiar Structure", description: "Same daily rhythm & routines" },

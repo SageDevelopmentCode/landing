@@ -49,7 +49,7 @@ export default function GardenShell({
           {navbar}
           <main>{children}</main>
           <EnrollmentAnnouncementPopup />
-          <Footer />
+          <Footer useShellDialogs />
         </div>
         <WaitlistDialog isOpen={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
         <ContactDialog isOpen={contactOpen} onClose={() => setContactOpen(false)} />
