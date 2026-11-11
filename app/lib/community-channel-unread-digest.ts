@@ -8,20 +8,13 @@ import type {
   CommunityChannelDigestChannel,
   CommunityChannelDigestMessage,
 } from "@/app/lib/community-channel-digest-types";
+import { fetchSchoolYearEnrolledFamilies } from "@/app/lib/school-year-enrolled-families";
 import {
   buildCommunityChannelUnreadDigestEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
 
-const DONT_INCLUDE_TAG = "Don't Include";
 const MESSAGES_PER_CHANNEL = 8;
-
-type ApplicationRow = {
-  user_id: string | null;
-  g1_email: string | null;
-  g1_full_name: string | null;
-  admin_tags: string[] | null;
-};
 
 type ParentRow = {
   id: string;
@@ -68,10 +61,6 @@ function messagePreview(m: ChannelMessageRow): string {
   if (m.image_url) return "📷 Shared a photo";
   if (m.file_url) return `📎 Shared ${m.file_name?.trim() || "an attachment"}`;
   return "New message";
-}
-
-function isEligibleParent(apps: ApplicationRow[]): boolean {
-  return apps.some((a) => !(a.admin_tags ?? []).includes(DONT_INCLUDE_TAG));
 }
 
 async function fetchLastDigestSentByUser(
@@ -212,26 +201,13 @@ export async function maybeSendCommunityChannelUnreadDigests(
   db: SupabaseClient,
   now = new Date(),
 ): Promise<CommunityChannelDigestCronResult> {
-  const appsRes = await db
-    .schema("parent_app")
-    .from("applications")
-    .select("user_id, g1_email, g1_full_name, admin_tags")
-    .eq("status", "enrolled")
-    .not("user_id", "is", null);
-
-  if (appsRes.error) throw new Error(appsRes.error.message);
-
-  const appsByUser = new Map<string, ApplicationRow[]>();
-  for (const row of (appsRes.data ?? []) as ApplicationRow[]) {
-    if (!row.user_id) continue;
-    const list = appsByUser.get(row.user_id) ?? [];
-    list.push(row);
-    appsByUser.set(row.user_id, list);
-  }
-
-  const eligibleUserIds = [...appsByUser.entries()]
-    .filter(([, apps]) => isEligibleParent(apps))
-    .map(([id]) => id);
+  const families = await fetchSchoolYearEnrolledFamilies(db);
+  const familyByParentId = new Map(
+    families
+      .filter((f) => f.parentId)
+      .map((f) => [f.parentId, f] as const),
+  );
+  const eligibleUserIds = [...familyByParentId.keys()];
 
   const result: CommunityChannelDigestCronResult = {
     sent: 0,
@@ -259,11 +235,10 @@ export async function maybeSendCommunityChannelUnreadDigests(
 
   for (const userId of eligibleUserIds) {
     const parent = parentById.get(userId);
-    const apps = appsByUser.get(userId) ?? [];
-    const fallbackApp = apps[0];
-    const parentEmail = parent?.email ?? fallbackApp?.g1_email ?? null;
+    const family = familyByParentId.get(userId);
+    const parentEmail = parent?.email ?? family?.parentEmail ?? null;
     const parentName =
-      parent?.full_name ?? fallbackApp?.g1_full_name ?? "Parent";
+      parent?.full_name ?? family?.parentName ?? "Parent";
 
     if (!parentEmail) {
       result.skipped += 1;

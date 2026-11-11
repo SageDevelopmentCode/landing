@@ -1,6 +1,6 @@
 # Community channel unread digest — email preview
 
-Sample HTML for the daily cron digest sent to enrolled families with new unread community messages.
+Sample HTML for the daily cron digest sent to **school-year enrolled families with supply fee paid** (see `fetchSchoolYearEnrolledFamilies`) when they have new unread community messages. Admin “live” sends from Outreach are not limited to this list.
 
 ## Refresh preview
 

@@ -3,6 +3,7 @@ import {
   createAdminClient,
 } from "@/app/lib/supabase-server";
 import { redirect } from "next/navigation";
+import GardenRoot from "@/app/_garden/GardenRoot";
 import LoginForm from "./LoginForm";
 
 export default async function LoginPage() {
@@ -50,5 +51,9 @@ export default async function LoginPage() {
     }
   }
 
-  return <LoginForm />;
+  return (
+    <GardenRoot>
+      <LoginForm />
+    </GardenRoot>
+  );
 }
