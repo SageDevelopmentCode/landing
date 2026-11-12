@@ -24,7 +24,7 @@ export const PARTNERS: Partner[] = [
     pullQuote:
       "We're excited to bring our students and Enclave residents together for shared activities, conversation, and connections across generations.",
     ctaLabel: "Visit The Enclave at Round Rock",
-    logoClassName: "relative h-14 w-64 mb-6",
+    logoClassName: "relative h-14 w-56 sm:w-64",
     previewLogoClassName: "relative h-12 w-full max-w-[220px] mx-auto",
   },
   {

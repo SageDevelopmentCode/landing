@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ElementType } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { FaqGroup } from "./types";
 
@@ -38,13 +38,19 @@ export default function FaqList({
   query,
   theme,
   idPrefix,
+  groupTitleAs: GroupTitle = "h3",
+  defaultOpen = null,
 }: {
   groups: FaqGroup[];
   query: string;
   theme: FaqTheme;
   idPrefix: string;
+  /** Heading level for group titles (default h3). */
+  groupTitleAs?: ElementType;
+  /** Key (`${group.title}::${question}`) of an item to start open. */
+  defaultOpen?: string | null;
 }) {
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(defaultOpen);
   const visible = filterFaqs(groups, query);
 
   if (!visible.length) {
@@ -55,7 +61,7 @@ export default function FaqList({
     <div className="space-y-14">
       {visible.map((g) => (
         <div key={g.title} id={groupId(idPrefix, g.title)} className={`scroll-mt-32 ${theme.group}`}>
-          <h3 className={theme.groupTitle}>{g.title}</h3>
+          <GroupTitle className={theme.groupTitle}>{g.title}</GroupTitle>
           <div>
             {g.items.map((it) => {
               const key = `${g.title}::${it.question}`;

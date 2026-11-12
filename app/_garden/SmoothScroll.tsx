@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 import "lenis/dist/lenis.css";
 import { gsap, ScrollTrigger } from "./gsap";
@@ -10,6 +11,10 @@ import { gsap, ScrollTrigger } from "./gsap";
  * perfectly in sync. Disabled entirely for prefers-reduced-motion.
  */
 export default function SmoothScroll({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const lenisRef = useRef<Lenis | null>(null);
+  const prevPathnameRef = useRef<string | null>(null);
+
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -51,17 +56,37 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
       // Never hijack scrolling inside modals, sheets, or the mobile menu.
       prevent: (node) => !!node.closest(".fixed, [role='dialog'], [data-lenis-prevent]"),
     });
+    lenisRef.current = lenis;
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
+      lenisRef.current = null;
       stopObserving();
       gsap.ticker.remove(tick);
       lenis.destroy();
     };
   }, []);
+
+  useEffect(() => {
+    if (prevPathnameRef.current === null) {
+      prevPathnameRef.current = pathname;
+      return;
+    }
+    if (prevPathnameRef.current === pathname) return;
+    prevPathnameRef.current = pathname;
+
+    const lenis = lenisRef.current;
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
+
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+  }, [pathname]);
 
   return <>{children}</>;
 }

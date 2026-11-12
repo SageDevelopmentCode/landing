@@ -2580,21 +2580,71 @@ export function createCommunityChannelDigestSentEmbed(data: {
     messageCount: number;
     emailSent: boolean;
   }>;
+  errors?: string[];
 }): DiscordEmbed {
-  const lines = data.digests.map((d) => {
-    const channels = d.channelNames.map((n) => n.split(" —")[0]).join(", ");
-    return `• **${d.parentName}** (${d.parentEmail}) — ${d.messageCount} msg${d.messageCount !== 1 ? "s" : ""} in ${channels}${d.emailSent ? " [email]" : ""}`;
-  });
-  let value = lines.join("\n");
-  if (value.length > 1024) {
-    value = value.substring(0, 1021) + "...";
+  const fields: DiscordEmbed["fields"] = [];
+
+  if (data.digests.length > 0) {
+    const lines = data.digests.map((d) => {
+      const channels = d.channelNames.map((n) => n.split(" —")[0]).join(", ");
+      return `• **${d.parentName}** (${d.parentEmail}) — ${d.messageCount} msg${d.messageCount !== 1 ? "s" : ""} in ${channels}${d.emailSent ? " [email]" : ""}`;
+    });
+    let value = lines.join("\n");
+    if (value.length > 1024) {
+      value = value.substring(0, 1021) + "...";
+    }
+    fields.push({ name: "Families", value, inline: false });
   }
 
+  const errors = data.errors ?? [];
+  const dedupeErrors = errors.filter(
+    (e) =>
+      e.includes("DEDUPE LOG FAILED") ||
+      e.includes("digest_log") ||
+      e.includes("last_read_at"),
+  );
+  const otherErrors = errors.filter((e) => !dedupeErrors.includes(e));
+
+  if (dedupeErrors.length > 0) {
+    let value = dedupeErrors
+      .map((e) => `• ${e}`)
+      .join("\n");
+    if (value.length > 1024) {
+      value = value.substring(0, 1021) + "...";
+    }
+    fields.push({
+      name: "⚠️ Dedupe / log failures",
+      value,
+      inline: false,
+    });
+  }
+
+  if (otherErrors.length > 0) {
+    let value = otherErrors
+      .slice(0, 15)
+      .map((e) => `• ${e}`)
+      .join("\n");
+    if (otherErrors.length > 15) {
+      value += `\n… +${otherErrors.length - 15} more`;
+    }
+    if (value.length > 1024) {
+      value = value.substring(0, 1021) + "...";
+    }
+    fields.push({ name: "Other errors", value, inline: false });
+  }
+
+  const hasDedupeFailure = dedupeErrors.length > 0;
+
   return {
-    title: "💬 Community Channel Digests Sent",
-    description: `**${data.digests.length} digest${data.digests.length !== 1 ? "s" : ""}** sent on ${data.date}`,
-    color: 0x6b8a6b,
-    fields: [{ name: "Families", value, inline: false }],
+    title: hasDedupeFailure
+      ? "⚠️ Community Channel Digests — check dedupe log"
+      : "💬 Community Channel Digests Sent",
+    description:
+      data.digests.length > 0
+        ? `**${data.digests.length} digest${data.digests.length !== 1 ? "s" : ""}** sent on ${data.date}`
+        : `No digests sent on ${data.date} (${errors.length} error${errors.length !== 1 ? "s" : ""})`,
+    color: hasDedupeFailure ? 0xc45c5c : 0x6b8a6b,
+    fields: fields.length > 0 ? fields : [{ name: "Status", value: "No issues", inline: false }],
     timestamp: new Date().toISOString(),
   };
 }

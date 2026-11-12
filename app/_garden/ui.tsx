@@ -10,6 +10,11 @@ export const btnSage =
 export const btnOutline =
   "inline-flex items-center justify-center gap-2 rounded-full border-2 border-[var(--sf-ink)] bg-white px-7 py-[14px] text-base font-extrabold text-[var(--sf-ink)] shadow-[0_6px_0_0_var(--sf-ink)] transition-all duration-200 hover:-translate-y-0.5 active:translate-y-1 active:shadow-[0_2px_0_0_var(--sf-ink)] cursor-pointer";
 
+/** Form field classes (same theme as the home page interest form). */
+export const fieldInput =
+  "w-full rounded-2xl border-2 border-[var(--sf-ink)]/15 bg-white px-4 py-3 text-[var(--sf-ink)] placeholder:text-[var(--sf-ink)]/40 transition focus:border-[var(--sf-sage)] focus:outline-none focus:ring-4 focus:ring-[var(--sf-mint)] disabled:opacity-60";
+export const fieldLabel = "mb-2 block text-sm font-extrabold text-[var(--sf-ink)]";
+
 const TINTS = {
   coral: "bg-[var(--sf-coral)]/20 text-[var(--sf-coral-deep)]",
   sage: "bg-[var(--sf-mint)] text-[var(--sf-sage-deep)]",

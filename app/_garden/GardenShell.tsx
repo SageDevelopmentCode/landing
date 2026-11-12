@@ -28,10 +28,16 @@ export default function GardenShell({
   navbar,
   children,
   className = "",
+  announcement = true,
+  smsDesktopOnly = false,
 }: {
   navbar: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Show the enrollment announcement popup after 25% scroll (default true). */
+  announcement?: boolean;
+  /** Hide the floating SMS button below lg (for pages with a mobile sticky CTA bar). */
+  smsDesktopOnly?: boolean;
 }) {
   const [waitlistOpen, setWaitlistOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -48,12 +54,14 @@ export default function GardenShell({
         <div className={`overflow-x-clip ${className}`}>
           {navbar}
           <main>{children}</main>
-          <EnrollmentAnnouncementPopup />
+          {announcement && <EnrollmentAnnouncementPopup />}
           <Footer useShellDialogs />
         </div>
         <WaitlistDialog isOpen={waitlistOpen} onClose={() => setWaitlistOpen(false)} />
         <ContactDialog isOpen={contactOpen} onClose={() => setContactOpen(false)} />
-        <AnimatePresence>{pastHero && <FloatingSMSButton />}</AnimatePresence>
+        <div className={smsDesktopOnly ? "hidden lg:block" : undefined}>
+          <AnimatePresence>{pastHero && <FloatingSMSButton />}</AnimatePresence>
+        </div>
       </SmoothScroll>
     </DialogsContext.Provider>
   );

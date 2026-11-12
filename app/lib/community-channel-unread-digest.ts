@@ -8,20 +8,13 @@ import type {
   CommunityChannelDigestChannel,
   CommunityChannelDigestMessage,
 } from "@/app/lib/community-channel-digest-types";
+import { fetchSchoolYearEnrolledFamilies } from "@/app/lib/school-year-enrolled-families";
 import {
   buildCommunityChannelUnreadDigestEmail,
   sendZohoEmail,
 } from "@/app/lib/zoho";
 
-const DONT_INCLUDE_TAG = "Don't Include";
 const MESSAGES_PER_CHANNEL = 8;
-
-type ApplicationRow = {
-  user_id: string | null;
-  g1_email: string | null;
-  g1_full_name: string | null;
-  admin_tags: string[] | null;
-};
 
 type ParentRow = {
   id: string;
@@ -70,8 +63,55 @@ function messagePreview(m: ChannelMessageRow): string {
   return "New message";
 }
 
-function isEligibleParent(apps: ApplicationRow[]): boolean {
-  return apps.some((a) => !(a.admin_tags ?? []).includes(DONT_INCLUDE_TAG));
+function maxDigestMessageCreatedAt(
+  channels: CommunityChannelDigestChannel[],
+): string {
+  let maxMs = 0;
+  for (const ch of channels) {
+    for (const m of ch.messages) {
+      const t = new Date(m.createdAt).getTime();
+      if (t > maxMs) maxMs = t;
+    }
+  }
+  return maxMs > 0 ? new Date(maxMs).toISOString() : new Date().toISOString();
+}
+
+async function bumpLastReadForDigestedChannels(
+  db: SupabaseClient,
+  userId: string,
+  channels: CommunityChannelDigestChannel[],
+): Promise<string[]> {
+  const warnings: string[] = [];
+
+  for (const ch of channels) {
+    if (ch.messages.length === 0) continue;
+
+    let maxMs = 0;
+    let maxIso = ch.messages[0].createdAt;
+    for (const m of ch.messages) {
+      const t = new Date(m.createdAt).getTime();
+      if (t > maxMs) {
+        maxMs = t;
+        maxIso = m.createdAt;
+      }
+    }
+
+    const { error } = await db
+      .schema("messaging")
+      .from("channel_members")
+      .update({ last_read_at: maxIso })
+      .eq("channel_id", ch.channelId)
+      .eq("user_id", userId)
+      .or(`last_read_at.is.null,last_read_at.lt.${maxIso}`);
+
+    if (error) {
+      warnings.push(
+        `Failed to bump last_read_at for channel ${ch.channelId} (user ${userId}): ${error.message}`,
+      );
+    }
+  }
+
+  return warnings;
 }
 
 async function fetchLastDigestSentByUser(
@@ -212,26 +252,13 @@ export async function maybeSendCommunityChannelUnreadDigests(
   db: SupabaseClient,
   now = new Date(),
 ): Promise<CommunityChannelDigestCronResult> {
-  const appsRes = await db
-    .schema("parent_app")
-    .from("applications")
-    .select("user_id, g1_email, g1_full_name, admin_tags")
-    .eq("status", "enrolled")
-    .not("user_id", "is", null);
-
-  if (appsRes.error) throw new Error(appsRes.error.message);
-
-  const appsByUser = new Map<string, ApplicationRow[]>();
-  for (const row of (appsRes.data ?? []) as ApplicationRow[]) {
-    if (!row.user_id) continue;
-    const list = appsByUser.get(row.user_id) ?? [];
-    list.push(row);
-    appsByUser.set(row.user_id, list);
-  }
-
-  const eligibleUserIds = [...appsByUser.entries()]
-    .filter(([, apps]) => isEligibleParent(apps))
-    .map(([id]) => id);
+  const families = await fetchSchoolYearEnrolledFamilies(db);
+  const familyByParentId = new Map(
+    families
+      .filter((f) => f.parentId)
+      .map((f) => [f.parentId, f] as const),
+  );
+  const eligibleUserIds = [...familyByParentId.keys()];
 
   const result: CommunityChannelDigestCronResult = {
     sent: 0,
@@ -259,11 +286,10 @@ export async function maybeSendCommunityChannelUnreadDigests(
 
   for (const userId of eligibleUserIds) {
     const parent = parentById.get(userId);
-    const apps = appsByUser.get(userId) ?? [];
-    const fallbackApp = apps[0];
-    const parentEmail = parent?.email ?? fallbackApp?.g1_email ?? null;
+    const family = familyByParentId.get(userId);
+    const parentEmail = parent?.email ?? family?.parentEmail ?? null;
     const parentName =
-      parent?.full_name ?? fallbackApp?.g1_full_name ?? "Parent";
+      parent?.full_name ?? family?.parentName ?? "Parent";
 
     if (!parentEmail) {
       result.skipped += 1;
@@ -305,6 +331,8 @@ export async function maybeSendCommunityChannelUnreadDigests(
         continue;
       }
 
+      const digestWatermarkIso = maxDigestMessageCreatedAt(channels);
+
       const logRes = await db
         .schema("parent_app")
         .from("community_channel_digest_log")
@@ -312,14 +340,22 @@ export async function maybeSendCommunityChannelUnreadDigests(
           user_id: userId,
           message_count: messageCount,
           channel_ids: channels.map((c) => c.channelId),
-          sent_at: digestCutoffIso,
+          sent_at: digestWatermarkIso,
         });
 
       if (logRes.error) {
         result.errors.push(
-          `Digest sent to ${parentEmail} but log failed: ${logRes.error.message}`,
+          `[DEDUPE LOG FAILED] Email was sent to ${parentEmail} but community_channel_digest_log insert failed — next cron may repeat the same backlog: ${logRes.error.message}`,
         );
+        continue;
       }
+
+      const readBumpWarnings = await bumpLastReadForDigestedChannels(
+        db,
+        userId,
+        channels,
+      );
+      result.errors.push(...readBumpWarnings);
 
       result.sent += 1;
       result.digests.push({
@@ -365,7 +401,9 @@ export async function maybeSendCommunityChannelUnreadDigests(
       })),
       metadata: channelSummary ? { channelName: channelSummary } : undefined,
     });
+  }
 
+  if (result.digests.length > 0 || result.errors.length > 0) {
     const dateLabel = now.toLocaleDateString("en-US", {
       timeZone: "America/Chicago",
       weekday: "long",
@@ -376,6 +414,7 @@ export async function maybeSendCommunityChannelUnreadDigests(
     const embed = createCommunityChannelDigestSentEmbed({
       date: dateLabel,
       digests: result.digests,
+      errors: result.errors,
     });
     await sendDiscordNotification(
       embed,
