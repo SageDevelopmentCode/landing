@@ -3,6 +3,7 @@ import { Merriweather, Poppins } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+import ScrollToTopOnNavigate from "@/app/components/ScrollToTopOnNavigate";
 import "./globals.css";
 
 const merriweather = Merriweather({
@@ -187,6 +188,7 @@ export default function RootLayout({
             alt=""
           />
         </noscript>
+        <ScrollToTopOnNavigate />
         {children}
         <Analytics />
         <SpeedInsights />

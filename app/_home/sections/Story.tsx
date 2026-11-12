@@ -7,7 +7,8 @@ import { motion } from "framer-motion";
 import { gsap, useGSAP, MQ_MOTION } from "@/app/_garden/gsap";
 import { WELCOME, OFFER, PHILOSOPHY } from "@/app/_home/content";
 import { Reveal, Runs, WordsReveal, useMediaQuery } from "@/app/_garden/motion";
-import { Arrow, Draw, Leaf, Pill, Squiggle, btnOutline, btnPop, type Tint } from "@/app/_garden/ui";
+import { WeekSchedule } from "@/app/_garden/program";
+import { Arrow, Draw, Pill, Squiggle, btnOutline, btnPop, type Tint } from "@/app/_garden/ui";
 
 // ─── Welcome — draggable polaroids ───────────────────────────────────────────
 
@@ -71,7 +72,6 @@ export function Welcome() {
 
 // ─── What We Offer — sticky notes + blob programs ────────────────────────────
 
-const BLOCK_TINTS = ["var(--sf-butter)", "var(--sf-mint)", "var(--sf-sky)"];
 const PROGRAM_TINTS: Tint[] = ["lav", "sage"];
 
 export function Offer() {
@@ -94,34 +94,7 @@ export function Offer() {
           </div>
 
           {/* Sticky-note week */}
-          <div>
-            <p className="sf-hand mb-4 text-2xl">{OFFER.schedule.weekdays}</p>
-            <Reveal className="grid gap-5 sm:grid-cols-3 lg:grid-cols-1" stagger={0.12} y={50}>
-              {OFFER.schedule.blocks.map((b, i) => (
-                <div
-                  key={b}
-                  className={`sf-wiggle relative rounded-md p-5 pt-7 shadow-[0_14px_30px_-16px_rgba(43,42,38,0.5)] lg:flex lg:items-center lg:gap-5 lg:pt-5 ${["lg:mr-10", "lg:ml-10", "lg:mr-6"][i]}`}
-                  style={{ background: BLOCK_TINTS[i], rotate: `${[-2, 1.5, -1][i]}deg` }}
-                >
-                  <span className="absolute -top-2 left-1/2 h-4 w-12 -translate-x-1/2 rounded-sm bg-white/70" />
-                  <span className="sf-display text-4xl opacity-30 lg:text-5xl">{i + 1}</span>
-                  <p className="mt-2 font-bold leading-snug lg:mt-0 lg:text-lg">{b}</p>
-                </div>
-              ))}
-            </Reveal>
-            <Reveal className="mt-6" y={40}>
-              <div className="relative overflow-hidden rounded-[28px] bg-[var(--sf-coral)] p-7 text-white">
-                <Draw className="absolute -right-4 -top-4 w-28 opacity-60">
-                  <Leaf color="#fff" />
-                </Draw>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h4 className="sf-display text-3xl">{OFFER.schedule.friday.title} 🎉</h4>
-                  <span className="rounded-full bg-white px-4 py-1.5 text-sm font-extrabold text-[var(--sf-coral-deep)]">{OFFER.schedule.friday.time}</span>
-                </div>
-                <p className="mt-2 text-lg font-semibold">{OFFER.schedule.friday.description}</p>
-              </div>
-            </Reveal>
-          </div>
+          <WeekSchedule schedule={OFFER.schedule} />
         </div>
 
         {/* Programs */}

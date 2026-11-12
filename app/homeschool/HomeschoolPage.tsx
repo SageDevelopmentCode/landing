@@ -6,26 +6,23 @@ import Navbar from "@/app/components/Navbar";
 import GardenShell, { useDialogs } from "@/app/_garden/GardenShell";
 import PageHero from "@/app/_garden/PageHero";
 import { Magnetic, Reveal, Runs, WordsReveal } from "@/app/_garden/motion";
-import { CtaCard, Chips, DetailNotes, PhotoScatter, PillarCards } from "@/app/_garden/program";
-import { Draw, Pill, Star, btnOutline, btnPop } from "@/app/_garden/ui";
+import { CtaCard, DetailNotes, PhotoScatter } from "@/app/_garden/program";
+import { Pill, btnOutline, btnPop } from "@/app/_garden/ui";
 import { DropInPricing } from "@/app/_home/sections/Tuition";
 import LatestRecap from "@/app/highlights/_shared/LatestRecap";
 import {
   HS_CTA,
   HS_DESCRIPTION,
   HS_DETAILS,
-  HS_FRIDAY,
   HS_GALLERY,
   HS_HERO,
   HS_PRICING,
   HS_PROGRAM,
-  HS_SCHEDULE,
   HS_SUMMARY,
-  HS_WHY,
 } from "./content";
+import { FieldDayFridays, ScheduleTiers, WhyMicroschool } from "./sections";
 
 const MARK = "font-extrabold text-[var(--sf-ink)] bg-[linear-gradient(transparent_60%,var(--sf-butter)_60%)]";
-const TIER_NOTES = ["var(--sf-butter)", "var(--sf-mint)", "var(--sf-sky)"];
 
 /** The Homeschool Drop-In page, built with the Garden design system (app/_garden). */
 export default function HomeschoolPage() {
@@ -80,62 +77,11 @@ export default function HomeschoolPage() {
         </div>
       </section>
 
-      {/* Flexible scheduling */}
-      <section className="py-24 lg:py-32">
-        <div className="mx-auto max-w-6xl px-6 sm:px-10 lg:px-16">
-          <div className="mx-auto max-w-3xl text-center">
-            <Pill tint="sage">🗓️ {HS_SCHEDULE.badge}</Pill>
-            <WordsReveal text={HS_SCHEDULE.heading} className="sf-display mt-5 text-5xl md:text-7xl" />
-            <p className="sf-hand mt-3 text-2xl text-[var(--sf-sage-deep)]">{HS_SCHEDULE.subtitle}</p>
-          </div>
-          <Reveal className="mt-14 grid gap-8 sm:grid-cols-3" stagger={0.12} y={50}>
-            {HS_SCHEDULE.tiers.map((t, i) => (
-              <div
-                key={t.title}
-                className="sf-wiggle relative rounded-md p-7 pt-9 shadow-[0_14px_30px_-16px_rgba(43,42,38,0.5)]"
-                style={{ background: TIER_NOTES[i], rotate: `${[-2, 1.5, -1][i]}deg` }}
-              >
-                <span className="absolute -top-2 left-1/2 h-4 w-12 -translate-x-1/2 rounded-sm bg-white/70" aria-hidden="true" />
-                <p className="sf-hand text-2xl text-[var(--sf-coral-deep)]">{t.days}</p>
-                <h3 className="sf-display mt-2 text-3xl">{t.title}</h3>
-                <p className="mt-3 leading-relaxed text-[var(--sf-ink)]/75">{t.description}</p>
-              </div>
-            ))}
-          </Reveal>
-        </div>
-      </section>
+      <ScheduleTiers />
 
-      {/* Field Day Fridays */}
-      <section className="relative overflow-hidden bg-[var(--sf-butter)]/50 py-24 lg:py-32">
-        <Draw className="absolute right-[8%] top-[18%] hidden w-12 lg:block">
-          <Star />
-        </Draw>
-        <div className="mx-auto max-w-4xl px-6 text-center sm:px-10">
-          <Pill tint="coral">🎉 {HS_FRIDAY.badge}</Pill>
-          <h2 className="sf-display mt-5 text-5xl md:text-7xl">
-            <span className="text-[var(--sf-coral-deep)]">{HS_FRIDAY.headingHighlight}</span> {HS_FRIDAY.headingAfter}
-          </h2>
-          <Reveal>
-            <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-[var(--sf-soft)]">{HS_FRIDAY.body}</p>
-          </Reveal>
-          <Chips items={HS_FRIDAY.chips} className="mt-10" />
-        </div>
-      </section>
+      <FieldDayFridays />
 
-      {/* Why microschool */}
-      <section className="py-24 lg:py-32">
-        <div className="mx-auto grid max-w-7xl gap-14 px-6 sm:px-10 lg:grid-cols-2 lg:items-center lg:px-16">
-          <div>
-            <Pill tint="lav">🌟 {HS_WHY.badge}</Pill>
-            <WordsReveal text={HS_WHY.heading} className="sf-display mt-5 text-5xl md:text-6xl" />
-            <p className="sf-hand mt-3 text-2xl text-[var(--sf-sage-deep)]">{HS_WHY.subtitle}</p>
-            <Reveal>
-              <p className="mt-6 text-lg leading-relaxed text-[var(--sf-soft)]">{HS_WHY.body}</p>
-            </Reveal>
-          </div>
-          <PillarCards pillars={HS_WHY.pillars} />
-        </div>
-      </section>
+      <WhyMicroschool />
 
       <Program />
 

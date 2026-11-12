@@ -4,7 +4,7 @@ import { useRef, type ReactNode } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Marquee, Reveal, useMediaQuery } from "./motion";
-import { Arrow, Draw, Pill, Sun, type Tint } from "./ui";
+import { Arrow, Draw, Leaf, Pill, Sun, type Tint } from "./ui";
 
 /**
  * Building blocks shared by the program pages (school year, homeschool).
@@ -39,7 +39,18 @@ export function DetailNotes({ details, className = "" }: { details: { label: str
  * Taped polaroids you can drag around on desktop (fine pointers), and an
  * endless Marquee row on smaller screens.
  */
-export function PhotoScatter({ photos, alt, hint }: { photos: string[]; alt: string; hint?: string }) {
+export function PhotoScatter({
+  photos,
+  alt,
+  hint,
+  featureFirst = true,
+}: {
+  photos: string[];
+  alt: string;
+  hint?: string;
+  /** Make the first polaroid larger (default). Turn off for even rows of four. */
+  featureFirst?: boolean;
+}) {
   const area = useRef<HTMLDivElement>(null);
   const canDrag = useMediaQuery("(pointer: fine)");
   return (
@@ -65,7 +76,7 @@ export function PhotoScatter({ photos, alt, hint }: { photos: string[]; alt: str
             whileInView={{ opacity: 1, y: 0, rotate: PHOTO_TILTS[i % PHOTO_TILTS.length] }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ type: "spring", stiffness: 160, damping: 16, delay: i * 0.06 }}
-            className={`sf-polaroid relative select-none ${i === 0 ? "w-[30%]" : "w-[23%]"} ${canDrag ? "cursor-grab" : ""}`}
+            className={`sf-polaroid relative select-none ${featureFirst && i === 0 ? "w-[30%]" : "w-[23%]"} ${canDrag ? "cursor-grab" : ""}`}
             style={{ rotate: PHOTO_TILTS[i % PHOTO_TILTS.length] }}
           >
             <span className="absolute -top-3 left-1/2 z-10 h-6 w-20 -translate-x-1/2 -rotate-2 rounded-sm opacity-90" style={{ background: TAPE[i % TAPE.length] }} aria-hidden="true" />
@@ -161,5 +172,49 @@ export function Chips({ items, className = "" }: { items: { emoji: string; label
         </span>
       ))}
     </Reveal>
+  );
+}
+
+const BLOCK_TINTS = ["var(--sf-butter)", "var(--sf-mint)", "var(--sf-sky)"];
+
+export type WeekScheduleCopy = {
+  weekdays: string;
+  blocks: readonly string[];
+  friday: { title: string; time: string; description: string };
+};
+
+/** The Monday–Thursday blocks as tilted sticky notes, plus the coral Field Day Friday card. */
+export function WeekSchedule({ schedule }: { schedule: WeekScheduleCopy }) {
+  return (
+    <div>
+      <p className="sf-hand mb-4 text-2xl">{schedule.weekdays}</p>
+      <Reveal className="grid gap-5 sm:grid-cols-3 lg:grid-cols-1" stagger={0.12} y={50}>
+        {schedule.blocks.map((b, i) => (
+          <div
+            key={b}
+            className={`sf-wiggle relative rounded-md p-5 pt-7 shadow-[0_14px_30px_-16px_rgba(43,42,38,0.5)] lg:flex lg:items-center lg:gap-5 lg:pt-5 ${["lg:mr-10", "lg:ml-10", "lg:mr-6"][i % 3]}`}
+            style={{ background: BLOCK_TINTS[i % BLOCK_TINTS.length], rotate: `${[-2, 1.5, -1][i % 3]}deg` }}
+          >
+            <span className="absolute -top-2 left-1/2 h-4 w-12 -translate-x-1/2 rounded-sm bg-white/70" aria-hidden="true" />
+            <span className="sf-display text-4xl opacity-30 lg:text-5xl" aria-hidden="true">
+              {i + 1}
+            </span>
+            <p className="mt-2 font-bold leading-snug lg:mt-0 lg:text-lg">{b}</p>
+          </div>
+        ))}
+      </Reveal>
+      <Reveal className="mt-6" y={40}>
+        <div className="relative overflow-hidden rounded-[28px] bg-[var(--sf-coral)] p-7 text-white">
+          <Draw className="absolute -right-4 -top-4 w-28 opacity-60">
+            <Leaf color="#fff" />
+          </Draw>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h4 className="sf-display text-3xl">{schedule.friday.title} 🎉</h4>
+            <span className="rounded-full bg-white px-4 py-1.5 text-sm font-extrabold text-[var(--sf-coral-deep)]">{schedule.friday.time}</span>
+          </div>
+          <p className="mt-2 text-lg font-semibold">{schedule.friday.description}</p>
+        </div>
+      </Reveal>
+    </div>
   );
 }

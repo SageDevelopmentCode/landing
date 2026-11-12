@@ -63,6 +63,56 @@ function messagePreview(m: ChannelMessageRow): string {
   return "New message";
 }
 
+function maxDigestMessageCreatedAt(
+  channels: CommunityChannelDigestChannel[],
+): string {
+  let maxMs = 0;
+  for (const ch of channels) {
+    for (const m of ch.messages) {
+      const t = new Date(m.createdAt).getTime();
+      if (t > maxMs) maxMs = t;
+    }
+  }
+  return maxMs > 0 ? new Date(maxMs).toISOString() : new Date().toISOString();
+}
+
+async function bumpLastReadForDigestedChannels(
+  db: SupabaseClient,
+  userId: string,
+  channels: CommunityChannelDigestChannel[],
+): Promise<string[]> {
+  const warnings: string[] = [];
+
+  for (const ch of channels) {
+    if (ch.messages.length === 0) continue;
+
+    let maxMs = 0;
+    let maxIso = ch.messages[0].createdAt;
+    for (const m of ch.messages) {
+      const t = new Date(m.createdAt).getTime();
+      if (t > maxMs) {
+        maxMs = t;
+        maxIso = m.createdAt;
+      }
+    }
+
+    const { error } = await db
+      .schema("messaging")
+      .from("channel_members")
+      .update({ last_read_at: maxIso })
+      .eq("channel_id", ch.channelId)
+      .eq("user_id", userId);
+
+    if (error) {
+      warnings.push(
+        `Failed to bump last_read_at for channel ${ch.channelId} (user ${userId}): ${error.message}`,
+      );
+    }
+  }
+
+  return warnings;
+}
+
 async function fetchLastDigestSentByUser(
   db: SupabaseClient,
   userIds: string[],
@@ -280,6 +330,8 @@ export async function maybeSendCommunityChannelUnreadDigests(
         continue;
       }
 
+      const digestWatermarkIso = maxDigestMessageCreatedAt(channels);
+
       const logRes = await db
         .schema("parent_app")
         .from("community_channel_digest_log")
@@ -287,14 +339,22 @@ export async function maybeSendCommunityChannelUnreadDigests(
           user_id: userId,
           message_count: messageCount,
           channel_ids: channels.map((c) => c.channelId),
-          sent_at: digestCutoffIso,
+          sent_at: digestWatermarkIso,
         });
 
       if (logRes.error) {
         result.errors.push(
-          `Digest sent to ${parentEmail} but log failed: ${logRes.error.message}`,
+          `[DEDUPE LOG FAILED] Email was sent to ${parentEmail} but community_channel_digest_log insert failed — next cron may repeat the same backlog: ${logRes.error.message}`,
         );
+        continue;
       }
+
+      const readBumpWarnings = await bumpLastReadForDigestedChannels(
+        db,
+        userId,
+        channels,
+      );
+      result.errors.push(...readBumpWarnings);
 
       result.sent += 1;
       result.digests.push({
@@ -340,7 +400,9 @@ export async function maybeSendCommunityChannelUnreadDigests(
       })),
       metadata: channelSummary ? { channelName: channelSummary } : undefined,
     });
+  }
 
+  if (result.digests.length > 0 || result.errors.length > 0) {
     const dateLabel = now.toLocaleDateString("en-US", {
       timeZone: "America/Chicago",
       weekday: "long",
@@ -351,6 +413,7 @@ export async function maybeSendCommunityChannelUnreadDigests(
     const embed = createCommunityChannelDigestSentEmbed({
       date: dateLabel,
       digests: result.digests,
+      errors: result.errors,
     });
     await sendDiscordNotification(
       embed,
