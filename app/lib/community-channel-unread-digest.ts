@@ -101,7 +101,8 @@ async function bumpLastReadForDigestedChannels(
       .from("channel_members")
       .update({ last_read_at: maxIso })
       .eq("channel_id", ch.channelId)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .or(`last_read_at.is.null,last_read_at.lt.${maxIso}`);
 
     if (error) {
       warnings.push(
