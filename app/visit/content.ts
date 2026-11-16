@@ -2,17 +2,17 @@
  * Copy for the Visit page, carried over verbatim from the previous
  * app/visit/page.tsx. SCHOOL_FAQS is also used by /tour (identical copy).
  */
-import { SCHOOL_WEEK_TWELVE_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
+import { SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
 import type { FaqItem } from "@/app/_garden/types";
 
-export const GALLERY_IMAGES = SCHOOL_WEEK_TWELVE_GALLERY_IMAGES;
-export const GALLERY_ALT = "Sage Field school week 12";
+export const GALLERY_IMAGES = SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES;
+export const GALLERY_ALT = "Sage Field school week 13";
 
 export const BENTO_IMAGES = [
   "/assets/Stock3.jpg",
-  SCHOOL_WEEK_TWELVE_GALLERY_IMAGES[0],
-  SCHOOL_WEEK_TWELVE_GALLERY_IMAGES[2],
-  SCHOOL_WEEK_TWELVE_GALLERY_IMAGES[5],
+  SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES[0],
+  SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES[2],
+  SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES[5],
 ];
 export const BENTO_ALT = "Sage Field campus and students";
 

@@ -19,7 +19,7 @@ import WeeklySchedule from "../components/WeeklySchedule";
 import FAQAccordion from "../components/FAQAccordion";
 import GardenIsland from "@/app/_garden/GardenIsland";
 import LatestRecap from "@/app/highlights/_shared/LatestRecap";
-import { SCHOOL_WEEK_TWELVE_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
+import { SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
 
 type Tab = "school-year" | "homeschool";
 
@@ -97,7 +97,7 @@ const tabContent = {
       { label: "Schedule", value: "Up to 4 days/week" },
       { label: "Term", value: "6-month commitment" },
     ],
-    images: SCHOOL_WEEK_TWELVE_GALLERY_IMAGES,
+    images: SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES,
   },
   homeschool: {
     badge: "Homeschool Drop-In",
@@ -112,7 +112,7 @@ const tabContent = {
       { label: "Fridays", value: "Field Days" },
       { label: "Class Size", value: "~10 Kids" },
     ],
-    images: SCHOOL_WEEK_TWELVE_GALLERY_IMAGES,
+    images: SCHOOL_WEEK_THIRTEEN_GALLERY_IMAGES,
   },
 };
 
