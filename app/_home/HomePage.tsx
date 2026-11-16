@@ -1,7 +1,7 @@
 "use client";
 
 import Navbar from "@/app/components/Navbar";
-import WeekRecapPreview from "@/app/components/WeekRecapPreview";
+import LatestRecap from "@/app/highlights/_shared/LatestRecap";
 import FridayRacePreview from "@/app/friday/components/race/FridayRacePreview";
 import GardenShell from "@/app/_garden/GardenShell";
 import Hero from "./sections/Hero";
@@ -20,7 +20,7 @@ export default function HomePage() {
       <Hero />
       <Welcome />
       <FridayRacePreview />
-      <WeekRecapPreview className="bg-welcome-bg" />
+      <LatestRecap />
       <Offer />
       <Philosophy />
       <Continuity />

@@ -16,7 +16,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
 import ContactDialog from "../components/ContactDialog";
-import WeekRecapPreview from "../components/WeekRecapPreview";
+import GardenIsland from "@/app/_garden/GardenIsland";
+import LatestRecap from "@/app/highlights/_shared/LatestRecap";
 import { SCHOOL_YEAR_LATEST_CARD } from "@/app/lib/highlights/school-year-latest-preview";
 import EveningSpotlight from "../components/community/EveningSpotlight";
 import PlantCatalog from "../components/community/PlantCatalog";
@@ -609,7 +610,9 @@ export default function CommunityGardenPage() {
         prefersReducedMotion={prefersReducedMotion}
       />
 
-      <WeekRecapPreview className="bg-welcome-bg" />
+      <GardenIsland>
+        <LatestRecap />
+      </GardenIsland>
 
       {/* ── SUMMER HIGHLIGHTS ── */}
       <section className="py-16 px-8 sm:px-12 lg:px-16 bg-sage-50">

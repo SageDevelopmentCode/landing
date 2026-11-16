@@ -17,8 +17,9 @@ import MeetTheTeamSection from "../components/MeetTheTeamSection";
 import PartnershipsPreviewSection from "../components/PartnershipsPreviewSection";
 import WeeklySchedule from "../components/WeeklySchedule";
 import FAQAccordion from "../components/FAQAccordion";
-import WeekRecapPreview from "../components/WeekRecapPreview";
-import { SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
+import GardenIsland from "@/app/_garden/GardenIsland";
+import LatestRecap from "@/app/highlights/_shared/LatestRecap";
+import { SCHOOL_WEEK_TWELVE_GALLERY_IMAGES } from "@/app/lib/highlights/school-year-latest-preview";
 
 type Tab = "school-year" | "homeschool";
 
@@ -96,7 +97,7 @@ const tabContent = {
       { label: "Schedule", value: "Up to 4 days/week" },
       { label: "Term", value: "6-month commitment" },
     ],
-    images: SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES,
+    images: SCHOOL_WEEK_TWELVE_GALLERY_IMAGES,
   },
   homeschool: {
     badge: "Homeschool Drop-In",
@@ -111,7 +112,7 @@ const tabContent = {
       { label: "Fridays", value: "Field Days" },
       { label: "Class Size", value: "~10 Kids" },
     ],
-    images: SCHOOL_WEEK_ELEVEN_GALLERY_IMAGES,
+    images: SCHOOL_WEEK_TWELVE_GALLERY_IMAGES,
   },
 };
 
@@ -301,7 +302,7 @@ function InterestPageContent() {
               >
                 <Image
                   src={src}
-                  alt="Sage Field school week 11"
+                  alt="Sage Field school week 12"
                   fill
                   className="object-cover"
                   sizes="88vw"
@@ -407,7 +408,7 @@ function InterestPageContent() {
                       >
                         <Image
                           src={src}
-                          alt="Sage Field school week 11"
+                          alt="Sage Field school week 12"
                           fill
                           className="object-cover hover:scale-[1.02] transition-transform duration-500"
                           sizes="(max-width: 1024px) 50vw, 33vw"
@@ -764,7 +765,9 @@ function InterestPageContent() {
         </div>
       </section>
 
-      <WeekRecapPreview className="bg-welcome-bg" />
+      <GardenIsland>
+        <LatestRecap />
+      </GardenIsland>
 
       {/* FAQ Section */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">

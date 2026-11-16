@@ -349,8 +349,8 @@ export default function ShadowPage() {
                   </div>
                   <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     {[
-                      { label: RECAP.week10, items: band.week10, pill: "bg-[var(--sf-coral)]/20 text-[var(--sf-coral-deep)]" },
-                      { label: RECAP.week11, items: band.week11, pill: "bg-[var(--sf-mint)] text-[var(--sf-sage-deep)]" },
+                      { label: RECAP.week11, items: band.week11, pill: "bg-[var(--sf-coral)]/20 text-[var(--sf-coral-deep)]" },
+                      { label: RECAP.week12, items: band.week12, pill: "bg-[var(--sf-mint)] text-[var(--sf-sage-deep)]" },
                     ].map((wk) => (
                       <div key={wk.label} className="rounded-2xl bg-white p-4">
                         <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-extrabold ${wk.pill}`}>{wk.label}</span>

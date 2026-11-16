@@ -8,26 +8,6 @@ import type { FaqItem } from "@/app/_garden/types";
 
 // ─── Image Arrays ─────────────────────────────────────────────────────────────
 
-export const WEEK10_IMAGES = [
-  "/assets/highlights/school_week_ten/E9C8665F-3A5D-4D42-BBEE-A304AE89650C 2.JPG",
-  "/assets/highlights/school_week_ten/738F9C06-0FA2-4123-84DB-F02E783177C6 2.JPG",
-  "/assets/highlights/school_week_ten/36BA22E1-883A-4E3D-B4AA-59DDF3BB1D5D 2.JPG",
-  "/assets/highlights/school_week_ten/500878B3-9A0E-40EC-98BE-90BCA4C5B3C2 2.JPG",
-  "/assets/highlights/school_week_ten/6A513DEA-DA53-4A0B-97F0-56CD8252239E 2.JPG",
-  "/assets/highlights/school_week_ten/D6531363-0E64-47BD-BF46-74BB7AF1AF1D 2.JPG",
-  "/assets/highlights/school_week_ten/4FBDDB9F-3CD9-4CDC-BE85-5747C8565143 2.JPG",
-  "/assets/highlights/school_week_ten/2ED66DBE-D717-438E-9F23-2B6773BC53B9 2.JPG",
-  "/assets/highlights/school_week_ten/CF0580D0-E27D-4643-82AC-DA64589B4D5D 2.JPG",
-  "/assets/highlights/school_week_ten/5A0D8F13-F909-436C-920F-D0239845F44A 2.JPG",
-  "/assets/highlights/school_week_ten/9C9E161E-C4A2-4D8F-9807-63E7A25DE79E 2.JPG",
-  "/assets/highlights/school_week_ten/CD090DFB-4F87-44B0-8C3D-6BD63F38DAA7 2.JPG",
-  "/assets/highlights/school_week_ten/84F1CC69-0D48-4206-9A3C-1047209EDE1F 2.JPG",
-  "/assets/highlights/school_week_ten/76C5792B-D9E9-4D86-A280-DEC741EF9CD1 2.JPG",
-  "/assets/highlights/school_week_ten/2157652A-3FA6-4458-BD7C-E93F888BBA15 2.JPG",
-  "/assets/highlights/school_week_ten/EC13D47B-9B4C-430B-AE2C-92B6530229E5 2.JPG",
-  "/assets/highlights/school_week_ten/B7159973-EEFB-4EFD-8D26-FA00FCE67452 2.JPG",
-];
-
 export const WEEK11_IMAGES = [
   "/assets/highlights/school_week_eleven/2D1BA87C-3BA1-4596-857A-D62FFFD3AEF6.JPG",
   "/assets/highlights/school_week_eleven/06323F77-4E26-4A28-AC58-36B018A0831D.JPG",
@@ -58,7 +38,27 @@ export const WEEK11_IMAGES = [
   "/assets/highlights/school_week_eleven/E85EDE1E-ADFE-4F0D-861C-1427EB58E8AB.JPG",
 ];
 
-export const CAROUSEL_IMAGES = [...WEEK10_IMAGES, ...WEEK11_IMAGES];
+export const WEEK12_IMAGES = [
+  "/assets/highlights/school_week_twelve/4C91BE96-1DAA-442A-9D31-D18B017CBACC.JPG",
+  "/assets/highlights/school_week_twelve/5F89FB6A-BC40-40AE-9CF5-AD11C088BCB3.JPG",
+  "/assets/highlights/school_week_twelve/10CC9173-98B8-4C61-AC26-BC47AD794446.JPG",
+  "/assets/highlights/school_week_twelve/AD71CA2A-A8E9-4463-A0A3-142CF28E77A5.JPG",
+  "/assets/highlights/school_week_twelve/4843EA7B-0555-471A-980A-201D5D946C20.JPG",
+  "/assets/highlights/school_week_twelve/93C77585-2766-4445-A567-36B1D8D5E528.JPG",
+  "/assets/highlights/school_week_twelve/3A2D9CC2-CBC0-4FB5-B939-1F5943B71917.JPG",
+  "/assets/highlights/school_week_twelve/42204CE0-4F42-4137-86B2-EEAB2C602047.JPG",
+  "/assets/highlights/school_week_twelve/7F63D5AB-60B2-4394-9B75-05074B9928CA.JPG",
+  "/assets/highlights/school_week_twelve/3372BC8C-4A29-4604-A768-C788925A1CF2.JPG",
+  "/assets/highlights/school_week_twelve/48D42281-6276-4268-8D8A-D43437EF17C7.JPG",
+  "/assets/highlights/school_week_twelve/530085FA-8419-4772-B7BC-F8432A1A6C8B.JPG",
+  "/assets/highlights/school_week_twelve/23219CC1-98DB-4B4C-96D5-B770AF8E4EE4.JPG",
+  "/assets/highlights/school_week_twelve/0A7EB988-ECAE-43A3-9DF0-F4373EF6C013.JPG",
+  "/assets/highlights/school_week_twelve/EFB8DA43-FCA8-408E-ADAB-40F06498DCAB.JPG",
+  "/assets/highlights/school_week_twelve/AD03DCE9-DC98-4011-B106-BA6076C1D929.JPG",
+  "/assets/highlights/school_week_twelve/9C1D5E40-6AB7-45E9-96BD-117B95105520.JPG",
+];
+
+export const CAROUSEL_IMAGES = [...WEEK11_IMAGES, ...WEEK12_IMAGES];
 
 export const GALLERY_INITIAL_COUNT = 9;
 
@@ -133,74 +133,74 @@ export const WEEK11_UPPER_ELEM_HIGHLIGHTS = [
   },
 ];
 
-// ─── Week 10 Highlights ───────────────────────────────────────────────────────
+// ─── Week 12 Highlights ───────────────────────────────────────────────────────
 
-export const WEEK10_PRIMARY_HIGHLIGHTS = [
+export const WEEK12_PRIMARY_HIGHLIGHTS = [
   {
-    emoji: "🏎️",
-    label: "Speed & Ramps",
-    desc: "F1-inspired ads, homemade ramps, and predictions about time and distance",
+    emoji: "🦃",
+    label: "Thanksgiving Gratitude",
+    desc: "Talked about thankfulness and what gratitude looks like every day",
   },
   {
-    emoji: "✍️",
-    label: "Young Authors",
-    desc: "National Writing Day peer stories sparked illustrator work and handwriting",
+    emoji: "📖",
+    label: "Story Elements",
+    desc: "Named main characters and settings while retelling favorite tales",
   },
   {
-    emoji: "🍕",
-    label: "Equal Parts",
-    desc: "Hands-on fractions by dividing wholes into fair shares",
+    emoji: "🌍",
+    label: "Earth & Space",
+    desc: "Ant curiosity led into planets, layers of Earth, and big-space wonder",
   },
   {
-    emoji: "🕷️",
-    label: "Spider Study",
-    desc: "Life-cycle inquiry after wrapping up ants on campus",
+    emoji: "💡",
+    label: "Light & Energy",
+    desc: "November science kicked off with how light and energy show up around us",
   },
 ];
 
-export const WEEK10_LOWER_ELEM_HIGHLIGHTS = [
+export const WEEK12_LOWER_ELEM_HIGHLIGHTS = [
   {
-    emoji: "➖",
-    label: "Subtraction Lines",
-    desc: "Number-line take-away for first grade and regrouping word problems for second",
+    emoji: "🍕",
+    label: "Fraction Models",
+    desc: "Halves, thirds, and wholes matched to pictures and shape models",
   },
   {
-    emoji: "🔤",
-    label: "Word Families",
-    desc: "CVC decoding on whiteboards during crisp outdoor mornings",
+    emoji: "🔍",
+    label: "Context Clues",
+    desc: "Daily passages built main-idea and vocabulary detective skills",
   },
   {
-    emoji: "🇺🇸",
-    label: "Landmarks & Symbols",
-    desc: "Liberty Bell and Washington Monument history with big questions",
+    emoji: "🚗",
+    label: "Force & Motion Lab",
+    desc: "Ramp-and-car trials recorded how far vehicles rolled after block bumps",
   },
   {
-    emoji: "👑",
-    label: "Fairytale Kingdom",
-    desc: "Field Friday crowns, castle art, and take-home royal creations",
+    emoji: "🍲",
+    label: "Tomato Basil Soup",
+    desc: "Diced garden veggies and simmered a cozy lunch with rosemary and thyme",
   },
 ];
 
-export const WEEK10_UPPER_ELEM_HIGHLIGHTS = [
+export const WEEK12_UPPER_ELEM_HIGHLIGHTS = [
   {
     emoji: "🍕",
-    label: "Unlike Denominators",
-    desc: "LCM comparisons, equivalent fractions, and multi-step word problems",
+    label: "Fraction Pizza Finale",
+    desc: "Recipe problems unlocked ingredient amounts to wrap the fractions unit",
   },
   {
-    emoji: "✍️",
-    label: "Stretch the Sentence",
-    desc: "Prepositions, FANBOYS, and persuasive letters with supporting reasons",
+    emoji: "🫁",
+    label: "Human Anatomy",
+    desc: "Skeletal IDs, model lungs, and muscular-system moves launched science",
   },
   {
-    emoji: "❤️",
-    label: "Heart Rate Lab",
-    desc: "Calm meditation through vigorous play while tracking beats per minute",
+    emoji: "📓",
+    label: "Notebooking",
+    desc: "Titles, labels, summaries, and guided sentence expansion in every subject",
   },
   {
-    emoji: "🧵",
-    label: "Community Making",
-    desc: "Butternut squash soup, art frames, and intergenerational stuffed-animal sewing",
+    emoji: "🎨",
+    label: "Roots & Watercolor",
+    desc: "Greek and Latin tele- and pre- roots plus partner watercolor painting",
   },
 ];
 
@@ -318,28 +318,28 @@ export const HERO = {
   cta: "Book a Shadow Day →",
   secondary: "See a Day in Action",
   photos: [
+    "/assets/highlights/school_week_twelve/4C91BE96-1DAA-442A-9D31-D18B017CBACC.JPG",
     "/assets/highlights/school_week_eleven/2D1BA87C-3BA1-4596-857A-D62FFFD3AEF6.JPG",
-    "/assets/highlights/school_week_ten/E9C8665F-3A5D-4D42-BBEE-A304AE89650C 2.JPG",
-    "/assets/highlights/school_week_eleven/A27CDDBC-D55F-4D28-B423-25A007194873.JPG",
+    "/assets/highlights/school_week_twelve/5F89FB6A-BC40-40AE-9CF5-AD11C088BCB3.JPG",
   ],
 };
 
 export const RECAP = {
-  badge: "Weeks 10 & 11 in Review",
+  badge: "Weeks 11 & 12 in Review",
   heading: "A Glimpse of What Kids Do Here",
-  sub: "Weeks ten and eleven — here's a real look at what your child would experience at Sage Field. October wrap-ups, Halloween Field Friday, and real community.",
+  sub: "Weeks eleven and twelve — October wrap-ups meet November gratitude, anatomy labs, tomato basil soup, and Autumn Adventure Field Friday.",
   showFewer: "Show fewer photos",
   seeAll: (n: number) => `See all ${n} photos →`,
-  week10: "Week 10",
   week11: "Week 11",
+  week12: "Week 12",
   bands: [
-    { emoji: "🌱", title: "Primary", subtitle: "Pre-K & Kindergarten", tint: "coral" as const, week10: WEEK10_PRIMARY_HIGHLIGHTS, week11: WEEK11_PRIMARY_HIGHLIGHTS },
-    { emoji: "✨", title: "Lower Elementary", subtitle: "1st & 2nd Grade", tint: "sage" as const, week10: WEEK10_LOWER_ELEM_HIGHLIGHTS, week11: WEEK11_LOWER_ELEM_HIGHLIGHTS },
-    { emoji: "📐", title: "Upper Elementary", subtitle: "3rd & 4th Grade", tint: "sky" as const, week10: WEEK10_UPPER_ELEM_HIGHLIGHTS, week11: WEEK11_UPPER_ELEM_HIGHLIGHTS },
+    { emoji: "🌱", title: "Primary", subtitle: "Pre-K & Kindergarten", tint: "coral" as const, week11: WEEK11_PRIMARY_HIGHLIGHTS, week12: WEEK12_PRIMARY_HIGHLIGHTS },
+    { emoji: "✨", title: "Lower Elementary", subtitle: "1st & 2nd Grade", tint: "sage" as const, week11: WEEK11_LOWER_ELEM_HIGHLIGHTS, week12: WEEK12_LOWER_ELEM_HIGHLIGHTS },
+    { emoji: "📐", title: "Upper Elementary", subtitle: "3rd & 4th Grade", tint: "sky" as const, week11: WEEK11_UPPER_ELEM_HIGHLIGHTS, week12: WEEK12_UPPER_ELEM_HIGHLIGHTS },
   ],
   links: [
-    { label: "View Full Week 10 Recap →", href: "/highlights/school-year/week-10" },
     { label: "View Full Week 11 Recap →", href: "/highlights/school-year/week-11" },
+    { label: "View Full Week 12 Recap →", href: "/highlights/school-year/week-12" },
   ],
 };
 

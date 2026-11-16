@@ -55,6 +55,7 @@ import { sendSchoolYearWeekNineNewsletterEmail } from '../../actions/sendSchoolY
 import { sendSchoolYearWeekTenNewsletterEmail } from '../../actions/sendSchoolYearWeekTenNewsletterEmail'
 import { sendSchoolYearWeekElevenNewsletterEmail } from '../../actions/sendSchoolYearWeekElevenNewsletterEmail'
 import { sendSchoolYearWeekTwelveNewsletterEmail } from '../../actions/sendSchoolYearWeekTwelveNewsletterEmail'
+import { sendSchoolYearWeekThirteenNewsletterEmail } from '../../actions/sendSchoolYearWeekThirteenNewsletterEmail'
 import { sendSchoolYearCommitmentEmail } from '../../actions/sendSchoolYearCommitmentEmail'
 import { sendFreeFridayAnnouncementEmail } from '../../actions/sendFreeFridayAnnouncementEmail'
 import { sendGoogleReviewIncentiveEmail } from '../../actions/sendGoogleReviewIncentiveEmail'
@@ -343,6 +344,9 @@ export function ApplicationDetailSidebar({
   const [schoolYearWeekTwelveNewsletterSending, setSchoolYearWeekTwelveNewsletterSending] = useState(false)
   const [schoolYearWeekTwelveNewsletterSent, setSchoolYearWeekTwelveNewsletterSent] = useState(false)
   const [schoolYearWeekTwelveNewsletterError, setSchoolYearWeekTwelveNewsletterError] = useState<string | null>(null)
+  const [schoolYearWeekThirteenNewsletterSending, setSchoolYearWeekThirteenNewsletterSending] = useState(false)
+  const [schoolYearWeekThirteenNewsletterSent, setSchoolYearWeekThirteenNewsletterSent] = useState(false)
+  const [schoolYearWeekThirteenNewsletterError, setSchoolYearWeekThirteenNewsletterError] = useState<string | null>(null)
   const [freeFridaySending, setFreeFridaySending] = useState(false)
   const [freeFridaySent, setFreeFridaySent] = useState(false)
   const [freeFridayError, setFreeFridayError] = useState<string | null>(null)
@@ -2123,6 +2127,25 @@ export function ApplicationDetailSidebar({
     }
   }
 
+  const handleSendSchoolYearWeekThirteenNewsletter = async () => {
+    if (schoolYearWeekThirteenNewsletterSending || !application.g1_email) return
+    setSchoolYearWeekThirteenNewsletterSending(true)
+    setSchoolYearWeekThirteenNewsletterError(null)
+    const result = await sendSchoolYearWeekThirteenNewsletterEmail({
+      g1FullName: application.g1_full_name ?? '',
+      childLegalName: application.child_legal_name ?? '',
+      email: application.g1_email,
+    })
+    setSchoolYearWeekThirteenNewsletterSending(false)
+    if (result.success) {
+      setSchoolYearWeekThirteenNewsletterSent(true)
+      setEmailThreadKey(k => k + 1)
+      setTimeout(() => setSchoolYearWeekThirteenNewsletterSent(false), 3000)
+    } else {
+      setSchoolYearWeekThirteenNewsletterError(result.error ?? 'Failed to send')
+    }
+  }
+
   const handleSendOpenHouseEnrollment = async () => {
     if (openHouseSending || !application.g1_email) return
     setOpenHouseSending(true)
@@ -3124,6 +3147,17 @@ export function ApplicationDetailSidebar({
                     {schoolYearWeekTwelveNewsletterSending ? 'Sending…' : schoolYearWeekTwelveNewsletterSent ? '✓ Sent!' : 'Send School Year Week Twelve Newsletter'}
                   </button>
                   {schoolYearWeekTwelveNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekTwelveNewsletterError}</span>}
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleSendSchoolYearWeekThirteenNewsletter}
+                    disabled={schoolYearWeekThirteenNewsletterSending || schoolYearWeekThirteenNewsletterSent}
+                    className="px-3 py-1.5 text-sm font-semibold text-white rounded-lg transition-colors hover:bg-[#234d25] disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#2C5F2E', border: 'none', borderRadius: '8px' }}
+                  >
+                    {schoolYearWeekThirteenNewsletterSending ? 'Sending…' : schoolYearWeekThirteenNewsletterSent ? '✓ Sent!' : 'Send School Year Week Thirteen Newsletter'}
+                  </button>
+                  {schoolYearWeekThirteenNewsletterError && <span className="text-xs text-red-600">{schoolYearWeekThirteenNewsletterError}</span>}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
