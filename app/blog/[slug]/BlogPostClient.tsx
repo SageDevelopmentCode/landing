@@ -5,7 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowLeft, BookOpen } from 'lucide-react'
 import type { BlogPost } from '@/app/actions/blog'
-import WeekRecapPreview from '@/app/components/WeekRecapPreview'
+import GardenIsland from '@/app/_garden/GardenIsland'
+import LatestRecap from '@/app/highlights/_shared/LatestRecap'
 
 interface Props {
   post: BlogPost
@@ -134,8 +135,9 @@ export default function BlogPostClient({ post, otherPosts }: Props) {
       </div>
     )}
 
-    {/* Week recap promo */}
-    <WeekRecapPreview />
+    <GardenIsland>
+      <LatestRecap />
+    </GardenIsland>
 
     {/* Apply CTA */}
     <div className="max-w-5xl mx-auto px-5 sm:px-8 lg:px-12 py-16">

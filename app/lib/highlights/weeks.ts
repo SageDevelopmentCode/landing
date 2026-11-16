@@ -8,6 +8,22 @@ export interface WeekEntry {
 
 export const SCHOOL_YEAR_WEEKS: WeekEntry[] = [
   {
+    week: 13,
+    dates: "Nov 9–13",
+    theme: "Science Labs, Writing & Race Car Field Friday",
+    href: "/highlights/school-year/week-13",
+    coverImage:
+      "/assets/highlights/school_week_thirteen/E9592AC5-43E4-4FE2-A6DC-4252DEA66F3B.JPG",
+  },
+  {
+    week: 12,
+    dates: "Nov 2–6",
+    theme: "Gratitude, New Units & Autumn Adventure",
+    href: "/highlights/school-year/week-12",
+    coverImage:
+      "/assets/highlights/school_week_twelve/4C91BE96-1DAA-442A-9D31-D18B017CBACC.JPG",
+  },
+  {
     week: 11,
     dates: "Oct 26–30",
     theme: "October Wrap-Up & Halloween Field Friday",

@@ -12,7 +12,8 @@ import SummerProgramCard from "../components/SummerProgramCard";
 import AfterCareCard from "../components/AfterCareCard";
 import FieldDayFridayCard from "../components/FieldDayFridayCard";
 import MeetTheTeamSection from "../components/MeetTheTeamSection";
-import WeekRecapPreview from "../components/WeekRecapPreview";
+import GardenIsland from "@/app/_garden/GardenIsland";
+import LatestRecap from "@/app/highlights/_shared/LatestRecap";
 
 const details = [
   { label: "Dates", value: "May 26 – Aug 13, 2026" },
@@ -316,7 +317,9 @@ export default function Summer2026Page() {
         </div>
       </section>
 
-      <WeekRecapPreview />
+      <GardenIsland>
+        <LatestRecap />
+      </GardenIsland>
 
       {/* Daily Schedule */}
       <section className="pb-16 px-8 sm:px-12 lg:px-16">

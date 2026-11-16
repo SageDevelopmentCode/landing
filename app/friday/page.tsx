@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import FloatingSMSButton from "../components/FloatingSMSButton";
-import WeekRecapPreview from "../components/WeekRecapPreview";
+import GardenIsland from "@/app/_garden/GardenIsland";
+import LatestRecap from "@/app/highlights/_shared/LatestRecap";
 import { formatPhone } from "../utils/formatPhone";
 import { FUN_FRIDAY_DROPIN_CENTS } from "@/shared/billing/school-year";
 import StartLineHero from "./components/race/StartLineHero";
@@ -188,7 +189,9 @@ export default function FieldDayFridayPage() {
 
       <RoadBend from={CHALK} to={SUN} dir="ltr" car={car} />
       <div className="rc-recap-wrap">
-        <WeekRecapPreview />
+        <GardenIsland>
+          <LatestRecap />
+        </GardenIsland>
       </div>
 
       <RoadBend from={SUN} to={RED} dir="rtl" car={car} />

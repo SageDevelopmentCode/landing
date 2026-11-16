@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
-import WeekRecapPreview from "../components/WeekRecapPreview";
+import GardenIsland from "@/app/_garden/GardenIsland";
+import LatestRecap from "@/app/highlights/_shared/LatestRecap";
 import Footer from "../components/Footer";
 import WaitlistDialog from "../components/WaitlistDialog";
 import WhatWeOfferSection from "../components/WhatWeOfferSection";
@@ -481,28 +482,9 @@ export default function MeetMissJoyPage() {
         </div>
       </section>
 
-      {/* ───────────────────────────────────────────
-          4. SUMMER IN ACTION — WeekRecapPreview
-      ─────────────────────────────────────────── */}
-      <section className="bg-white pt-10 pb-0 px-8 sm:px-12 lg:px-16">
-        <div className="max-w-4xl mx-auto text-center mb-6">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <h2 className="text-2xl md:text-3xl font-bold text-text-gray font-heading mb-2">
-              Summer in Action
-            </h2>
-            <p className="text-base text-gray-500 font-body">
-              Wondering what a day here really looks like? Here&apos;s a glimpse
-              at our summer.
-            </p>
-          </motion.div>
-        </div>
-      </section>
-      <WeekRecapPreview className="bg-white" />
+      <GardenIsland>
+        <LatestRecap />
+      </GardenIsland>
 
       {/* ───────────────────────────────────────────
           5. ABOUT SAGE FIELD — "What We're Building"
