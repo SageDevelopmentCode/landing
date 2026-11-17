@@ -35,6 +35,7 @@ import {
   CalendarDays,
   MapPin,
   Building2,
+  FileText,
 } from "lucide-react";
 import {
   cssColors as colors,
@@ -179,6 +180,11 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         name: "Impersonate",
         href: "/admin/impersonate",
         icon: <Eye className="w-4 h-4" />,
+      },
+      {
+        name: "Contract PDFs",
+        href: "/admin/contract-downloads",
+        icon: <FileText className="w-4 h-4" />,
       },
     ],
   },

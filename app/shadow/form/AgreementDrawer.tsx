@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle, PenLine, X } from "lucide-react";
 import { Dancing_Script } from "next/font/google";
-import { ACTIVITIES, RISKS } from "../content";
+import { ParticipantAgreementBody } from "@/app/lib/participant-agreements/participant-agreement-body";
 
 const dancingScript = Dancing_Script({
   subsets: ["latin"],
@@ -11,7 +11,11 @@ const dancingScript = Dancing_Script({
 });
 
 function AgreementSectionHeader({ title }: { title: string }) {
-  return <h3 className="sf-display border-b-2 border-dashed border-[var(--sf-ink)]/10 pb-2 text-xl">{title}</h3>;
+  return (
+    <h3 className="sf-display border-b-2 border-dashed border-[var(--sf-ink)]/10 pb-2 text-xl">
+      {title}
+    </h3>
+  );
 }
 
 /** The Shadow Day Participant Agreement drawer (copy unchanged from the original page). */
@@ -95,227 +99,23 @@ export default function AgreementDrawer({
               {/* Scrollable Body */}
               <div data-lenis-prevent className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-6">
                 <div className="flex flex-col gap-8">
-                  {/* School info header */}
-                  <div className="flex flex-col gap-0.5">
-                    <p className="sf-display text-lg text-[var(--sf-ink)]">
-                      Sage Field Private Microschool
-                    </p>
-                    <p className="text-xs text-[var(--sf-soft)]">
-                      Location: Round Rock, Texas · Shadow Day Date: Mon–Thu by
-                      appointment
-                    </p>
-                  </div>
-
-                  {/* Pre-filled participant info */}
-                  <div className="flex flex-col gap-3 bg-[var(--sf-cream)] rounded-2xl px-4 py-4 border-2 border-dashed border-[var(--sf-ink)]/10">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
-                      {[
-                        {
-                          label: kids.length > 1 ? "Children" : "Student Name",
-                          value: kids.map((c) => c.name).filter(Boolean).join(", ") || "—",
-                        },
-                        {
-                          label: "Parent / Guardian",
-                          value: guardianName || "—",
-                        },
-                        {
-                          label: "Emergency Contact",
-                          value: emergencyName
-                            ? `${emergencyName}${emergencyPhone ? ` · ${emergencyPhone}` : ""}`
-                            : "—",
-                        },
-                        {
-                          label: "Photo Consent",
-                          value: photoConsent
-                            ? "✓ Authorized"
-                            : "✗ Not authorized",
-                        },
-                      ].map((row) => (
-                        <div key={row.label}>
-                          <p className="text-xs font-extrabold uppercase tracking-wide text-[var(--sf-soft)]/70">
-                            {row.label}
-                          </p>
-                          <p className="text-sm font-bold text-[var(--sf-ink)]">
-                            {row.value}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    {notesForAgreement && (
-                      <div className="border-t-2 border-dashed border-[var(--sf-ink)]/10 pt-3 mt-1">
-                        <p className="text-xs font-extrabold uppercase tracking-wide text-[var(--sf-soft)]/70 mb-1">
-                          Medical / Notes
-                        </p>
-                        <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                          {notesForAgreement}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 1. Acknowledgment of Program Activities */}
-                  <div className="flex flex-col gap-3">
-                    <AgreementSectionHeader title="1. Acknowledgment of Program Activities" />
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      I understand that my child is participating in a Shadow
-                      Day at an outdoor education program where children learn
-                      through active exploration, hands-on experiences, and
-                      supervised outdoor activities. Activities may include, but
-                      are not limited to:
-                    </p>
-                    <ul className="flex flex-col gap-1.5">
-                      {ACTIVITIES.map((a) => (
-                        <li
-                          key={a}
-                          className="flex gap-2 text-sm text-[var(--sf-soft)]"
-                        >
-                          <span className="text-[var(--sf-coral-deep)] mt-0.5 flex-shrink-0">
-                            •
-                          </span>
-                          <span>{a}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      I understand that these activities involve inherent risks
-                      that cannot be completely eliminated while preserving the
-                      educational and developmental benefits of participation.
-                    </p>
-                  </div>
-
-                  {/* 2. Assumption of Risk */}
-                  <div className="flex flex-col gap-3">
-                    <AgreementSectionHeader title="2. Assumption of Risk" />
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      I knowingly and voluntarily assume all risks associated
-                      with my child&apos;s participation in the Shadow Day,
-                      including but not limited to:
-                    </p>
-                    <ul className="flex flex-col gap-1.5">
-                      {RISKS.map((r) => (
-                        <li
-                          key={r}
-                          className="flex gap-2 text-sm text-[var(--sf-soft)]"
-                        >
-                          <span className="text-[var(--sf-coral-deep)] mt-0.5 flex-shrink-0">
-                            •
-                          </span>
-                          <span>{r}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      I understand that injury may occur despite reasonable
-                      supervision and safety precautions.
-                    </p>
-                  </div>
-
-                  {/* 3. Release of Liability */}
-                  <div className="flex flex-col gap-3">
-                    <AgreementSectionHeader title="3. Release of Liability" />
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      In consideration of my child&apos;s participation in the
-                      Shadow Day, I release and hold harmless the School, its
-                      owners, directors, employees, contractors, volunteers,
-                      agents, and representatives from any claims, demands,
-                      causes of action, damages, losses, costs, or expenses
-                      arising out of or related to my child&apos;s
-                      participation.
-                    </p>
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      This release applies to all claims based upon ordinary
-                      negligence but does not apply to claims arising from gross
-                      negligence, reckless conduct, or intentional misconduct.
-                    </p>
-                  </div>
-
-                  {/* 4. Medical Authorization */}
-                  <div className="flex flex-col gap-3">
-                    <AgreementSectionHeader title="4. Medical Authorization" />
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      I authorize school personnel to obtain emergency medical
-                      treatment for my child if I cannot be reached promptly. I
-                      understand that:
-                    </p>
-                    <ul className="flex flex-col gap-1.5">
-                      {[
-                        "Emergency medical services may be contacted when deemed necessary.",
-                        "I am responsible for all medical expenses incurred on behalf of my child.",
-                        "School personnel may administer basic first aid as appropriate.",
-                      ].map((item) => (
-                        <li
-                          key={item}
-                          className="flex gap-2 text-sm text-[var(--sf-soft)]"
-                        >
-                          <span className="text-[var(--sf-coral-deep)] mt-0.5 flex-shrink-0">
-                            •
-                          </span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {notesForAgreement && (
-                      <div className="bg-[var(--sf-butter)]/50 rounded-2xl px-4 py-3">
-                        <p className="text-xs font-semibold text-[#7a5b00] mb-1">
-                          Allergies, Medical Conditions, or Special Notes
-                        </p>
-                        <p className="text-sm text-[var(--sf-ink)]">
-                          {notesForAgreement}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 5. Photography and Media Release */}
-                  <div className="flex flex-col gap-3">
-                    <AgreementSectionHeader title="5. Photography and Media Release" />
-                    <div
-                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl border-2 ${
-                        photoConsent
-                          ? "bg-[var(--sf-mint)]/60 border-[var(--sf-mint)]"
-                          : "bg-[var(--sf-cream)] border-[var(--sf-ink)]/10"
-                      }`}
-                    >
-                      <span className="text-lg">
-                        {photoConsent ? "✅" : "🚫"}
-                      </span>
-                      <p className="text-sm text-[var(--sf-ink)]">
-                        {photoConsent
-                          ? "I authorize the School to photograph and/or record my child and use such images or recordings for educational, promotional, website, social media, and marketing purposes."
-                          : "I do not authorize the School to use photographs or recordings of my child."}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 6. Emergency Contact */}
-                  <div className="flex flex-col gap-3">
-                    <AgreementSectionHeader title="6. Emergency Contact Authorization" />
-                    <p className="text-sm text-[var(--sf-soft)] leading-relaxed">
-                      If the parent or guardian cannot be reached, the following
-                      individual is authorized to make emergency decisions
-                      regarding the child:
-                    </p>
-                    <div className="bg-[var(--sf-cream)] rounded-2xl px-4 py-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-xs font-extrabold uppercase tracking-wide text-[var(--sf-soft)]/70">
-                            Name
-                          </p>
-                          <p className="text-sm font-bold text-[var(--sf-ink)]">
-                            {emergencyName || "—"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-extrabold uppercase tracking-wide text-[var(--sf-soft)]/70">
-                            Phone
-                          </p>
-                          <p className="text-sm font-bold text-[var(--sf-ink)]">
-                            {emergencyPhone || "—"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <ParticipantAgreementBody
+                    variant="shadow"
+                    mode="garden"
+                    sectionsThrough={6}
+                    info={{
+                      studentLabel:
+                        kids.length > 1 ? "Children" : "Student Name",
+                      studentNames:
+                        kids.map((c) => c.name).filter(Boolean).join(", ") ||
+                        "—",
+                      parentName: guardianName || "—",
+                      emergencyName: emergencyName || "—",
+                      emergencyPhone: emergencyPhone || undefined,
+                      photoConsent,
+                      notes: notesForAgreement,
+                    }}
+                  />
 
                   {/* 7. Parent Acknowledgment & Signature */}
                   <div className="flex flex-col gap-4">

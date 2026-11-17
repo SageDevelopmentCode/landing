@@ -2396,7 +2396,7 @@ export async function buildBeachBashConfirmationEmail(opts: {
 }): Promise<{ subject: string; content: string }> {
   const childLabel =
     opts.childCount > 1 ? `${opts.childCount} children` : opts.childNames;
-  const subject = "Race Cars and Speedsters — You're Registered! 🏎️";
+  const subject = "Thankful & Grateful — You're Registered! 🦃";
   const content = `
 <!DOCTYPE html>
 <html>
@@ -2404,11 +2404,11 @@ export async function buildBeachBashConfirmationEmail(opts: {
 <body style="font-family: Georgia, serif; color: #2c2c2c; max-width: 600px; margin: 0 auto; padding: 32px 24px; line-height: 1.7;">
   <p style="margin-bottom: 24px;">Dear ${opts.parentName},</p>
 
-  <p>Your registration for <strong>${opts.childNames}</strong> is confirmed and your payment of <strong>$${opts.amountDollars}</strong> has been received. We can&apos;t wait to see you at <strong>Race Cars and Speedsters</strong> Field Day${opts.childCount > 1 ? " with the whole crew" : ""}!</p>
+  <p>Your registration for <strong>${opts.childNames}</strong> is confirmed and your payment of <strong>$${opts.amountDollars}</strong> has been received. We can&apos;t wait to see you at <strong>Thankful &amp; Grateful</strong> Field Day${opts.childCount > 1 ? " with the whole crew" : ""}!</p>
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">Event Details</h2>
   <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
-    <tr><td style="padding: 6px 0; width: 28px;">📅</td><td style="padding: 6px 0;"><strong>Date:</strong> Friday, November 13, 2026</td></tr>
+    <tr><td style="padding: 6px 0; width: 28px;">📅</td><td style="padding: 6px 0;"><strong>Date:</strong> Friday, November 20, 2026</td></tr>
     <tr><td style="padding: 6px 0;">🕗</td><td style="padding: 6px 0;"><strong>Drop-off:</strong> 8:30 AM &nbsp;·&nbsp; <strong>Pick-up:</strong> 1:30 PM</td></tr>
     <tr><td style="padding: 6px 0;">👧</td><td style="padding: 6px 0;"><strong>Registered:</strong> ${childLabel}</td></tr>
     <tr><td style="padding: 6px 0;">📍</td><td style="padding: 6px 0;"><strong>Location:</strong> 2760 Gattis School Rd, Round Rock, TX</td></tr>
@@ -2416,9 +2416,9 @@ export async function buildBeachBashConfirmationEmail(opts: {
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What&apos;s on the Agenda</h2>
   <table style="border-collapse: collapse; width: 100%; font-size: 15px;">
-    <tr><td style="padding: 5px 0; width: 28px;">🎨</td><td style="padding: 5px 0;"><strong>Paint little race cars</strong> — Paint and decorate little race cars to take home.</td></tr>
-    <tr><td style="padding: 5px 0;">🏁</td><td style="padding: 5px 0;"><strong>Checkered Flags</strong> — Make checkered flags to wave, hang, or show off.</td></tr>
-    <tr><td style="padding: 5px 0;">🧩</td><td style="padding: 5px 0;"><strong>Paint car themed puzzles</strong> — Paint car-themed puzzles for a take-home keepsake.</td></tr>
+    <tr><td style="padding: 5px 0; width: 28px;">🦃</td><td style="padding: 5px 0;"><strong>Turkey face masks</strong> — Make a feathered turkey mask to wear and take home.</td></tr>
+    <tr><td style="padding: 5px 0;">🔑</td><td style="padding: 5px 0;"><strong>Gratitude keychains</strong> — String a keychain that holds what you&apos;re thankful for.</td></tr>
+    <tr><td style="padding: 5px 0;">🎨</td><td style="padding: 5px 0;"><strong>Thanksgiving ceramic paintings</strong> — Paint a Thanksgiving ceramic piece to bring home.</td></tr>
   </table>
 
   <h2 style="font-size: 17px; margin-top: 32px; margin-bottom: 10px; color: #2c2c2c;">What to Pack</h2>
@@ -2430,7 +2430,7 @@ export async function buildBeachBashConfirmationEmail(opts: {
     <tr><td style="padding: 5px 0;">🥪</td><td style="padding: 5px 0;">Snack + lunch from home</td></tr>
     <tr><td style="padding: 5px 0;">👕</td><td style="padding: 5px 0;">Old clothes for outdoor play</td></tr>
     <tr><td style="padding: 5px 0;">🎒</td><td style="padding: 5px 0;">Small backpack for paintings &amp; creations</td></tr>
-    <tr><td style="padding: 5px 0;">🏁</td><td style="padding: 5px 0;">Optional racing colors or a checkered accessory</td></tr>
+    <tr><td style="padding: 5px 0;">🍂</td><td style="padding: 5px 0;">Optional fall colors or a cozy layer</td></tr>
   </table>
 
   <p style="margin-top: 28px;">Questions before Friday? Reach us at <a href="mailto:sabrina@sagefield.co" style="color: #5a7a5a;">sabrina@sagefield.co</a> or text <a href="sms:+15126775872" style="color: #5a7a5a;">(512) 677-5872</a>.</p>
