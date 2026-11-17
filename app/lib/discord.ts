@@ -1361,15 +1361,21 @@ export function createBeachBashPaymentEmbed(data: {
   childNames: string;
   childCount: number;
   amountCents: number;
+  /** The event this payment was for — from `resolveFridayEmailEvent`. */
+  event: { title: string; emoji: string; displayDate: string } | null;
 }): DiscordEmbed {
   return {
-    title: "🦃 Field Day Friday Payment Received",
+    title: `${data.event?.emoji ?? "🎉"} Field Day Friday Payment Received`,
     color: 0xd62828,
     fields: [
       { name: "Parent", value: data.parentName, inline: true },
       { name: "Email", value: data.parentEmail, inline: true },
       { name: `Child${data.childCount > 1 ? "ren" : ""}`, value: data.childNames, inline: true },
-      { name: "Event", value: "Thankful & Grateful — November 20, 2026", inline: true },
+      {
+        name: "Event",
+        value: data.event ? `${data.event.title} — ${data.event.displayDate}` : "Field Day Friday (event unknown)",
+        inline: true,
+      },
       { name: "Amount Paid", value: `$${(data.amountCents / 100).toFixed(2)}`, inline: true },
     ],
     timestamp: new Date().toISOString(),

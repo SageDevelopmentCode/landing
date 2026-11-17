@@ -21,6 +21,7 @@ import { recordMobilePaymentIntent } from "@/app/lib/record-mobile-payment-inten
 import { isMobilePaymentIntent } from "@/app/lib/is-mobile-payment-intent";
 import { notifySchoolYearTuitionPayment } from "@/app/lib/stripe-school-year-tuition-notify";
 import { SUMMER_27_SY_27_28 } from "@/app/lib/application-programs";
+import { resolveFridayEmailEvent } from "@/shared/marketing/friday-page-event";
 import {
   buildRegistrationFeeConfirmationEmail,
   buildSummerTuitionConfirmationEmail,
@@ -933,6 +934,7 @@ export async function POST(request: NextRequest) {
       const registrationId = session.metadata?.registration_id;
       const amountCents = session.amount_total ?? 0;
       const amountDollars = (amountCents / 100).toFixed(2);
+      const fridayEvent = resolveFridayEmailEvent(session.metadata);
 
       if (registrationId) {
         const { error: updateError } = await supabase
@@ -977,6 +979,7 @@ export async function POST(request: NextRequest) {
           childNames,
           childCount,
           amountCents,
+          event: fridayEvent,
         }),
       ).catch((err) => console.error("Beach Bash payment Discord notification failed:", err));
 
@@ -991,6 +994,7 @@ export async function POST(request: NextRequest) {
             childNames: childNames !== "N/A" ? childNames : "your child",
             childCount,
             amountDollars,
+            event: fridayEvent,
           });
           subject = built.subject;
 

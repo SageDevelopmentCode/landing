@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         payment_type: "beach_bash_fee",
         registration_id: row.id,
+        event_date: FRIDAY_PAGE_EVENT_DATE,
         parent_email: data.email,
         parent_name: data.parentName,
         child_names: childNames,

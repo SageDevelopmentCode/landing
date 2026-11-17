@@ -16,6 +16,7 @@ import {
   buildSchoolYearTuitionConfirmationEmail,
   buildSupplyFeeConfirmationEmail,
 } from '@/app/lib/zoho'
+import { resolveFridayEmailEvent } from '@/shared/marketing/friday-page-event'
 
 export async function POST(request: NextRequest) {
   try {
@@ -343,7 +344,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      const result = await buildBeachBashConfirmationEmail({ parentName, childNames, childCount, amountDollars })
+      const event = resolveFridayEmailEvent(meta)
+      const result = await buildBeachBashConfirmationEmail({ parentName, childNames, childCount, amountDollars, event })
       subject = result.subject
       content = result.content
       template = 'beach_bash_fee_confirmation'
