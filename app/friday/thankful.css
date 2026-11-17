@@ -1,0 +1,277 @@
+/* Thankful & Grateful Field Friday — motion + texture layer on top of the Garden kit. */
+
+.tg-page {
+  --tg-pumpkin: #ee8434;
+  --tg-pumpkin-deep: #c4621c;
+  --tg-cranberry: #b23a48;
+  --tg-mustard: #f4c04e;
+  --tg-wheat: #f6e3bf;
+  --tg-cinnamon: #c8643b;
+  --tg-cocoa: #4a3426;
+  --tg-forest: #2e4535;
+}
+
+/* ─── Turkey ─────────────────────────────────────────────────────────────── */
+
+.tg-turkey {
+  overflow: visible;
+  display: block;
+}
+
+.tg-feather {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: tg-fan 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes tg-fan {
+  from { transform: scale(0.15) rotate(-14deg); }
+  to { transform: scale(1) rotate(0deg); }
+}
+
+.tg-fan {
+  transform-box: view-box;
+  transform-origin: 120px 150px;
+  animation: tg-sway 5s ease-in-out infinite;
+}
+@keyframes tg-sway {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+.tg-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tg-blink 4.6s infinite;
+}
+@keyframes tg-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.tg-head,
+.tg-wattle,
+.tg-turkey-all,
+.tg-foot-l,
+.tg-foot-r {
+  transform-box: fill-box;
+}
+.tg-head { transform-origin: 50% 90%; }
+.tg-wattle { transform-origin: 30% 0%; }
+.tg-turkey-all { transform-origin: 50% 100%; }
+
+.tg-gobbling .tg-head { animation: tg-gobble 0.85s ease-in-out; }
+.tg-gobbling .tg-wattle { animation: tg-wattle 0.85s ease-in-out; }
+.tg-gobbling .tg-turkey-all { animation: tg-hop 0.85s ease-out; }
+@keyframes tg-gobble {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(-12deg); }
+  35% { transform: rotate(10deg); }
+  55% { transform: rotate(-8deg); }
+  75% { transform: rotate(5deg); }
+}
+@keyframes tg-wattle {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(28deg); }
+  45% { transform: rotate(-24deg); }
+  70% { transform: rotate(14deg); }
+}
+@keyframes tg-hop {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  12% { transform: translateY(0) scale(1.06, 0.92); }
+  35% { transform: translateY(-14px) scale(0.97, 1.04); }
+  60% { transform: translateY(0) scale(1.03, 0.97); }
+}
+
+.tg-waddling .tg-turkey-all { animation: tg-waddle 0.5s ease-in-out infinite; }
+.tg-waddling .tg-foot-l { animation: tg-step 0.5s ease-in-out infinite; }
+.tg-waddling .tg-foot-r { animation: tg-step 0.5s ease-in-out infinite reverse; }
+@keyframes tg-waddle {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+@keyframes tg-step {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Speech bubble pop */
+.tg-bubble {
+  animation: tg-bubble 1.1s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes tg-bubble {
+  0% { opacity: 0; transform: scale(0.4) translateY(10px); }
+  20%, 80% { opacity: 1; transform: scale(1) translateY(0); }
+  100% { opacity: 0; transform: scale(0.9) translateY(-8px); }
+}
+
+.tg-tick {
+  display: inline-block;
+  animation: tg-tick 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tg-tick {
+  from { transform: translateY(-40%); opacity: 0.2; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.tg-bubble-stay {
+  animation: tg-bubble-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes tg-bubble-in {
+  from { opacity: 0; transform: scale(0.4) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ─── Falling leaves ─────────────────────────────────────────────────────── */
+
+.tg-leaves {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.tg-leaves > span {
+  position: absolute;
+  top: -60px;
+  left: var(--x);
+  width: var(--s);
+  height: var(--s);
+  animation: tg-fall var(--dur) linear var(--delay) infinite;
+  opacity: 0;
+}
+.tg-leaves > span > svg {
+  width: 100%;
+  height: 100%;
+  animation: tg-flutter calc(var(--dur) / 4) ease-in-out infinite alternate;
+}
+@keyframes tg-fall {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  8% { opacity: 0.9; }
+  85% { opacity: 0.9; }
+  100% { transform: translate3d(var(--drift), 115vh, 0); opacity: 0; }
+}
+@keyframes tg-flutter {
+  from { transform: rotate(-35deg) rotateY(0deg); }
+  to { transform: rotate(40deg) rotateY(60deg); }
+}
+
+/* ─── Crafts ─────────────────────────────────────────────────────────────── */
+
+.tg-gingham {
+  background-color: #fff;
+  background-image:
+    linear-gradient(90deg, rgba(238, 132, 52, 0.18) 50%, transparent 50%),
+    linear-gradient(rgba(238, 132, 52, 0.18) 50%, transparent 50%);
+  background-size: 36px 36px;
+}
+
+.tg-art-feather {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tg-keychain {
+  transform-box: view-box;
+  transform-origin: 60px 14px;
+  transition: transform 0.4s ease;
+}
+.tg-on .tg-keychain { animation: tg-pendulum 2.4s ease-in-out infinite; }
+@keyframes tg-pendulum {
+  0%, 100% { transform: rotate(-16deg); }
+  50% { transform: rotate(16deg); }
+}
+
+.tg-paint {
+  stroke-dasharray: 1 2;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.9s ease-in-out;
+}
+.tg-on .tg-paint { stroke-dashoffset: 0; }
+
+.tg-brush {
+  transform-box: view-box;
+  transition: transform 1s ease-in-out, opacity 0.4s;
+}
+
+.tg-steam {
+  animation: tg-steam 2.8s ease-in-out infinite;
+  transform-box: fill-box;
+}
+@keyframes tg-steam {
+  0% { opacity: 0; transform: translateY(6px); }
+  40% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.tg-stamp {
+  animation: tg-stamp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes tg-stamp {
+  from { opacity: 0; transform: scale(2.2) rotate(-30deg); }
+  to { opacity: 1; transform: scale(1) rotate(-12deg); }
+}
+
+/* ─── Gratitude tree ─────────────────────────────────────────────────────── */
+
+.tg-twinkle {
+  animation: tg-twinkle 2.6s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes tg-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.tg-hang {
+  transform-origin: 50% 0%;
+  animation: tg-hang 3.5s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes tg-hang {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+}
+
+/* ─── Pie ────────────────────────────────────────────────────────────────── */
+
+.tg-slice {
+  transform-box: view-box;
+  transform-origin: 120px 120px;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+}
+
+/* ─── Reduced motion: everything rests in its final state ──────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .tg-feather,
+  .tg-fan,
+  .tg-eyes,
+  .tg-gobbling .tg-head,
+  .tg-gobbling .tg-wattle,
+  .tg-gobbling .tg-turkey-all,
+  .tg-waddling .tg-turkey-all,
+  .tg-waddling .tg-foot-l,
+  .tg-waddling .tg-foot-r,
+  .tg-on .tg-keychain,
+  .tg-steam,
+  .tg-stamp,
+  .tg-twinkle,
+  .tg-tick,
+  .tg-hang {
+    animation: none;
+  }
+  .tg-bubble,
+  .tg-bubble-stay {
+    animation: none;
+    opacity: 1;
+  }
+  .tg-leaves {
+    display: none;
+  }
+  .tg-paint,
+  .tg-art-feather,
+  .tg-slice,
+  .tg-brush {
+    transition: none;
+  }
+}

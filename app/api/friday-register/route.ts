@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
               ? Math.round(finalAmountCents / data.children.length)
               : PRICE_PER_CHILD_CENTS,
             product_data: {
-              name: `Race Cars and Speedsters — ${eventShortDay}`,
+              name: `Thankful & Grateful — ${eventShortDay}`,
               description: `Sage Field Private School · $${FUN_FRIDAY_DROPIN_CENTS / 100} per child · ${eventDisplayDate}`,
             },
           },
@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
       metadata: {
         payment_type: "beach_bash_fee",
         registration_id: row.id,
+        event_date: FRIDAY_PAGE_EVENT_DATE,
         parent_email: data.email,
         parent_name: data.parentName,
         child_names: childNames,
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
         intended_amount_cents: String(BASE_AMOUNT_CENTS),
         cover_fees: String(data.coverFees),
         payment_method: data.paymentMethod,
-        description: "Race Cars and Speedsters Field Day Fee",
+        description: "Thankful & Grateful Field Day Fee",
       },
       success_url: `${baseUrl}/friday/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/friday#reserve`,

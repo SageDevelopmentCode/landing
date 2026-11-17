@@ -2,7 +2,7 @@
 
 import Navbar from "@/app/components/Navbar";
 import LatestRecap from "@/app/highlights/_shared/LatestRecap";
-import FridayRacePreview from "@/app/friday/components/race/FridayRacePreview";
+import FridayThankfulPreview from "@/app/friday/components/thankful/FridayThankfulPreview";
 import GardenShell from "@/app/_garden/GardenShell";
 import Hero from "./sections/Hero";
 import { Welcome, Offer, Philosophy } from "./sections/Story";
@@ -19,7 +19,7 @@ export default function HomePage() {
     <GardenShell navbar={<Navbar darkStyle />}>
       <Hero />
       <Welcome />
-      <FridayRacePreview />
+      <FridayThankfulPreview />
       <LatestRecap />
       <Offer />
       <Philosophy />
