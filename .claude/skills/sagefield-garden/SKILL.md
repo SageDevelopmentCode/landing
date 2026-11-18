@@ -5,7 +5,11 @@ description: The Sage Field "Garden" design system used by the home page. Use wh
 
 # Sage Field "Garden" design system
 
-The home page (`app/page.tsx` → `app/_home/HomePage.tsx`) is the reference build. When in doubt, open the matching home section in `app/_home/sections/` and copy its structure.
+The home page (`app/page.tsx` → `app/_home/HomePage.tsx`) is the reference build.
+
+> For the Expo parent app (`apps/mobile`), use the `sagefield-garden-mobile` skill instead.
+
+When in doubt, open the matching home section in `app/_home/sections/` and copy its structure.
 
 ## The feel
 Warm, playful, premium. It's made for parents of 4–11 year olds: friendly enough to feel like childhood, polished enough to trust with tuition money.

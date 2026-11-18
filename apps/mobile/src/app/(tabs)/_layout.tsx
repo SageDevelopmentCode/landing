@@ -8,6 +8,7 @@ import { notifyError } from "@/lib/discord";
 import { Brand, BottomTabInset, floatingTabBarStyle } from "@/constants/theme";
 import { MoreMenuSheet } from "@/components/MoreMenuSheet";
 import { AdminPreviewBanner } from "@/components/AdminPreviewBanner";
+import { GardenToastProvider } from "@/components/garden/GardenToast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -116,6 +117,7 @@ export default function TabsLayout() {
   }, [fetchTotalUnread]);
 
   return (
+    <GardenToastProvider>
     <BottomSheetModalProvider>
       <View style={styles.root}>
         {isImpersonating && (
@@ -207,6 +209,7 @@ export default function TabsLayout() {
       <MoreMenuSheet ref={bottomSheetRef} />
       </View>
     </BottomSheetModalProvider>
+    </GardenToastProvider>
   );
 }
 

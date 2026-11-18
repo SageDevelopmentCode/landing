@@ -3,6 +3,17 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 import { DancingScript_700Bold } from '@expo-google-fonts/dancing-script';
 import { Merriweather_400Regular, Merriweather_700Bold, useFonts } from '@expo-google-fonts/merriweather';
 import { Poppins_400Regular, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
+import {
+  BricolageGrotesque_700Bold,
+  BricolageGrotesque_800ExtraBold,
+} from '@expo-google-fonts/bricolage-grotesque';
+import {
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+} from '@expo-google-fonts/nunito';
+import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
 import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Sentry from '@sentry/react-native';
@@ -36,6 +47,14 @@ function RootLayout() {
     Merriweather_700Bold,
     Poppins_400Regular,
     Poppins_600SemiBold,
+    // Garden design system (parent Home previews)
+    BricolageGrotesque_700Bold,
+    BricolageGrotesque_800ExtraBold,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    GochiHand_400Regular,
   });
 
   useAppUpdatePrompt();
