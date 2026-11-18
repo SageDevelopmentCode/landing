@@ -13,7 +13,6 @@ import {
   GardenRadii,
   GardenSegmented,
   GardenSkeleton,
-  HandNote,
   PressableScale,
   READ_ONLY_TOAST,
   gardenCard,
@@ -82,7 +81,6 @@ export function InboxScreen() {
     <View>
       <View style={st.hero}>
         <View style={{ flex: 1 }}>
-          <HandNote size={19}>{isDm ? "say hi to a teacher" : "chat with Sage Field families"}</HandNote>
           <Display size={34}>Messages</Display>
         </View>
         {isDm && !m.isReadOnlyPreview ? (
@@ -91,7 +89,6 @@ export function InboxScreen() {
             tone="sage"
             label="New Message"
             onPress={() => m.router.push("/(tabs)/messages/compose")}
-            style={{ marginTop: 8 }}
           />
         ) : null}
       </View>
@@ -382,7 +379,7 @@ function DmEmpty({
 
 const st = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Garden.cream },
-  hero: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 14 },
+  hero: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 58, paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 14 },
   row: {
     ...gardenCard,
     borderRadius: 22,

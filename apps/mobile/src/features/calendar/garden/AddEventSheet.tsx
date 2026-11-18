@@ -248,7 +248,6 @@ export function AddEventSheet({ c, fb }: { c: ParentCalendar; fb: CalendarFeedba
         {/* Progress */}
         <View style={s.progressRow}>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={s.eyebrow}>{isEdit ? "Edit event" : "Add to calendar"}</Text>
             <HandNote size={17}>{`Step ${stepIdx + 1} of ${TOTAL}`}</HandNote>
           </View>
           <SeedProgress
@@ -574,13 +573,6 @@ function TimeStep({
 const s = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 130, gap: 18 },
   progressRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  eyebrow: {
-    fontFamily: GardenFonts.bodyHeavy,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    color: Garden.muted,
-  },
   hint: { fontFamily: GardenFonts.body, fontSize: 14.5, lineHeight: 20, color: Garden.soft },
   label: {
     fontFamily: GardenFonts.bodyHeavy,

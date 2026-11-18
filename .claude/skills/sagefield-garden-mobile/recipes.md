@@ -21,6 +21,7 @@ import {
   - Unread count: `<CountBadge count={n} />` absolutely positioned at top −3 / right −4.
   - "Something to do": a 9pt coral dot.
 - Each button's `accessibilityLabel` includes the state ("Notifications, 3 unread").
+- The greeting `HandNote` is Home-only. Other screens' heroes start with the `Display` title and put no eyebrow above it (e.g. Feed: "Family feed" + subtitle + filter button).
 
 ## 2. "Today" sticky note
 **Source:** `TodayNote`

@@ -8,7 +8,6 @@ import {
   GardenFonts,
   GardenIconButton,
   GardenSkeleton,
-  HandNote,
   PressableScale,
   READ_ONLY_TOAST,
   gardenCard,
@@ -54,7 +53,6 @@ export function ComposeScreen() {
     <SafeAreaView style={s.safe} edges={["top"]}>
       <View style={s.head}>
         <View style={{ flex: 1 }}>
-          <HandNote size={18}>who should we reach?</HandNote>
           <Display size={28}>New Message</Display>
         </View>
         <GardenIconButton icon="close" label="Close" onPress={() => c.router.back()} />
@@ -136,7 +134,7 @@ export function ComposeScreen() {
 
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Garden.cream },
-  head: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14 },
+  head: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14 },
   labelRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 22, paddingTop: 18, paddingBottom: 10 },
   label: { fontFamily: GardenFonts.bodyHeavy, fontSize: 11.5, letterSpacing: 0.8, color: Garden.muted },
   row: { ...gardenCard, borderRadius: 20, flexDirection: "row", alignItems: "center", gap: 12, padding: 12, minHeight: 70 },

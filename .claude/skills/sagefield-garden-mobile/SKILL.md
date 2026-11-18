@@ -21,6 +21,7 @@ Same brand as the website. Read "The feel" and "Non-negotiables" in the web skil
 4. **No new native modules.** Don't add react-native-svg, lottie, moti or expo-blur. A native module needs a new dev build and breaks OTA (`eas update`). Plain Views, Reanimated, Ionicons and emoji cover every recipe.
 5. **Writes go through the screen's data hook**, which returns `{ ok, error?, canceled? }`. The UI reacts to that result with feedback and never calls Supabase directly.
 6. **Respect read-only preview.** When `isReadOnlyPreview` is set (an admin is viewing as a parent), block writes and show the info toast ("Preview mode").
+7. **No eyebrows above headings.** A screen or section starts with its `Display` heading. Don't put a `HandNote`, `Pill` or uppercase label above it (no "fresh from the classroom" over "Family feed"). Handwritten notes go *below* a heading (`GardenSectionHeader` `note`), inside cards and sticky notes, or as inline feedback. The only exception is the parent Home greeting ("Good evening,").
 
 ## Getting started on a new parent screen
 ```tsx
@@ -78,8 +79,8 @@ Fonts load in `src/app/_layout.tsx` (`@expo-google-fonts/bricolage-grotesque`, `
 | `PressableScale` | Any tappable card, tile, chip or row. Springs to 0.96 with a light haptic. Props: `pressedScale`, `haptics` (`"tap"` \| `"select"` \| `"press"` \| `false`), `accessibilityLabel`. It replaces hover. |
 | `GardenButton` | Real buttons. Tones: `coral` \| `sage` \| `ink` \| `outline` \| `butter`. Sizes: `md` \| `sm`. Also `icon`, `iconRight`, `loading` and `loadingLabel` ("Opening…"), `success` and `successLabel` (✓ morph), `fullWidth`. It has a toy shadow that presses down. **The mobile coral face is coral-deep**, because white text on light coral is too faint at phone sizes. |
 | `Display` | Bricolage headings (`size` 22 for sections, 26–28 for sheets, 36 for the hero). Has `accessibilityRole="header"` and a Dynamic Type cap. |
-| `HandNote` | Gochi Hand notes: greetings, "step 1 of 3", "next up →". Never paragraphs. |
-| `Pill` | Eyebrow or status chip with a `tint`. |
+| `HandNote` | Gochi Hand notes: the Home greeting, step counters ("step 1 of 3"), sticky-note labels ("next up →"), notes *under* a heading. Never above a heading, never paragraphs. |
+| `Pill` | Status chip with a `tint`. |
 | `CountBadge` | Unread counts. Pops when the count changes and renders nothing at 0. |
 | `StickyNote` | A "today" or "next up" note with tape. `tilt` is clamped to ±2°. |
 | `Polaroid` | A child photo with a taped frame, initials fallback, handwritten caption and subcaption. |
@@ -93,7 +94,7 @@ Fonts load in `src/app/_layout.tsx` (`@expo-google-fonts/bricolage-grotesque`, `
 | `haptic` | `tap`, `select`, `press`, `success`, `warning`, `error`. |
 
 ## Screen anatomy (how the Home is ordered, and why)
-1. **Hero:** a handwritten greeting, the name in Display type, a date pill, and icon buttons with badges (checklist dot, notification count, avatar for the profile sheet).
+1. **Hero:** a handwritten greeting, the name in Display type, a date pill, and icon buttons with badges (checklist dot, notification count, avatar for the profile sheet). The greeting is Home-only: every other screen's hero starts with its `Display` title (see rule 7).
 2. **What's happening:** the `TodayNote` sticky note and any booked conference tickets.
 3. **What needs you:** `NextStepsStack` merges Action Needed and setup progress into numbered steps, each with one ink CTA. When there's nothing to do it shows "All caught up! 🌿".
 4. **Your people:** child polaroids and teacher chips with a Message button that has a loading state.
@@ -151,6 +152,7 @@ Use `enableDynamicSizing` for short sheets and `snapPoints` (for example `["62%"
 
 ## Pre-ship checklist
 - [ ] Every string comes from real copy. Toasts and notes are feedback only.
+- [ ] No eyebrow text above any heading (Home greeting excepted).
 - [ ] Data and writes live in a `use<Area>` hook. The UI only reacts to `{ ok, error, canceled }`.
 - [ ] Every write path has feedback: loading, then success or error with Retry. Read-only preview is guarded.
 - [ ] Loading skeletons match the final layout. Empty and error states exist for every section.

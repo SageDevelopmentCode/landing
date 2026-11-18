@@ -28,3 +28,5 @@ export { GardenIconButton } from "./GardenIconButton";
 export { GardenAvatar, initialsOf, pastelFor } from "./GardenAvatar";
 export { GardenField, type GardenFieldProps } from "./GardenField";
 export { READ_ONLY_TOAST, useWriteGuard } from "./readOnly";
+export { GardenScreenHero, useGardenGoBack } from "./GardenScreenHero";
+export { useRefreshFeedback, type RefreshFeedback } from "./useRefreshFeedback";

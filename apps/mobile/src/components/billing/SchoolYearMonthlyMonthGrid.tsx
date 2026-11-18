@@ -1,4 +1,4 @@
-import { FontFamilies } from "@/constants/theme";
+import { Garden, GardenFonts, GardenTints } from "@/components/garden";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -50,7 +50,7 @@ export function SchoolYearMonthlyMonthGrid({
                   isSelected && { backgroundColor: accentTintBg },
                   (isPaid || isSelected) && {
                     borderLeftWidth: 3,
-                    borderLeftColor: isPaid ? "#16A34A" : accentColor,
+                    borderLeftColor: isPaid ? GardenTints.mint.fg : accentColor,
                   },
                 ]}
                 onPress={() => !isPaid && onToggle(month.key)}
@@ -61,14 +61,14 @@ export function SchoolYearMonthlyMonthGrid({
                     style={[
                       s.checkCircle,
                       isPaid
-                        ? { backgroundColor: "#16A34A" }
+                        ? { backgroundColor: Garden.sage }
                         : isSelected
                           ? { backgroundColor: accentColor }
                           : s.checkCircleEmpty,
                     ]}
                   >
                     {(isPaid || isSelected) && (
-                      <Ionicons name="checkmark" size={12} color="#ffffff" />
+                      <Ionicons name="checkmark" size={12} color={Garden.white} />
                     )}
                   </View>
                   <Text style={s.monthLabel} numberOfLines={1}>
@@ -101,14 +101,14 @@ const s = StyleSheet.create({
   row: { flexDirection: "row", gap: 10 },
   card: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
+    backgroundColor: Garden.white,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 14,
     gap: 4,
   },
   cardPaid: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: GardenTints.mint.bg,
     opacity: 0.85,
   },
   cardSpacer: { flex: 1 },
@@ -120,7 +120,7 @@ const s = StyleSheet.create({
   checkCircle: {
     width: 20,
     height: 20,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
@@ -128,34 +128,34 @@ const s = StyleSheet.create({
   checkCircleEmpty: {
     backgroundColor: "transparent",
     borderWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: "#d9cfbf",
   },
   monthLabel: {
     flex: 1,
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#111827",
+    color: Garden.ink,
   },
   paidBadge: {
-    backgroundColor: "#DCFCE7",
+    backgroundColor: GardenTints.mint.bg,
     borderRadius: 9999,
     paddingHorizontal: 6,
     paddingVertical: 2,
     flexShrink: 0,
   },
   paidBadgeText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 10,
-    color: "#16A34A",
+    color: GardenTints.mint.fg,
   },
   subtitle: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 11,
-    color: "#9CA3AF",
+    color: Garden.muted,
     marginLeft: 28,
   },
   partialPaid: {
-    fontFamily: FontFamilies.bodySemiBold,
-    color: "#16A34A",
+    fontFamily: GardenFonts.bodyBold,
+    color: GardenTints.mint.fg,
   },
 });

@@ -1,384 +1,185 @@
-import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
-import { notifyDiscord, notifyError } from "@/lib/discord";
-import { supabase } from "@/lib/supabase";
-import { useAuth, useReadOnlyPreview } from "@/contexts/AuthContext";
-import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+// Share Your Experience — Garden. Data + submit live in useTestimonial();
+// this screen adds the read-only guard, loading/error/Retry and the
+// celebration when the testimonial goes through.
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+  Confetti,
+  Display,
+  Garden,
+  GardenButton,
+  GardenField,
+  GardenFonts,
+  GardenScreenHero,
+  GardenSkeleton,
+  GardenTints,
+  MIN_TAP,
+  haptic,
+  useGardenGoBack,
+  useToast,
+  useWriteGuard,
+  type ConfettiHandle,
+} from "@/components/garden";
+import { BottomTabInset } from "@/constants/theme";
+import { GUTTER, PromptsNote } from "@/features/rewards/garden/RewardsParts";
+import { useTestimonial } from "@/features/rewards/useRewards";
+import { useEffect, useRef } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeIn, ZoomIn, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const MAX_TEXT = 2000;
+
 export default function TestimonialScreen() {
-  const router = useRouter();
-  const { userId, effectiveParentId } = useAuth();
-  const isReadOnlyPreview = useReadOnlyPreview();
-  const [testimonialText, setTestimonialText] = useState("");
-  const [testimonialSubmitting, setTestimonialSubmitting] = useState(false);
-  const [testimonialSubmitted, setTestimonialSubmitted] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [firstName, setFirstName] = useState("your child");
-  const [fullName, setFullName] = useState("");
-  const [firstChildName, setFirstChildName] = useState("");
+  const t = useTestimonial();
+  const toast = useToast();
+  const goBack = useGardenGoBack();
+  const reduce = useReducedMotion();
+  const { blocked } = useWriteGuard();
+  const confettiRef = useRef<ConfettiHandle>(null);
+  const submitRef = useRef<(() => Promise<void>) | null>(null);
 
-  useEffect(() => {
-    if (!userId || !effectiveParentId) return;
-
-    async function load() {
-      try {
-        const [userResult, studentsResult, testimonialResult] =
-          await Promise.all([
-            supabase
-              .schema("admin")
-              .from("users")
-              .select("full_name")
-              .eq("id", userId)
-              .single(),
-            supabase
-              .schema("admin")
-              .from("students")
-              .select("child_legal_name")
-              .eq("parent_id", effectiveParentId)
-              .eq("is_deleted", false)
-              .limit(1),
-            supabase
-              .schema("marketing")
-              .from("testimonials")
-              .select("id")
-              .eq("parent_id", userId)
-              .limit(1),
-          ]);
-
-        if (userResult.data?.full_name) {
-          setFullName(userResult.data.full_name);
-          setFirstName(userResult.data.full_name.split(" ")[0]);
-        }
-        const firstChild = studentsResult.data?.[0];
-        if (firstChild?.child_legal_name) {
-          setFirstChildName(firstChild.child_legal_name.split(" ")[0]);
-        }
-        if ((testimonialResult.data?.length ?? 0) > 0) {
-          setTestimonialSubmitted(true);
-        }
-      } catch (e) {
-        notifyError("rewards-testimonial-load", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, [userId, effectiveParentId]);
-
-  async function handleSubmitTestimonial() {
-    if (isReadOnlyPreview) return;
-    const trimmed = testimonialText.trim();
-    if (!trimmed) return;
-    setTestimonialSubmitting(true);
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const session = sessionData?.session;
-
-      const { error } = await supabase
-        .schema("marketing")
-        .from("testimonials")
-        .insert({
-          parent_id: userId,
-          parent_name: fullName || firstName,
-          parent_email: session?.user?.email ?? "",
-          child_name: firstChildName,
-          testimonial: trimmed,
-        });
-
-      if (error) throw error;
-
-      setTestimonialSubmitted(true);
-      setTestimonialText("");
-
-      notifyDiscord({
-        type: "testimonial_submitted",
-        data: {
-          parentName: fullName || firstName,
-          parentEmail: session?.user?.email ?? "",
-          childName: firstChildName,
-          testimonial: trimmed,
-        },
+  async function handleSubmit() {
+    if (blocked()) return;
+    const r = await t.submit();
+    if (r.ok) {
+      haptic.success();
+      confettiRef.current?.fire();
+      toast.show({ tone: "success", title: "Thank you so much!", silent: true });
+    } else if (r.error && r.error !== "read-only") {
+      toast.show({
+        tone: "error",
+        title: "Your testimonial didn't send",
+        message: "Check your connection and try again. Your words are still here.",
+        action: { label: "Retry", onPress: () => void submitRef.current?.() },
       });
-    } catch (e) {
-      notifyError("rewards-testimonial-submit", e);
-    } finally {
-      setTestimonialSubmitting(false);
     }
   }
 
-  return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={22} color="#1f2937" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Share Your Experience</Text>
-        <View style={styles.backBtn} />
-      </View>
+  useEffect(() => {
+    submitRef.current = handleSubmit;
+  });
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+  const canSubmit = !!t.testimonialText.trim() && !t.submitting;
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: Garden.cream }} edges={["top"]}>
+      <GardenScreenHero title="Share Your Experience" />
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: BottomTabInset + 40 },
-          ]}
+          contentContainerStyle={[st.content, { paddingBottom: BottomTabInset + 40 }]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           showsVerticalScrollIndicator={false}
         >
-          {!loading && testimonialSubmitted ? (
-            <View style={styles.successWrap}>
-              <View style={styles.successIcon}>
-                <Text style={{ fontSize: 28 }}>☕</Text>
-              </View>
-              <Text style={styles.successTitle}>Thank you so much!</Text>
-              <Text style={styles.successBody}>
-                We'll be in touch about your gift card soon.
+          {t.loading ? (
+            <View style={{ gap: 14, alignItems: "center", paddingTop: 12 }}>
+              <GardenSkeleton width={76} height={76} radius={38} />
+              <GardenSkeleton width="70%" height={24} />
+              <GardenSkeleton width="100%" height={150} radius={8} />
+            </View>
+          ) : t.submitted ? (
+            <View style={st.success}>
+              <Animated.View entering={reduce ? undefined : ZoomIn.springify()} style={st.successIcon}>
+                <Text style={{ fontSize: 34 }}>☕</Text>
+              </Animated.View>
+              <Display size={28} style={{ textAlign: "center" }}>
+                Thank you so much!
+              </Display>
+              <Text style={st.successBody} maxFontSizeMultiplier={1.4}>
+                We&apos;ll be in touch about your gift card soon.
               </Text>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.closeBtn,
-                  pressed && { opacity: 0.8 },
-                ]}
-                onPress={() => router.back()}
-              >
-                <Text style={styles.closeBtnTxt}>Go back</Text>
-              </Pressable>
+              <GardenButton label="Go back" tone="outline" onPress={goBack} style={{ alignSelf: "center", marginTop: 8 }} />
             </View>
           ) : (
-            <>
-              <View style={styles.sheetHeader}>
-                <Text style={{ fontSize: 32 }}>☕</Text>
-                <Text style={styles.sheetTitle}>Share Your Experience</Text>
-                <Text style={styles.sheetSubtitle}>
+            <Animated.View entering={reduce ? undefined : FadeIn.duration(200)} style={{ gap: 18 }}>
+              <View style={st.header}>
+                <View style={st.headerIcon}>
+                  <Text style={{ fontSize: 32 }}>☕</Text>
+                </View>
+                <Text style={st.subtitle} maxFontSizeMultiplier={1.4}>
                   $15 Starbucks gift card — coffee on us
                 </Text>
               </View>
 
-              <Text style={styles.sheetIntro}>
-                A few honest sentences from the heart is more than enough. Here
-                are some prompts:
+              <Text style={st.intro} maxFontSizeMultiplier={1.4}>
+                A few honest sentences from the heart is more than enough. Here are some prompts:
               </Text>
 
-              <View style={styles.prompts}>
-                {[
-                  `What has ${firstChildName || "your child"} enjoyed most at Sage Field?`,
-                  "How has the program impacted them or your family?",
-                  "Is there a specific moment or experience that stood out?",
-                  "Would you recommend Sage Field to another family, and why?",
-                ].map((p, i) => (
-                  <View key={i} style={styles.promptRow}>
-                    <Text style={styles.promptBullet}>•</Text>
-                    <Text style={styles.promptTxt}>{p}</Text>
-                  </View>
-                ))}
+              <PromptsNote firstChildName={t.firstChildName} />
+
+              <View style={{ gap: 6 }}>
+                <GardenField
+                  boxed
+                  multiline
+                  numberOfLines={5}
+                  placeholder="Share your experience here…"
+                  value={t.testimonialText}
+                  onChangeText={t.setTestimonialText}
+                  maxLength={MAX_TEXT}
+                  editable={!t.submitting}
+                  accessibilityLabel="Your testimonial"
+                  containerStyle={{ minHeight: 150 }}
+                />
+                <Text style={st.counter}>{`${t.testimonialText.length}/${MAX_TEXT}`}</Text>
               </View>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Share your experience here…"
-                placeholderTextColor="#9ca3af"
-                multiline
-                numberOfLines={4}
-                value={testimonialText}
-                onChangeText={setTestimonialText}
-                textAlignVertical="top"
+              <GardenButton
+                label="☕  Submit testimonial"
+                tone="coral"
+                fullWidth
+                loading={t.submitting}
+                loadingLabel="Submitting…"
+                disabled={!canSubmit}
+                onPress={() => void handleSubmit()}
               />
 
               <Pressable
-                style={({ pressed }) => [
-                  styles.submitBtn,
-                  (!testimonialText.trim() || testimonialSubmitting) &&
-                    styles.submitBtnDisabled,
-                  pressed && { opacity: 0.85 },
-                ]}
-                onPress={handleSubmitTestimonial}
-                disabled={!testimonialText.trim() || testimonialSubmitting}
+                onPress={goBack}
+                hitSlop={8}
+                accessibilityRole="button"
+                style={st.later}
               >
-                <Text style={styles.submitBtnTxt}>
-                  {testimonialSubmitting
-                    ? "Submitting…"
-                    : "☕  Submit testimonial"}
-                </Text>
+                <Text style={st.laterText}>Maybe later</Text>
               </Pressable>
-
-              <Pressable
-                style={{ alignItems: "center", marginTop: 4 }}
-                onPress={() => router.back()}
-              >
-                <Text style={styles.maybeLater}>Maybe later</Text>
-              </Pressable>
-            </>
+            </Animated.View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+      <Confetti ref={confettiRef} />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
-    backgroundColor: "#fff",
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
+const st = StyleSheet.create({
+  content: { paddingHorizontal: GUTTER, paddingTop: 8 },
+  header: { alignItems: "center", gap: 10 },
+  headerIcon: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: GardenTints.peach.bg,
     alignItems: "center",
     justifyContent: "center",
   },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#1f2937",
-  },
-  content: {
-    padding: 20,
-    gap: 16,
-  },
-  successWrap: {
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 60,
-  },
+  subtitle: { fontFamily: GardenFonts.bodyHeavy, fontSize: 15, color: GardenTints.peach.fg, textAlign: "center" },
+  intro: { fontFamily: GardenFonts.body, fontSize: 14.5, lineHeight: 21, color: Garden.soft },
+  counter: { alignSelf: "flex-end", fontFamily: GardenFonts.bodySemi, fontSize: 11.5, color: Garden.muted },
+  later: { alignSelf: "center", minHeight: MIN_TAP, justifyContent: "center", paddingHorizontal: 12 },
+  laterText: { fontFamily: GardenFonts.bodyBold, fontSize: 14, color: Garden.muted },
+  success: { alignItems: "center", gap: 12, paddingVertical: 48 },
   successIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "#f5ede0",
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: GardenTints.peach.bg,
     alignItems: "center",
     justifyContent: "center",
-  },
-  successTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 22,
-    color: "#78350f",
+    marginBottom: 4,
   },
   successBody: {
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#92400e",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-  closeBtn: {
-    backgroundColor: "#f5ede0",
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  closeBtnTxt: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#a0784a",
-  },
-  sheetHeader: {
-    alignItems: "center",
-    gap: 4,
-    paddingTop: 8,
-  },
-  sheetTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 20,
-    color: "#78350f",
-    marginTop: 8,
-  },
-  sheetSubtitle: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#92400e",
-  },
-  sheetIntro: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#6b7280",
-    lineHeight: 20,
-  },
-  prompts: {
-    gap: 6,
-    backgroundColor: "#fdf8f3",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#f0e0cc",
-    padding: 14,
-  },
-  promptRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  promptBullet: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#a0784a",
-    marginTop: 1,
-  },
-  promptTxt: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#374151",
-    flex: 1,
-    lineHeight: 19,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#d6c9b8",
-    borderRadius: 12,
-    padding: 12,
-    minHeight: 120,
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#1f2937",
-    backgroundColor: "#fff",
-  },
-  submitBtn: {
-    backgroundColor: "#a0784a",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  submitBtnDisabled: {
-    opacity: 0.45,
-  },
-  submitBtnTxt: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.body,
     fontSize: 15,
-    color: "#fff",
-  },
-  maybeLater: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#9ca3af",
+    lineHeight: 22,
+    color: Garden.soft,
+    textAlign: "center",
   },
 });

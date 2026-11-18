@@ -46,7 +46,6 @@ export function FeedHero({ f }: { f: ParentFeed }) {
     <View style={hero.wrap}>
       <View style={hero.row}>
         <View style={{ flex: 1 }}>
-          <HandNote size={19}>fresh from the classroom</HandNote>
           <Display size={34} numberOfLines={1}>
             {PARENT_FEED_COPY.title}
           </Display>
@@ -59,7 +58,6 @@ export function FeedHero({ f }: { f: ParentFeed }) {
           label={f.filterTeacherName ? `Filter by Teacher, showing ${f.filterTeacherName}` : "Filter by Teacher"}
           onPress={() => f.filterSheetRef.current?.present()}
           dot={!!f.filterTeacherId}
-          style={{ marginTop: 6 }}
         />
       </View>
       {f.filterTeacherName ? (
@@ -84,7 +82,7 @@ export function FeedHero({ f }: { f: ParentFeed }) {
 
 const hero = StyleSheet.create({
   wrap: { paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 16 },
-  row: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  row: { flexDirection: "row", alignItems: "center", gap: 12 },
   sub: { fontFamily: GardenFonts.bodySemi, fontSize: 14, color: Garden.soft, marginTop: 4 },
   chip: {
     flexDirection: "row",

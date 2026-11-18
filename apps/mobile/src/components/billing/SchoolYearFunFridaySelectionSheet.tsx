@@ -1,10 +1,11 @@
+import { Garden, GardenButton, GardenFonts, GardenTints, gardenSheetChrome } from "@/components/garden";
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
 import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
 import {
   SchoolYearMonthlyMonthGrid,
   type SchoolYearMonthGridItem,
 } from "@/components/billing/SchoolYearMonthlyMonthGrid";
-import { FontFamilies, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import type { ApplicationRow } from "@/lib/school-year-billing";
 import {
@@ -15,7 +16,6 @@ import {
 } from "@/lib/school-year";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -24,8 +24,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 type StudentInfo = { id: string; name: string; profileImageUrl: string | null };
 
-const ACCENT = "#7c3aed";
-const ACCENT_TINT = "#F5F3FF";
+const ACCENT = GardenTints.lav.fg;
+const ACCENT_TINT = GardenTints.lav.bg;
 
 function formatCents(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -171,18 +171,10 @@ export function SchoolYearFunFridaySelectionSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
+      {...gardenSheetChrome}
       snapPoints={["90%"]}
       enableDynamicSizing={false}
-      enablePanDownToClose
       onDismiss={reset}
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-          pressBehavior="close"
-        />
-      )}
     >
       {step === "payment" && !readOnly ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
@@ -332,7 +324,7 @@ export function SchoolYearFunFridaySelectionSheet({
                         <Ionicons
                           name={isOpen ? "chevron-up" : "chevron-down"}
                           size={16}
-                          color="#9CA3AF"
+                          color={Garden.muted}
                         />
                       </Pressable>
                       {isOpen && (
@@ -396,13 +388,13 @@ export function SchoolYearFunFridaySelectionSheet({
 
           {!readOnly ? (
             <View style={s.footer}>
-              <Pressable
-                style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
-                disabled={!canContinue}
+              <GardenButton
+                label={continueLabel}
                 onPress={() => setStep("payment")}
-              >
-                <Text style={s.primaryBtnText}>{continueLabel}</Text>
-              </Pressable>
+                disabled={!canContinue}
+                fullWidth
+                style={s.primaryBtn}
+              />
             </View>
           ) : null}
         </View>
@@ -419,12 +411,12 @@ const s = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: Garden.line,
   },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: "#111827",
+    fontFamily: GardenFonts.display,
+    fontSize: 26,
+    color: Garden.ink,
   },
   studentRow: {
     flexDirection: "row",
@@ -433,20 +425,20 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
   subtitle: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 13,
-    color: "#6B7280",
+    color: Garden.soft,
   },
   gradeBadge: {
-    backgroundColor: "#F3F4F6",
+    backgroundColor: Garden.white,
     borderRadius: 9999,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   gradeBadgeText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 11,
-    color: "#4B5563",
+    color: Garden.soft,
   },
   tabRow: {
     flexDirection: "row",
@@ -459,60 +451,60 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 9999,
-    backgroundColor: "#F3F4F6",
+    backgroundColor: Garden.white,
   },
   tabOn: {
     backgroundColor: ACCENT,
   },
   tabText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#6B7280",
+    color: Garden.soft,
   },
-  tabTextOn: { color: "#ffffff" },
+  tabTextOn: { color: Garden.white },
   scrollContent: {
     paddingHorizontal: Spacing.three,
     paddingTop: 12,
     paddingBottom: 20,
   },
   instruction: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 13,
-    color: "#6B7280",
+    color: Garden.soft,
     marginBottom: 4,
   },
   instructionSub: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 11,
-    color: "#9CA3AF",
+    color: Garden.muted,
     marginBottom: 16,
   },
   summaryBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
+    backgroundColor: Garden.white,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginTop: 16,
   },
   summaryLabel: {
     flex: 1,
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 13,
-    color: "#6B7280",
+    color: Garden.soft,
     marginRight: 8,
   },
   summaryTotal: {
-    fontFamily: FontFamilies.heading,
+    fontFamily: GardenFonts.display,
     fontSize: 16,
     color: ACCENT,
   },
   accordion: {
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#F3F4F6",
+    borderColor: Garden.white,
     marginBottom: 10,
     overflow: "hidden",
   },
@@ -522,7 +514,7 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: Garden.white,
   },
   accordionHeaderLeft: {
     flexDirection: "row",
@@ -532,20 +524,20 @@ const s = StyleSheet.create({
     flexWrap: "wrap",
   },
   monthTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#374151",
+    color: Garden.ink,
   },
   countBadgePaid: {
-    backgroundColor: "#DCFCE7",
+    backgroundColor: GardenTints.mint.bg,
     borderRadius: 9999,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   countBadgePaidText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 10,
-    color: "#15803D",
+    color: GardenTints.mint.fg,
   },
   countBadgeSel: {
     borderRadius: 9999,
@@ -553,9 +545,9 @@ const s = StyleSheet.create({
     paddingVertical: 2,
   },
   countBadgeSelText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 10,
-    color: "#ffffff",
+    color: Garden.white,
   },
   daysGrid: {
     flexDirection: "row",
@@ -569,39 +561,28 @@ const s = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#ffffff",
+    borderColor: Garden.line,
+    backgroundColor: Garden.white,
   },
   dayChipOn: { backgroundColor: ACCENT, borderColor: ACCENT },
   dayChipPaid: {
-    backgroundColor: "#DCFCE7",
-    borderColor: "#86EFAC",
+    backgroundColor: GardenTints.mint.bg,
+    borderColor: Garden.mint,
   },
   dayChipText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 11,
-    color: "#374151",
+    color: Garden.ink,
   },
-  dayChipTextPaid: { color: "#15803D" },
-  dayChipTextOn: { color: "#ffffff" },
+  dayChipTextPaid: { color: GardenTints.mint.fg },
+  dayChipTextOn: { color: Garden.white },
   footer: {
     paddingHorizontal: Spacing.three,
     paddingTop: Spacing.two,
     paddingBottom: Spacing.three,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E5E7EB",
-    backgroundColor: "#ffffff",
+    borderTopColor: Garden.line,
+    backgroundColor: Garden.cream,
   },
-  primaryBtn: {
-    backgroundColor: ACCENT,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  primaryBtnDisabled: { opacity: 0.4 },
-  primaryBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#ffffff",
-  },
+  primaryBtn: { marginTop: 20 },
 });

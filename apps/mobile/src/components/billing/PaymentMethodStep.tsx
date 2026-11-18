@@ -1,7 +1,8 @@
+import { Garden, GardenButton, GardenFonts, GardenTints, haptic } from "@/components/garden";
+import { GardenInlineError } from "./GardenInlineError";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 
 export type LineItem = {
   studentName: string;
@@ -44,7 +45,7 @@ export function PaymentMethodStep({ intendedAmountCents, lineItems, onBack, onPa
     <View style={s.container}>
       {/* Back row */}
       <Pressable style={s.backRow} onPress={onBack} hitSlop={8}>
-        <Ionicons name="chevron-back" size={18} color="#374151" />
+        <Ionicons name="chevron-back" size={18} color={Garden.ink} />
         <Text style={s.backText}>Back to selection</Text>
       </Pressable>
 
@@ -78,10 +79,15 @@ export function PaymentMethodStep({ intendedAmountCents, lineItems, onBack, onPa
       <Text style={s.sectionLabel}>How will you be paying?</Text>
 
       {/* Payment method toggle */}
-      <View style={s.toggle}>
+      <View style={s.toggle} accessibilityRole="tablist">
         <Pressable
           style={[s.toggleBtn, paymentMethod === "card" && s.toggleBtnActive]}
-          onPress={() => setPaymentMethod("card")}
+          onPress={() => {
+            if (paymentMethod !== "card") haptic.select();
+            setPaymentMethod("card");
+          }}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: paymentMethod === "card" }}
         >
           <Text style={[s.toggleText, paymentMethod === "card" && s.toggleTextActive]}>
             Credit/Debit Card
@@ -89,7 +95,12 @@ export function PaymentMethodStep({ intendedAmountCents, lineItems, onBack, onPa
         </Pressable>
         <Pressable
           style={[s.toggleBtn, paymentMethod === "ach" && s.toggleBtnActive]}
-          onPress={() => setPaymentMethod("ach")}
+          onPress={() => {
+            if (paymentMethod !== "ach") haptic.select();
+            setPaymentMethod("ach");
+          }}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: paymentMethod === "ach" }}
         >
           <Text style={[s.toggleText, paymentMethod === "ach" && s.toggleTextActive]}>
             ACH / US bank account
@@ -105,9 +116,17 @@ export function PaymentMethodStep({ intendedAmountCents, lineItems, onBack, onPa
       </Text>
 
       {/* Agree to pay fee checkbox */}
-      <Pressable style={s.checkRow} onPress={() => setCoverFees((v) => !v)}>
+      <Pressable
+        style={s.checkRow}
+        onPress={() => {
+          haptic.select();
+          setCoverFees((v) => !v);
+        }}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: coverFees }}
+      >
         <View style={[s.checkbox, coverFees && s.checkboxOn]}>
-          {coverFees && <Ionicons name="checkmark" size={12} color="#fff" />}
+          {coverFees && <Ionicons name="checkmark" size={12} color={Garden.white} />}
         </View>
         <Text style={s.checkText}>I agree to pay the processing fee</Text>
       </Pressable>
@@ -118,17 +137,16 @@ export function PaymentMethodStep({ intendedAmountCents, lineItems, onBack, onPa
         <Text style={s.totalBoxAmt}>{formatCents(displayTotal)}</Text>
       </View>
 
-      <Pressable
-        style={[s.cta, (loading || !coverFees) && s.ctaDim]}
-        onPress={() => onPay(coverFees, paymentMethod)}
-        disabled={loading || !coverFees}
-      >
-        <Text style={s.ctaText}>
-          {loading ? "Processing..." : `Pay ${formatCents(displayTotal)}`}
-        </Text>
-      </Pressable>
+      <GardenButton
+        label={`Pay ${formatCents(displayTotal)}`}
+        loading={loading}
+        loadingLabel="Processing..."
+        disabled={!coverFees}
+        onPress={() => void onPay(coverFees, paymentMethod)}
+        fullWidth
+      />
 
-      {error && <Text style={s.errorText}>{error}</Text>}
+      {error ? <GardenInlineError message={error} /> : null}
 
       {/* Check note */}
       <Text style={s.checkNote}>
@@ -146,18 +164,21 @@ const s = StyleSheet.create({
   backRow: {
     flexDirection: "row",
     alignItems: "center",
+    alignSelf: "flex-start",
     gap: 4,
+    minHeight: 44,
   },
   backText: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.bodyHeavy,
     fontSize: 14,
-    color: "#374151",
+    color: Garden.sageDeep,
   },
 
   sectionLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#111827",
+    fontFamily: GardenFonts.display,
+    fontSize: 20,
+    letterSpacing: -0.5,
+    color: Garden.ink,
   },
 
   toggle: {
@@ -166,33 +187,35 @@ const s = StyleSheet.create({
   },
   toggleBtn: {
     flex: 1,
-    paddingVertical: 12,
+    minHeight: 52,
+    paddingVertical: 10,
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 16,
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-    backgroundColor: "#F9FAFB",
+    borderColor: Garden.line,
+    backgroundColor: Garden.white,
   },
   toggleBtnActive: {
-    backgroundColor: "rgba(94,124,104,0.08)",
-    borderColor: Brand.sage700,
+    backgroundColor: GardenTints.sage.bg,
+    borderColor: Garden.sage,
   },
   toggleText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#6B7280",
+    fontFamily: GardenFonts.bodySemi,
+    fontSize: 13.5,
+    color: Garden.soft,
     textAlign: "center",
   },
   toggleTextActive: {
-    fontFamily: FontFamilies.bodySemiBold,
-    color: Brand.sage800,
+    fontFamily: GardenFonts.bodyHeavy,
+    color: Garden.sageDeep,
   },
 
   feeNote: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#9CA3AF",
+    fontFamily: GardenFonts.body,
+    fontSize: 12.5,
+    color: Garden.soft,
     marginTop: -4,
   },
 
@@ -200,75 +223,62 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    minHeight: 44,
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: "#D1D5DB",
+    width: 24,
+    height: 24,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: "#d9cfbf",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: Garden.white,
   },
   checkboxOn: {
-    backgroundColor: Brand.sage700,
-    borderColor: Brand.sage700,
+    backgroundColor: Garden.sage,
+    borderColor: Garden.sage,
   },
   checkText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#374151",
+    fontFamily: GardenFonts.bodyBold,
+    fontSize: 14,
+    color: Garden.ink,
     flex: 1,
   },
 
   totalBox: {
-    backgroundColor: "#F0FDF4",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#86EFAC",
-    paddingHorizontal: Spacing.three,
+    backgroundColor: GardenTints.mint.bg,
+    borderRadius: 20,
+    borderWidth: 0,
+    paddingHorizontal: 18,
     paddingVertical: 14,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   totalBoxLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 14,
-    color: "#16A34A",
+    color: GardenTints.mint.fg,
   },
   totalBoxAmt: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 24,
-    color: "#111827",
-  },
-
-  cta: {
-    backgroundColor: Brand.sage700,
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: "center",
-  },
-  ctaDim: { backgroundColor: "#D1D5DB" },
-  ctaText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#fff",
+    fontFamily: GardenFonts.display,
+    fontSize: 26,
+    color: Garden.ink,
   },
 
   summaryCard: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#E5E7EB",
-    padding: 14,
+    backgroundColor: Garden.white,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Garden.line,
+    padding: 16,
     gap: 6,
   },
   summaryLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 10,
-    color: "#9CA3AF",
+    fontFamily: GardenFonts.bodyHeavy,
+    fontSize: 11,
+    color: Garden.muted,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: 4,
@@ -279,47 +289,41 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   summaryName: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#111827",
+    color: Garden.ink,
   },
   summaryAmt: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#111827",
+    color: Garden.ink,
   },
   summaryDetail: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: Garden.soft,
   },
   summaryDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: Garden.line,
     marginVertical: 8,
   },
   summarySubtotalLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#374151",
+    color: Garden.ink,
   },
   summarySubtotalAmt: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#374151",
+    color: Garden.ink,
   },
 
   checkNote: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-    color: "#9CA3AF",
+    fontFamily: GardenFonts.body,
+    fontSize: 12,
+    color: Garden.muted,
     textAlign: "center",
-    lineHeight: 16,
-  },
-  errorText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#DC2626",
-    textAlign: "center",
+    lineHeight: 17,
   },
 });

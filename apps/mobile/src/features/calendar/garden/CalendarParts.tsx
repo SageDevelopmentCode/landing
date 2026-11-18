@@ -53,7 +53,6 @@ export function CalendarHero({ c }: { c: ParentCalendar }) {
     <View style={hero.wrap}>
       <View style={hero.row}>
         <View style={{ flex: 1 }}>
-          <HandNote size={19}>{c.viewMode === "monthly" ? "this month at school" : "this week at school"}</HandNote>
           <Display size={30} numberOfLines={1}>
             {c.headerLabel}
           </Display>

@@ -1,6 +1,7 @@
+import { Garden, GardenButton, GardenFonts, GardenTints, gardenSheetChrome } from "@/components/garden";
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
 import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
-import { Brand, FontFamilies, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import type {
   ApplicationRow,
@@ -18,7 +19,6 @@ import {
 } from "@/lib/school-year";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -306,18 +306,10 @@ export function HomeschoolSchoolYearSelectionSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
+      {...gardenSheetChrome}
       snapPoints={["90%"]}
       enableDynamicSizing={false}
-      enablePanDownToClose
       onDismiss={reset}
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-          pressBehavior="close"
-        />
-      )}
     >
       {step === "payment" && !readOnly ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
@@ -336,7 +328,7 @@ export function HomeschoolSchoolYearSelectionSheet({
         <View style={s.flex}>
           <View style={s.header}>
             <Pressable onPress={() => setStep("plan")} hitSlop={12}>
-              <Ionicons name="chevron-back" size={22} color="#374151" />
+              <Ionicons name="chevron-back" size={22} color={Garden.ink} />
             </Pressable>
             <View style={s.headerCenter}>
               <Text style={s.headerTitle}>Bundle a Sibling?</Text>
@@ -385,7 +377,7 @@ export function HomeschoolSchoolYearSelectionSheet({
                   <View style={s.sibRow}>
                     <View style={[s.sibCheck, isIncluded && s.sibCheckOn]}>
                       {isIncluded && (
-                        <Ionicons name="checkmark" size={12} color="#fff" />
+                        <Ionicons name="checkmark" size={12} color={Garden.white} />
                       )}
                     </View>
                     <View style={{ flex: 1 }}>
@@ -456,11 +448,12 @@ export function HomeschoolSchoolYearSelectionSheet({
             })}
           </BottomSheetScrollView>
           <View style={s.footer}>
-            <Pressable style={s.primaryBtn} onPress={() => setStep("payment")}>
-              <Text style={s.primaryBtnText}>
-                Continue · {formatCents(combinedCents)}
-              </Text>
-            </Pressable>
+            <GardenButton
+              label={`Continue · ${formatCents(combinedCents)}`}
+              onPress={() => setStep("payment")}
+              fullWidth
+              style={s.primaryBtn}
+            />
           </View>
         </View>
       ) : (
@@ -501,7 +494,7 @@ export function HomeschoolSchoolYearSelectionSheet({
                         : "radio-button-off"
                     }
                     size={20}
-                    color={selectedTier === tier.key ? Brand.sage700 : "#9CA3AF"}
+                    color={selectedTier === tier.key ? Garden.sage : Garden.muted}
                   />
                 </View>
                 {paidMonthsForTier.length > 0 ? (
@@ -515,7 +508,7 @@ export function HomeschoolSchoolYearSelectionSheet({
                           <Ionicons
                             name="checkmark"
                             size={10}
-                            color="#15803d"
+                            color={GardenTints.mint.fg}
                           />
                           <Text style={s.paidChipText}>
                             {m.short}
@@ -558,7 +551,7 @@ export function HomeschoolSchoolYearSelectionSheet({
                   }
                 >
                   {isPaid ? (
-                    <Ionicons name="checkmark" size={12} color="#15803d" />
+                    <Ionicons name="checkmark" size={12} color={GardenTints.mint.fg} />
                   ) : null}
                   <Text
                     style={[
@@ -615,18 +608,16 @@ export function HomeschoolSchoolYearSelectionSheet({
           )}
 
           {!readOnly ? (
-            <Pressable
-              style={[s.primaryBtn, !canContinue && s.primaryBtnDisabled]}
-              disabled={!canContinue}
+            <GardenButton
+              label={`Continue · ${formatCents(primaryCents)}`}
               onPress={() => {
                 if (eligibleSiblings.length > 0) setStep("sibling");
                 else setStep("payment");
               }}
-            >
-              <Text style={s.primaryBtnText}>
-                Continue · {formatCents(primaryCents)}
-              </Text>
-            </Pressable>
+              disabled={!canContinue}
+              fullWidth
+              style={s.primaryBtn}
+            />
           ) : null}
         </BottomSheetScrollView>
       )}
@@ -646,26 +637,26 @@ const s = StyleSheet.create({
   },
   headerCenter: { flex: 1, alignItems: "center" },
   headerTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 16,
-    color: "#111827",
+    color: Garden.ink,
   },
-  headerSub: { fontFamily: FontFamilies.body, fontSize: 12, color: "#9CA3AF" },
+  headerSub: { fontFamily: GardenFonts.body, fontSize: 12, color: Garden.muted },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: "#111827",
+    fontFamily: GardenFonts.display,
+    fontSize: 26,
+    color: Garden.ink,
   },
   subtitle: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 13,
-    color: "#9CA3AF",
+    color: Garden.muted,
     marginBottom: 16,
   },
   sectionLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 11,
-    color: "#6B7280",
+    color: Garden.soft,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     marginTop: 12,
@@ -673,14 +664,14 @@ const s = StyleSheet.create({
   },
   row: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 10,
+    borderColor: Garden.line,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 8,
   },
   rowSelected: {
-    borderColor: Brand.sage700,
-    backgroundColor: "rgba(74,124,89,0.06)",
+    borderColor: Garden.sage,
+    backgroundColor: GardenTints.sage.bg,
   },
   rowContent: { flex: 1, gap: 8 },
   rowHeader: {
@@ -689,25 +680,25 @@ const s = StyleSheet.create({
     justifyContent: "space-between",
   },
   rowTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 14,
-    color: "#374151",
+    color: Garden.ink,
   },
-  rowSub: { fontFamily: FontFamilies.body, fontSize: 12, color: "#9CA3AF" },
+  rowSub: { fontFamily: GardenFonts.body, fontSize: 12, color: Garden.muted },
   paidChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   paidChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#dcfce7",
+    backgroundColor: GardenTints.mint.bg,
     borderRadius: 9999,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   paidChipText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 10,
-    color: "#15803d",
+    color: GardenTints.mint.fg,
   },
   monthGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   monthChip: {
@@ -715,60 +706,48 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: Garden.line,
     alignItems: "center",
     minWidth: 56,
   },
-  monthChipOn: { backgroundColor: Brand.sage700, borderColor: Brand.sage700 },
-  monthChipPaid: { backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" },
+  monthChipOn: { backgroundColor: Garden.sage, borderColor: Garden.sage },
+  monthChipPaid: { backgroundColor: GardenTints.mint.bg, borderColor: GardenTints.mint.bg },
   monthChipText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 12,
-    color: "#374151",
+    color: Garden.ink,
   },
-  monthChipTextOn: { color: "#ffffff" },
-  monthChipTextPaid: { color: "#15803d" },
+  monthChipTextOn: { color: Garden.white },
+  monthChipTextPaid: { color: GardenTints.mint.fg },
   monthChipDayLabel: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 9,
-    color: "#15803d",
+    color: GardenTints.mint.fg,
     marginTop: 2,
     textAlign: "center",
   },
   priceNote: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 13,
-    color: "#6B7280",
+    color: Garden.soft,
     marginTop: 12,
   },
-  primaryBtn: {
-    backgroundColor: Brand.sage700,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  primaryBtnDisabled: { opacity: 0.45 },
-  primaryBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#ffffff",
-  },
+  primaryBtn: { marginTop: 20 },
   footer: {
     padding: Spacing.three,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#E5E7EB",
+    borderTopColor: Garden.line,
   },
   sibCard: {
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
+    borderColor: Garden.line,
+    borderRadius: 16,
     padding: 14,
-    backgroundColor: "#fff",
+    backgroundColor: Garden.white,
   },
   sibCardActive: {
-    borderColor: Brand.sage700,
-    backgroundColor: "rgba(74,124,89,0.06)",
+    borderColor: Garden.sage,
+    backgroundColor: GardenTints.sage.bg,
   },
   sibRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   sibCheck: {
@@ -776,26 +755,26 @@ const s = StyleSheet.create({
     height: 20,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: "#D1D5DB",
+    borderColor: "#d9cfbf",
     alignItems: "center",
     justifyContent: "center",
   },
-  sibCheckOn: { backgroundColor: Brand.sage700, borderColor: Brand.sage700 },
+  sibCheckOn: { backgroundColor: Garden.sage, borderColor: Garden.sage },
   sibName: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 14,
-    color: "#111827",
+    color: Garden.ink,
   },
-  sibDetail: { fontFamily: FontFamilies.body, fontSize: 12, color: "#6B7280" },
+  sibDetail: { fontFamily: GardenFonts.body, fontSize: 12, color: Garden.soft },
   sibAmt: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 14,
-    color: Brand.sage700,
+    color: Garden.sage,
   },
   editRow: { marginTop: 10 },
   editText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 12,
-    color: Brand.sage700,
+    color: Garden.sage,
   },
 });

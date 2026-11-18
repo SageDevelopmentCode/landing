@@ -1,21 +1,16 @@
+import { Garden, GardenButton, GardenFonts, gardenSheetChrome } from "@/components/garden";
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
 import { API_BASE_URL } from "@/constants/config";
-import { Brand, FontFamilies, Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import { supabase } from "@/lib/supabase";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
+  BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { StyleSheet, Text } from "react-native";
+import { GardenInlineError } from "./GardenInlineError";
 
 type TuitionResult = {
   label: string;
@@ -104,17 +99,13 @@ export function TuitionCodeSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
+      {...gardenSheetChrome}
       snapPoints={["70%", "90%"]}
-      enablePanDownToClose
+      enableDynamicSizing={false}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
+      android_keyboardInputMode="adjustResize"
       onDismiss={reset}
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-          pressBehavior="close"
-        />
-      )}
     >
       {step === "payment" && result ? (
         <BottomSheetScrollView contentContainerStyle={s.content}>
@@ -140,25 +131,28 @@ export function TuitionCodeSheet({
           <Text style={s.subtitle}>
             Enter the tuition code provided by the school.
           </Text>
-          <TextInput
+          <BottomSheetTextInput
             style={s.input}
+            accessibilityLabel="Tuition code"
+            returnKeyType="go"
+            onSubmitEditing={() => void handleValidate()}
             value={code}
             onChangeText={(t) => setCode(t.toUpperCase())}
             placeholder="e.g. SMITH900"
-            placeholderTextColor="#D1D5DB"
+            placeholderTextColor="#d9cfbf"
             autoCapitalize="characters"
             autoCorrect={false}
           />
-          {error ? <Text style={s.error}>{error}</Text> : null}
-          <Pressable
-            style={[s.primaryBtn, (!code.trim() || validating) && s.primaryBtnDisabled]}
-            disabled={!code.trim() || validating}
+          {error ? <GardenInlineError message={error} style={{ marginTop: 10 }} /> : null}
+          <GardenButton
+            label="Apply Code"
+            loading={validating}
+            loadingLabel="Checking…"
             onPress={handleValidate}
-          >
-            <Text style={s.primaryBtnText}>
-              {validating ? "Checking…" : "Apply Code"}
-            </Text>
-          </Pressable>
+            disabled={!code.trim()}
+            fullWidth
+            style={s.primaryBtn}
+          />
         </BottomSheetScrollView>
       )}
     </BottomSheetModal>
@@ -166,47 +160,32 @@ export function TuitionCodeSheet({
 }
 
 const s = StyleSheet.create({
-  content: { padding: Spacing.three, paddingBottom: 40 },
+  content: { padding: 18, paddingTop: 6, paddingBottom: 40 },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: "#111827",
+    fontFamily: GardenFonts.display,
+    fontSize: 26,
+    color: Garden.ink,
     marginBottom: 6,
   },
   subtitle: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#6B7280",
+    fontFamily: GardenFonts.body,
+    fontSize: 14,
+    lineHeight: 20,
+    color: Garden.soft,
     marginBottom: 16,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
+    backgroundColor: Garden.white,
+    minHeight: 52,
+    borderWidth: 1.5,
+    borderColor: Garden.line,
+    borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#111827",
-    letterSpacing: 1,
+    fontFamily: GardenFonts.bodyHeavy,
+    fontSize: 16,
+    color: Garden.ink,
+    letterSpacing: 1.5,
   },
-  error: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#B91C1C",
-    marginTop: 8,
-  },
-  primaryBtn: {
-    backgroundColor: "#0d9488",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  primaryBtnDisabled: { opacity: 0.45 },
-  primaryBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#ffffff",
-  },
+  primaryBtn: { marginTop: 20 },
 });

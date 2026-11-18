@@ -487,6 +487,7 @@ export function useParentHome({ autoPrompts = true }: UseParentHomeOptions = {})
               .schema("billing")
               .from("pending_payment_requests")
               .select("id, label, amount_cents, program, student_id, payment_type")
+              .eq("parent_id", effectiveParentId)
               .eq("status", "pending")
               .order("created_at", { ascending: false })
               .limit(3),
@@ -733,6 +734,16 @@ export function useParentHome({ autoPrompts = true }: UseParentHomeOptions = {})
           schoolYearMap[tx.student_id].push(...months);
         } else if (tx.payment_type === "supply_fee") {
           supplyFeeMap[tx.student_id] = true;
+          // Tuition month bundled with the supply fee counts as paid.
+          const bundleMonth = Number(meta?.bundle_month_index);
+          if (meta?.bundle_type === "school_year_tuition" && bundleMonth) {
+            if (!schoolYearMap[tx.student_id]) {
+              schoolYearMap[tx.student_id] = [];
+            }
+            if (!schoolYearMap[tx.student_id].includes(bundleMonth)) {
+              schoolYearMap[tx.student_id].push(bundleMonth);
+            }
+          }
           if (
             meta?.bundle_type === "homeschool" &&
             meta.bundle_homeschool_tier
