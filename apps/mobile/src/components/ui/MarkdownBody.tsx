@@ -97,11 +97,35 @@ const markdownStyles = {
   },
 };
 
+// Garden (parent redesign) typography: Nunito + warm ink. Opt in with `garden`.
+const G = {
+  body: "Nunito_400Regular",
+  semi: "Nunito_700Bold",
+  heavy: "Nunito_800ExtraBold",
+  display: "BricolageGrotesque_800ExtraBold",
+  ink: "#2b2a26",
+  soft: "#5b5850",
+  sage: "#4a6354",
+};
+const gardenMarkdownStyles = {
+  ...markdownStyles,
+  body: { ...markdownStyles.body, fontFamily: G.body, fontSize: 15, color: G.soft, lineHeight: 23 },
+  strong: { ...markdownStyles.strong, fontFamily: G.heavy },
+  heading1: { ...markdownStyles.heading1, fontFamily: G.display, color: G.ink },
+  heading2: { ...markdownStyles.heading2, fontFamily: G.display, color: G.ink },
+  heading3: { ...markdownStyles.heading3, fontFamily: G.heavy, color: G.ink },
+  list_item: { ...markdownStyles.list_item, fontFamily: G.body, fontSize: 15, color: G.soft },
+  link: { color: G.sage, fontFamily: G.semi, textDecorationLine: "underline" as const },
+  blockquote: { ...markdownStyles.blockquote, borderLeftColor: "#6b9474" },
+};
+
 interface Props {
   body: string;
   collapsible?: boolean;
   previewLength?: number;
   leadBold?: boolean;
+  /** Use Garden fonts/colours (parent redesign). */
+  garden?: boolean;
 }
 
 export function MarkdownBody({
@@ -109,6 +133,7 @@ export function MarkdownBody({
   collapsible = false,
   previewLength = 280,
   leadBold = false,
+  garden = false,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const decoded = decodeEntities(body);
@@ -124,27 +149,40 @@ export function MarkdownBody({
     <View>
       {lead && (
         <Text
-          style={{
-            fontFamily: FontFamilies.bodySemiBold,
-            fontSize: 15,
-            color: "#1f2937",
-            lineHeight: 23,
-            marginBottom: 6,
-          }}
+          style={
+            garden
+              ? { fontFamily: G.heavy, fontSize: 16, color: G.ink, lineHeight: 23, marginBottom: 6 }
+              : {
+                  fontFamily: FontFamilies.bodySemiBold,
+                  fontSize: 15,
+                  color: "#1f2937",
+                  lineHeight: 23,
+                  marginBottom: 6,
+                }
+          }
         >
           {lead}
         </Text>
       )}
-      {displayBody.length > 0 && <Markdown style={markdownStyles}>{displayBody}</Markdown>}
+      {displayBody.length > 0 && <Markdown style={garden ? gardenMarkdownStyles : markdownStyles}>{displayBody}</Markdown>}
       {needsTruncation && (
-        <TouchableOpacity onPress={() => setExpanded((v) => !v)} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => setExpanded((v) => !v)}
+          activeOpacity={0.7}
+          hitSlop={garden ? 12 : undefined}
+          accessibilityRole="button"
+        >
           <Text
-            style={{
-              fontFamily: FontFamilies.bodySemiBold,
-              fontSize: 13,
-              color: Brand.sage700,
-              marginTop: 2,
-            }}
+            style={
+              garden
+                ? { fontFamily: G.heavy, fontSize: 14, color: G.sage, marginTop: 2 }
+                : {
+                    fontFamily: FontFamilies.bodySemiBold,
+                    fontSize: 13,
+                    color: Brand.sage700,
+                    marginTop: 2,
+                  }
+            }
           >
             {expanded ? "Show less" : "Read more"}
           </Text>

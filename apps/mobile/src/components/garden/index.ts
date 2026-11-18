@@ -22,3 +22,9 @@ export {
   type ToastOptions,
   type ToastTone,
 } from "./GardenToast";
+export { gardenSheetChrome, GardenSheetBackdrop } from "./GardenSheet";
+export { GardenSegmented, type SegmentOption } from "./GardenSegmented";
+export { GardenIconButton } from "./GardenIconButton";
+export { GardenAvatar, initialsOf, pastelFor } from "./GardenAvatar";
+export { GardenField, type GardenFieldProps } from "./GardenField";
+export { READ_ONLY_TOAST, useWriteGuard } from "./readOnly";

@@ -25,6 +25,7 @@ import {
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Linking,
   ScrollView,
   StyleSheet,
