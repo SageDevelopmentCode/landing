@@ -1,13 +1,12 @@
+import { Garden, GardenFonts, gardenSheetChrome } from "@/components/garden";
 import {
   getEmergencySnackLabel,
   getSharedFoodLabel,
 } from "@/components/SchoolDayFoodPreferencesSheet";
-import { HomeTheme } from "@/components/home/homeTheme";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import type { StaffSchoolDayFoodPref } from "@/lib/staff-food-and-activity-prefs";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -51,20 +50,10 @@ export const StaffSchoolDayFoodPrefsSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         snapPoints={["50%", "85%"]}
-        enablePanDownToClose
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior="close"
-          />
-        )}
-        backgroundStyle={{ backgroundColor: HomeTheme.canvas }}
-        handleIndicatorStyle={{ backgroundColor: "#C4D9C8" }}
+        {...gardenSheetChrome}
       >
         <BottomSheetScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>School Day Food Preferences</Text>
+          <Text style={styles.title} accessibilityRole="header">School Day Food Preferences</Text>
 
           {loading ? (
             <View style={styles.loadingWrap}>
@@ -128,9 +117,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: "#1f2937",
+    fontFamily: GardenFonts.display,
+    fontSize: 24,
+    letterSpacing: -0.7,
+    color: Garden.ink,
     marginBottom: 4,
     marginTop: 4,
   },

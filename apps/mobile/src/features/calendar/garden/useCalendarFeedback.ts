@@ -1,7 +1,7 @@
 // Garden feedback for the parent calendar: toasts, haptics and confetti that
 // react to the results returned by useParentCalendar's handlers.
 import type { ConfettiHandle } from "@/components/garden";
-import { haptic, READ_ONLY_TOAST, useToast } from "@/components/garden";
+import { haptic, READ_ONLY_TOAST, useRefreshFeedback, useToast } from "@/components/garden";
 import type { ParentCalendarEventRecord } from "@/lib/calendar-actions";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Linking } from "react-native";
@@ -162,3 +162,20 @@ export function useCalendarFeedback(c: ParentCalendar) {
 }
 
 export type CalendarFeedback = ReturnType<typeof useCalendarFeedback>;
+
+/**
+ * Staff calendar (view-only): the shared calendar feedback, with pull to
+ * refresh and the error card's Retry going through useRefreshFeedback like
+ * every other staff screen.
+ */
+export function useStaffCalendarFeedback(c: ParentCalendar): CalendarFeedback {
+  const base = useCalendarFeedback(c);
+  const rf = useRefreshFeedback(c.reload, c.retryLoad);
+  return {
+    ...base,
+    refreshing: rf.refreshing,
+    retrying: rf.retrying,
+    refresh: rf.refresh,
+    retryLoad: rf.retry,
+  };
+}

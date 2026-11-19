@@ -41,6 +41,8 @@ export function useDmThread() {
   const [avatar, setAvatar] = useState(otherUserAvatar ?? "");
   const [otherId, setOtherId] = useState(otherUserId ?? "");
   const [isGroup, setIsGroup] = useState(isGroupParam === "true");
+  /** admin.users.role of the other person ("parent", "teacher", "super_admin", …). */
+  const [otherRole, setOtherRole] = useState<string | null>(null);
   const [messages, setMessages] = useState<DmMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +93,7 @@ export function useDmThread() {
       setSignedInId(user.id);
 
       // Fill in the header when we arrived without params (e.g. a notification).
+      let resolvedOtherId = otherUserId ?? "";
       if (!otherUserId || !otherUserName) {
         const listUser = parentViewUserId ?? user.id;
         const { data: convs } = await supabase.rpc("get_conversation_list", { p_user_id: listUser });
@@ -98,7 +101,8 @@ export function useDmThread() {
         if (match) {
           if (!otherUserName) setName((match.other_user_name as string) ?? "");
           if (!otherUserId) {
-            setOtherId((match.other_user_id as string) ?? "");
+            resolvedOtherId = (match.other_user_id as string) ?? "";
+            setOtherId(resolvedOtherId);
             if (match.other_user_profile_image) setAvatar(match.other_user_profile_image as string);
           }
           setIsGroup(Boolean(match.is_group));
@@ -118,14 +122,15 @@ export function useDmThread() {
       if (msgErr) throw msgErr;
       if (meta?.kind === "household_teacher") setIsGroup(true);
 
-      if (otherUserId) {
+      if (resolvedOtherId) {
         const { data: profile } = await supabase
           .schema("admin")
           .from("users")
-          .select("profile_image_url")
-          .eq("id", otherUserId)
+          .select("profile_image_url, role")
+          .eq("id", resolvedOtherId)
           .maybeSingle();
         if (profile?.profile_image_url) setAvatar(profile.profile_image_url);
+        setOtherRole((profile as { role?: string | null } | null)?.role ?? null);
       }
 
       const rows = ([...(data ?? [])] as DmMessage[]).reverse();
@@ -343,6 +348,7 @@ export function useDmThread() {
     name,
     avatar,
     otherId,
+    otherRole,
     isGroup,
     messages,
     loading,

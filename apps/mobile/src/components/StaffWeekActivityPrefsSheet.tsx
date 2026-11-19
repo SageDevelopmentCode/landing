@@ -1,4 +1,4 @@
-import { HomeTheme } from "@/components/home/homeTheme";
+import { Garden, GardenFonts, gardenSheetChrome } from "@/components/garden";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import type { Activity } from "@/lib/activities-actions";
@@ -9,7 +9,6 @@ import type {
 } from "@/lib/staff-food-and-activity-prefs";
 import { useActivityPrefReminders } from "@/hooks/use-activity-pref-reminders";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -248,21 +247,11 @@ export const StaffWeekActivityPrefsSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         snapPoints={["50%", "85%"]}
-        enablePanDownToClose
         onChange={handleSheetChange}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior="close"
-          />
-        )}
-        backgroundStyle={{ backgroundColor: HomeTheme.canvas }}
-        handleIndicatorStyle={{ backgroundColor: "#C4D9C8" }}
+        {...gardenSheetChrome}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Upcoming Activity Preferences</Text>
+          <Text style={styles.title} accessibilityRole="header">Upcoming Activity Preferences</Text>
 
           {!loading && activities.length > 1 && (
             <ScrollView
@@ -374,9 +363,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: "#1f2937",
+    fontFamily: GardenFonts.display,
+    fontSize: 24,
+    letterSpacing: -0.7,
+    color: Garden.ink,
   },
   tabRow: {
     flexDirection: "row",

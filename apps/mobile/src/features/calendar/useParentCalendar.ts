@@ -1,4 +1,5 @@
-// Parent calendar: data, navigation and writes. UI lives in ./garden.
+// Calendar data, navigation and writes, shared by the parent calendar and the
+// view-only staff calendar (mode "staff"). UI lives in ./garden.
 // Handlers return { ok, error? } and never show UI themselves — the Garden
 // feedback hook reacts to the results.
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,10 +34,22 @@ const FETCH_TAG = "parent-calendar-fetch";
 const SELECT =
   "id,title,event_date,is_all_day,start_time,end_time,color,category,shared_with,programs,description,location,attachment_links,created_by";
 
+/** Thrown (and surfaced on the error card) when there's no signed-in user. */
+export const NOT_SIGNED_IN = "Not authenticated";
+
 export type ViewMode = "monthly" | "weekly";
 export type Result = { ok: boolean; error?: string };
+export type CalendarMode = "parent" | "staff";
+export type CalendarOptions = {
+  /** "staff" is view-only: no add/edit/delete, no register CTA. */
+  mode?: CalendarMode;
+  /** Tag passed to notifyError when a load fails. */
+  fetchErrorTag?: string;
+};
 
-export function useParentCalendar() {
+export function useParentCalendar({ mode = "parent", fetchErrorTag }: CalendarOptions = {}) {
+  const isStaff = mode === "staff";
+  const errorTag = fetchErrorTag ?? (isStaff ? "staff-calendar-fetch" : FETCH_TAG);
   const router = useRouter();
   const { isReadOnlyPreview } = useAuth();
   const { selectDate, addEvent } = useLocalSearchParams<{
@@ -50,7 +63,8 @@ export function useParentCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   /** Events cached per "YYYY-MM". A key present = that month is loaded. */
   const [cache, setCache] = useState<Record<string, CalendarEvent[]>>({});
-  const [error, setError] = useState<string | null>(null);
+  /** Blocking load errors per "YYYY-MM" (only for months with nothing cached). */
+  const [failed, setFailed] = useState<Record<string, string>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [todayYMD, setTodayYMD] = useState(() => toYMD(new Date()));
   /** +1 forward / -1 back — drives the slide direction of the grid. */
@@ -84,6 +98,10 @@ export function useParentCalendar() {
   }, [viewMode, anchor, weekDays]);
   const visibleKey = visibleMonths.join("|");
 
+  const error = useMemo(
+    () => visibleMonths.map((k) => (k in cache ? undefined : failed[k])).find(Boolean) ?? null,
+    [visibleMonths, cache, failed],
+  );
   const loading = !error && visibleMonths.some((k) => !(k in cache));
 
   const events = useMemo(
@@ -110,7 +128,7 @@ export function useParentCalendar() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) throw new Error(NOT_SIGNED_IN);
       setCurrentUserId(user.id);
 
       const { data, error: qErr } = await supabase
@@ -129,23 +147,38 @@ export function useParentCalendar() {
         const k = monthKeyOfYMD(e.event_date);
         if (buckets[k]) buckets[k].push(e);
       }
+      // A newer request for a month wins: stale responses never land.
+      const live = sorted.filter((k) => monthSeqRef.current[k] === myId);
       setCache((prev) => {
         const next = { ...prev };
-        for (const k of sorted) {
-          if (monthSeqRef.current[k] === myId) next[k] = buckets[k];
-        }
+        for (const k of live) next[k] = buckets[k];
         return next;
       });
-      setError(null);
+      setFailed((prev) => {
+        if (!live.some((k) => k in prev)) return prev;
+        const next = { ...prev };
+        for (const k of live) delete next[k];
+        return next;
+      });
       return { ok: true };
     } catch (e) {
-      if (!quiet) notifyError(FETCH_TAG, e);
+      if (!quiet) notifyError(errorTag, e);
       const msg = e instanceof Error ? e.message : "Couldn't load events";
-      // Only surface a blocking error when nothing is on screen yet.
-      if (!quiet && sorted.some((k) => !(k in cacheRef.current))) setError(msg);
+      // Only surface a blocking error for months that are still this request's
+      // to answer and have nothing on screen yet.
+      const blocked = sorted.filter(
+        (k) => monthSeqRef.current[k] === myId && !(k in cacheRef.current),
+      );
+      if (!quiet && blocked.length) {
+        setFailed((prev) => {
+          const next = { ...prev };
+          for (const k of blocked) next[k] = msg;
+          return next;
+        });
+      }
       return { ok: false, error: msg };
     }
-  }, []);
+  }, [errorTag]);
 
   // Load whatever the visible range is missing; quietly prefetch neighbours.
   useEffect(() => {
@@ -167,7 +200,11 @@ export function useParentCalendar() {
   }, [fetchMonths, visibleMonths]);
 
   const retryLoad = useCallback(async (): Promise<Result> => {
-    setError(null);
+    setFailed((prev) => {
+      const next = { ...prev };
+      for (const k of visibleMonths) delete next[k];
+      return next;
+    });
     return fetchMonths(visibleMonths);
   }, [fetchMonths, visibleMonths]);
 
@@ -239,20 +276,32 @@ export function useParentCalendar() {
     detailSheetRef.current?.present();
   }, []);
 
+  /** Field Friday "Register now!" CTA — parents only. */
+  const canRegister = !isStaff;
   const register = useCallback(() => {
+    if (isStaff) return;
     detailSheetRef.current?.dismiss();
     router.push("/(tabs)/tuition");
-  }, [router]);
+  }, [router, isStaff]);
 
+  /** Staff calendar is view-only, so staff never manage events here. */
   const canManage = useCallback(
     (evt: CalendarEvent | null) =>
-      !!evt && !!currentUserId && evt.created_by === currentUserId,
-    [currentUserId],
+      !isStaff && !!evt && !!currentUserId && evt.created_by === currentUserId,
+    [currentUserId, isStaff],
   );
+
+  // ── Back (staff only — the parent calendar is a tab) ──────────────────────
+  const backHref = isStaff ? "/(staff)/home" : null;
+  const goBack = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace((backHref ?? "/(tabs)/home") as never);
+  }, [router, backHref]);
 
   // ── Add / edit ─────────────────────────────────────────────────────────────
   const openAddEvent = useCallback(
     (dateYmd?: string) => {
+      if (isStaff) return;
       setEventToEdit(null);
       setAddInitialDate(dateYmd ?? selectedDate ?? todayYMD);
       setAddSession((n) => n + 1);
@@ -260,16 +309,17 @@ export function useParentCalendar() {
       setSelectedEvent(null);
       addSheetRef.current?.present();
     },
-    [selectedDate, todayYMD],
+    [selectedDate, todayYMD, isStaff],
   );
 
   const openEditEvent = useCallback((evt: CalendarEvent) => {
+    if (isStaff) return;
     setEventToEdit(evt as ParentCalendarEventRecord);
     setAddInitialDate(evt.event_date);
     setAddSession((n) => n + 1);
     detailSheetRef.current?.dismiss();
     addSheetRef.current?.present();
-  }, []);
+  }, [isStaff]);
 
   /** Called by the add sheet after the server saved the event. */
   const applySavedEvent = useCallback(
@@ -299,6 +349,7 @@ export function useParentCalendar() {
   );
 
   const deleteEvent = useCallback(async (evt: CalendarEvent): Promise<Result> => {
+    if (isStaff) return { ok: false, error: "The staff calendar is view-only." };
     try {
       await deleteParentCalendarEvent(evt.id);
       setCache((prev) => {
@@ -312,7 +363,7 @@ export function useParentCalendar() {
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : undefined };
     }
-  }, []);
+  }, [isStaff]);
 
   // ── Deep link: ?addEvent=1 (Home "Share an event") ─────────────────────────
   // Note: clearing the param re-runs this effect, so the pending open must not
@@ -325,7 +376,7 @@ export function useParentCalendar() {
   useEffect(() => {
     if (!addEvent) return;
     router.setParams({ addEvent: undefined });
-    if (isReadOnlyPreview) return;
+    if (isReadOnlyPreview || isStaff) return;
     pendingAddRef.current?.cancel();
     let timer: ReturnType<typeof setTimeout> | undefined;
     const task = InteractionManager.runAfterInteractions(() => {
@@ -372,7 +423,11 @@ export function useParentCalendar() {
 
   return {
     router,
+    mode,
+    isStaff,
     isReadOnlyPreview,
+    backHref,
+    goBack,
     // view
     anchor,
     year,
@@ -406,6 +461,7 @@ export function useParentCalendar() {
     setSelectedEvent,
     openEvent,
     register,
+    canRegister,
     canManage,
     deleteEvent,
     // add / edit

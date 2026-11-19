@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal, BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { Brand, BottomTabInset, floatingTabBarStyle } from "@/constants/theme";
 import { StaffMoreMenuSheet } from "@/components/StaffMoreMenuSheet";
+import { GardenToastProvider } from "@/components/garden/GardenToast";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -25,6 +26,7 @@ export default function StaffLayout() {
   }, []);
 
   return (
+    <GardenToastProvider>
     <BottomSheetModalProvider>
       <Tabs
         safeAreaInsets={{ bottom: 0 }}
@@ -117,5 +119,6 @@ export default function StaffLayout() {
       </Tabs>
       <StaffMoreMenuSheet ref={bottomSheetRef} />
     </BottomSheetModalProvider>
+    </GardenToastProvider>
   );
 }

@@ -1,4 +1,4 @@
-// Garden UI for the parent calendar. Data + handlers come from
+// Garden UI for the parent and staff calendars. Data + handlers come from
 // useParentCalendar (c) and feedback from useCalendarFeedback (fb).
 import {
   Display,
@@ -39,7 +39,7 @@ import {
   toYMD,
   ymdOf,
 } from "../calendarUtils";
-import type { ParentCalendar } from "../useParentCalendar";
+import { NOT_SIGNED_IN, type ParentCalendar } from "../useParentCalendar";
 import type { CalendarFeedback } from "./useCalendarFeedback";
 
 export const GUTTER = 18;
@@ -52,8 +52,11 @@ export function CalendarHero({ c }: { c: ParentCalendar }) {
   return (
     <View style={hero.wrap}>
       <View style={hero.row}>
+        {c.backHref ? (
+          <GardenIconButton icon="chevron-back" label="Back" onPress={c.goBack} />
+        ) : null}
         <View style={{ flex: 1 }}>
-          <Display size={30} numberOfLines={1}>
+          <Display size={c.backHref ? 26 : 30} numberOfLines={1}>
             {c.headerLabel}
           </Display>
         </View>
@@ -179,6 +182,11 @@ export function MonthGrid({
   dimPast?: boolean;
 }) {
   const cells = monthCells(year, month);
+  // Explicit week rows: a 100/7% wrap grid rounds past the row width on some
+  // devices and pushes Saturday onto the next line.
+  const weeks = Array.from({ length: cells.length / 7 }, (_, w) =>
+    cells.slice(w * 7, w * 7 + 7).map((day, i) => ({ day, idx: w * 7 + i })),
+  );
   const circle = compact ? 34 : 36;
   return (
     <View>
@@ -193,8 +201,9 @@ export function MonthGrid({
           </Text>
         ))}
       </View>
-      <View style={grid.grid}>
-        {cells.map((day, idx) => {
+      {weeks.map((week) => (
+      <View key={week[0].idx} style={grid.week}>
+        {week.map(({ day, idx }) => {
           const weekend = idx % 7 === 0 || idx % 7 === 6;
           if (day === null) return <View key={`e${idx}`} style={[grid.cell, weekend && grid.weekend]} />;
           const ymd = ymdOf(year, month, day);
@@ -257,6 +266,7 @@ export function MonthGrid({
           );
         })}
       </View>
+      ))}
     </View>
   );
 }
@@ -272,8 +282,8 @@ const grid = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.4,
   },
-  grid: { flexDirection: "row", flexWrap: "wrap" },
-  cell: { width: `${100 / 7}%`, alignItems: "center", paddingVertical: 3 },
+  week: { flexDirection: "row" },
+  cell: { flex: 1, alignItems: "center", paddingVertical: 3 },
   weekend: { backgroundColor: "rgba(243,234,220,0.55)" },
   todayRing: { borderWidth: 2, borderColor: Garden.coral },
   selected: { backgroundColor: Garden.sageDeep },
@@ -383,6 +393,7 @@ export function CalendarBoard({ c, fb }: { c: ParentCalendar; fb: CalendarFeedba
       <View style={{ paddingHorizontal: GUTTER, marginBottom: 22 }}>
         <GardenErrorCard
           title="We couldn't load the calendar"
+          body={c.error === NOT_SIGNED_IN ? "Please sign in again to see events." : undefined}
           onRetry={() => void fb.retryLoad()}
           retrying={fb.retrying}
         />
@@ -522,8 +533,8 @@ export function Agenda({ c, fb }: { c: ParentCalendar; fb: CalendarFeedback }) {
               emoji="📅"
               title="No events scheduled"
               tint="sky"
-              actionLabel="Add your event!"
-              onAction={() => fb.openAdd(c.selectedDate ?? undefined)}
+              actionLabel={c.isStaff ? undefined : "Add your event!"}
+              onAction={c.isStaff ? undefined : () => fb.openAdd(c.selectedDate ?? undefined)}
             />
           </Animated.View>
         ) : (

@@ -1,6 +1,6 @@
-// Garden parent messages inbox: Direct Messages + Community.
+// Garden messages inbox (parents and staff): Direct Messages + Community.
+// Staff extras: "+" on Community opens the New Channel sheet.
 import {
-  CountBadge,
   Display,
   Garden,
   GardenAvatar,
@@ -12,23 +12,21 @@ import {
   GardenIconButton,
   GardenRadii,
   GardenSegmented,
-  GardenSkeleton,
-  PressableScale,
   READ_ONLY_TOAST,
   gardenCard,
   haptic,
   useToast,
 } from "@/components/garden";
 import { BottomTabInset } from "@/constants/theme";
-import type { ChannelWithMeta } from "@/lib/channel-actions";
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ATTACHMENT_PREVIEW, shortTimeAgo, type ConversationRow, type TeacherSuggestion } from "../messagingApi";
+import type { TeacherSuggestion } from "../messagingApi";
 import { useInbox, type Inbox } from "../useInbox";
-
-const GUTTER = 18;
+import { ChannelCard, ConversationCard, INBOX_GUTTER as GUTTER, RowSkeletons } from "./InboxBits";
+import { NewChannelSheet } from "./NewChannelSheet";
 
 export function InboxScreen() {
   const m = useInbox();
@@ -36,6 +34,8 @@ export function InboxScreen() {
   const [retrying, setRetrying] = useState(false);
   const refreshRef = useRef<(() => Promise<void>) | null>(null);
   const startRef = useRef<((t: TeacherSuggestion) => Promise<void>) | null>(null);
+  const createRef = useRef<((name: string, description: string) => Promise<void>) | null>(null);
+  const newChannelRef = useRef<BottomSheetModal>(null);
 
   const refresh = useCallback(async () => {
     const r = m.activeTab === "dm" ? await m.loadDMs("refresh") : await m.loadChannels("refresh");
@@ -70,10 +70,43 @@ export function InboxScreen() {
     [m, toast],
   );
 
+  // Staff: create a channel. The sheet stays open (with what was typed) on failure.
+  const createChannel = useCallback(
+    async (name: string, description: string) => {
+      const label = name.trim();
+      if (!label || m.creatingChannel) return;
+      haptic.press();
+      const id = toast.show({ tone: "loading", title: "Creating channel…" });
+      const r = await m.createChannel(label, description);
+      if (r.ok && r.channelId) {
+        haptic.success();
+        toast.update(id, { tone: "success", title: `#${label} created`, duration: 2400 });
+        newChannelRef.current?.dismiss();
+        m.openCreatedChannel(r.channelId, label);
+      } else {
+        haptic.error();
+        toast.update(id, {
+          tone: "error",
+          title: "Couldn't create the channel",
+          message: "Check your connection and try again.",
+          duration: 5000,
+          action: { label: "Retry", onPress: () => void createRef.current?.(name, description) },
+        });
+      }
+    },
+    [m, toast],
+  );
+
   useEffect(() => {
     refreshRef.current = refresh;
     startRef.current = start;
-  }, [refresh, start]);
+    createRef.current = createChannel;
+  }, [refresh, start, createChannel]);
+
+  const openNewChannel = useCallback(() => {
+    haptic.tap();
+    newChannelRef.current?.present();
+  }, []);
 
   const isDm = m.activeTab === "dm";
 
@@ -88,8 +121,10 @@ export function InboxScreen() {
             icon="create-outline"
             tone="sage"
             label="New Message"
-            onPress={() => m.router.push("/(tabs)/messages/compose")}
+            onPress={() => m.router.push(m.routes.compose)}
           />
+        ) : !isDm && m.isStaff ? (
+          <GardenIconButton icon="add" tone="sage" label="New Channel" onPress={openNewChannel} />
         ) : null}
       </View>
       <View style={{ paddingHorizontal: GUTTER, gap: 12, marginBottom: 14 }}>
@@ -125,7 +160,7 @@ export function InboxScreen() {
           data={m.loading || m.error ? [] : m.filtered}
           keyExtractor={(r) => r.id}
           ListHeaderComponent={header}
-          renderItem={({ item, index }) => <ConversationCard item={item} index={index} m={m} />}
+          renderItem={({ item, index }) => <ConversationCard item={item} index={index} onOpen={m.openConversation} />}
           ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           ListEmptyComponent={
             <DmEmpty
@@ -151,7 +186,7 @@ export function InboxScreen() {
           data={m.channelsLoading || m.channelsError ? [] : m.channels}
           keyExtractor={(c) => c.id}
           ListHeaderComponent={header}
-          renderItem={({ item, index }) => <ChannelCard c={item} index={index} m={m} />}
+          renderItem={({ item, index }) => <ChannelCard c={item} index={index} onOpen={m.openChannel} />}
           ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           ListEmptyComponent={
             m.channelsLoading ? (
@@ -173,8 +208,14 @@ export function InboxScreen() {
                 <GardenEmpty
                   emoji="🌻"
                   title="No channels yet"
-                  body="Channels will appear here once they're created by your school."
+                  body={
+                    m.isStaff
+                      ? "Tap + to create the first channel."
+                      : "Channels will appear here once they're created by your school."
+                  }
                   tint="butter"
+                  actionLabel={m.isStaff ? "New Channel" : undefined}
+                  onAction={m.isStaff ? openNewChannel : undefined}
                 />
               </View>
             )
@@ -186,115 +227,14 @@ export function InboxScreen() {
           }
         />
       )}
+      {m.isStaff ? (
+        <NewChannelSheet ref={newChannelRef} creating={m.creatingChannel} onCreate={(n, d) => void createChannel(n, d)} />
+      ) : null}
     </SafeAreaView>
   );
 }
 
-// ─── Rows ────────────────────────────────────────────────────────────────────
-function ConversationCard({ item, index, m }: { item: ConversationRow; index: number; m: Inbox }) {
-  const unread = item.unreadCount > 0;
-  const preview = item.lastMessagePreview === "" ? ATTACHMENT_PREVIEW : (item.lastMessagePreview ?? "No messages yet");
-  return (
-    <Animated.View entering={index < 8 ? FadeInDown.delay(index * 35).springify().damping(18) : undefined}>
-      <PressableScale
-        pressedScale={0.98}
-        onPress={() => m.openConversation(item)}
-        accessibilityLabel={`${item.otherUserName}${unread ? `, ${item.unreadCount} unread` : ""}. ${preview}`}
-        accessibilityHint="Opens the conversation"
-        style={[st.row, unread && st.rowUnread]}
-      >
-        <GardenAvatar
-          name={item.otherUserName}
-          uri={item.isGroup ? null : item.otherUserProfileImageUrl}
-          seed={item.otherUserId || item.id}
-          icon={item.isGroup ? "people" : undefined}
-          size={50}
-        />
-        <View style={{ flex: 1, gap: 2 }}>
-          <View style={st.rowTop}>
-            <Text style={[st.name, unread && { fontFamily: GardenFonts.bodyHeavy }]} numberOfLines={1}>
-              {item.otherUserName}
-            </Text>
-            <Text style={[st.time, unread && { color: Garden.coralDeep, fontFamily: GardenFonts.bodyHeavy }]}>
-              {shortTimeAgo(item.updatedAt)}
-            </Text>
-          </View>
-          {item.isGroup && item.participantCount > 0 ? (
-            <Text style={st.sub}>{item.participantCount} members</Text>
-          ) : null}
-          <View style={st.rowTop}>
-            <Text style={[st.preview, unread && { color: Garden.ink, fontFamily: GardenFonts.bodyBold }]} numberOfLines={1}>
-              {preview}
-            </Text>
-            <CountBadge count={item.unreadCount} />
-          </View>
-        </View>
-      </PressableScale>
-    </Animated.View>
-  );
-}
-
-function ChannelCard({ c, index, m }: { c: ChannelWithMeta; index: number; m: Inbox }) {
-  const unread = c.isMember && c.unreadCount > 0;
-  const preview = c.lastMessage
-    ? c.lastMessage.body || ATTACHMENT_PREVIEW
-    : c.description
-      ? c.description
-      : `${c.memberCount} ${c.memberCount === 1 ? "member" : "members"}`;
-  return (
-    <Animated.View entering={index < 8 ? FadeInDown.delay(index * 35).springify().damping(18) : undefined}>
-      <PressableScale
-        pressedScale={0.98}
-        onPress={() => m.openChannel(c)}
-        accessibilityLabel={`#${c.name}${unread ? `, ${c.unreadCount} unread` : ""}${!c.isMember ? ", not joined" : ""}. ${preview}`}
-        accessibilityHint="Opens the channel"
-        style={[st.row, unread && st.rowUnread]}
-      >
-        <View style={[st.hash, c.is_default && { backgroundColor: Garden.butter }]}>
-          <Text style={[st.hashText, c.is_default && { color: "#7a5a00" }]}>#</Text>
-        </View>
-        <View style={{ flex: 1, gap: 2 }}>
-          <View style={st.rowTop}>
-            <Text style={[st.name, unread && { fontFamily: GardenFonts.bodyHeavy }]} numberOfLines={1}>
-              {c.name}
-            </Text>
-            {c.lastMessage ? <Text style={st.time}>{shortTimeAgo(c.lastMessage.created_at)}</Text> : null}
-          </View>
-          <View style={st.rowTop}>
-            <Text style={[st.preview, unread && { color: Garden.ink, fontFamily: GardenFonts.bodyBold }]} numberOfLines={1}>
-              {preview}
-            </Text>
-            {!c.isMember ? (
-              <View style={st.joinPill}>
-                <Text style={st.joinText}>Join</Text>
-              </View>
-            ) : (
-              <CountBadge count={c.unreadCount} />
-            )}
-          </View>
-        </View>
-      </PressableScale>
-    </Animated.View>
-  );
-}
-
-// ─── Empty / loading ─────────────────────────────────────────────────────────
-function RowSkeletons() {
-  return (
-    <View style={{ paddingHorizontal: GUTTER, gap: 8 }}>
-      {[0, 1, 2, 3, 4].map((i) => (
-        <View key={i} style={[st.row, { backgroundColor: Garden.white }]}>
-          <GardenSkeleton width={50} height={50} radius={25} />
-          <View style={{ flex: 1, gap: 7 }}>
-            <GardenSkeleton width="55%" height={14} radius={6} />
-            <GardenSkeleton width="80%" height={12} radius={6} />
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-}
-
+// ─── Empty states ────────────────────────────────────────────────────────────
 function DmEmpty({
   m,
   retrying,
@@ -371,7 +311,7 @@ function DmEmpty({
         body="Tap the compose button to start a conversation."
         tint="mint"
         actionLabel={!m.isReadOnlyPreview ? "New Message" : undefined}
-        onAction={!m.isReadOnlyPreview ? () => m.router.push("/(tabs)/messages/compose") : undefined}
+        onAction={!m.isReadOnlyPreview ? () => m.router.push(m.routes.compose) : undefined}
       />
     </View>
   );
@@ -380,33 +320,6 @@ function DmEmpty({
 const st = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Garden.cream },
   hero: { flexDirection: "row", alignItems: "center", gap: 12, minHeight: 58, paddingHorizontal: GUTTER, paddingTop: 10, paddingBottom: 14 },
-  row: {
-    ...gardenCard,
-    borderRadius: 22,
-    marginHorizontal: GUTTER,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    padding: 12,
-    minHeight: 74,
-  },
-  rowUnread: { borderColor: "#f3c9c2", backgroundColor: "#fffaf6" },
-  rowTop: { flexDirection: "row", alignItems: "center", gap: 8 },
-  name: { flex: 1, fontFamily: GardenFonts.bodyBold, fontSize: 16, color: Garden.ink },
-  time: { fontFamily: GardenFonts.bodySemi, fontSize: 12, color: Garden.muted },
-  sub: { fontFamily: GardenFonts.bodySemi, fontSize: 12, color: Garden.muted },
-  preview: { flex: 1, fontFamily: GardenFonts.body, fontSize: 14, color: Garden.soft },
-  hash: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    backgroundColor: Garden.mint,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  hashText: { fontFamily: GardenFonts.display, fontSize: 24, color: "#2f6b44" },
-  joinPill: { backgroundColor: Garden.coralDeep, borderRadius: GardenRadii.pill, paddingHorizontal: 12, paddingVertical: 4 },
-  joinText: { fontFamily: GardenFonts.bodyHeavy, fontSize: 12, color: Garden.white },
   intro: {
     flexDirection: "row",
     alignItems: "center",

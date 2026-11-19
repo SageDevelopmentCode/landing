@@ -1,8 +1,11 @@
+// "Send Reminder" to a family who hasn't set an activity preference.
+// Feedback is a Garden toast that names the student (staff toast host).
+import { useToast } from "@/components/garden";
 import { sendActivityPreferenceReminder } from "@/lib/staff-activity-pref-reminders";
 import { useCallback, useState } from "react";
-import { Alert } from "react-native";
 
 export function useActivityPrefReminders(activityId: string | null) {
+  const toast = useToast();
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [sentIds, setSentIds] = useState<Set<string>>(() => new Set());
 
@@ -12,39 +15,47 @@ export function useActivityPrefReminders(activityId: string | null) {
   }, []);
 
   const sendReminder = useCallback(
-    async (studentId: string) => {
+    async (studentId: string, studentName?: string | null) => {
       if (!activityId || sendingId || sentIds.has(studentId)) return;
+      const who = studentName?.split(" ")[0];
 
       setSendingId(studentId);
       try {
         const result = await sendActivityPreferenceReminder(studentId, activityId);
         if (!result.success) {
-          Alert.alert("Reminder failed", result.error ?? "Failed to send reminder");
+          toast.show({
+            tone: "error",
+            title: "Reminder failed",
+            message: result.error ?? "Failed to send reminder",
+          });
           return;
         }
 
         setSentIds((prev) => new Set(prev).add(studentId));
 
-        if (result.emailSent && !result.pushSent) {
-          Alert.alert(
-            "Reminder sent",
-            "Email sent. Push notification was not sent (parent may not have the app).",
-          );
-        } else if (!result.emailSent && result.pushSent) {
-          Alert.alert(
-            "Reminder sent",
-            "Push notification sent. Email could not be delivered.",
-          );
-        }
-      } catch (err: unknown) {
         const message =
-          err instanceof Error ? err.message : "Failed to send reminder";
-        Alert.alert("Reminder failed", message);
+          result.emailSent && !result.pushSent
+            ? "Email sent. Push notification was not sent (parent may not have the app)."
+            : !result.emailSent && result.pushSent
+              ? "Push notification sent. Email could not be delivered."
+              : undefined;
+        toast.show({
+          tone: "success",
+          title: who ? `Reminder sent to ${who}'s family` : "Reminder sent",
+          message,
+          duration: message ? 5000 : undefined,
+        });
+      } catch (err: unknown) {
+        toast.show({
+          tone: "error",
+          title: "Reminder failed",
+          message: err instanceof Error ? err.message : "Failed to send reminder",
+        });
       } finally {
         setSendingId(null);
       }
     },
-    [activityId, sendingId, sentIds],
+    [activityId, sendingId, sentIds, toast],
   );
 
   return {

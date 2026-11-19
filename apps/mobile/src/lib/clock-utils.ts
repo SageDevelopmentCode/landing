@@ -122,3 +122,29 @@ export function getPastPayPeriods(n: number): { start: string; end: string; labe
   }
   return periods;
 }
+
+// ─── Payroll helpers (additive; existing exports above are unchanged) ────────
+
+/** Raw session length in ms, clamped so a bad clock-out never goes negative. */
+export function sessionDurationMsClamped(clockInAt: string, clockOutAt: string): number {
+  const ms = new Date(clockOutAt).getTime() - new Date(clockInAt).getTime();
+  return Number.isFinite(ms) ? Math.max(0, ms) : 0;
+}
+
+/**
+ * Total hours for a set of sessions: sums the raw (clamped) durations and
+ * rounds once to 2 decimals, matching the web's submitPaystub server action.
+ */
+export function totalSessionHours(sessions: { clock_in_at: string; clock_out_at: string }[]): number {
+  const ms = sessions.reduce((sum, s) => sum + sessionDurationMsClamped(s.clock_in_at, s.clock_out_at), 0);
+  return Math.round((ms / 3_600_000) * 100) / 100;
+}
+
+/** How many calendar days (local time) a session's clock-out lands after its clock-in. */
+export function sessionDaysSpanned(clockInAt: string, clockOutAt: string): number {
+  const a = new Date(clockInAt);
+  const b = new Date(clockOutAt);
+  const da = new Date(a.getFullYear(), a.getMonth(), a.getDate()).getTime();
+  const db = new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
+  return Math.max(0, Math.round((db - da) / 86_400_000));
+}

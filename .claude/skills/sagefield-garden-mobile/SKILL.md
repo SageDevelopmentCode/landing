@@ -1,6 +1,6 @@
 ---
 name: sagefield-garden-mobile
-description: The Sage Field "Garden" design system for the parent mobile app (Expo / React Native in apps/mobile). Use whenever building, redesigning, or restyling any parent-facing screen in apps/mobile (Home, Children, Tuition, Calendar, Messages, Feed, sheets, onboarding), or when asked to "match the new Home", "use the mobile Garden design", or add toasts/haptics/feedback to a parent screen. Covers tokens, fonts, the components/garden kit, screen anatomy, the data-hook pattern, feedback (toasts, haptics, confetti), sheets, accessibility, and gotchas learned building the parent Home.
+description: The Sage Field "Garden" design system for the mobile app (Expo / React Native in apps/mobile), covering both the parent app and the staff / super-admin app. Use whenever building, redesigning, or restyling any parent-facing screen (Home, Children, Tuition, Calendar, Messages, Feed, sheets, onboarding) or any staff screen in app/(staff) (staff Home, attendance, students, admin tools; see staff.md), or when asked to "match the new Home", "use the mobile Garden design", or add toasts/haptics/feedback to a parent screen. Covers tokens, fonts, the components/garden kit, screen anatomy, the data-hook pattern, feedback (toasts, haptics, confetti), sheets, accessibility, and gotchas learned building the parent Home.
 ---
 
 # Sage Field "Garden" for the parent mobile app
@@ -22,6 +22,9 @@ Same brand as the website. Read "The feel" and "Non-negotiables" in the web skil
 5. **Writes go through the screen's data hook**, which returns `{ ok, error?, canceled? }`. The UI reacts to that result with feedback and never calls Supabase directly.
 6. **Respect read-only preview.** When `isReadOnlyPreview` is set (an admin is viewing as a parent), block writes and show the info toast ("Preview mode").
 7. **No eyebrows above headings.** A screen or section starts with its `Display` heading. Don't put a `HandNote`, `Pill` or uppercase label above it (no "fresh from the classroom" over "Family feed"). Handwritten notes go *below* a heading (`GardenSectionHeader` `note`), inside cards and sticky notes, or as inline feedback. The only exception is the parent Home greeting ("Good evening,").
+
+## Staff & admin screens
+Screens in `src/app/(staff)/` use this same system with a denser, faster "work tool" flavour: one primary action per row, toasts that name the student, Undo for reversible actions, and confetti only for real shift milestones. **Read `staff.md` next to this file** before building one. The staff Home (`src/app/(staff)/home.tsx` + `src/features/staff-home/`) is the staff reference build. The toast host is already mounted in `src/app/(staff)/_layout.tsx`.
 
 ## Getting started on a new parent screen
 ```tsx

@@ -1,6 +1,8 @@
-// Parent messages inbox: DMs + community channels, realtime, search.
+// Messages inbox (parents and staff): DMs + community channels, realtime, search.
+// Audience and routes come from MessagingRoutesProvider (default: parent).
 import { useAuth } from "@/contexts/AuthContext";
 import {
+  createChannel as createChannelRow,
   ensureDefaultChannelMembership,
   getChannels,
   type ChannelWithMeta,
@@ -18,13 +20,18 @@ import {
   type Result,
   type TeacherSuggestion,
 } from "./messagingApi";
+import { useMessagingRoutes } from "./messagingRoutes";
 
 export type InboxTab = "dm" | "community";
 type LoadMode = "initial" | "quiet" | "refresh";
 
 export function useInbox() {
   const router = useRouter();
-  const { parentViewUserId, isReadOnlyPreview } = useAuth();
+  const routes = useMessagingRoutes();
+  const isStaff = routes.audience === "staff";
+  const { parentViewUserId, isReadOnlyPreview: parentPreview } = useAuth();
+  // Read-only preview is a parent-side concept (an admin viewing as a parent).
+  const isReadOnlyPreview = !isStaff && parentPreview;
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string }>();
 
   const [activeTab, setActiveTab] = useState<InboxTab>(tabParam === "community" ? "community" : "dm");
@@ -65,7 +72,7 @@ export function useInbox() {
           channelUserIdRef.current = user.id;
           setChannelUserId(user.id);
         }
-        const uid = parentViewUserId ?? user?.id ?? null;
+        const uid = (isStaff ? null : parentViewUserId) ?? user?.id ?? null;
         if (!uid) throw new Error("Not authenticated");
         messagingUserIdRef.current = uid;
         setMessagingUserId(uid);
@@ -73,7 +80,7 @@ export function useInbox() {
         if (!r.ok) throw new Error(r.error);
         setRows(r.rows);
         setError(null);
-        if (!isReadOnlyPreview && r.rows.length === 0) setTeachers(await fetchParentVisibleTeachers());
+        if (!isStaff && !isReadOnlyPreview && r.rows.length === 0) setTeachers(await fetchParentVisibleTeachers());
         else setTeachers([]);
         loadedOnce.current = true;
         return { ok: true };
@@ -86,7 +93,7 @@ export function useInbox() {
         setLoading(false);
       }
     },
-    [parentViewUserId, isReadOnlyPreview],
+    [isStaff, parentViewUserId, isReadOnlyPreview],
   );
 
   const loadChannels = useCallback(async (mode: LoadMode): Promise<Result> => {
@@ -102,7 +109,7 @@ export function useInbox() {
       channelsLoadedOnce.current = true;
       return { ok: true };
     } catch (e) {
-      notifyError("parent-messages-channels", e);
+      notifyError(isStaff ? "staff-messages-channels" : "parent-messages-channels", e);
       const msg = e instanceof Error ? e.message : "Couldn't load channels";
       if (!channelsLoadedOnce.current) setChannelsError(msg);
       return { ok: false, error: msg };
@@ -110,7 +117,7 @@ export function useInbox() {
       if (mode === "refresh") setChannelsRefreshing(false);
       setChannelsLoading(false);
     }
-  }, []);
+  }, [isStaff]);
 
   // Quiet refresh on every focus; skeletons only on the very first load.
   useFocusEffect(
@@ -204,7 +211,7 @@ export function useInbox() {
     (item: ConversationRow) => {
       setRows((prev) => prev.map((r) => (r.id === item.id ? { ...r, unreadCount: 0 } : r)));
       router.push({
-        pathname: "/(tabs)/messages/[id]",
+        pathname: routes.thread,
         params: {
           id: item.id,
           otherUserName: item.otherUserName,
@@ -214,14 +221,14 @@ export function useInbox() {
         },
       });
     },
-    [router],
+    [router, routes.thread],
   );
 
   const openChannel = useCallback(
     (c: ChannelWithMeta) => {
       setChannels((prev) => prev.map((x) => (x.id === c.id ? { ...x, unreadCount: 0 } : x)));
       router.push({
-        pathname: "/(tabs)/messages/channel/[channelId]",
+        pathname: routes.channel,
         params: {
           channelId: c.id,
           channelName: c.name,
@@ -231,7 +238,7 @@ export function useInbox() {
         },
       });
     },
-    [router],
+    [router, routes.channel],
   );
 
   const startConversation = useCallback(
@@ -242,7 +249,7 @@ export function useInbox() {
       setStartingId(null);
       if (!r.ok) return { ok: false, error: r.error };
       router.push({
-        pathname: "/(tabs)/messages/[id]",
+        pathname: routes.thread,
         params: {
           id: r.conversationId,
           otherUserName: teacher.full_name,
@@ -252,11 +259,47 @@ export function useInbox() {
       });
       return { ok: true };
     },
-    [router, startingId],
+    [router, routes.thread, startingId],
+  );
+
+  /** Staff: create a channel (creator joins it), refresh the list, return its id. */
+  const [creatingChannel, setCreatingChannel] = useState(false);
+  const createChannel = useCallback(
+    async (name: string, description: string): Promise<Result & { channelId?: string }> => {
+      const uid = channelUserIdRef.current;
+      const n = name.trim();
+      if (!uid || !n) return { ok: false };
+      setCreatingChannel(true);
+      try {
+        const channelId = await createChannelRow(n, description.trim() || null, uid);
+        if (!channelId) return { ok: false, error: "Couldn't create the channel" };
+        void loadChannels("quiet");
+        return { ok: true, channelId };
+      } catch (e) {
+        notifyError("staff-messages-create-channel", e);
+        return { ok: false, error: e instanceof Error ? e.message : undefined };
+      } finally {
+        setCreatingChannel(false);
+      }
+    },
+    [loadChannels],
+  );
+
+  /** Open a channel the user just created (they're its only member). */
+  const openCreatedChannel = useCallback(
+    (channelId: string, name: string) => {
+      router.push({
+        pathname: routes.channel,
+        params: { channelId, channelName: name.trim(), isMember: "true", isDefault: "false", memberCount: "1" },
+      });
+    },
+    [router, routes.channel],
   );
 
   return {
     router,
+    routes,
+    isStaff,
     isReadOnlyPreview,
     activeTab,
     setActiveTab,
@@ -280,6 +323,9 @@ export function useInbox() {
     openConversation,
     openChannel,
     startConversation,
+    creatingChannel,
+    createChannel,
+    openCreatedChannel,
   };
 }
 

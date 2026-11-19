@@ -1,6 +1,8 @@
-// Parent post detail: loads one post with media, attachments, comments and
-// reactions; handlers return { ok } and the Garden UI reacts with feedback.
+// Post detail for both apps: loads one post with media, attachments, comments
+// and reactions; handlers return { ok } and the Garden UI reacts with feedback.
+// mode "staff" adds the poster's role check + delete.
 import type { PostReactionRow } from "@/components/feed/feedTypes";
+import { canDeleteFeedPost, feedPostDeleteRpcName } from "@/components/feed/feedUtils";
 import { notifyError } from "@/lib/discord";
 import { supabase } from "@/lib/supabase";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -86,13 +88,15 @@ function flatten(
   return out;
 }
 
-export function useFeedPost(postId: string | undefined) {
+export function useFeedPost(postId: string | undefined, mode: "parent" | "staff" = "parent") {
+  const errorTag = mode === "staff" ? "staff-feed-post" : "parent-feed-post";
   const [post, setPost] = useState<PostDetail | null>(null);
   const [rawReactions, setRawReactions] = useState<PostReactionRow[]>([]);
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [myName, setMyName] = useState("You");
   const [myProfileImageUrl, setMyProfileImageUrl] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
@@ -153,7 +157,7 @@ export function useFeedPost(postId: string | undefined) {
         if (seq !== loadSeq.current) return { ok: true };
 
         if (postRes.error || !postRes.data) {
-          if (postRes.error) notifyError("parent-feed-post", postRes.error);
+          if (postRes.error) notifyError(errorTag, postRes.error);
           setError(postRes.error ? "We couldn't load this post." : "Post not found.");
           setLoading(false);
           return { ok: false };
@@ -189,6 +193,7 @@ export function useFeedPost(postId: string | undefined) {
           imgById[u.id] = u.profile_image_url ?? null;
         }
         if (nameById[user.id]) setMyName(nameById[user.id]);
+        setCurrentUserRole(roleById[user.id] ?? null);
         setMyProfileImageUrl(imgById[user.id] ?? null);
         setUserNameById(nameById);
         setUserProfileImageById(imgById);
@@ -256,13 +261,13 @@ export function useFeedPost(postId: string | undefined) {
         return { ok: true };
       } catch (e) {
         if (seq !== loadSeq.current) return { ok: true };
-        notifyError("parent-feed-post", e);
+        notifyError(errorTag, e);
         setError(e instanceof Error && e.message === "Not authenticated." ? e.message : "We couldn't load this post.");
         setLoading(false);
         return { ok: false };
       }
     },
-    [postId],
+    [postId, errorTag],
   );
 
   useEffect(() => {
@@ -383,6 +388,30 @@ export function useFeedPost(postId: string | undefined) {
     [currentUserId],
   );
 
+  // ── Staff: delete the post ─────────────────────────────────────────────────
+  const canDelete =
+    mode === "staff" && !!post && canDeleteFeedPost(post, currentUserId, currentUserRole);
+  const deletingRef = useRef(false);
+  const deletePost = useCallback(async (): Promise<Result> => {
+    if (!post || !canDelete || deletingRef.current) return { ok: false };
+    deletingRef.current = true;
+    try {
+      const { error: err } = await supabase
+        .schema("feed")
+        .rpc(feedPostDeleteRpcName(currentUserRole), { p_post_id: post.id });
+      if (err) {
+        notifyError("staff-feed-delete-post", err);
+        return { ok: false, error: err.message };
+      }
+      return { ok: true };
+    } catch (e) {
+      notifyError("staff-feed-delete-post", e);
+      return { ok: false, error: e instanceof Error ? e.message : "Delete failed." };
+    } finally {
+      deletingRef.current = false;
+    }
+  }, [post, canDelete, currentUserRole]);
+
   const toggleReplies = useCallback((parentId: string) => {
     setExpandedReplies((prev) => {
       const next = new Set(prev);
@@ -413,6 +442,10 @@ export function useFeedPost(postId: string | undefined) {
     reload: () => load(true),
     retry: () => load(false),
     currentUserId,
+    currentUserRole,
+    canDelete,
+    deletePost,
+    mode,
     myName,
     myProfileImageUrl,
     commentText,

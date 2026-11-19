@@ -33,13 +33,26 @@ export function useTileSize() {
 }
 
 // ─── Hero + active filters ───────────────────────────────────────────────────
-export function PhotosHero({ g, onOpenFilter }: { g: PhotosGallery; onOpenFilter: () => void }) {
+export function PhotosHero({
+  g,
+  onOpenFilter,
+  extraRight,
+  fallbackHref,
+}: {
+  g: PhotosGallery;
+  onOpenFilter: () => void;
+  /** Extra buttons after the filter (staff: Upload). */
+  extraRight?: React.ReactNode;
+  fallbackHref?: string;
+}) {
   const n = g.selectedDates.size;
   return (
     <GardenScreenHero
       title="Photos"
+      fallbackHref={fallbackHref}
       right={
-        <View>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <View>
           <GardenIconButton
             icon={n > 0 ? "calendar" : "calendar-outline"}
             tone={n > 0 ? "sage" : "white"}
@@ -52,6 +65,8 @@ export function PhotosHero({ g, onOpenFilter }: { g: PhotosGallery; onOpenFilter
               <CountBadge count={n} />
             </View>
           ) : null}
+          </View>
+          {extraRight ?? null}
         </View>
       }
     />
@@ -123,19 +138,27 @@ function PhotoTile({
   size,
   label,
   onPress,
+  onLongPress,
 }: {
   photo: TeacherPhoto;
   url?: string;
   size: number;
   label: string;
   onPress: () => void;
+  onLongPress?: () => void;
 }) {
   return (
     <PressableScale
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={350}
       pressedScale={0.94}
       accessibilityLabel={label}
-      accessibilityHint="Opens the photo"
+      accessibilityHint={onLongPress ? "Opens the photo. Long press for options" : "Opens the photo"}
+      accessibilityActions={onLongPress ? [{ name: "longpress", label: "Photo options" }] : undefined}
+      onAccessibilityAction={(e) => {
+        if (e.nativeEvent.actionName === "longpress") onLongPress?.();
+      }}
       style={[st.tile, { width: size, height: size }]}
     >
       {url ? (
@@ -159,11 +182,13 @@ export function TileRow({
   sectionTitle,
   g,
   size,
+  onLongPress,
 }: {
   row: TeacherPhoto[];
   sectionTitle: string;
   g: PhotosGallery;
   size: number;
+  onLongPress?: (photo: TeacherPhoto) => void;
 }) {
   return (
     <View style={st.tileRow}>
@@ -175,6 +200,7 @@ export function TileRow({
           size={size}
           label={photo.caption ? `Photo: ${photo.caption}` : `Photo from ${sectionTitle}`}
           onPress={() => g.openPhoto(photo)}
+          onLongPress={onLongPress ? () => onLongPress(photo) : undefined}
         />
       ))}
       {row.length < 3
@@ -221,7 +247,17 @@ export function PhotosError({ fb }: { fb: RefreshFeedback }) {
   );
 }
 
-export function PhotosEmpty({ g }: { g: PhotosGallery }) {
+export function PhotosEmpty({
+  g,
+  emptyBody = "Check back soon for school photos.",
+  emptyActionLabel,
+  onEmptyAction,
+}: {
+  g: PhotosGallery;
+  emptyBody?: string;
+  emptyActionLabel?: string;
+  onEmptyAction?: () => void;
+}) {
   const filtered = g.selectedDates.size > 0;
   return (
     <View style={{ paddingHorizontal: GUTTER, paddingTop: 12 }}>
@@ -229,9 +265,9 @@ export function PhotosEmpty({ g }: { g: PhotosGallery }) {
         emoji={filtered ? "🗓️" : "📸"}
         tint={filtered ? "sky" : "peach"}
         title={filtered ? "No photos for selected dates" : "No photos yet"}
-        body={filtered ? "Try selecting different dates." : "Check back soon for school photos."}
-        actionLabel={filtered ? "Clear" : undefined}
-        onAction={filtered ? g.clearDates : undefined}
+        body={filtered ? "Try selecting different dates." : emptyBody}
+        actionLabel={filtered ? "Clear" : emptyActionLabel}
+        onAction={filtered ? g.clearDates : onEmptyAction}
       />
     </View>
   );

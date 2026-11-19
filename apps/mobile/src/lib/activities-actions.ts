@@ -64,19 +64,38 @@ export type Activity = {
   change_log: ActivityChangeLogEntry[];
 };
 
+/**
+ * An image in a form: a local file to upload, or one already in storage
+ * (`storagePath` set) that is simply re-linked — never re-uploaded.
+ */
+export type ImageRef = { uri: string; storagePath?: string | null };
+
 export type IngredientPayload = {
   name: string;
   sort_order: number;
-  imageUri?: string | null;
+  image?: ImageRef | null;
 };
 
 export type FoodPayload = {
   name: string;
   sort_order: number;
   allergens?: string | null;
-  imageUris: string[];
+  images: ImageRef[];
   ingredients: IngredientPayload[];
 };
+
+/**
+ * Thrown when a new activity's row exists but a later step failed. The form
+ * keeps `activityId` so Save retries as an update instead of a duplicate.
+ */
+export class ActivityPartialSaveError extends Error {
+  activityId: string;
+  constructor(message: string, activityId: string) {
+    super(message);
+    this.name = "ActivityPartialSaveError";
+    this.activityId = activityId;
+  }
+}
 
 export type ActivityUpsertPayload = {
   title: string;
@@ -101,7 +120,7 @@ async function getSignedUrls(paths: string[]): Promise<Record<string, string>> {
     .createSignedUrls(paths, 3600);
   const map: Record<string, string> = {};
   (data ?? []).forEach((item) => {
-    if (item.signedUrl) map[item.path] = item.signedUrl;
+    if (item.signedUrl && item.path) map[item.path] = item.signedUrl;
   });
   return map;
 }
@@ -117,12 +136,13 @@ async function uploadActivityImage(uri: string, storagePath: string): Promise<vo
   const {
     data: { session },
   } = await supabase.auth.getSession();
+  if (!session) throw new Error("You're signed out. Sign in and try again.");
   const uploadRes = await fetch(
     `${process.env.EXPO_PUBLIC_SUPABASE_URL}/storage/v1/object/activity-images/${storagePath}`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.access_token}`,
+        Authorization: `Bearer ${session.access_token}`,
         "Content-Type": "image/jpeg",
         "x-upsert": "true",
       },
@@ -269,10 +289,149 @@ export async function getActivities(): Promise<Activity[]> {
   return assembleActivities(rows, urlMap, profileMap);
 }
 
+export async function getActivity(activityId: string): Promise<Activity | null> {
+  const { data, error } = await supabase
+    .schema("teachers")
+    .from("activities")
+    .select(NESTED_SELECT)
+    .eq("id", activityId)
+    .eq("is_deleted", false)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const paths = collectAllPaths([data]);
+  const [urlMap, profileMap] = await Promise.all([getSignedUrls(paths), getProfileMap([data])]);
+  return assembleActivities([data], urlMap, profileMap)[0];
+}
+
+// ---------------------------------------------------------------------------
+// Writes
+// ---------------------------------------------------------------------------
+
+type ImgKind = "activity" | "food" | "ingredient";
+
+function newPath(userId: string, activityId: string, kind: ImgKind) {
+  return `${userId}/${activityId}/${kind}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+}
+
+type ResolvedFood = {
+  name: string;
+  sort_order: number;
+  allergens: string | null;
+  imagePaths: string[];
+  ingredients: { name: string; sort_order: number; imagePath: string | null }[];
+};
+
+/**
+ * Upload every new (local) image first and resolve every image to a storage
+ * path, before any row is written. If an upload fails, the ones that already
+ * went up are removed and nothing in the database has changed.
+ */
+async function resolveImages(
+  payload: ActivityUpsertPayload,
+  userId: string,
+  activityId: string,
+): Promise<{ activityPaths: string[]; foods: ResolvedFood[]; uploaded: string[] }> {
+  const uploaded: string[] = [];
+  const up = async (ref: ImageRef, kind: ImgKind) => {
+    if (ref.storagePath) return ref.storagePath;
+    const sp = newPath(userId, activityId, kind);
+    await uploadActivityImage(ref.uri, sp);
+    uploaded.push(sp);
+    return sp;
+  };
+  try {
+    const activityPaths = [...payload.existingImagePaths];
+    for (const uri of payload.newImageUris) activityPaths.push(await up({ uri }, "activity"));
+    const foods: ResolvedFood[] = [];
+    for (const f of payload.foods) {
+      const imagePaths: string[] = [];
+      for (const ref of f.images) imagePaths.push(await up(ref, "food"));
+      const ingredients = [];
+      for (const ing of f.ingredients) {
+        ingredients.push({
+          name: ing.name,
+          sort_order: ing.sort_order,
+          imagePath: ing.image ? await up(ing.image, "ingredient") : null,
+        });
+      }
+      foods.push({ name: f.name, sort_order: f.sort_order, allergens: f.allergens ?? null, imagePaths, ingredients });
+    }
+    return { activityPaths, foods, uploaded };
+  } catch (e) {
+    if (uploaded.length) void supabase.storage.from("activity-images").remove(uploaded);
+    throw e;
+  }
+}
+
+/** Insert a whole food tree. On any failure the foods it added are removed. */
+async function insertFoods(activityId: string, foods: ResolvedFood[], userId: string): Promise<void> {
+  const added: string[] = [];
+  try {
+    for (const food of foods) {
+      const { data: foodRow, error: foodErr } = await supabase
+        .schema("teachers")
+        .from("activity_foods")
+        .insert({ activity_id: activityId, name: food.name, sort_order: food.sort_order, allergens: food.allergens })
+        .select("id")
+        .single();
+      if (foodErr) throw foodErr;
+      const foodId = foodRow.id as string;
+      added.push(foodId);
+
+      if (food.imagePaths.length) {
+        const { error } = await supabase
+          .schema("teachers")
+          .from("activity_food_images")
+          .insert(food.imagePaths.map((sp) => ({ food_id: foodId, storage_path: sp, uploaded_by: userId })));
+        if (error) throw error;
+      }
+      for (const ing of food.ingredients) {
+        const { data: ingRow, error: ingErr } = await supabase
+          .schema("teachers")
+          .from("activity_ingredients")
+          .insert({ food_id: foodId, name: ing.name, sort_order: ing.sort_order })
+          .select("id")
+          .single();
+        if (ingErr) throw ingErr;
+        if (ing.imagePath) {
+          const { error } = await supabase
+            .schema("teachers")
+            .from("activity_ingredient_images")
+            .insert({ ingredient_id: ingRow.id, storage_path: ing.imagePath, uploaded_by: userId });
+          if (error) throw error;
+        }
+      }
+    }
+  } catch (e) {
+    if (added.length) await supabase.schema("teachers").from("activity_foods").delete().in("id", added);
+    throw e;
+  }
+}
+
+async function refetchActivity(activityId: string): Promise<Activity> {
+  const a = await getActivity(activityId);
+  if (!a) throw new Error("Saved, but couldn't reload the activity.");
+  return a;
+}
+
+function allPathsOf(a: { images: { storage_path: string }[]; foods: ActivityFood[] }): string[] {
+  return [
+    ...a.images.map((i) => i.storage_path),
+    ...a.foods.flatMap((f) => [
+      ...f.images.map((i) => i.storage_path),
+      ...f.ingredients.flatMap((ing) => ing.images.map((i) => i.storage_path)),
+    ]),
+  ];
+}
+
 export async function createActivity(
   payload: ActivityUpsertPayload,
   userId: string
 ): Promise<Activity> {
+  // Created as a private draft and switched to the chosen status at the very
+  // end, so the "new activity" push to parents fires only once the photos and
+  // foods are in place (the trigger fires on draft → published).
   const { data: actRow, error: actErr } = await supabase
     .schema("teachers")
     .from("activities")
@@ -281,89 +440,48 @@ export async function createActivity(
       description: payload.description,
       includes_food: payload.includes_food,
       activity_date: payload.activity_date?.trim() || null,
-      status: payload.status,
-      visibility: payload.visibility,
+      status: "draft",
+      visibility: "private",
       created_by: userId,
     })
     .select("id")
     .single();
 
   if (actErr) throw actErr;
-  const activityId = actRow.id;
+  const activityId = actRow.id as string;
 
-  // Upload + insert activity images
-  for (const uri of payload.newImageUris) {
-    const storagePath = `${userId}/${activityId}/activity/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-    await uploadActivityImage(uri, storagePath);
+  try {
+    const resolved = await resolveImages(payload, userId, activityId);
+    if (resolved.activityPaths.length) {
+      const { error } = await supabase
+        .schema("teachers")
+        .from("activity_images")
+        .insert(resolved.activityPaths.map((sp) => ({ activity_id: activityId, storage_path: sp, uploaded_by: userId })));
+      if (error) throw error;
+    }
+    await insertFoods(activityId, resolved.foods, userId);
+
     await supabase
       .schema("teachers")
-      .from("activity_images")
-      .insert({ activity_id: activityId, storage_path: storagePath, uploaded_by: userId });
+      .from("activity_change_log")
+      .insert({ activity_id: activityId, teacher_id: userId, summary: ["Created activity"] });
+
+    if (payload.status !== "draft" || payload.visibility !== "private") {
+      const { error } = await supabase
+        .schema("teachers")
+        .from("activities")
+        .update({ status: payload.status, visibility: payload.visibility })
+        .eq("id", activityId);
+      if (error) throw error;
+    }
+  } catch (e) {
+    throw new ActivityPartialSaveError(
+      e instanceof Error ? e.message : "Some parts of the activity didn't save.",
+      activityId,
+    );
   }
 
-  // Insert foods
-  for (const food of payload.foods) {
-    const { data: foodRow, error: foodErr } = await supabase
-      .schema("teachers")
-      .from("activity_foods")
-      .insert({
-        activity_id: activityId,
-        name: food.name,
-        sort_order: food.sort_order,
-        allergens: food.allergens ?? null,
-      })
-      .select("id")
-      .single();
-    if (foodErr) throw foodErr;
-    const foodId = foodRow.id;
-
-    for (const uri of food.imageUris) {
-      const sp = `${userId}/${activityId}/food/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-      await uploadActivityImage(uri, sp);
-      await supabase
-        .schema("teachers")
-        .from("activity_food_images")
-        .insert({ food_id: foodId, storage_path: sp, uploaded_by: userId });
-    }
-
-    for (const ing of food.ingredients) {
-      const { data: ingRow, error: ingErr } = await supabase
-        .schema("teachers")
-        .from("activity_ingredients")
-        .insert({ food_id: foodId, name: ing.name, sort_order: ing.sort_order })
-        .select("id")
-        .single();
-      if (ingErr) throw ingErr;
-
-      if (ing.imageUri) {
-        const sp = `${userId}/${activityId}/ingredient/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-        await uploadActivityImage(ing.imageUri, sp);
-        await supabase
-          .schema("teachers")
-          .from("activity_ingredient_images")
-          .insert({ ingredient_id: ingRow.id, storage_path: sp, uploaded_by: userId });
-      }
-    }
-  }
-
-  // Change log
-  await supabase
-    .schema("teachers")
-    .from("activity_change_log")
-    .insert({ activity_id: activityId, teacher_id: userId, summary: ["Created activity"] });
-
-  // Re-fetch
-  const { data: refetch, error: refetchErr } = await supabase
-    .schema("teachers")
-    .from("activities")
-    .select(NESTED_SELECT)
-    .eq("id", activityId)
-    .single();
-  if (refetchErr) throw refetchErr;
-
-  const paths = collectAllPaths([refetch]);
-  const [urlMap, profileMap] = await Promise.all([getSignedUrls(paths), getProfileMap([refetch])]);
-  return assembleActivities([refetch], urlMap, profileMap)[0];
+  return refetchActivity(activityId);
 }
 
 export async function updateActivity(
@@ -372,93 +490,60 @@ export async function updateActivity(
   original: Activity,
   userId: string
 ): Promise<Activity> {
-  await supabase
-    .schema("teachers")
-    .from("activities")
-    .update({
-      title: payload.title,
-      description: payload.description,
-      includes_food: payload.includes_food,
-      activity_date: payload.activity_date?.trim() || null,
-      status: payload.status,
-      visibility: payload.visibility,
-    })
-    .eq("id", activityId);
-
-  // Replace activity images: delete all, re-insert kept + new
-  await supabase
-    .schema("teachers")
-    .from("activity_images")
-    .delete()
-    .eq("activity_id", activityId);
-
-  for (const sp of payload.existingImagePaths) {
-    await supabase
+  // 1. Every new file goes up first; nothing in the database changes if one fails.
+  const resolved = await resolveImages(payload, userId, activityId);
+  try {
+    // 2. The activity row. RLS only lets the creator update, and a blocked
+    //    update returns no error — so check a row actually changed.
+    const { count, error: updErr } = await supabase
       .schema("teachers")
-      .from("activity_images")
-      .insert({ activity_id: activityId, storage_path: sp, uploaded_by: userId });
-  }
-  for (const uri of payload.newImageUris) {
-    const sp = `${userId}/${activityId}/activity/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-    await uploadActivityImage(uri, sp);
-    await supabase
-      .schema("teachers")
-      .from("activity_images")
-      .insert({ activity_id: activityId, storage_path: sp, uploaded_by: userId });
-  }
+      .from("activities")
+      .update(
+        {
+          title: payload.title,
+          description: payload.description,
+          includes_food: payload.includes_food,
+          activity_date: payload.activity_date?.trim() || null,
+          status: payload.status,
+          visibility: payload.visibility,
+        },
+        { count: "exact" },
+      )
+      .eq("id", activityId);
+    if (updErr) throw updErr;
+    if (count === 0) throw new Error("You can only edit activities you created.");
 
-  // Replace foods (delete all, cascades children, re-insert)
-  await supabase
-    .schema("teachers")
-    .from("activity_foods")
-    .delete()
-    .eq("activity_id", activityId);
-
-  for (const food of payload.foods) {
-    const { data: foodRow, error: foodErr } = await supabase
-      .schema("teachers")
-      .from("activity_foods")
-      .insert({
-        activity_id: activityId,
-        name: food.name,
-        sort_order: food.sort_order,
-        allergens: food.allergens ?? null,
-      })
-      .select("id")
-      .single();
-    if (foodErr) throw foodErr;
-    const foodId = foodRow.id;
-
-    for (const uri of food.imageUris) {
-      const sp = `${userId}/${activityId}/food/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-      await uploadActivityImage(uri, sp);
-      await supabase
+    // 3. Activity photos: drop the removed rows, add the new ones.
+    const keep = new Set(resolved.activityPaths);
+    const dropIds = original.images.filter((img) => !keep.has(img.storage_path)).map((img) => img.id);
+    const have = new Set(original.images.map((img) => img.storage_path));
+    const addPaths = resolved.activityPaths.filter((sp) => !have.has(sp));
+    if (addPaths.length) {
+      const { error } = await supabase
         .schema("teachers")
-        .from("activity_food_images")
-        .insert({ food_id: foodId, storage_path: sp, uploaded_by: userId });
+        .from("activity_images")
+        .insert(addPaths.map((sp) => ({ activity_id: activityId, storage_path: sp, uploaded_by: userId })));
+      if (error) throw error;
+    }
+    if (dropIds.length) {
+      const { error } = await supabase.schema("teachers").from("activity_images").delete().in("id", dropIds);
+      if (error) throw error;
     }
 
-    for (const ing of food.ingredients) {
-      const { data: ingRow, error: ingErr } = await supabase
-        .schema("teachers")
-        .from("activity_ingredients")
-        .insert({ food_id: foodId, name: ing.name, sort_order: ing.sort_order })
-        .select("id")
-        .single();
-      if (ingErr) throw ingErr;
-
-      if (ing.imageUri) {
-        const sp = `${userId}/${activityId}/ingredient/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
-        await uploadActivityImage(ing.imageUri, sp);
-        await supabase
-          .schema("teachers")
-          .from("activity_ingredient_images")
-          .insert({ ingredient_id: ingRow.id, storage_path: sp, uploaded_by: userId });
-      }
+    // 4. Foods: write the new tree first, then remove the old one, so a
+    //    failure never leaves the activity with its foods wiped.
+    await insertFoods(activityId, resolved.foods, userId);
+    const oldFoodIds = original.foods.map((f) => f.id);
+    if (oldFoodIds.length) {
+      const { error } = await supabase.schema("teachers").from("activity_foods").delete().in("id", oldFoodIds);
+      if (error) throw error;
     }
+  } catch (e) {
+    if (resolved.uploaded.length) void supabase.storage.from("activity-images").remove(resolved.uploaded);
+    throw e;
   }
 
-  // Build change summary
+  // 5. Change log (best effort — the save itself already succeeded).
   const summary: string[] = [];
   if (payload.title !== original.title) summary.push(`Updated title to "${payload.title}"`);
   if (payload.description !== original.description) summary.push("Updated description");
@@ -468,32 +553,36 @@ export async function updateActivity(
   if (payload.visibility !== original.visibility) summary.push(`Visibility changed to ${payload.visibility}`);
   if (payload.includes_food !== original.includes_food)
     summary.push(payload.includes_food ? "Added food section" : "Removed food section");
+  const addedPhotos = payload.newImageUris.length;
+  const removedPhotos = original.images.length - payload.existingImagePaths.length;
+  if (addedPhotos > 0) summary.push(`Added ${addedPhotos} photo${addedPhotos === 1 ? "" : "s"}`);
+  if (removedPhotos > 0) summary.push(`Removed ${removedPhotos} photo${removedPhotos === 1 ? "" : "s"}`);
+  const foodSig = (fs: { name: string }[]) => fs.map((f) => f.name.trim()).join("|");
+  if (payload.includes_food && payload.includes_food === original.includes_food && foodSig(payload.foods) !== foodSig(original.foods))
+    summary.push("Updated foods");
   if (summary.length === 0) summary.push("Updated activity");
-
   await supabase
     .schema("teachers")
     .from("activity_change_log")
     .insert({ activity_id: activityId, teacher_id: userId, summary });
 
-  // Re-fetch
-  const { data: refetch, error: refetchErr } = await supabase
-    .schema("teachers")
-    .from("activities")
-    .select(NESTED_SELECT)
-    .eq("id", activityId)
-    .single();
-  if (refetchErr) throw refetchErr;
+  // 6. Files nobody points at any more.
+  const nowUsed = new Set([...resolved.activityPaths, ...resolved.foods.flatMap((f) => [...f.imagePaths, ...f.ingredients.map((i) => i.imagePath ?? "")])]);
+  const orphaned = allPathsOf(original).filter((sp) => !nowUsed.has(sp));
+  if (orphaned.length) void supabase.storage.from("activity-images").remove(orphaned);
 
-  const paths = collectAllPaths([refetch]);
-  const [urlMap, profileMap] = await Promise.all([getSignedUrls(paths), getProfileMap([refetch])]);
-  return assembleActivities([refetch], urlMap, profileMap)[0];
+  return refetchActivity(activityId);
 }
 
 export async function deleteActivity(activityId: string): Promise<void> {
-  const { error } = await supabase
+  // RLS lets only the creator update; a blocked update affects 0 rows with no
+  // error, so count the rows instead of assuming it worked. (No RETURNING: the
+  // read policy hides deleted rows.)
+  const { count, error } = await supabase
     .schema("teachers")
     .from("activities")
-    .update({ is_deleted: true })
+    .update({ is_deleted: true }, { count: "exact" })
     .eq("id", activityId);
   if (error) throw error;
+  if (count === 0) throw new Error("You can only delete activities you created.");
 }

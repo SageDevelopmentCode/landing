@@ -23,9 +23,10 @@ type FetchResult =
  */
 export function useFeedPosts(
   filterTeacherId: string | null,
-  options?: { pageSize?: number },
+  options?: { pageSize?: number; errorTag?: string },
 ) {
   const PAGE_SIZE = options?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const ERROR_TAG = options?.errorTag ?? "parent-feed-fetch";
   const [posts, setPosts] = useState<PostWithMeta[]>([]);
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +97,7 @@ export function useFeedPosts(
 
         const { data: postRows, error: postsErr } = await postsQuery;
         if (postsErr || !postRows) {
-          if (postsErr) notifyError("parent-feed-fetch", postsErr);
+          if (postsErr) notifyError(ERROR_TAG, postsErr);
           return { ok: false, error: postsErr?.message ?? "Failed to load feed." };
         }
         if (postRows.length === 0) return { ok: true, rows: [], rawCount: 0 };
@@ -196,11 +197,11 @@ export function useFeedPosts(
         }));
         return { ok: true, rows, rawCount: postRows.length };
       } catch (e) {
-        notifyError("parent-feed-fetch", e);
+        notifyError(ERROR_TAG, e);
         return { ok: false, error: e instanceof Error ? e.message : "Failed to load feed." };
       }
     },
-    [filterTeacherId],
+    [filterTeacherId, ERROR_TAG],
   );
 
   const setMore = (v: boolean) => {

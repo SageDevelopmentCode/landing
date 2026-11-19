@@ -1,4 +1,5 @@
-// Garden UI for the parent feed list.
+// Garden UI for the feed list — parent "Family feed" and staff "Class feed"
+// (f.isStaff adds back, compose and delete).
 import type { PostReactionRow, PostWithMeta } from "@/components/feed/feedTypes";
 import {
   formatAuthorSubtitle,
@@ -31,7 +32,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import { PARENT_FEED_COPY, type ParentFeed } from "../useParentFeed";
+import type { FeedList as ParentFeed } from "../useParentFeed";
 import { AttachmentRow, MediaMosaic, PostTypePill, ReactionBar } from "./FeedBits";
 import type { FeedFeedback } from "./useFeedFeedback";
 
@@ -41,16 +42,17 @@ const CARD_PAD = 16;
 // ─────────────────────────────────────────────────────────────────────────────
 // Hero + active filter chip
 // ─────────────────────────────────────────────────────────────────────────────
-export function FeedHero({ f }: { f: ParentFeed }) {
+export function FeedHero({ f, onBack }: { f: ParentFeed; onBack?: () => void }) {
   return (
     <View style={hero.wrap}>
       <View style={hero.row}>
+        {onBack ? <GardenIconButton icon="chevron-back" label="Back" onPress={onBack} /> : null}
         <View style={{ flex: 1 }}>
-          <Display size={34} numberOfLines={1}>
-            {PARENT_FEED_COPY.title}
+          <Display size={onBack ? 30 : 34} numberOfLines={1}>
+            {f.copy.title}
           </Display>
           <Text style={hero.sub} maxFontSizeMultiplier={1.35}>
-            {PARENT_FEED_COPY.subtitle}
+            {f.copy.subtitle}
           </Text>
         </View>
         <GardenIconButton
@@ -113,9 +115,12 @@ function PostCardImpl({ post, f, fb, index }: CardProps) {
   const innerW = width - GUTTER * 2 - CARD_PAD * 2;
   const subtitle = formatAuthorSubtitle(post.classroom, post.authorRole);
   const isTeacher = post.authorRole === "teacher" || post.authorRole === "super_admin";
-  const ctaRoute = post.cta_route && post.cta_label ? resolveFeedCtaRoute(post.cta_route, false) : null;
+  const ctaRoute = post.cta_route && post.cta_label ? resolveFeedCtaRoute(post.cta_route, f.isStaff) : null;
   const isNewsletter = post.post_type === "newsletter" || post.source_type === "newsletter";
-  const newsletterUrl = isNewsletter && post.cta_route ? newsletterPublicUrlFromCtaRoute(post.cta_route) : null;
+  // Parents open the public newsletter page; staff go to the in-app editor.
+  const newsletterUrl =
+    !f.isStaff && isNewsletter && post.cta_route ? newsletterPublicUrlFromCtaRoute(post.cta_route) : null;
+  const deletable = f.canDelete(post);
 
   return (
     <Animated.View entering={index < 4 ? FadeInDown.delay(index * 60).springify().damping(18) : undefined}>
@@ -148,6 +153,15 @@ function PostCardImpl({ post, f, fb, index }: CardProps) {
               </Text>
             </View>
           </PressableScale>
+          {deletable ? (
+            <GardenIconButton
+              icon="ellipsis-horizontal"
+              tone="ghost"
+              size={40}
+              label={`Post options for ${post.authorName}'s post`}
+              onPress={() => fb.openPostMenu(post)}
+            />
+          ) : null}
         </View>
 
         {/* Body */}
@@ -303,11 +317,13 @@ export function FeedEmptyOrError({ f, fb }: { f: ParentFeed; fb: FeedFeedback })
     <Animated.View entering={FadeIn.duration(220)} style={{ paddingHorizontal: GUTTER }}>
       <GardenEmpty
         emoji="🌱"
-        title={PARENT_FEED_COPY.emptyHeading}
-        body={PARENT_FEED_COPY.emptyBody}
+        title={f.copy.emptyHeading}
+        body={f.copy.emptyBody}
         tint="mint"
-        actionLabel={f.filterTeacherId ? "All Teachers" : undefined}
-        onAction={f.filterTeacherId ? () => f.selectTeacher(null) : undefined}
+        actionLabel={f.filterTeacherId ? "All Teachers" : f.isStaff ? "Write a post" : undefined}
+        onAction={
+          f.filterTeacherId ? () => f.selectTeacher(null) : f.isStaff ? f.openCompose : undefined
+        }
       />
     </Animated.View>
   );
@@ -515,4 +531,47 @@ const sh = StyleSheet.create({
   },
   tabOn: { backgroundColor: Garden.sageDeep, borderColor: Garden.sageDeep },
   tabCount: { fontFamily: GardenFonts.bodyHeavy, fontSize: 13, color: Garden.soft },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Staff: compose FAB
+// ─────────────────────────────────────────────────────────────────────────────
+export function ComposeFab({ f, bottom }: { f: ParentFeed; bottom: number }) {
+  return (
+    <Animated.View entering={FadeIn.duration(220)} style={[fab.wrap, { bottom }]} pointerEvents="box-none">
+      <PressableScale
+        haptics="press"
+        onPress={f.openCompose}
+        accessibilityLabel="Write a post"
+        accessibilityHint="Opens the post composer"
+        style={fab.btn}
+      >
+        <Ionicons name="create-outline" size={20} color={Garden.white} />
+        <Text style={fab.text} maxFontSizeMultiplier={1.2}>
+          New post
+        </Text>
+      </PressableScale>
+    </Animated.View>
+  );
+}
+
+const fab = StyleSheet.create({
+  wrap: { position: "absolute", right: GUTTER },
+  btn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minHeight: 54,
+    paddingHorizontal: 20,
+    borderRadius: GardenRadii.pill,
+    backgroundColor: Garden.coralDeep,
+    borderBottomWidth: 4,
+    borderBottomColor: "#c0594d",
+    shadowColor: "#2b2a26",
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 5,
+  },
+  text: { fontFamily: GardenFonts.bodyHeavy, fontSize: 15.5, color: Garden.white },
 });

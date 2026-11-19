@@ -1,8 +1,20 @@
-import { FlatList, Pressable, StyleSheet, Text, TextInput, View, ActivityIndicator } from "react-native";
-import { Image } from "expo-image";
+// Garden student tagger for staff photos: search, a 44pt avatar row per
+// student, a consent pill (Limited / No Consent — always with text, never
+// colour alone) and a checkbox. Same props as before.
+import {
+  Garden,
+  GardenAvatar,
+  GardenField,
+  GardenFonts,
+  GardenRadii,
+  GardenSkeleton,
+  GardenTints,
+  Pill,
+  haptic,
+} from "@/components/garden";
+import type { ConsentLevel, StudentWithConsent } from "@/lib/photos-actions";
 import { Ionicons } from "@expo/vector-icons";
-import { Brand, FontFamilies } from "@/constants/theme";
-import type { StudentWithConsent, ConsentLevel } from "@/lib/photos-actions";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 interface Props {
   students: StudentWithConsent[];
@@ -13,207 +25,126 @@ interface Props {
   loading?: boolean;
 }
 
-const CONSENT_BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  FULL:    { bg: "#dcfce7", text: "#166534", label: "Full" },
-  LIMITED: { bg: "#fef9c3", text: "#854d0e", label: "Limited" },
-  NO:      { bg: "#fee2e2", text: "#991b1b", label: "No Consent" },
+export const CONSENT_META: Record<ConsentLevel, { label: string; tint: "sage" | "butter" | "coral"; icon: string }> = {
+  FULL: { label: "Full", tint: "sage", icon: "✓" },
+  LIMITED: { label: "Limited", tint: "butter", icon: "⚠️" },
+  NO: { label: "No Consent", tint: "coral", icon: "⛔" },
 };
 
-function ConsentBadge({ level }: { level: ConsentLevel | null }) {
+export function ConsentPill({ level }: { level: ConsentLevel | null }) {
   if (!level || level === "FULL") return null;
-  const cfg = CONSENT_BADGE[level];
+  const m = CONSENT_META[level];
   return (
-    <View style={[styles.badge, { backgroundColor: cfg.bg }]}>
-      <Text style={[styles.badgeText, { color: cfg.text }]}>{cfg.label}</Text>
-    </View>
+    <Pill tint={m.tint}>
+      {m.icon} {m.label}
+    </Pill>
   );
 }
 
-function Initials({ name }: { name: string | null }) {
-  const letters = (name ?? "?")
-    .split(" ")
-    .map((w) => w[0] ?? "")
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-  return (
-    <View style={styles.initials}>
-      <Text style={styles.initialsText}>{letters}</Text>
-    </View>
-  );
-}
-
-export function StudentTagSelector({
-  students,
-  selected,
-  onToggle,
-  searchQuery,
-  onSearchChange,
-  loading,
-}: Props) {
-  const filtered = students.filter((s) =>
-    (s.name ?? "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+export function StudentTagSelector({ students, selected, onToggle, searchQuery, onSearchChange, loading }: Props) {
+  const q = searchQuery.trim().toLowerCase();
+  const filtered = students.filter((s) => (s.name ?? "").toLowerCase().includes(q));
+  // Selected students float to the top so a teacher can see who's tagged.
+  const ordered = [
+    ...filtered.filter((s) => selected.includes(s.student_id)),
+    ...filtered.filter((s) => !selected.includes(s.student_id)),
+  ];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchRow}>
-        <Ionicons name="search-outline" size={16} color="#9ca3af" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search students…"
-          placeholderTextColor="#9ca3af"
-          value={searchQuery}
-          onChangeText={onSearchChange}
-          autoCorrect={false}
-        />
-        {searchQuery.length > 0 && (
-          <Pressable onPress={() => onSearchChange("")} hitSlop={8}>
-            <Ionicons name="close-circle" size={16} color="#9ca3af" />
-          </Pressable>
-        )}
-      </View>
+    <View style={styles.wrap}>
+      <GardenField
+        icon="search-outline"
+        placeholder="Search students…"
+        value={searchQuery}
+        onChangeText={onSearchChange}
+        autoCorrect={false}
+        clearable
+        containerStyle={{ margin: 10 }}
+        accessibilityLabel="Search students"
+      />
 
       {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="small" color={Brand.sage700} />
+        <View style={{ paddingHorizontal: 12, paddingBottom: 12, gap: 10 }} accessibilityLabel="Loading students">
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              <GardenSkeleton width={40} height={40} radius={20} />
+              <GardenSkeleton width="55%" height={14} radius={6} />
+            </View>
+          ))}
         </View>
+      ) : ordered.length === 0 ? (
+        <Text style={styles.empty} maxFontSizeMultiplier={1.4}>
+          {searchQuery ? "No students match your search" : "No enrolled students found"}
+        </Text>
       ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={(s) => s.student_id}
-          scrollEnabled={false}
-          renderItem={({ item }) => {
-            const isSelected = selected.includes(item.student_id);
-            return (
-              <Pressable
-                style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-                onPress={() => onToggle(item.student_id)}
-              >
-                {item.profile_image_url ? (
-                  <Image
-                    source={{ uri: item.profile_image_url }}
-                    style={styles.avatar}
-                    contentFit="cover"
-                  />
-                ) : (
-                  <Initials name={item.name} />
-                )}
-                <Text style={styles.name} numberOfLines={1}>
-                  {item.name ?? "Unknown"}
-                </Text>
-                <ConsentBadge level={item.consent_level} />
-                <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                  {isSelected && (
-                    <Ionicons name="checkmark" size={14} color="#fff" />
-                  )}
-                </View>
-              </Pressable>
-            );
-          }}
-          ListEmptyComponent={
-            <Text style={styles.empty}>
-              {searchQuery ? "No students match your search" : "No enrolled students found"}
-            </Text>
-          }
-        />
+        ordered.map((item) => {
+          const on = selected.includes(item.student_id);
+          const name = item.name ?? "Unknown";
+          const consent = item.consent_level ? CONSENT_META[item.consent_level].label : "unknown consent";
+          return (
+            <Pressable
+              key={item.student_id}
+              onPress={() => {
+                haptic.select();
+                onToggle(item.student_id);
+              }}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: on }}
+              accessibilityLabel={`${name}, ${consent} photo consent`}
+              style={({ pressed }) => [styles.row, on && styles.rowOn, pressed && { opacity: 0.85 }]}
+            >
+              <GardenAvatar name={name} uri={item.profile_image_url} seed={item.student_id} size={40} />
+              <Text style={styles.name} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+                {name}
+              </Text>
+              <ConsentPill level={item.consent_level} />
+              <View style={[styles.check, on && styles.checkOn]}>
+                {on ? <Ionicons name="checkmark" size={15} color={Garden.white} /> : null}
+              </View>
+            </Pressable>
+          );
+        })
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrap: {
+    backgroundColor: Garden.white,
+    borderRadius: GardenRadii.md,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
+    borderColor: Garden.line,
     overflow: "hidden",
-  },
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-    gap: 8,
-  },
-  searchIcon: {},
-  searchInput: {
-    flex: 1,
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#111827",
-  },
-  loader: {
-    padding: 24,
-    alignItems: "center",
+    paddingBottom: 4,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 12,
+    minHeight: 58,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f9fafb",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Garden.line,
   },
-  rowPressed: {
-    backgroundColor: "#f9fafb",
-  },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#e5e7eb",
-  },
-  initials: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#d1fae5",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  initialsText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: Brand.sage700,
-  },
-  name: {
-    flex: 1,
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#111827",
-  },
-  badge: {
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  badgeText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
+  rowOn: { backgroundColor: GardenTints.sage.bg },
+  name: { flex: 1, fontFamily: GardenFonts.bodyBold, fontSize: 15, color: Garden.ink },
+  check: {
+    width: 26,
+    height: 26,
+    borderRadius: 8,
     borderWidth: 2,
-    borderColor: "#d1d5db",
+    borderColor: "#d9cdb9",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: Garden.white,
   },
-  checkboxSelected: {
-    backgroundColor: Brand.sage700,
-    borderColor: Brand.sage700,
-  },
+  checkOn: { backgroundColor: Garden.sageDeep, borderColor: Garden.sageDeep },
   empty: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#9ca3af",
+    fontFamily: GardenFonts.bodySemi,
+    fontSize: 14,
+    color: Garden.muted,
     textAlign: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    paddingVertical: 18,
   },
 });

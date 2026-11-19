@@ -39,11 +39,13 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import EmojiKeyboard, { type EmojiType } from "rn-emoji-keyboard";
 import { buildChatItems, formatClock, pickChatFile, pickChatImage, type ChatListItem } from "../chatShared";
+import { useMessagingRoutes } from "../messagingRoutes";
 import { QUICK_EMOJIS, useChannelThread, type ChannelMessage } from "../useChannelThread";
 import { Bubble, ChatHeader, Composer, DaySeparator, ImageViewer, MessageMeta, NewMessagesPill, useKeyboardOpen } from "./ChatBits";
 
 export function ChannelThreadScreen() {
   const t = useChannelThread();
+  const routes = useMessagingRoutes();
   const router = useRouter();
   const navigation = useNavigation();
   const toast = useToast();
@@ -71,8 +73,8 @@ export function ChannelThreadScreen() {
 
   const back = useCallback(() => {
     if (router.canGoBack()) router.back();
-    else router.replace("/(tabs)/messages?tab=community");
-  }, [router]);
+    else router.replace({ pathname: routes.base, params: { tab: "community" } });
+  }, [router, routes.base]);
 
   // Count messages that arrive while the parent is reading older ones.
   useEffect(() => {
@@ -103,10 +105,12 @@ export function ChannelThreadScreen() {
         tone: "error",
         title: "Could not join channel",
         message: "Something went wrong. Please try again or contact support.",
-        action: { label: "Get Help", onPress: () => router.push("/(tabs)/help") },
+        action: routes.helpHref
+          ? { label: "Get Help", onPress: () => routes.helpHref && router.push(routes.helpHref) }
+          : { label: "Retry", onPress: () => void actionsRef.current?.join() },
       });
     }
-  }, [preview, router, t, toast]);
+  }, [preview, router, routes.helpHref, t, toast]);
 
   const joinPrompt = useCallback(() => {
     toast.show({

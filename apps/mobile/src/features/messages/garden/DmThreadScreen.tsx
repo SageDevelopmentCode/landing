@@ -19,11 +19,14 @@ import { ActivityIndicator, FlatList, KeyboardAvoidingView, Linking, Platform, S
 import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { buildChatItems, formatClock, pickChatFile, pickChatImage, type ChatListItem } from "../chatShared";
+import { useMessagingRoutes } from "../messagingRoutes";
 import { useDmThread, type DmMessage } from "../useDmThread";
 import { Bubble, ChatHeader, Composer, DaySeparator, ImageViewer, MessageMeta } from "./ChatBits";
 
 export function DmThreadScreen() {
   const t = useDmThread();
+  const routes = useMessagingRoutes();
+  const isStaff = routes.audience === "staff";
   const router = useRouter();
   const navigation = useNavigation();
   const toast = useToast();
@@ -41,8 +44,8 @@ export function DmThreadScreen() {
 
   const back = useCallback(() => {
     if (router.canGoBack()) router.back();
-    else router.replace("/(tabs)/messages");
-  }, [router]);
+    else router.replace(routes.base);
+  }, [router, routes.base]);
 
   const guard = useCallback(() => {
     toast.show(READ_ONLY_TOAST);
@@ -163,16 +166,23 @@ export function DmThreadScreen() {
     );
   };
 
+  // Parents: the other side is always a teacher. Staff: only colleagues have a profile to open.
+  const profileHref = t.isGroup ? null : routes.profileFor(t.otherId, t.name, t.otherRole);
+  const subtitle = !profileHref
+    ? null
+    : isStaff
+      ? t.otherRole === "super_admin"
+        ? "Admin · view profile"
+        : "Teacher · view profile"
+      : "Teacher · view profile";
   const headerLeft = (
     <PressableScale
-      disabled={t.isGroup || !t.otherId}
-      haptics={t.isGroup ? false : "tap"}
+      disabled={!profileHref}
+      haptics={profileHref ? "tap" : false}
       pressedScale={0.98}
-      onPress={() =>
-        router.push({ pathname: "/(tabs)/teacher/[teacherId]", params: { teacherId: t.otherId, teacherName: t.name } })
-      }
-      accessibilityRole={t.isGroup ? "header" : "link"}
-      accessibilityLabel={t.isGroup ? t.name : `${t.name}, view profile`}
+      onPress={() => profileHref && router.push(profileHref)}
+      accessibilityRole={profileHref ? "link" : "header"}
+      accessibilityLabel={profileHref ? `${t.name}, view profile` : t.name}
       style={s.headerWho}
     >
       <GardenAvatar name={t.name} uri={t.isGroup ? null : t.avatar || null} seed={t.otherId || t.id} icon={t.isGroup ? "people" : undefined} size={40} />
@@ -180,7 +190,7 @@ export function DmThreadScreen() {
         <Text style={s.headerName} numberOfLines={1}>
           {t.name}
         </Text>
-        {!t.isGroup && t.otherId ? <Text style={s.headerSub}>Teacher · view profile</Text> : null}
+        {subtitle ? <Text style={s.headerSub}>{subtitle}</Text> : null}
       </View>
     </PressableScale>
   );
@@ -224,7 +234,7 @@ export function DmThreadScreen() {
               <Animated.View entering={FadeIn} style={s.empty}>
                 <GardenAvatar name={t.name} uri={t.isGroup ? null : t.avatar || null} seed={t.otherId || t.id} icon={t.isGroup ? "people" : undefined} size={72} />
                 <Text style={s.emptyTitle}>No messages yet</Text>
-                <HandNote size={18}>say hi to a teacher 👋</HandNote>
+                <HandNote size={18}>{isStaff ? "say hi 👋" : "say hi to a teacher 👋"}</HandNote>
               </Animated.View>
             }
           />

@@ -1,4 +1,4 @@
-// Garden event detail sheet for the parent calendar.
+// Garden event detail sheet for the parent and (view-only) staff calendars.
 import {
   Display,
   Garden,
@@ -110,7 +110,7 @@ export function EventDetailSheet({ c, fb }: { c: ParentCalendar; fb: CalendarFee
               </View>
             ) : null}
 
-            {isFieldFridayCalendarEvent(evt) ? (
+            {c.canRegister && isFieldFridayCalendarEvent(evt) ? (
               <View style={{ marginTop: 18, gap: 6 }}>
                 <HandNote size={16} style={{ textAlign: "center" }}>
                   sign up here →

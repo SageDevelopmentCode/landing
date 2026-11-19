@@ -71,18 +71,15 @@ async function uploadImageToStorage(
   storagePath: string,
   accessToken: string
 ): Promise<void> {
-  console.log("[uploadImageToStorage] compressing", storagePath);
   const compressed = await ImageManipulator.manipulateAsync(
     localUri,
     [{ resize: { width: 1200 } }],
     { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
   );
   try {
-    console.log("[uploadImageToStorage] fetching blob from", compressed.uri);
     const fileRes = await fetch(compressed.uri);
     const blob = await fileRes.blob();
     const url = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/storage/v1/object/teacher-photos/${storagePath}`;
-    console.log("[uploadImageToStorage] POSTing to", url, "blob size:", blob.size);
     const uploadRes = await fetch(url, {
       method: "POST",
       headers: {
@@ -92,13 +89,10 @@ async function uploadImageToStorage(
       },
       body: blob,
     });
-    console.log("[uploadImageToStorage] response status:", uploadRes.status);
     if (!uploadRes.ok) {
       const msg = await uploadRes.text();
-      console.error("[uploadImageToStorage] FAILED — status:", uploadRes.status, "body:", msg);
       throw new Error(`Photo upload failed: ${msg}`);
     }
-    console.log("[uploadImageToStorage] storage upload OK");
   } finally {
     await FileSystem.deleteAsync(compressed.uri, { idempotent: true });
   }
@@ -135,13 +129,10 @@ export async function getTeacherPhotos(userId: string): Promise<TeacherPhoto[]> 
 }
 
 export async function getAllSchoolPhotos(): Promise<TeacherPhoto[]> {
-  console.log("[getAllSchoolPhotos] calling RPC");
   const { data, error } = await supabase.rpc("get_all_school_photos");
-  console.log("[getAllSchoolPhotos] data:", JSON.stringify(data)?.slice(0, 300), "error:", error);
   if (error) throw new Error(error.message);
 
   const rows: any[] = data ?? [];
-  console.log("[getAllSchoolPhotos] rows count:", rows.length);
 
   return rows.map((r: any) => ({
     id: r.id,
@@ -162,11 +153,12 @@ export async function getAllSchoolPhotos(): Promise<TeacherPhoto[]> {
 }
 
 export async function getEnrolledStudentsWithConsent(): Promise<StudentWithConsent[]> {
-  const { data: appsData } = await supabase
+  const { data: appsData, error: appsError } = await supabase
     .schema("parent_app")
     .from("applications")
     .select("student_id")
     .eq("status", "enrolled");
+  if (appsError) throw new Error(appsError.message);
 
   const studentIds = (appsData ?? []).map((a: any) => a.student_id as string);
   if (studentIds.length === 0) return [];
@@ -185,6 +177,9 @@ export async function getEnrolledStudentsWithConsent(): Promise<StudentWithConse
       .select("student_id, consent_level")
       .in("student_id", studentIds),
   ]);
+
+  if (studentsRes.error) throw new Error(studentsRes.error.message);
+  if (consentRes.error) throw new Error(consentRes.error.message);
 
   const consentMap = new Map<string, ConsentLevel>();
   (consentRes.data ?? []).forEach((c: any) => {
@@ -214,21 +209,15 @@ export async function uploadPhoto(
   payload: UploadPhotoPayload,
   userId: string
 ): Promise<TeacherPhoto> {
-  console.log("[uploadPhoto] getting session for user", userId);
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) {
-    console.error("[uploadPhoto] no session — user is not authenticated");
-    throw new Error("Not authenticated");
-  }
-  console.log("[uploadPhoto] session OK, token prefix:", session.access_token.slice(0, 20));
+  if (!session) throw new Error("Not authenticated");
 
   const photoId = generateId();
   const storagePath = `${userId}/${photoId}/${Date.now()}.jpeg`;
 
   await uploadImageToStorage(payload.localUri, storagePath, session.access_token);
-  console.log("[uploadPhoto] storage upload done, inserting photo row id:", photoId);
 
   const { error: insertError } = await supabase
     .schema("teachers")
@@ -243,13 +232,11 @@ export async function uploadPhoto(
       is_deleted: false,
     });
   if (insertError) {
-    console.error("[uploadPhoto] photo insert error:", insertError.code, insertError.message, insertError.details);
+    void supabase.storage.from("teacher-photos").remove([storagePath]);
     throw new Error(insertError.message);
   }
-  console.log("[uploadPhoto] photo row inserted OK");
 
   if (payload.taggedStudentIds.length > 0) {
-    console.log("[uploadPhoto] inserting", payload.taggedStudentIds.length, "student tags");
     const { error: tagError } = await supabase
       .schema("teachers")
       .from("photo_student_tags")
@@ -260,10 +247,16 @@ export async function uploadPhoto(
         }))
       );
     if (tagError) {
-      console.error("[uploadPhoto] tag insert error:", tagError.code, tagError.message, tagError.details);
+      // Roll the photo back so a retry doesn't leave an untagged duplicate in
+      // the gallery (the tags carry the consent link to each student).
+      await supabase
+        .schema("teachers")
+        .from("photos")
+        .update({ is_deleted: true, updated_at: new Date().toISOString() })
+        .eq("id", photoId);
+      void supabase.storage.from("teacher-photos").remove([storagePath]);
       throw new Error(tagError.message);
     }
-    console.log("[uploadPhoto] tags inserted OK");
   }
 
   const { data: signedData } = await supabase.storage
@@ -299,23 +292,34 @@ export async function editPhoto(
     .eq("id", photoId);
   if (updateError) throw new Error(updateError.message);
 
-  await supabase
+  // Diff the tags instead of delete-all-then-insert, so a failed write can
+  // never leave the photo with no tags at all.
+  const { data: existing, error: readError } = await supabase
     .schema("teachers")
     .from("photo_student_tags")
-    .delete()
+    .select("student_id")
     .eq("photo_id", photoId);
+  if (readError) throw new Error(readError.message);
+  const have = new Set((existing ?? []).map((t: { student_id: string }) => t.student_id));
+  const want = new Set(payload.taggedStudentIds);
+  const toAdd = [...want].filter((id) => !have.has(id));
+  const toRemove = [...have].filter((id) => !want.has(id));
 
-  if (payload.taggedStudentIds.length > 0) {
+  if (toAdd.length > 0) {
     const { error: tagError } = await supabase
       .schema("teachers")
       .from("photo_student_tags")
-      .insert(
-        payload.taggedStudentIds.map((sid) => ({
-          photo_id: photoId,
-          student_id: sid,
-        }))
-      );
+      .insert(toAdd.map((sid) => ({ photo_id: photoId, student_id: sid })));
     if (tagError) throw new Error(tagError.message);
+  }
+  if (toRemove.length > 0) {
+    const { error: delError } = await supabase
+      .schema("teachers")
+      .from("photo_student_tags")
+      .delete()
+      .eq("photo_id", photoId)
+      .in("student_id", toRemove);
+    if (delError) throw new Error(delError.message);
   }
 }
 
@@ -323,16 +327,11 @@ export async function deletePhoto(
   photoId: string,
   storagePath: string
 ): Promise<void> {
-  console.log("[deletePhoto] deleting photoId:", photoId);
   const { error } = await supabase
     .schema("teachers")
     .from("photos")
     .update({ is_deleted: true, updated_at: new Date().toISOString() })
     .eq("id", photoId);
-  if (error) {
-    console.error("[deletePhoto] delete error:", error.code, error.message, error.details, error.hint);
-    throw new Error(error.message);
-  }
-  console.log("[deletePhoto] soft-delete OK, removing storage:", storagePath);
-  supabase.storage.from("teacher-photos").remove([storagePath]);
+  if (error) throw new Error(error.message);
+  void supabase.storage.from("teacher-photos").remove([storagePath]);
 }

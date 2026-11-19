@@ -1,4 +1,5 @@
-// Garden parent post detail: post, reactions, threaded comments, composer.
+// Garden post detail for both apps: post, reactions, threaded comments,
+// composer. mode "staff" routes into /(staff) and adds a ⋮ → Delete post.
 import type { PostReactionRow } from "@/components/feed/feedTypes";
 import {
   formatAuthorSubtitle,
@@ -16,8 +17,10 @@ import {
   GardenFonts,
   GardenIconButton,
   GardenRadii,
+  GardenActionSheet,
   GardenSkeleton,
   HandNote,
+  type GardenActionSheetHandle,
   PressableScale,
   READ_ONLY_TOAST,
   gardenCard,
@@ -65,12 +68,21 @@ import { AttachmentRow, MediaMosaic, PhotoViewer, PostTypePill, ReactionBar } fr
 const PAD = 18;
 
 export function ParentPostDetailScreen() {
+  return <PostDetailScreen mode="parent" />;
+}
+
+export function PostDetailScreen({ mode }: { mode: "parent" | "staff" }) {
+  const isStaff = mode === "staff";
   const { postId } = useLocalSearchParams<{ postId: string }>();
-  const p = useFeedPost(postId);
+  const p = useFeedPost(postId, mode);
   const router = useRouter();
   const navigation = useNavigation();
   const toast = useToast();
-  const { isReadOnlyPreview } = useAuth();
+  const { isReadOnlyPreview: authReadOnly } = useAuth();
+  // Read-only preview is a parent-side concept.
+  const isReadOnlyPreview = isStaff ? false : authReadOnly;
+  const menuRef = useRef<GardenActionSheetHandle>(null);
+  const deletePostRef = useRef<(() => Promise<void>) | null>(null);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const inputRef = useRef<TextInput>(null);
@@ -101,8 +113,47 @@ export function ParentPostDetailScreen() {
 
   const handleBack = useCallback(() => {
     if (navigation.canGoBack()) router.back();
-    else router.replace("/(tabs)/feed");
-  }, [navigation, router]);
+    else router.replace(isStaff ? "/(staff)/feed" : "/(tabs)/feed");
+  }, [navigation, router, isStaff]);
+
+  // ── Staff: delete the post (confirm — it's gone for every family) ─────────
+  const runDeletePost = useCallback(async () => {
+    const id = toast.show({ tone: "loading", title: "Deleting post…" });
+    const r = await p.deletePost();
+    if (r.ok) {
+      toast.update(id, { tone: "success", title: "Post deleted", message: "Families won't see it anymore." });
+      handleBack();
+    } else {
+      toast.update(id, {
+        tone: "error",
+        title: "Couldn't delete the post",
+        message: "Check your connection and try again.",
+        action: { label: "Retry", onPress: () => void deletePostRef.current?.() },
+      });
+    }
+  }, [p, toast, handleBack]);
+
+  const openPostMenu = useCallback(() => {
+    menuRef.current?.present({
+      title: "Post options",
+      subtitle: p.post?.source_type ? "This post was added automatically." : undefined,
+      actions: [
+        {
+          label: "Delete post",
+          icon: "trash-outline",
+          destructive: true,
+          hint: "Removes it for every family",
+          onPress: () => {
+            haptic.warning();
+            Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
+              { text: "Cancel", style: "cancel" },
+              { text: "Delete", style: "destructive", onPress: () => void runDeletePost() },
+            ]);
+          },
+        },
+      ],
+    });
+  }, [p.post?.source_type, runDeletePost]);
 
   // ── Feedback wrappers ──────────────────────────────────────────────────────
   const react = useCallback(
@@ -174,7 +225,8 @@ export function ParentPostDetailScreen() {
   useEffect(() => {
     submitRef.current = submit;
     deleteRef.current = runDelete;
-  }, [submit, runDelete]);
+    deletePostRef.current = runDeletePost;
+  }, [submit, runDelete, runDeletePost]);
 
   const openAttachment = useCallback(
     async (att: DetailAttachment) => {
@@ -258,7 +310,12 @@ export function ParentPostDetailScreen() {
             <View style={s.notFound}>
               <Text style={{ fontSize: 30 }}>🍂</Text>
               <Text style={s.notFoundText}>Post not found.</Text>
-              <GardenButton label="Family feed" tone="outline" icon="arrow-back" onPress={handleBack} />
+              <GardenButton
+                label={isStaff ? "Class feed" : "Family feed"}
+                tone="outline"
+                icon="arrow-back"
+                onPress={handleBack}
+              />
             </View>
           ) : (
             <GardenErrorCard
@@ -279,9 +336,11 @@ export function ParentPostDetailScreen() {
   const post = p.post;
   const subtitle = formatAuthorSubtitle(post.classroom, post.authorRole);
   const isTeacher = post.authorRole === "teacher" || post.authorRole === "super_admin";
-  const ctaRoute = post.cta_route && post.cta_label ? resolveFeedCtaRoute(post.cta_route, false) : null;
+  const ctaRoute = post.cta_route && post.cta_label ? resolveFeedCtaRoute(post.cta_route, isStaff) : null;
   const isNewsletter = post.post_type === "newsletter" || post.source_type === "newsletter";
-  const newsletterUrl = isNewsletter && post.cta_route ? newsletterPublicUrlFromCtaRoute(post.cta_route) : null;
+  // Parents open the public newsletter page; staff go to the in-app editor.
+  const newsletterUrl =
+    !isStaff && isNewsletter && post.cta_route ? newsletterPublicUrlFromCtaRoute(post.cta_route) : null;
   const hasReactions = p.rawReactions.length > 0;
   const canSend = !!p.commentText.trim() && !p.submitting;
 
@@ -296,7 +355,7 @@ export function ParentPostDetailScreen() {
           accessibilityLabel={isTeacher ? `${post.authorName}, view profile` : post.authorName}
           onPress={() =>
             router.push({
-              pathname: "/(tabs)/teacher/[teacherId]" as never,
+              pathname: (isStaff ? "/(staff)/teacher/[teacherId]" : "/(tabs)/teacher/[teacherId]") as never,
               params: { teacherId: post.teacher_id, teacherName: post.authorName, classroom: post.classroom ?? "", program: "" },
             })
           }
@@ -392,7 +451,15 @@ export function ParentPostDetailScreen() {
 
   return (
     <SafeAreaView style={s.safe} edges={["top", "left", "right"]}>
-      <NavBar title={post.authorName} onBack={handleBack} />
+      <NavBar
+        title={post.authorName}
+        onBack={handleBack}
+        right={
+          p.canDelete ? (
+            <GardenIconButton icon="ellipsis-horizontal" label="Post options" onPress={openPostMenu} />
+          ) : undefined
+        }
+      />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <FlatList
           ref={listRef}
@@ -471,6 +538,7 @@ export function ParentPostDetailScreen() {
       </KeyboardAvoidingView>
 
       <WhoReactedSheet
+        isStaff={isStaff}
         sheetRef={reactionsSheetRef}
         reactions={p.rawReactions}
         names={p.userNameById}
@@ -484,19 +552,20 @@ export function ParentPostDetailScreen() {
         onSave={(uri) => void savePhoto(uri)}
         onOpenVideo={(uri) => void Linking.openURL(uri).catch(() => undefined)}
       />
+      {isStaff ? <GardenActionSheet ref={menuRef} /> : null}
     </SafeAreaView>
   );
 }
 
 // ─── Pieces ──────────────────────────────────────────────────────────────────
-function NavBar({ title, onBack }: { title: string; onBack: () => void }) {
+function NavBar({ title, onBack, right }: { title: string; onBack: () => void; right?: React.ReactNode }) {
   return (
     <View style={s.nav}>
       <GardenIconButton icon="chevron-back" label="Back" onPress={onBack} />
       <Text style={s.navTitle} numberOfLines={1} accessibilityRole="header">
         {title}
       </Text>
-      <View style={{ width: 44 }} />
+      {right ?? <View style={{ width: 44 }} />}
     </View>
   );
 }
@@ -591,11 +660,13 @@ function CommentRow({
 }
 
 function WhoReactedSheet({
+  isStaff,
   sheetRef,
   reactions,
   names,
   images,
 }: {
+  isStaff: boolean;
   sheetRef: React.RefObject<BottomSheetModal | null>;
   reactions: PostReactionRow[];
   names: Record<string, string>;
@@ -611,7 +682,7 @@ function WhoReactedSheet({
     <BottomSheetModal ref={sheetRef} {...gardenSheetChrome} snapPoints={["50%", "85%"]} enableDynamicSizing={false}>
       <View style={{ paddingHorizontal: 20, paddingBottom: 12 }}>
         <Display size={24}>Reactions</Display>
-        <HandNote size={16}>the families cheering this on</HandNote>
+        <HandNote size={16}>{isStaff ? "who's cheering this on" : "the families cheering this on"}</HandNote>
       </View>
       <View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 12 }}>

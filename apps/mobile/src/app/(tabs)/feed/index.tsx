@@ -1,6 +1,6 @@
 // Parent Feed — Garden. Data + handlers live in useParentFeed() (which wraps
 // the shared useFeedPosts); the Garden pieces live in src/features/feed/garden/.
-// (Staff keeps components/feed/FeedScreen.)
+// (Staff uses the same parts via useFeedList("staff").)
 import { Garden } from "@/components/garden";
 import { BottomTabInset } from "@/constants/theme";
 import { PhotoViewer } from "@/features/feed/garden/FeedBits";

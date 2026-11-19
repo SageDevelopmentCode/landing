@@ -14,6 +14,7 @@ export function GardenScreenHero({
   right,
   size = 32,
   style,
+  fallbackHref = "/(tabs)/home",
 }: {
   title: string;
   /** Override the back press (e.g. to confirm discarding changes). */
@@ -22,12 +23,10 @@ export function GardenScreenHero({
   right?: ReactNode;
   size?: number;
   style?: StyleProp<ViewStyle>;
+  /** Where Back goes when there's no history (staff screens pass a staff route). */
+  fallbackHref?: string;
 }) {
-  const router = useRouter();
-  const goBack = () => {
-    if (router.canGoBack()) router.back();
-    else router.replace("/(tabs)/home");
-  };
+  const goBack = useGardenGoBack(fallbackHref);
   return (
     <View style={[styles.hero, style]}>
       <GardenIconButton icon="chevron-back" label={backLabel} onPress={onBack ?? goBack} />
@@ -40,11 +39,11 @@ export function GardenScreenHero({
 }
 
 /** Default back behaviour, for screens that wrap `onBack`. */
-export function useGardenGoBack() {
+export function useGardenGoBack(fallbackHref: string = "/(tabs)/home") {
   const router = useRouter();
   return () => {
     if (router.canGoBack()) router.back();
-    else router.replace("/(tabs)/home");
+    else router.replace(fallbackHref as any);
   };
 }
 

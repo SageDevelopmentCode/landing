@@ -1,5 +1,5 @@
-// Data for the parent Photos gallery: all school photos grouped by day, lazy
-// signed URLs for the rows on screen, and the date filter.
+// Data for the Photos gallery (parent + staff): all school photos grouped by
+// day, lazy signed URLs for the rows on screen, and the date filter.
 import { fetchSignedUrls, getAllSchoolPhotos, type TeacherPhoto } from "@/lib/photos-actions";
 import { setPhotoGallerySession } from "@/lib/photo-gallery-session";
 import { useRouter } from "expo-router";
@@ -51,7 +51,9 @@ function groupByDate(photos: TeacherPhoto[]): PhotoSection[] {
 /** How many photos get signed URLs right away, so the first screen never sits blank. */
 const EAGER_SIGN = 30;
 
-export function usePhotosGallery() {
+export function usePhotosGallery({
+  openPath = "/(tabs)/photos/[photoId]",
+}: { openPath?: string } = {}) {
   const router = useRouter();
   const [photos, setPhotos] = useState<TeacherPhoto[]>([]);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
@@ -116,7 +118,7 @@ export function usePhotosGallery() {
     (photo: TeacherPhoto) => {
       setPhotoGallerySession(photos);
       router.push({
-        pathname: "/(tabs)/photos/[photoId]",
+        pathname: openPath as never,
         params: {
           photoId: photo.id,
           storagePath: photo.storage_path,
@@ -124,8 +126,13 @@ export function usePhotosGallery() {
         },
       });
     },
-    [photos, router, signedUrls],
+    [photos, router, signedUrls, openPath],
   );
+
+  /** Drop a photo locally (after a delete) without a full reload. */
+  const removePhoto = useCallback((id: string) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+  }, []);
 
   const allSections = useMemo(() => groupByDate(photos), [photos]);
 
@@ -168,6 +175,7 @@ export function usePhotosGallery() {
     clearDates,
     reload: load,
     openPhoto,
+    removePhoto,
     onViewableItemsChanged,
   };
 }

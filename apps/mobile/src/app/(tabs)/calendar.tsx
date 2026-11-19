@@ -1,6 +1,6 @@
 // Parent Calendar — Garden. Data + handlers live in useParentCalendar();
 // the Garden pieces live in src/features/calendar/garden/.
-// (Staff keeps components/MobileCalendarScreen.)
+// Staff reuses the same pieces in view-only mode: app/(staff)/calendar.tsx.
 import { Confetti, Garden } from "@/components/garden";
 import { BottomTabInset } from "@/constants/theme";
 import { AddEventSheet } from "@/features/calendar/garden/AddEventSheet";

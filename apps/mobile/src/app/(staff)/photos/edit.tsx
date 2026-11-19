@@ -1,362 +1,311 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+// Staff "Edit Photo" — Garden. Same details form as Upload; Save stays
+// disabled until the photo has loaded, a failed load shows Retry (never an
+// empty form you could save over), unsaved edits ask before closing, and the
+// viewer/gallery pick up the change when you go back.
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useFocusEffect } from "expo-router";
+  Display,
+  Garden,
+  GardenButton,
+  GardenErrorCard,
+  GardenIconButton,
+  GardenSkeleton,
+  haptic,
+  useDiscardGuard,
+  useToast,
+} from "@/components/garden";
+import { floatingTabBarStyle } from "@/constants/theme";
 import { useUploadQueue } from "@/contexts/UploadQueueContext";
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { supabase } from "@/lib/supabase";
+import { confirmConsent, consentIssues, PhotoDetailsForm } from "@/features/staff-photos/garden/PhotoDetailsForm";
+import { useConsentStudents } from "@/features/staff-photos/useConsentStudents";
+import { useStaffRole } from "@/features/staff-shared/useStaffRole";
+import { notifyError } from "@/lib/discord";
+import { getPhotoGallerySession, updatePhotoGallerySession } from "@/lib/photo-gallery-session";
 import {
   deletePhoto,
   editPhoto,
   getAllSchoolPhotos,
-  getEnrolledStudentsWithConsent,
-  PublicationLabel,
-  StudentWithConsent,
-  TeacherPhoto,
+  type PublicationLabel,
+  type TeacherPhoto,
 } from "@/lib/photos-actions";
-import { StudentTagSelector } from "@/components/photos/StudentTagSelector";
-import { DatePickerField } from "@/components/photos/DatePickerField";
-import { Brand, floatingTabBarStyle, FontFamilies } from "@/constants/theme";
+import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-const PUB_LABELS: { key: PublicationLabel; label: string }[] = [
-  { key: "newsletter",   label: "Newsletter" },
-  { key: "social_media", label: "Social Media" },
-  { key: "website",      label: "Website" },
-];
+const GUTTER = 18;
 
-export default function PhotoEditScreen() {
+type Draft = { caption: string; takenOn: string; selected: string[]; labels: PublicationLabel[] };
+
+const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
+
+export default function EditPhotoScreen() {
   const { photoId } = useLocalSearchParams<{ photoId: string }>();
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const toast = useToast();
+  const { userId } = useStaffRole();
+  const { markGalleryDirty } = useUploadQueue();
 
   const [photo, setPhoto] = useState<TeacherPhoto | null>(null);
+  const [loadState, setLoadState] = useState<"loading" | "ready" | "error" | "forbidden">("loading");
+  const [retrying, setRetrying] = useState(false);
+  const [original, setOriginal] = useState<Draft | null>(null);
   const [caption, setCaption] = useState("");
   const [takenOn, setTakenOn] = useState("");
-  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [studentSearch, setStudentSearch] = useState("");
-  const [pubLabels, setPubLabels] = useState<PublicationLabel[]>([]);
-  const [students, setStudents] = useState<StudentWithConsent[]>([]);
-  const [studentsLoading, setStudentsLoading] = useState(true);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [labels, setLabels] = useState<PublicationLabel[]>([]);
+  const [search, setSearch] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const isDirty = useRef(false);
-  const { markGalleryDirty } = useUploadQueue();
+  const saveRef = useRef<(() => Promise<void>) | null>(null);
+  const s = useConsentStudents(loadState === "ready");
+
+  const dirty = useMemo(
+    () =>
+      !!original &&
+      (caption !== original.caption ||
+        takenOn !== original.takenOn ||
+        !sameSet(selected, original.selected) ||
+        !sameSet(labels, original.labels)),
+    [original, caption, takenOn, selected, labels],
+  );
+  const guard = useDiscardGuard(dirty, {
+    title: "Discard changes?",
+    message: "Your edits will be lost.",
+    fallbackHref: "/(staff)/photos",
+  });
+  const leave = () => guard.leave(() => (router.canGoBack() ? router.back() : router.replace("/(staff)/photos" as never)));
 
   useFocusEffect(
     useCallback(() => {
       navigation.getParent()?.setOptions({ tabBarStyle: { display: "none" } });
-      return () => {
-        navigation.getParent()?.setOptions({ tabBarStyle: floatingTabBarStyle });
-      };
-    }, [navigation])
+      return () => navigation.getParent()?.setOptions({ tabBarStyle: floatingTabBarStyle });
+    }, [navigation]),
   );
 
-  useEffect(() => {
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const [all, enrolledStudents] = await Promise.all([
-        getAllSchoolPhotos(),
-        getEnrolledStudentsWithConsent(),
-      ]);
-
-      const found = all.find((p) => p.id === photoId);
-      if (found && found.teacher_id === user.id) {
-        setPhoto(found);
-        setCaption(found.caption ?? "");
-        setTakenOn(found.taken_on ?? "");
-        setSelectedStudents(found.tags.map((t) => t.student_id));
-        setPubLabels(found.publication_labels);
-      } else {
-        Alert.alert("Cannot edit photo", "You can only edit photos you uploaded.", [
-          { text: "OK", onPress: () => router.back() },
-        ]);
-      }
-
-      setStudents(enrolledStudents);
-      setStudentsLoading(false);
-    }
-    load();
-  }, [photoId, router]);
-
-  function toggleLabel(key: PublicationLabel) {
-    isDirty.current = true;
-    setPubLabels((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
-  }
-
-  function toggleStudent(studentId: string) {
-    isDirty.current = true;
-    setSelectedStudents((prev) =>
-      prev.includes(studentId) ? prev.filter((id) => id !== studentId) : [...prev, studentId]
-    );
-  }
-
-  function handleBack() {
-    if (isDirty.current) {
-      Alert.alert("Discard changes?", "Your edits will be lost.", [
-        { text: "Keep editing", style: "cancel" },
-        { text: "Discard", style: "destructive", onPress: () => router.back() },
-      ]);
-    } else {
-      router.back();
-    }
-  }
-
-  async function handleSave() {
-    if (!photo) return;
-    setSaving(true);
+  const load = useCallback(async () => {
     try {
-      await editPhoto(photo.id, {
+      const fromSession = getPhotoGallerySession().find((p) => p.id === photoId);
+      const found = fromSession ?? (await getAllSchoolPhotos()).find((p) => p.id === photoId);
+      if (!found) {
+        setLoadState("error");
+        return;
+      }
+      if (!userId || found.teacher_id !== userId) {
+        setLoadState("forbidden");
+        return;
+      }
+      const d: Draft = {
+        caption: found.caption ?? "",
+        takenOn: found.taken_on ?? "",
+        selected: found.tags.map((t) => t.student_id),
+        labels: found.publication_labels,
+      };
+      setPhoto(found);
+      setOriginal(d);
+      setCaption(d.caption);
+      setTakenOn(d.takenOn);
+      setSelected(d.selected);
+      setLabels(d.labels);
+      setLoadState("ready");
+    } catch (e) {
+      notifyError("staff-photo-edit-load", e);
+      setLoadState("error");
+    }
+  }, [photoId, userId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(() => {
+    if (loadState !== "forbidden") return;
+    Alert.alert("Cannot edit photo", "You can only edit photos you uploaded.", [{ text: "OK", onPress: leave }]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- show once per state change
+  }, [loadState]);
+
+  const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+
+  const handleSave = useCallback(async () => {
+    if (!photo || saving || !dirty) return;
+    const ok = await confirmConsent(consentIssues(s.students, selected, labels), "Save anyway");
+    if (!ok) return;
+    setSaving(true);
+    haptic.press();
+    try {
+      const payload = {
         caption: caption.trim() || null,
         taken_on: takenOn.trim() || null,
-        taggedStudentIds: selectedStudents,
-        publication_labels: pubLabels,
-      });
-      isDirty.current = false;
+        taggedStudentIds: selected,
+        publication_labels: labels,
+      };
+      await editPhoto(photo.id, payload);
       markGalleryDirty();
-      router.back();
-    } catch (err: any) {
-      Alert.alert("Error", err.message ?? "Failed to save changes.");
+      // Keep the open viewer in sync without a refetch.
+      const tags = s.students
+        .filter((st) => selected.includes(st.student_id))
+        .map((st) => ({
+          student_id: st.student_id,
+          name: st.name,
+          profile_image_url: st.profile_image_url,
+          consent_level: st.consent_level,
+        }));
+      updatePhotoGallerySession(
+        getPhotoGallerySession().map((p) =>
+          p.id === photo.id
+            ? { ...p, caption: payload.caption, taken_on: payload.taken_on, publication_labels: labels, tags }
+            : p,
+        ),
+      );
+      setSaved(true);
+      toast.show({ tone: "success", title: "Changes saved", duration: 1800 });
+      setTimeout(leave, 450);
+    } catch (err) {
+      notifyError("staff-photo-edit-save", err);
+      toast.show({
+        tone: "error",
+        title: "Error",
+        message: err instanceof Error ? err.message : "Failed to save changes.",
+        action: { label: "Retry", onPress: () => void saveRef.current?.() },
+      });
     } finally {
       setSaving(false);
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- leave is stable enough for a one-shot
+  }, [photo, saving, dirty, s.students, selected, labels, caption, takenOn, markGalleryDirty, toast]);
+
+  useEffect(() => {
+    saveRef.current = handleSave;
+  }, [handleSave]);
 
   function handleDelete() {
     if (!photo) return;
-    Alert.alert(
-      "Delete Photo",
-      "This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              await deletePhoto(photo.id, photo.storage_path);
-              markGalleryDirty();
-              router.back();
-            } catch (err) {
-              console.error("[handleDelete] failed:", err);
-              setDeleting(false);
-              Alert.alert("Delete failed", err instanceof Error ? err.message : "Could not delete photo.");
-            }
-          },
+    haptic.warning();
+    Alert.alert("Delete Photo", "This cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await deletePhoto(photo.id, photo.storage_path);
+            markGalleryDirty();
+            updatePhotoGallerySession(getPhotoGallerySession().filter((p) => p.id !== photo.id));
+            toast.show({ tone: "success", title: "Photo deleted" });
+            // Close Edit and the viewer behind it (the photo is gone).
+            guard.leave(() => router.dismissTo("/(staff)/photos" as never));
+          } catch (err) {
+            notifyError("staff-photo-delete", err);
+            setDeleting(false);
+            toast.show({
+              tone: "error",
+              title: "Delete failed",
+              message: err instanceof Error ? err.message : "Could not delete photo.",
+            });
+          }
         },
-      ]
-    );
+      },
+    ]);
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <View style={styles.header}>
-        <Pressable onPress={handleBack} hitSlop={12}>
-          <Ionicons name="close" size={24} color="#374151" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Edit Photo</Text>
-        <Pressable
-          onPress={handleSave}
-          disabled={saving || deleting}
-          hitSlop={12}
-        >
-          <Text style={[styles.saveText, (saving || deleting) && { opacity: 0.4 }]}>
-            {saving ? "Saving…" : "Save"}
-          </Text>
-        </Pressable>
+    <SafeAreaView style={st.safe} edges={["top", "left", "right"]}>
+      <View style={st.nav}>
+        <GardenIconButton icon="close" label="Close Edit Photo" onPress={guard.back} disabled={saving || deleting} />
+        <Display size={24} style={{ flex: 1 }}>
+          Edit Photo
+        </Display>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Caption */}
-        <Text style={styles.fieldLabel}>Caption</Text>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Add a caption (optional)"
-          placeholderTextColor="#9ca3af"
-          value={caption}
-          onChangeText={(v) => { setCaption(v); isDirty.current = true; }}
-          multiline
-          numberOfLines={2}
-        />
-
-        {/* Date */}
-        <Text style={styles.fieldLabel}>Date taken</Text>
-        <DatePickerField
-          value={takenOn}
-          onChange={(v) => { setTakenOn(v); isDirty.current = true; }}
-        />
-
-        {/* Publication labels */}
-        <Text style={styles.fieldLabel}>Publication labels</Text>
-        <View style={styles.labelsRow}>
-          {PUB_LABELS.map(({ key, label }) => {
-            const active = pubLabels.includes(key);
-            return (
-              <Pressable
-                key={key}
-                style={[styles.labelToggle, active && styles.labelToggleActive]}
-                onPress={() => toggleLabel(key)}
-              >
-                <Text style={[styles.labelToggleText, active && styles.labelToggleTextActive]}>
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* Student tags */}
-        <Text style={styles.fieldLabel}>Tag students</Text>
-        {selectedStudents.length > 0 && (
-          <Text style={styles.selectedCount}>{selectedStudents.length} selected</Text>
-        )}
-        <StudentTagSelector
-          students={students}
-          selected={selectedStudents}
-          onToggle={toggleStudent}
-          searchQuery={studentSearch}
-          onSearchChange={setStudentSearch}
-          loading={studentsLoading}
-        />
-
-        {/* Delete */}
-        <Pressable
-          style={[styles.deleteBtn, deleting && { opacity: 0.5 }]}
-          onPress={handleDelete}
-          disabled={deleting || saving}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: 24, gap: 16 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
         >
-          <Ionicons name="trash-outline" size={18} color="#dc2626" />
-          <Text style={styles.deleteBtnText}>{deleting ? "Deleting…" : "Delete Photo"}</Text>
-        </Pressable>
+          {loadState === "loading" || loadState === "forbidden" ? (
+            <View style={{ gap: 14 }} accessibilityLabel="Loading photo">
+              <GardenSkeleton width="40%" height={12} />
+              <GardenSkeleton width="100%" height={72} radius={14} />
+              <GardenSkeleton width="40%" height={12} />
+              <GardenSkeleton width="100%" height={48} radius={24} />
+              <GardenSkeleton width="100%" height={200} radius={20} />
+            </View>
+          ) : loadState === "error" ? (
+            <GardenErrorCard
+              title="We couldn't load this photo"
+              retrying={retrying}
+              onRetry={async () => {
+                setRetrying(true);
+                setLoadState("loading");
+                await load();
+                setRetrying(false);
+              }}
+            />
+          ) : (
+            <PhotoDetailsForm
+              caption={caption}
+              onCaption={setCaption}
+              takenOn={takenOn}
+              onTakenOn={setTakenOn}
+              labels={labels}
+              onToggleLabel={(k) => setLabels((l) => toggle(l, k))}
+              students={s.students}
+              studentsLoading={s.loading}
+              studentsError={s.error}
+              onRetryStudents={() => void s.retry()}
+              selected={selected}
+              onToggleStudent={(id) => setSelected((l) => toggle(l, id))}
+              search={search}
+              onSearch={setSearch}
+            />
+          )}
+        </ScrollView>
 
-        <View style={{ height: 24 }} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+        {loadState === "ready" ? (
+          <View style={[st.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+            <GardenButton
+              label={dirty ? "Save" : "No changes yet"}
+              loading={saving}
+              loadingLabel="Saving…"
+              success={saved}
+              successLabel="Saved"
+              tone="sage"
+              icon="checkmark"
+              fullWidth
+              disabled={!dirty || deleting}
+              onPress={() => void handleSave()}
+            />
+            <GardenButton
+              label="Delete Photo"
+              loading={deleting}
+              loadingLabel="Deleting…"
+              tone="outline"
+              icon="trash-outline"
+              fullWidth
+              disabled={saving}
+              onPress={handleDelete}
+              style={{ marginTop: 10 }}
+            />
+          </View>
+        ) : null}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-  },
-  headerTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#111827",
-  },
-  saveText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
-    color: Brand.sage700,
-  },
-  content: {
-    padding: 16,
-    gap: 8,
-  },
-  fieldLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#374151",
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#111827",
-    minHeight: 64,
-    textAlignVertical: "top",
-  },
-  textInputSingle: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#111827",
-  },
-  labelsRow: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  labelToggle: {
-    borderWidth: 1.5,
-    borderColor: "#e5e7eb",
-    borderRadius: 100,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  labelToggleActive: {
-    borderColor: Brand.sage700,
-    backgroundColor: "#f0f7f2",
-  },
-  labelToggleText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#6b7280",
-  },
-  labelToggleTextActive: {
-    color: Brand.sage700,
-    fontFamily: FontFamilies.bodySemiBold,
-  },
-  selectedCount: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: Brand.sage700,
-    marginBottom: 4,
-  },
-  deleteBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "#fecaca",
-    backgroundColor: "#fff5f5",
-  },
-  deleteBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#dc2626",
+const st = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Garden.cream },
+  nav: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: GUTTER, paddingVertical: 10 },
+  footer: {
+    paddingHorizontal: GUTTER,
+    paddingTop: 10,
+    backgroundColor: Garden.cream,
+    borderTopWidth: 1,
+    borderTopColor: Garden.line,
   },
 });
