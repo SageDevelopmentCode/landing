@@ -169,7 +169,7 @@ function Progress({ a, program }: { a: StaffAttendance; program: RosterProgram }
         <Text style={ui.count} maxFontSizeMultiplier={1.3}>
           {s.checkedIn} of {s.total} present
         </Text>
-        <HandNote size={16} color={s.unmarked === 0 ? Garden.sageDeep : Garden.coralDeep}>
+        <HandNote size={16} color={s.unmarked === 0 ? Garden.sageDeep : Garden.butterDeep}>
           {note}
         </HandNote>
       </View>

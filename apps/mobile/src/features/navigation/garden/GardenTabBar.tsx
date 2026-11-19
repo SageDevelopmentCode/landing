@@ -1,4 +1,5 @@
-// Garden floating tab bar for the parent tabs.
+// Garden floating tab bar, shared by the parent tabs (`PARENT_TABS`) and the
+// staff tabs (`STAFF_TABS`).
 // - Same geometry as `floatingTabBarStyle`, so every screen's BottomTabInset
 //   padding still fits.
 // - A sage pill glides behind the active tab; icons pop when they become active.
@@ -40,19 +41,43 @@ import {
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-type TabDef = { name: string; label: string; active: IoniconName; inactive: IoniconName };
+export type TabDef = { name: string; label: string; active: IoniconName; inactive: IoniconName };
 
-const TABS: TabDef[] = [
+const MORE_TAB: TabDef = {
+  name: "more",
+  label: "More",
+  active: "ellipsis-horizontal-circle",
+  inactive: "ellipsis-horizontal-circle-outline",
+};
+
+const MESSAGES_TAB: TabDef = {
+  name: "messages",
+  label: "Messages",
+  active: "chatbubbles",
+  inactive: "chatbubbles-outline",
+};
+
+/** Parent tabs (`app/(tabs)`). */
+export const PARENT_TABS: TabDef[] = [
   { name: "home", label: "Home", active: "home", inactive: "home-outline" },
   { name: "feed", label: "Feed", active: "newspaper", inactive: "newspaper-outline" },
   { name: "calendar", label: "Calendar", active: "calendar", inactive: "calendar-outline" },
-  { name: "messages", label: "Messages", active: "chatbubbles", inactive: "chatbubbles-outline" },
+  MESSAGES_TAB,
+  MORE_TAB,
+];
+
+/** Staff / super-admin tabs (`app/(staff)`). */
+export const STAFF_TABS: TabDef[] = [
+  { name: "home", label: "Home", active: "home", inactive: "home-outline" },
+  { name: "students", label: "Students", active: "people", inactive: "people-outline" },
   {
-    name: "more",
-    label: "More",
-    active: "ellipsis-horizontal-circle",
-    inactive: "ellipsis-horizontal-circle-outline",
+    name: "attendance",
+    label: "Attendance",
+    active: "checkmark-done-circle",
+    inactive: "checkmark-done-circle-outline",
   },
+  MESSAGES_TAB,
+  MORE_TAB,
 ];
 
 const BAR_BOTTOM = Platform.select({ ios: 24, android: 20 }) ?? 20;
@@ -60,6 +85,8 @@ const BAR_HEIGHT = 64;
 const PAD = 6;
 
 type Props = BottomTabBarProps & {
+  /** Visible tabs, in order (`PARENT_TABS` / `STAFF_TABS`). */
+  tabs: TabDef[];
   /** Unread messages for the Messages badge. */
   unread: number;
   /** The More sheet is open (light up the More tab). */
@@ -68,7 +95,7 @@ type Props = BottomTabBarProps & {
   moreRoutes: ReadonlySet<string>;
 };
 
-export function GardenTabBar({ state, descriptors, navigation, unread, moreOpen, moreRoutes }: Props) {
+export function GardenTabBar({ state, descriptors, navigation, tabs, unread, moreOpen, moreRoutes }: Props) {
   const reduce = useReducedMotion();
   const focused = state.routes[state.index];
   const focusedOptions = descriptors[focused.key]?.options;
@@ -77,7 +104,7 @@ export function GardenTabBar({ state, descriptors, navigation, unread, moreOpen,
     "none";
 
   // Which visible tab looks active.
-  const visible = TABS.map((t) => ({ def: t, route: state.routes.find((r) => r.name === t.name) })).filter(
+  const visible = tabs.map((t) => ({ def: t, route: state.routes.find((r) => r.name === t.name) })).filter(
     (t): t is { def: TabDef; route: (typeof state.routes)[number] } => !!t.route,
   );
   const moreIdx = visible.findIndex((t) => t.def.name === "more");

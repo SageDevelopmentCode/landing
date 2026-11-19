@@ -8,6 +8,7 @@ import {
   buildDisplayNameMap,
   getStudentDisplayName,
 } from "@/lib/student-display-name";
+import { UNASSIGNED_TEACHER } from "@/lib/group-by-teacher";
 import { supabase } from "@/lib/supabase";
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
@@ -80,6 +81,42 @@ export function getStudentDayStatus(
 
 export function isStudentCheckedIn(record: AttendanceSlim | null): boolean {
   return !!record?.checked_in && !record.marked_absent;
+}
+
+export type TeacherRosterSummaryBucket = "present" | "unmarked" | "absent";
+
+export type TeacherRosterSummary = Record<TeacherRosterSummaryBucket, number>;
+
+export function summarizeTeacherRosterStatus(
+  status: StudentDayStatus,
+): TeacherRosterSummaryBucket {
+  if (status === "picked_up" || status === "present") return "present";
+  if (status === "absent") return "absent";
+  return "unmarked";
+}
+
+export function emptyTeacherRosterSummary(): TeacherRosterSummary {
+  return { present: 0, unmarked: 0, absent: 0 };
+}
+
+export function buildTeacherRosterSummaries(
+  students: SchoolYearTodayStudent[],
+  isFriday: boolean,
+): Map<string, TeacherRosterSummary> {
+  const map = new Map<string, TeacherRosterSummary>();
+  for (const student of students) {
+    const key = student.teacherName ?? UNASSIGNED_TEACHER;
+    let summary = map.get(key);
+    if (!summary) {
+      summary = emptyTeacherRosterSummary();
+      map.set(key, summary);
+    }
+    const bucket = summarizeTeacherRosterStatus(
+      getStudentDayStatus(student, isFriday),
+    );
+    summary[bucket]++;
+  }
+  return map;
 }
 
 export const STATUS_FILTER_CHIPS: {

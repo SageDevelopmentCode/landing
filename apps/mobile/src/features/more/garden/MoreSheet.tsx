@@ -1,45 +1,36 @@
 // Garden "More" sheet for the parent tabs: who you are, the school + community
 // destinations as tactile tiles (with live nudges), and account links as rows.
 // Same destinations and routes as the old MoreMenuSheet, plus Feedback.
+// Tiles / rows are shared with the staff sheet (`./MoreTiles`).
 import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useRouter, useSegments } from "expo-router";
-import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
-import { forwardRef, useCallback, useEffect, useRef, useState, type RefObject } from "react";
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import Animated, { FadeInDown, ZoomIn, useReducedMotion } from "react-native-reanimated";
+import { forwardRef, useCallback, useRef, useState, type RefObject } from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Display,
   Garden,
   GardenAvatar,
-  GardenFonts,
-  GardenRadii,
   GardenTints,
   HandNote,
   MIN_TAP,
   PressableScale,
-  gardenCard,
   gardenSheetChrome,
-  useToast,
-  type GardenTint,
 } from "@/components/garden";
-import { notifyError } from "@/lib/discord";
 import { useMoreMenu } from "../useMoreMenu";
-
-type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
-
-type MoreItem = {
-  label: string;
-  icon: IoniconName;
-  tint: GardenTint;
-  /** Route pushed on tap. */
-  route?: string;
-  /** External page opened in the in-app browser. */
-  url?: string;
-  /** Tab route name used to mark "you're here". */
-  routeName?: string;
-};
+import {
+  MORE_GAP,
+  MoreListDivider,
+  MoreListRow,
+  MoreSectionTitle,
+  TallTile,
+  WideTile,
+  moreTileStyles,
+  useOpenUrl,
+  type MoreItem,
+} from "./MoreTiles";
 
 const SCHOOL: MoreItem[] = [
   { label: "Children", icon: "people-outline", tint: "sage", route: "/(tabs)/children", routeName: "children" },
@@ -79,43 +70,23 @@ type Props = {
 export const MoreSheet = forwardRef<BottomSheetModal, Props>(function MoreSheet({ onChange }, ref) {
   const router = useRouter();
   const segments = useSegments() as string[];
-  const toast = useToast();
   const reduce = useReducedMotion();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const me = useMoreMenu();
   const reload = me.reload;
-  // Grid cell widths come from the measured content width (no % rounding gaps).
+  const openUrl = useOpenUrl("more-menu-browser");
+  // Grid cell widths come from the measured content width, floored so pixel
+  // rounding never pushes the last tile onto a new row.
   const [gridW, setGridW] = useState(0);
-  const w2 = gridW > 0 ? (gridW - GAP) / 2 : undefined;
-  const w3 = gridW > 0 ? (gridW - GAP * 2) / 3 : undefined;
+  const w2 = gridW > 0 ? Math.floor((gridW - MORE_GAP) / 2) : undefined;
+  const w3 = gridW > 0 ? Math.floor((gridW - MORE_GAP * 2) / 3) : undefined;
 
   // Re-key the content on each present so tiles stagger in every time.
   const [presentKey, setPresentKey] = useState(0);
   const openRef = useRef(false);
 
   const here = segments[0] === "(tabs)" ? (segments[1] ?? null) : null;
-
-  const openUrl = useCallback(
-    async (url: string) => {
-      try {
-        await openBrowserAsync(url, { presentationStyle: WebBrowserPresentationStyle.AUTOMATIC });
-      } catch (e) {
-        void notifyError("more-menu-browser", e);
-        toast.show({
-          tone: "error",
-          title: "Couldn't open the page",
-          message: "Check your connection and try again.",
-          action: { label: "Retry", onPress: () => void openUrlRef.current?.(url) },
-        });
-      }
-    },
-    [toast],
-  );
-  const openUrlRef = useRef<typeof openUrl | null>(null);
-  useEffect(() => {
-    openUrlRef.current = openUrl;
-  }, [openUrl]);
 
   const onItemPress = useCallback(
     (item: MoreItem) => {
@@ -183,21 +154,23 @@ export const MoreSheet = forwardRef<BottomSheetModal, Props>(function MoreSheet(
           </PressableScale>
 
           {/* ── School ─────────────────────────────────────────── */}
-          <SectionTitle>School</SectionTitle>
-          <View style={s.grid2}>
+          <MoreSectionTitle>School</MoreSectionTitle>
+          <View style={moreTileStyles.grid}>
             {SCHOOL.map((item, i) => {
               const due = item.routeName === "tuition" ? me.tuitionDue : 0;
+              const badge =
+                due > 0 ? { text: `${due} due`, a11y: `${due} ${due === 1 ? "payment" : "payments"} due` } : undefined;
               return (
                 <Animated.View key={item.label} entering={enter(i)} style={{ width: w2, flexGrow: w2 ? 0 : 1 }}>
-                  <WideTile item={item} here={here === item.routeName} due={due} onPress={() => onItemPress(item)} />
+                  <WideTile item={item} here={here === item.routeName} badge={badge} onPress={() => onItemPress(item)} />
                 </Animated.View>
               );
             })}
           </View>
 
           {/* ── Community ──────────────────────────────────────── */}
-          <SectionTitle>Community</SectionTitle>
-          <View style={s.grid3}>
+          <MoreSectionTitle>Community</MoreSectionTitle>
+          <View style={moreTileStyles.grid}>
             {COMMUNITY.map((item, i) => (
               <Animated.View key={item.label} entering={enter(SCHOOL.length + i)} style={{ width: w3 ?? "31%" }}>
                 <TallTile item={item} here={here === item.routeName} onPress={() => onItemPress(item)} />
@@ -206,12 +179,12 @@ export const MoreSheet = forwardRef<BottomSheetModal, Props>(function MoreSheet(
           </View>
 
           {/* ── Account ────────────────────────────────────────── */}
-          <SectionTitle>Account</SectionTitle>
-          <Animated.View entering={enter(SCHOOL.length + COMMUNITY.length)} style={s.listCard}>
+          <MoreSectionTitle>Account</MoreSectionTitle>
+          <Animated.View entering={enter(SCHOOL.length + COMMUNITY.length)} style={moreTileStyles.listCard}>
             {ACCOUNT.map((item, i) => (
               <View key={item.label}>
-                {i > 0 && <View style={s.divider} />}
-                <ListRow item={item} here={here === item.routeName} onPress={() => onItemPress(item)} />
+                {i > 0 && <MoreListDivider />}
+                <MoreListRow item={item} here={here === item.routeName} onPress={() => onItemPress(item)} />
               </View>
             ))}
           </Animated.View>
@@ -220,117 +193,6 @@ export const MoreSheet = forwardRef<BottomSheetModal, Props>(function MoreSheet(
     </BottomSheetModal>
   );
 });
-
-function SectionTitle({ children }: { children: string }) {
-  return (
-    <Display size={18} style={s.sectionTitle}>
-      {children}
-    </Display>
-  );
-}
-
-function IconSquircle({ item, size }: { item: MoreItem; size: number }) {
-  const t = GardenTints[item.tint];
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.36,
-        backgroundColor: t.bg,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Ionicons name={item.icon} size={Math.round(size * 0.5)} color={t.fg} />
-    </View>
-  );
-}
-
-function HereDot() {
-  return <View style={s.hereDot} accessibilityElementsHidden importantForAccessibility="no" />;
-}
-
-function hereLabel(label: string, here: boolean) {
-  return here ? `${label}, current page` : label;
-}
-
-function WideTile({
-  item,
-  here,
-  due,
-  onPress,
-}: {
-  item: MoreItem;
-  here: boolean;
-  due: number;
-  onPress: () => void;
-}) {
-  const label = due > 0 ? `${item.label}, ${due} ${due === 1 ? "payment" : "payments"} due` : item.label;
-  return (
-    <PressableScale
-      onPress={onPress}
-      accessibilityLabel={hereLabel(label, here)}
-      accessibilityState={{ selected: here }}
-      style={[s.tile, s.wideTile, here && s.tileHere]}
-    >
-      <IconSquircle item={item} size={42} />
-      <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
-        <Text style={s.tileLabel} numberOfLines={2} maxFontSizeMultiplier={1.3}>
-          {item.label}
-        </Text>
-        {due > 0 && (
-          <Animated.View entering={ZoomIn.springify()} style={s.duePill}>
-            <Text style={s.duePillText} maxFontSizeMultiplier={1.2} numberOfLines={1}>
-              {due} due
-            </Text>
-          </Animated.View>
-        )}
-      </View>
-      {here && <HereDot />}
-    </PressableScale>
-  );
-}
-
-function TallTile({ item, here, onPress }: { item: MoreItem; here: boolean; onPress: () => void }) {
-  return (
-    <PressableScale
-      onPress={onPress}
-      accessibilityLabel={hereLabel(item.label, here)}
-      accessibilityState={{ selected: here }}
-      style={[s.tile, s.tallTile, here && s.tileHere]}
-    >
-      <IconSquircle item={item} size={44} />
-      <Text style={[s.tileLabel, { textAlign: "center" }]} numberOfLines={2} maxFontSizeMultiplier={1.3}>
-        {item.label}
-      </Text>
-      {here && <HereDot />}
-    </PressableScale>
-  );
-}
-
-function ListRow({ item, here, onPress }: { item: MoreItem; here: boolean; onPress: () => void }) {
-  const external = !!item.url;
-  return (
-    <PressableScale
-      pressedScale={0.98}
-      onPress={onPress}
-      accessibilityRole={external ? "link" : "button"}
-      accessibilityLabel={hereLabel(external ? `${item.label}, opens in browser` : item.label, here)}
-      accessibilityState={{ selected: here }}
-      style={s.row}
-    >
-      <IconSquircle item={item} size={36} />
-      <Text style={s.rowLabel} numberOfLines={1} maxFontSizeMultiplier={1.35}>
-        {item.label}
-      </Text>
-      {here && <Text style={s.hereText}>you're here</Text>}
-      <Ionicons name={external ? "open-outline" : "chevron-forward"} size={external ? 17 : 18} color={Garden.muted} />
-    </PressableScale>
-  );
-}
-
-const GAP = 10;
 
 const s = StyleSheet.create({
   content: {
@@ -359,100 +221,5 @@ const s = StyleSheet.create({
     backgroundColor: GardenTints.sage.bg,
     alignItems: "center",
     justifyContent: "center",
-  },
-  sectionTitle: {
-    marginTop: 22,
-    marginBottom: 10,
-  },
-  grid2: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: GAP,
-  },
-  grid3: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: GAP,
-  },
-  tile: {
-    ...gardenCard,
-    borderRadius: GardenRadii.md,
-    borderWidth: 1.5,
-  },
-  tileHere: {
-    borderColor: Garden.sage,
-    borderWidth: 2,
-  },
-  wideTile: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    minHeight: 70,
-  },
-  tallTile: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 6,
-    paddingVertical: 14,
-    minHeight: 100,
-  },
-  tileLabel: {
-    fontFamily: GardenFonts.bodyBold,
-    fontSize: 14,
-    lineHeight: 17,
-    color: Garden.ink,
-  },
-  duePill: {
-    alignSelf: "flex-start",
-    backgroundColor: Garden.coralDeep,
-    borderRadius: GardenRadii.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  duePillText: {
-    fontFamily: GardenFonts.bodyHeavy,
-    fontSize: 11,
-    color: Garden.white,
-  },
-  hereDot: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Garden.sage,
-  },
-  listCard: {
-    ...gardenCard,
-    borderRadius: GardenRadii.md,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    minHeight: 56,
-    paddingHorizontal: 8,
-  },
-  rowLabel: {
-    flex: 1,
-    fontFamily: GardenFonts.bodyBold,
-    fontSize: 15,
-    color: Garden.ink,
-  },
-  hereText: {
-    fontFamily: GardenFonts.hand,
-    fontSize: 15,
-    color: Garden.sageDeep,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Garden.line,
-    marginLeft: 56,
   },
 });

@@ -92,7 +92,7 @@ function ActionSheet({ a, fb }: { a: StaffAttendance; fb: StaffAttendanceFeedbac
                       {name}
                     </Display>
                     <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap" }}>
-                      {status !== "unmarked" ? <StatusPill status={status} /> : <Pill tint="coral">Unmarked</Pill>}
+                      {status !== "unmarked" ? <StatusPill status={status} /> : <Pill tint="butter">Unmarked</Pill>}
                       <Pill tint={row.hasEnrollment ? "sage" : "coral"}>{row.hasEnrollment ? "Paid" : "Unpaid"}</Pill>
                     </View>
                   </View>

@@ -56,6 +56,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeIn, LinearTransition, ZoomIn } from "react-native-reanimated";
 import {
   STATUS_FILTER_CHIPS,
+  emptyTeacherRosterSummary,
   formatEventTime,
   formatTodayDate,
   isStudentCheckedIn,
@@ -67,6 +68,8 @@ import {
   type StaffUpcomingCalendarEvent,
   type StudentDayStatus,
   type StudentStatusFilter,
+  type TeacherRosterSummary,
+  type TeacherRosterSummaryBucket,
 } from "../staffHomeUtils";
 import type { StaffHome } from "../useStaffHome";
 import type { StaffHomeFeedback } from "./useStaffHomeFeedback";
@@ -79,10 +82,10 @@ export const STATUS_META: Record<
   StudentDayStatus,
   { label: string; tint: GardenTint; icon: IoniconName }
 > = {
-  unmarked: { label: "Unmarked", tint: "coral", icon: "ellipse-outline" },
+  unmarked: { label: "Unmarked", tint: "butter", icon: "ellipse-outline" },
   present: { label: "Present", tint: "sage", icon: "checkmark-circle" },
   picked_up: { label: "Picked Up", tint: "mint", icon: "car" },
-  absent: { label: "Absent", tint: "butter", icon: "moon" },
+  absent: { label: "Absent", tint: "coral", icon: "moon" },
 };
 
 export function StatusPill({ status }: { status: StudentDayStatus }) {
@@ -533,6 +536,53 @@ function RosterSkeleton() {
   );
 }
 
+const GROUP_SUMMARY_KEYS: TeacherRosterSummaryBucket[] = ["present", "unmarked", "absent"];
+
+function TeacherGroupAttendanceSummary({
+  teacherName,
+  summary,
+}: {
+  teacherName: string;
+  summary: TeacherRosterSummary;
+}) {
+  const a11y = `${teacherName}, ${summary.present} present, ${summary.unmarked} unmarked, ${summary.absent} absent`;
+  return (
+    <View
+      style={row.groupSummary}
+      accessibilityRole="text"
+      accessibilityLabel={a11y}
+      accessible
+    >
+      {GROUP_SUMMARY_KEYS.map((key, index) => {
+        const meta = STATUS_META[key];
+        const t = GardenTints[meta.tint];
+        const label = meta.label.toLowerCase();
+        return (
+          <View key={key} style={row.groupSummarySegment} importantForAccessibility="no-hide-descendants">
+            {index > 0 ? (
+              <Text style={row.groupSummarySep} accessibilityElementsHidden>
+                {" · "}
+              </Text>
+            ) : null}
+            {key === "present" ? (
+              <View style={row.groupSummaryIconPair}>
+                <Ionicons name={meta.icon} size={11} color={t.fg} accessibilityElementsHidden />
+                <Text style={[row.groupSummaryText, { color: t.fg }]} maxFontSizeMultiplier={1.3}>
+                  {summary[key]}
+                </Text>
+              </View>
+            ) : (
+              <Text style={[row.groupSummaryText, { color: t.fg }]} maxFontSizeMultiplier={1.3}>
+                {summary[key]} {label}
+              </Text>
+            )}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 function RosterEmpty({ h }: { h: StaffHome }) {
   if (h.statusFilter !== "all") {
     const filterLabels: Record<StudentDayStatus, string> = {
@@ -600,7 +650,7 @@ export function DayRoster({ h, fb }: { h: StaffHome; fb: StaffHomeFeedback }) {
             : `${h.filteredStudents.length} ${h.filteredStudents.length === 1 ? "student" : "students"}`}
         </Text>
         {note ? (
-          <HandNote size={16} color={unmarked === 0 && total > 0 ? Garden.sageDeep : Garden.coralDeep}>
+          <HandNote size={16} color={unmarked === 0 && total > 0 ? Garden.sageDeep : Garden.butterDeep}>
             {note}
           </HandNote>
         ) : null}
@@ -637,9 +687,12 @@ export function DayRoster({ h, fb }: { h: StaffHome; fb: StaffHomeFeedback }) {
                   <Text style={row.groupTitle} numberOfLines={1} accessibilityRole="header">
                     {section.teacherName}
                   </Text>
-                  <Text style={row.groupCount}>
-                    {section.students.length} {section.students.length === 1 ? "student" : "students"}
-                  </Text>
+                  <TeacherGroupAttendanceSummary
+                    teacherName={section.teacherName}
+                    summary={
+                      h.teacherRosterSummaries.get(section.teacherName) ?? emptyTeacherRosterSummary()
+                    }
+                  />
                 </View>
                 {section.students.map((student, i) => (
                   <StudentRow
@@ -735,7 +788,18 @@ const row = StyleSheet.create({
   },
   groupDot: { width: 10, height: 10, borderRadius: 5 },
   groupTitle: { flex: 1, fontFamily: GardenFonts.display, fontSize: 16, color: Garden.ink },
-  groupCount: { fontFamily: GardenFonts.bodyBold, fontSize: 12.5, color: Garden.muted },
+  groupSummary: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    flexShrink: 1,
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 0,
+  },
+  groupSummarySegment: { flexDirection: "row", alignItems: "center" },
+  groupSummaryIconPair: { flexDirection: "row", alignItems: "center", gap: 3 },
+  groupSummarySep: { fontFamily: GardenFonts.bodyBold, fontSize: 12.5, color: Garden.muted },
+  groupSummaryText: { fontFamily: GardenFonts.bodyBold, fontSize: 12.5 },
   wrap: {
     flexDirection: "row",
     alignItems: "center",

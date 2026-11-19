@@ -51,6 +51,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AFTERCARE_SLIM_SELECT,
   SY_ATTENDANCE_SLIM_SELECT,
+  buildTeacherRosterSummaries,
   fetchUnpaidStudentsForDate,
   getInitials,
   getStudentDayStatus,
@@ -1231,6 +1232,11 @@ export function useStaffHome() {
 
   const teacherSections = groupStudentsByTeacher(filteredStudents, statusPriority);
 
+  const teacherRosterSummaries = useMemo(
+    () => buildTeacherRosterSummaries(todayStudents, selectedIsFriday),
+    [todayStudents, selectedIsFriday],
+  );
+
   const showPickupReminder =
     selectedDate === todayActual && !selectedIsFriday && isSchoolYearPickupReminderWindow(now);
 
@@ -1287,6 +1293,7 @@ export function useStaffHome() {
     statusCounts,
     filteredStudents,
     teacherSections,
+    teacherRosterSummaries,
     pending,
     getActiveAttendanceRecord,
     loadTodayStudents,

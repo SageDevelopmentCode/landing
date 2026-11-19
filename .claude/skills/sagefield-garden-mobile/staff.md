@@ -19,10 +19,10 @@ Staff screens (`apps/mobile/src/app/(staff)/`) use the same Garden kit, tokens, 
 
 - **Density:** list rows are about 66pt high, with a 44pt avatar, the name, then a row of status pills. Group lists in white `gardenCard` panels with a small header (colour dot, title, count) rather than a full-bleed list.
 - **Status:** always colour, icon and text together. The reference `STATUS_META` is in `StaffHomeParts.tsx`:
-  - Unmarked: coral
+  - Unmarked: butter
   - Present: sage ✓
   - Picked Up: mint 🚗
-  - Absent: butter 🌙
+  - Absent: coral 🌙
 - **Coral is still "do this":** unpaid, pickup not recorded, Confirm Pickup.
 - **Progress:** pair a thin sage progress bar with a `HandNote` under the day bar ("4 of 18 still to mark", or "all 18 marked ✓"). Notes stay feedback only.
 - **Role:** show the role as a pill in the hero (sage for Teacher, lav for Super Admin). Admin-only affordances, like the tappable tours ticket, render as a plain `View` for other roles. Never show a disabled button.
@@ -30,6 +30,7 @@ Staff screens (`apps/mobile/src/app/(staff)/`) use the same Garden kit, tokens, 
 
 ## Wiring
 - **Toast host:** `src/app/(staff)/_layout.tsx` wraps everything in `GardenToastProvider`, outside `BottomSheetModalProvider`, exactly like `(tabs)/_layout.tsx`. `useToast()` works on every staff screen.
+- **Tab bar + More:** the staff layout uses the shared `GardenTabBar` (`features/navigation/garden`) with `STAFF_TABS`, the shared `useUnreadMessages` badge, and `StaffMoreSheet` (`features/staff-more`). The More sheet's tiles and rows come from `features/more/garden/MoreTiles.tsx`, shared with the parent sheet. A new staff destination gets a `MoreItem` with a `routeName` so the More tab lights up and the tile shows "you're here".
 - **Read-only preview** is a parent-side concept, so staff screens don't need `useWriteGuard`.
 - **External staff sheets** spread `gardenSheetChrome` and use Bricolage titles:
   - `StaffWeekActivityPrefsSheet`
