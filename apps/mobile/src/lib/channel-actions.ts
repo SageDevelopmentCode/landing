@@ -524,3 +524,34 @@ export async function getChannelMemberCount(channelId: string): Promise<number> 
     .eq("channel_id", channelId);
   return count ?? 0;
 }
+
+/**
+ * Name, default flag and the user's membership for one channel. Used when a
+ * channel is opened without route params (e.g. from a push notification).
+ */
+export async function getChannelMeta(
+  channelId: string,
+  userId: string
+): Promise<{ name: string; is_default: boolean; isMember: boolean } | null> {
+  const [{ data: ch }, { data: membership }] = await Promise.all([
+    supabase
+      .schema("messaging")
+      .from("channels")
+      .select("name, is_default")
+      .eq("id", channelId)
+      .maybeSingle(),
+    supabase
+      .schema("messaging")
+      .from("channel_members")
+      .select("channel_id")
+      .eq("channel_id", channelId)
+      .eq("user_id", userId)
+      .maybeSingle(),
+  ]);
+  if (!ch) return null;
+  return {
+    name: (ch as { name: string }).name,
+    is_default: Boolean((ch as { is_default?: boolean }).is_default),
+    isMember: !!membership,
+  };
+}

@@ -10,6 +10,8 @@ export type NewsletterSectionImage = {
   storage_path: string;
   signed_url: string | null;
   sort_order: number;
+  /** "newsletter-images" (uploaded here) or "teacher-photos" (added from the web photo library). */
+  source_bucket: string;
 };
 
 export type NewsletterTeacherUpdate = {
@@ -83,38 +85,21 @@ export type SaveDraftPayload = {
 };
 
 // ---------------------------------------------------------------------------
-// Cross-screen pending edits (section editor → newsletter editor)
-// ---------------------------------------------------------------------------
-
-export const pendingSectionEdits = new Map<string, string>(); // sectionId → body
-const _pendingTeacherUpdate = { body: null as string | null };
-
-export function setPendingTeacherUpdateEdit(body: string) {
-  _pendingTeacherUpdate.body = body;
-}
-
-export function getPendingTeacherUpdateEdit(): string | null {
-  return _pendingTeacherUpdate.body;
-}
-
-export function clearPendingEdits() {
-  pendingSectionEdits.clear();
-  _pendingTeacherUpdate.body = null;
-}
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-async function getSignedUrls(paths: string[]): Promise<Record<string, string>> {
-  if (paths.length === 0) return {};
-  const { data } = await supabase.storage
-    .from("newsletter-images")
-    .createSignedUrls(paths, 3600);
+/** Signed URLs keyed by `${bucket}:${path}` (section images can live in two buckets). */
+async function getSignedUrls(byBucket: Map<string, string[]>): Promise<Record<string, string>> {
   const map: Record<string, string> = {};
-  (data ?? []).forEach((item) => {
-    if (item.path && item.signedUrl) map[item.path] = item.signedUrl;
-  });
+  await Promise.all(
+    [...byBucket.entries()].map(async ([bucket, paths]) => {
+      if (paths.length === 0) return;
+      const { data } = await supabase.storage.from(bucket).createSignedUrls(paths, 3600);
+      (data ?? []).forEach((item) => {
+        if (item.path && item.signedUrl) map[`${bucket}:${item.path}`] = item.signedUrl;
+      });
+    }),
+  );
   return map;
 }
 
@@ -186,7 +171,11 @@ export async function createNewsletter(title: string, weekRange: string): Promis
       }))
     )
     .select("id, is_class_updates");
-  if (secErr) throw secErr;
+  if (secErr) {
+    // Don't leave a newsletter with no sections behind.
+    await supabase.schema("newsletters").from("newsletters").update({ is_deleted: true }).eq("id", nl.id);
+    throw secErr;
+  }
 
   const classSection = (sections ?? []).find((s: any) => s.is_class_updates);
   if (classSection) {
@@ -197,7 +186,8 @@ export async function createNewsletter(title: string, weekRange: string): Promis
       .in("role", ["teacher", "super_admin"])
       .eq("is_deleted", false);
     if (teachers && teachers.length > 0) {
-      await supabase
+      // Best effort: each teacher's row is also upserted when they save.
+      const { error: tuErr } = await supabase
         .schema("newsletters")
         .from("teacher_updates")
         .insert(
@@ -207,6 +197,10 @@ export async function createNewsletter(title: string, weekRange: string): Promis
             body: "",
           }))
         );
+      if (tuErr) {
+        const { notifyError } = await import("@/lib/discord");
+        notifyError("staff-newsletter-create-teacher-updates", tuErr);
+      }
     }
   }
 
@@ -226,7 +220,7 @@ export async function getNewsletter(id: string): Promise<Newsletter> {
       sections (
         id, newsletter_id, label, body, visible, sort_order, is_class_updates, created_at, updated_at,
         teacher_updates (id, section_id, teacher_id, body, updated_at),
-        section_images (id, storage_path, sort_order)
+        section_images (id, storage_path, sort_order, is_deleted, source_bucket)
       ),
       change_log (id, newsletter_id, teacher_id, summary, created_at)
     `)
@@ -234,13 +228,16 @@ export async function getNewsletter(id: string): Promise<Newsletter> {
     .single();
   if (error) throw error;
 
-  const allPaths: string[] = [];
+  const byBucket = new Map<string, string[]>();
   for (const sec of data.sections ?? []) {
     for (const img of (sec as any).section_images ?? []) {
-      allPaths.push(img.storage_path);
+      if (img.is_deleted) continue;
+      const bucket = img.source_bucket ?? "newsletter-images";
+      if (!byBucket.has(bucket)) byBucket.set(bucket, []);
+      byBucket.get(bucket)!.push(img.storage_path);
     }
   }
-  const urlMap = await getSignedUrls(allPaths);
+  const urlMap = await getSignedUrls(byBucket);
 
   const clIds = [...new Set((data.change_log ?? []).map((cl: any) => cl.teacher_id as string))];
   const profileMap = await getTeacherProfileMap(clIds);
@@ -270,14 +267,18 @@ export async function getNewsletter(id: string): Promise<Newsletter> {
         updated_at: sec.updated_at,
         teacher_updates: (sec.teacher_updates ?? []) as NewsletterTeacherUpdate[],
         images: ((sec.section_images ?? []) as any[])
-          .slice()
+          .filter((img) => !img.is_deleted)
           .sort((a, b) => a.sort_order - b.sort_order)
-          .map((img) => ({
-            id: img.id,
-            storage_path: img.storage_path,
-            signed_url: urlMap[img.storage_path] ?? null,
-            sort_order: img.sort_order,
-          })),
+          .map((img) => {
+            const bucket = img.source_bucket ?? "newsletter-images";
+            return {
+              id: img.id,
+              storage_path: img.storage_path,
+              signed_url: urlMap[`${bucket}:${img.storage_path}`] ?? null,
+              sort_order: img.sort_order,
+              source_bucket: bucket,
+            };
+          }),
       })),
     change_log: ((data.change_log ?? []) as any[])
       .slice()
@@ -339,8 +340,6 @@ export async function saveDraft(id: string, payload: SaveDraftPayload): Promise<
       .from("change_log")
       .insert({ newsletter_id: id, teacher_id: user.id, summary: payload.changeSummary });
   }
-
-  clearPendingEdits();
 }
 
 // ---------------------------------------------------------------------------
@@ -356,9 +355,10 @@ export async function publishNewsletter(id: string): Promise<void> {
   if (error) throw error;
 
   const { syncNewsletterFeedPost } = await import("@/lib/feed-auto-actions");
-  syncNewsletterFeedPost(id).catch((e) =>
-    console.error("syncNewsletterFeedPost:", e),
-  );
+  syncNewsletterFeedPost(id).catch(async (e) => {
+    const { notifyError } = await import("@/lib/discord");
+    notifyError("staff-newsletter-feed-sync", e);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -380,8 +380,14 @@ export async function softDeleteNewsletter(id: string): Promise<void> {
 
 export async function uploadSectionImage(
   sectionId: string,
-  localUri: string
+  localUri: string,
+  sortOrder = 0
 ): Promise<NewsletterSectionImage> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) throw new Error("You're signed out. Sign in and try again.");
+
   const compressed = await ImageManipulator.manipulateAsync(
     localUri,
     [{ resize: { width: 1200 } }],
@@ -393,14 +399,13 @@ export async function uploadSectionImage(
 
   const fileRes = await fetch(compressed.uri);
   const blob = await fileRes.blob();
-  const { data: { session } } = await supabase.auth.getSession();
 
   const uploadRes = await fetch(
     `${process.env.EXPO_PUBLIC_SUPABASE_URL}/storage/v1/object/newsletter-images/${storagePath}`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.access_token}`,
+        Authorization: `Bearer ${session.access_token}`,
         "Content-Type": "image/jpeg",
         "x-upsert": "true",
       },
@@ -412,14 +417,16 @@ export async function uploadSectionImage(
     throw new Error(`Image upload failed: ${msg}`);
   }
 
-  const { data: { user } } = await supabase.auth.getUser();
   const { data: imgRow, error: insertErr } = await supabase
     .schema("newsletters")
     .from("section_images")
-    .insert({ section_id: sectionId, storage_path: storagePath, uploaded_by: user!.id, sort_order: 0 })
+    .insert({ section_id: sectionId, storage_path: storagePath, uploaded_by: session.user.id, sort_order: sortOrder })
     .select("id, storage_path, sort_order")
     .single();
-  if (insertErr) throw insertErr;
+  if (insertErr) {
+    void supabase.storage.from("newsletter-images").remove([storagePath]);
+    throw insertErr;
+  }
 
   const { data: signedData } = await supabase.storage
     .from("newsletter-images")
@@ -430,16 +437,25 @@ export async function uploadSectionImage(
     storage_path: imgRow.storage_path,
     signed_url: signedData?.signedUrl ?? null,
     sort_order: imgRow.sort_order,
+    source_bucket: "newsletter-images",
   };
 }
 
-export async function deleteSectionImage(imageId: string, storagePath: string): Promise<void> {
-  await supabase
+export async function deleteSectionImage(
+  imageId: string,
+  storagePath: string,
+  sourceBucket = "newsletter-images"
+): Promise<void> {
+  const { error } = await supabase
     .schema("newsletters")
     .from("section_images")
     .update({ is_deleted: true })
     .eq("id", imageId);
-  await supabase.storage.from("newsletter-images").remove([storagePath]);
+  if (error) throw error;
+  // Library photos (teacher-photos) stay in the teacher's library.
+  if (sourceBucket === "newsletter-images") {
+    void supabase.storage.from("newsletter-images").remove([storagePath]);
+  }
 }
 
 // ---------------------------------------------------------------------------

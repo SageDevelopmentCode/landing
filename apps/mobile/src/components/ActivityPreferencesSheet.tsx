@@ -1,18 +1,22 @@
+import {
+  Display,
+  Garden,
+  GardenAvatar,
+  GardenButton,
+  GardenEmpty,
+  GardenErrorCard,
+  GardenFonts,
+  GardenRadii,
+  GardenSkeleton,
+  HandNote,
+  gardenSheetChrome,
+} from "@/components/garden";
 import { forwardRef, useCallback, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
-import { Image } from "expo-image";
-import { Brand, FontFamilies } from "@/constants/theme";
 import { fetchDontIncludeStudentIds } from "@/lib/application-tags";
 import {
   LEVEL_LABELS,
@@ -30,23 +34,6 @@ type PrefRow = {
   isDefault?: boolean;
 };
 
-const AVATAR_PALETTE = [
-  "#6b7c9b", "#7b8ca3", "#8b9c7e", "#9c7e8b",
-  "#7e8b9c", "#a07060", "#707ea0", "#608070",
-];
-
-function avatarColor(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0][0].toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 type AttendingStudent = {
   student_id: string;
   name: string | null;
@@ -62,29 +49,19 @@ interface Props {
 function PrefStudentRow({ pref }: { pref: PrefRow }) {
   const lvl = LEVEL_LABELS[pref.participation_level];
   return (
-    <View style={styles.row}>
-      {pref.profile_image_url ? (
-        <Image
-          source={{ uri: pref.profile_image_url }}
-          style={[styles.avatar, styles.avatarImg]}
-          contentFit="cover"
-        />
-      ) : (
-        <View style={[styles.avatar, { backgroundColor: avatarColor(pref.student_id) }]}>
-          <Text style={styles.avatarText}>{getInitials(pref.child_legal_name)}</Text>
-        </View>
-      )}
+    <View style={styles.row} accessible accessibilityLabel={`${pref.child_legal_name}: ${lvl.label}${pref.notes ? `. ${pref.notes}` : ""}`}>
+      <GardenAvatar name={pref.child_legal_name} uri={pref.profile_image_url} seed={pref.student_id} size={44} />
       <View style={styles.info}>
-        <Text style={styles.name}>{pref.child_legal_name}</Text>
+        <Text style={styles.name} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+          {pref.child_legal_name}
+        </Text>
         <View style={[styles.chip, { backgroundColor: lvl.bg }]}>
           <Text style={[styles.chipText, { color: lvl.color }]}>
             {lvl.emoji} {lvl.label}
           </Text>
         </View>
         {!!pref.notes && <Text style={styles.notes}>{pref.notes}</Text>}
-        {pref.isDefault && (
-          <Text style={styles.defaultLabel}>Auto-fill preference</Text>
-        )}
+        {pref.isDefault && <Text style={styles.defaultLabel}>Auto-fill preference</Text>}
       </View>
     </View>
   );
@@ -297,230 +274,143 @@ export const ActivityPreferencesSheet = forwardRef<BottomSheetModal, Props>(
         : hasAttendingScope && attendingStudents.length === 0
           ? "No students signed up for this day."
           : "No preferences set yet.";
+    const fullCount = prefs.filter((p) => p.participation_level === "full").length;
 
     return (
       <BottomSheetModal
         ref={ref}
-        snapPoints={["50%", "85%"]}
-        enablePanDownToClose
+        snapPoints={["55%", "88%"]}
         onChange={handleChange}
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior="close"
-          />
-        )}
+        {...gardenSheetChrome}
       >
         <BottomSheetScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>Student Preferences</Text>
+          <Display size={26}>Student Preferences</Display>
+          {!loading && !error && prefs.length + noPreferenceStudents.length > 0 ? (
+            <HandNote size={16} style={{ marginTop: 2 }}>
+              {`${prefs.length} set${fullCount ? ` · ${fullCount} full` : ""}${
+                noPreferenceStudents.length ? ` · ${noPreferenceStudents.length} still to hear from` : " · everyone's answered ✓"
+              }`}
+            </HandNote>
+          ) : null}
 
-          {loading && (
-            <View style={styles.centered}>
-              <ActivityIndicator size="small" color={Brand.sage700} />
-            </View>
-          )}
-
-          {!loading && error && (
-            <View style={styles.centered}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          )}
-
-          {!loading && !error && prefs.length === 0 && noPreferenceStudents.length === 0 && (
-            <View style={styles.centered}>
-              <Text style={styles.emptyText}>{emptyMessage}</Text>
-            </View>
-          )}
-
-          {!loading && !error && prefs.length > 0 && (
-            <>
-              <Text style={styles.sectionHeader}>Preferences Set</Text>
-              {prefs.map((pref) => (
-                <PrefStudentRow key={pref.student_id} pref={pref} />
+          {loading ? (
+            <View style={{ gap: 10, marginTop: 16 }} accessibilityLabel="Loading preferences">
+              {[0, 1, 2].map((i) => (
+                <View key={i} style={styles.row}>
+                  <GardenSkeleton width={44} height={44} radius={22} />
+                  <View style={{ flex: 1, gap: 6 }}>
+                    <GardenSkeleton width="55%" height={14} radius={6} />
+                    <GardenSkeleton width="35%" height={20} radius={10} />
+                  </View>
+                </View>
               ))}
-            </>
-          )}
+            </View>
+          ) : null}
 
-          {!loading && !error && noPreferenceStudents.length > 0 && (
-            <>
-              <Text style={styles.sectionHeader}>No Preference Set</Text>
+          {!loading && error ? (
+            <View style={{ marginTop: 16 }}>
+              <GardenErrorCard title="Couldn't load preferences" body={error} onRetry={() => void fetchPrefs()} />
+            </View>
+          ) : null}
+
+          {!loading && !error && prefs.length === 0 && noPreferenceStudents.length === 0 ? (
+            <GardenEmpty emoji="🗓️" title={emptyMessage} tint="sky" style={{ marginTop: 16 }} />
+          ) : null}
+
+          {!loading && !error && noPreferenceStudents.length > 0 ? (
+            <View style={styles.group}>
+              <View style={styles.groupHead}>
+                <View style={[styles.dot, { backgroundColor: Garden.coralDeep }]} />
+                <Text style={styles.sectionHeader}>No Preference Set</Text>
+                <Text style={styles.groupCount}>{noPreferenceStudents.length}</Text>
+              </View>
               {noPreferenceStudents.map((s) => {
                 const displayName = s.name ?? "Unknown";
                 const isSending = sendingId === s.student_id;
                 const isSent = sentIds.has(s.student_id);
-                const isDisabled = isSending || isSent || !!sendingId;
                 return (
                   <View key={s.student_id} style={styles.row}>
-                    {s.profile_image_url ? (
-                      <Image
-                        source={{ uri: s.profile_image_url }}
-                        style={[styles.avatar, styles.avatarImg]}
-                        contentFit="cover"
-                      />
-                    ) : (
-                      <View
-                        style={[
-                          styles.avatar,
-                          { backgroundColor: avatarColor(s.student_id) },
-                        ]}
-                      >
-                        <Text style={styles.avatarText}>
-                          {getInitials(displayName)}
-                        </Text>
-                      </View>
-                    )}
+                    <GardenAvatar name={displayName} uri={s.profile_image_url} seed={s.student_id} size={44} />
                     <View style={styles.info}>
-                      <Text style={styles.name}>{displayName}</Text>
-                      <View style={[styles.chip, { backgroundColor: "#f3f4f6" }]}>
-                        <Text style={[styles.chipText, { color: "#6b7280" }]}>
-                          ❓ Not set
-                        </Text>
+                      <Text style={styles.name} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+                        {displayName}
+                      </Text>
+                      <View style={[styles.chip, { backgroundColor: "#f3eadc" }]}>
+                        <Text style={[styles.chipText, { color: Garden.soft }]}>❓ Not set</Text>
                       </View>
                     </View>
-                    <Pressable
-                      style={[
-                        styles.reminderBtn,
-                        isSent && styles.reminderBtnSent,
-                        isDisabled && !isSent && styles.reminderBtnDisabled,
-                      ]}
-                      disabled={isDisabled}
-                      onPress={() => sendReminder(s.student_id)}
-                    >
-                      <Text
-                        style={[
-                          styles.reminderBtnText,
-                          isSent && styles.reminderBtnTextSent,
-                        ]}
-                      >
-                        {isSending ? "Sending…" : isSent ? "Sent" : "Send Reminder"}
-                      </Text>
-                    </Pressable>
+                    <GardenButton
+                      label={isSent ? "Sent" : "Send Reminder"}
+                      size="sm"
+                      tone={isSent ? "sage" : "coral"}
+                      icon={isSent ? "checkmark" : "notifications-outline"}
+                      loading={isSending}
+                      loadingLabel="Sending…"
+                      disabled={isSent || (!!sendingId && !isSending)}
+                      onPress={() => void sendReminder(s.student_id, s.name)}
+                      accessibilityHint={`Reminds ${displayName}'s family to set a preference`}
+                    />
                   </View>
                 );
               })}
-            </>
-          )}
+            </View>
+          ) : null}
+
+          {!loading && !error && prefs.length > 0 ? (
+            <View style={styles.group}>
+              <View style={styles.groupHead}>
+                <View style={[styles.dot, { backgroundColor: Garden.sage }]} />
+                <Text style={styles.sectionHeader}>Preferences Set</Text>
+                <Text style={styles.groupCount}>{prefs.length}</Text>
+              </View>
+              {prefs.map((pref) => (
+                <PrefStudentRow key={pref.student_id} pref={pref} />
+              ))}
+            </View>
+          ) : null}
         </BottomSheetScrollView>
       </BottomSheetModal>
     );
   },
 );
 
+ActivityPreferencesSheet.displayName = "ActivityPreferencesSheet";
+
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-    gap: 12,
+  container: { paddingHorizontal: 18, paddingTop: 4, paddingBottom: 48 },
+  group: {
+    marginTop: 16,
+    backgroundColor: Garden.white,
+    borderRadius: GardenRadii.md,
+    borderWidth: 1,
+    borderColor: Garden.line,
+    paddingHorizontal: 12,
+    paddingBottom: 4,
   },
-  title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: "#1f2937",
-    marginBottom: 4,
-    marginTop: 4,
-  },
-  centered: {
-    paddingVertical: 40,
-    alignItems: "center",
-  },
-  errorText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#dc2626",
-    textAlign: "center",
-  },
-  emptyText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#9ca3af",
-    textAlign: "center",
-  },
+  groupHead: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 12 },
+  dot: { width: 9, height: 9, borderRadius: 5 },
+  groupCount: { fontFamily: GardenFonts.bodyHeavy, fontSize: 13, color: Garden.muted },
   row: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    backgroundColor: "#f9fafb",
-    borderRadius: 12,
-    padding: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    overflow: "hidden",
+    gap: 12,
+    minHeight: 66,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Garden.line,
   },
-  avatarImg: {
-    backgroundColor: "transparent",
-  },
-  avatarText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#fff",
-  },
-  info: {
-    flex: 1,
-    gap: 6,
-  },
-  name: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#1f2937",
-  },
-  chip: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  chipText: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-  },
-  notes: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#6b7280",
-    lineHeight: 18,
-  },
+  info: { flex: 1, gap: 4 },
+  name: { fontFamily: GardenFonts.bodyHeavy, fontSize: 15, color: Garden.ink },
+  chip: { alignSelf: "flex-start", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  chipText: { fontFamily: GardenFonts.bodyHeavy, fontSize: 11.5 },
+  notes: { fontFamily: GardenFonts.body, fontSize: 13, color: Garden.soft },
   sectionHeader: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#6b7280",
-    marginTop: 8,
-    marginBottom: 2,
+    flex: 1,
+    fontFamily: GardenFonts.bodyHeavy,
+    fontSize: 12,
+    letterSpacing: 0.6,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: Garden.muted,
   },
-  defaultLabel: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-    color: "#9ca3af",
-    fontStyle: "italic",
-  },
-  reminderBtn: {
-    alignSelf: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: Brand.sage700,
-  },
-  reminderBtnSent: {
-    backgroundColor: "#e5e7eb",
-  },
-  reminderBtnDisabled: {
-    opacity: 0.6,
-  },
-  reminderBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-    color: "#ffffff",
-  },
-  reminderBtnTextSent: {
-    color: "#6b7280",
-  },
+  defaultLabel: { fontFamily: GardenFonts.hand, fontSize: 14, color: Garden.muted },
 });

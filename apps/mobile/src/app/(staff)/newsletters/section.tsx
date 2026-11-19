@@ -1,8 +1,37 @@
+// Staff newsletter section editor — Garden. Writes the text into the shared
+// draft (Done), uploads / removes photos right away (they update the editor's
+// counts and the preview immediately), asks before throwing away unsaved
+// text, and is read-only once the newsletter is published.
+import {
+  Display,
+  Garden,
+  GardenButton,
+  GardenEmpty,
+  GardenFonts,
+  GardenHintBox,
+  GardenIconButton,
+  GardenRadii,
+  HandNote,
+  PressableScale,
+  haptic,
+  useDiscardGuard,
+  useToast,
+} from "@/components/garden";
+import { floatingTabBarStyle } from "@/constants/theme";
+import { GUTTER } from "@/features/staff-newsletters/garden/NewslettersStaffParts";
+import { useNewsletterEditor } from "@/features/staff-newsletters/NewsletterEditorProvider";
+import type { NewsletterSectionImage } from "@/lib/newsletters-actions";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import { useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
-  Dimensions,
   KeyboardAvoidingView,
+  Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -10,286 +39,269 @@ import {
   Text,
   TextInput,
   View,
-  ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
-import { Image } from "expo-image";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
-import { Brand, FontFamilies, floatingTabBarStyle } from "@/constants/theme";
-import {
-  NewsletterSectionImage,
-  deleteSectionImage,
-  pendingSectionEdits,
-  setPendingTeacherUpdateEdit,
-  uploadSectionImage,
-} from "@/lib/newsletters-actions";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const IMG_SIZE = 80;
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function SectionEditorScreen() {
-  const {
-    sectionId,
-    sectionLabel,
-    isClassUpdates,
-    initialBody,
-    existingImages,
-  } = useLocalSearchParams<{
-    newsletterId: string;
-    sectionId: string;
-    sectionLabel: string;
-    isClassUpdates: string;
-    initialBody: string;
-    existingImages: string;
-  }>();
-
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
+  const { sectionId } = useLocalSearchParams<{ newsletterId: string; sectionId: string }>();
+  const e = useNewsletterEditor();
+  const toast = useToast();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const sec = e.draft?.sections.find((s) => s.id === sectionId) ?? null;
+  const isClass = !!sec?.is_class_updates;
+  const ro = e.isPublished;
+  const initial = sec ? (isClass ? e.draft!.myUpdate : sec.body) : "";
+  const [body, setBody] = useState(initial);
+  const [viewing, setViewing] = useState<NewsletterSectionImage | null>(null);
+  const uploadRef = useRef<((uri: string) => Promise<void>) | null>(null);
+  const changed = !ro && body !== initial;
+
+  const guard = useDiscardGuard(changed, {
+    title: "Discard changes?",
+    message: "Tap Done to keep what you wrote in this section.",
+    fallbackHref: "/(staff)/newsletters",
+  });
 
   useFocusEffect(
     useCallback(() => {
       navigation.getParent()?.setOptions({ tabBarStyle: { display: "none" } });
-      return () => {
-        navigation.getParent()?.setOptions({ tabBarStyle: floatingTabBarStyle });
-      };
-    }, [navigation])
+      return () => navigation.getParent()?.setOptions({ tabBarStyle: floatingTabBarStyle });
+    }, [navigation]),
   );
 
-  const isClass = isClassUpdates === "true";
-
-  const [body, setBody] = useState(initialBody ?? "");
-  const [images, setImages] = useState<NewsletterSectionImage[]>(() => {
-    try {
-      return existingImages ? JSON.parse(existingImages) : [];
-    } catch {
-      return [];
+  const done = () => {
+    if (sec && changed) {
+      if (isClass) e.patch({ myUpdate: body });
+      else e.patchSection(sec.id, { body });
+      haptic.success();
+      toast.show({ tone: "info", title: `${sec.label} updated`, message: "Remember to Save the draft.", duration: 2200, silent: true });
     }
-  });
-  const [uploading, setUploading] = useState(false);
+    guard.leave();
+  };
 
-  const handleDone = useCallback(() => {
-    if (isClass) {
-      setPendingTeacherUpdateEdit(body);
-    } else if (sectionId) {
-      pendingSectionEdits.set(sectionId, body);
-    }
-    router.back();
-  }, [isClass, sectionId, body, router]);
+  const upload = useCallback(
+    async (uri: string) => {
+      if (!sec) return;
+      const r = await e.addImage(sec.id, uri);
+      if (r.ok) {
+        haptic.success();
+        toast.show({ tone: "success", title: `Photo added to ${sec.label}`, duration: 1800 });
+      } else {
+        toast.show({
+          tone: "error",
+          title: "Upload Failed",
+          message: r.error ?? "Could not upload image",
+          action: { label: "Retry", onPress: () => void uploadRef.current?.(uri) },
+        });
+      }
+    },
+    [e, sec, toast],
+  );
+  useEffect(() => {
+    uploadRef.current = upload;
+  }, [upload]);
 
-  const handlePickImage = useCallback(async () => {
+  const pick = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permission Required", "Please allow access to your photo library.");
+      toast.show({
+        tone: "error",
+        title: "Permission Required",
+        message: "Please allow access to your photo library.",
+        action: { label: "Settings", onPress: () => void Linking.openSettings() },
+      });
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: false,
-      quality: 1,
-    });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: false, quality: 1 });
     if (result.canceled || !result.assets[0]) return;
+    await upload(result.assets[0].uri);
+  };
 
-    setUploading(true);
-    try {
-      const uploaded = await uploadSectionImage(sectionId!, result.assets[0].uri);
-      setImages((prev) => [...prev, uploaded]);
-    } catch (e: any) {
-      Alert.alert("Upload Failed", e.message ?? "Could not upload image");
-    } finally {
-      setUploading(false);
-    }
-  }, [sectionId]);
-
-  const handleDeleteImage = useCallback((img: NewsletterSectionImage) => {
+  const confirmRemove = (img: NewsletterSectionImage) => {
+    if (!sec) return;
+    haptic.warning();
     Alert.alert("Remove Image", "Remove this image from the section?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Remove",
         style: "destructive",
         onPress: async () => {
-          try {
-            await deleteSectionImage(img.id, img.storage_path);
-            setImages((prev) => prev.filter((i) => i.id !== img.id));
-          } catch (e: any) {
-            Alert.alert("Error", e.message ?? "Failed to remove image");
-          }
+          const r = await e.removeImage(sec.id, img);
+          setViewing(null);
+          if (r.ok) toast.show({ tone: "success", title: "Image removed", duration: 1600 });
+          else toast.show({ tone: "error", title: "Error", message: r.error ?? "Failed to remove image" });
         },
       },
     ]);
-  }, []);
+  };
+
+  if (!sec) {
+    return (
+      <SafeAreaView style={st.safe}>
+        <View style={st.nav}>
+          <GardenIconButton icon="chevron-back" label="Back" onPress={() => guard.leave()} />
+        </View>
+        <View style={{ paddingHorizontal: GUTTER }}>
+          <GardenEmpty emoji="🍂" title="Section not found" body="Go back to the newsletter and try again." />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const tile = Math.floor((width - GUTTER * 2 - 16) / 3);
+  const uploading = !!e.uploading[sec.id];
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={0}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={Brand.sage700} />
-        </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>{sectionLabel}</Text>
-        <Pressable
-          style={({ pressed }) => [styles.doneBtn, pressed && { opacity: 0.7 }]}
-          onPress={handleDone}
-        >
-          <Text style={styles.doneBtnText}>Done</Text>
-        </Pressable>
+    <SafeAreaView style={st.safe} edges={["top", "left", "right"]}>
+      <View style={st.nav}>
+        <GardenIconButton icon="chevron-back" label="Back" onPress={guard.back} />
+        <View style={{ flex: 1 }}>
+          <Display size={24} numberOfLines={1}>
+            {sec.label}
+          </Display>
+          {!sec.visible ? (
+            <HandNote size={14} color={Garden.muted}>
+              hidden from parents
+            </HandNote>
+          ) : null}
+        </View>
+        {!ro ? <GardenButton label="Done" tone="sage" size="sm" icon="checkmark" onPress={done} /> : null}
       </View>
 
-      {isClass ? (
-        // Class Updates — show only current teacher's textarea
-        <View style={styles.flex}>
-          <View style={styles.classLabelRow}>
-            <Text style={styles.classLabel}>Your Update</Text>
-          </View>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: insets.bottom + 32, gap: 14 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          {ro ? (
+            <GardenHintBox icon="lock-closed-outline" style={{ marginTop: 0 }}>
+              This newsletter is published, so its sections are read-only.
+            </GardenHintBox>
+          ) : null}
+          {isClass ? <Text style={st.label}>Your Update</Text> : null}
           <TextInput
-            style={styles.bodyInput}
+            style={[st.body, ro && { opacity: 0.8 }]}
             value={body}
             onChangeText={setBody}
             multiline
-            placeholder="Write your class update here…"
-            placeholderTextColor="#9ca3af"
+            editable={!ro}
+            placeholder={isClass ? "Write your class update here…" : `Write content for ${sec.label}…`}
+            placeholderTextColor={Garden.muted}
             textAlignVertical="top"
+            maxFontSizeMultiplier={1.4}
+            accessibilityLabel={isClass ? "Your Update" : `${sec.label} text`}
           />
-        </View>
-      ) : (
-        // Regular section — body + image strip
-        <View style={styles.flex}>
-          <TextInput
-            style={styles.bodyInput}
-            value={body}
-            onChangeText={setBody}
-            multiline
-            placeholder={`Write content for ${sectionLabel}…`}
-            placeholderTextColor="#9ca3af"
-            textAlignVertical="top"
-          />
+          {changed ? (
+            <HandNote size={15} color={Garden.coralDeep}>
+              tap Done to keep these edits ✏️
+            </HandNote>
+          ) : null}
 
-          {/* Image strip */}
-          <View style={styles.imageStripContainer}>
-            <View style={styles.imageStripHeader}>
-              <Text style={styles.imageStripTitle}>Images ({images.length})</Text>
+          {!isClass ? (
+            <View style={{ gap: 10 }}>
+              <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
+                <Text style={st.label}>Images</Text>
+                <HandNote size={15} color={Garden.muted}>{`${sec.images.length}`}</HandNote>
+              </View>
+              <View style={st.grid}>
+                {sec.images.map((img) => (
+                  <PressableScale
+                    key={img.id}
+                    onPress={() => setViewing(img)}
+                    onLongPress={ro ? undefined : () => confirmRemove(img)}
+                    accessibilityLabel="Section image"
+                    accessibilityHint={ro ? "Opens the image" : "Opens the image. Long press to remove"}
+                    style={[st.tile, { width: tile, height: tile }]}
+                  >
+                    {img.signed_url ? (
+                      <Image source={{ uri: img.signed_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
+                    ) : (
+                      <Ionicons name="image-outline" size={22} color={Garden.muted} />
+                    )}
+                  </PressableScale>
+                ))}
+                {!ro ? (
+                  <PressableScale
+                    onPress={() => void pick()}
+                    disabled={uploading}
+                    accessibilityLabel={uploading ? "Uploading image" : "Add image"}
+                    style={[st.tile, st.addTile, { width: tile, height: tile }]}
+                  >
+                    {uploading ? (
+                      <ActivityIndicator color={Garden.sageDeep} />
+                    ) : (
+                      <>
+                        <Ionicons name="add" size={24} color={Garden.sageDeep} />
+                        <Text style={st.addText}>Add</Text>
+                      </>
+                    )}
+                  </PressableScale>
+                ) : null}
+              </View>
+              {!ro ? (
+                <HandNote size={14} color={Garden.muted}>
+                  photos save right away · long-press one to remove it
+                </HandNote>
+              ) : null}
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.imageStrip}
-            >
-              {images.map((img) => (
-                <Pressable
-                  key={img.id}
-                  style={({ pressed }) => [styles.imageTile, pressed && { opacity: 0.8 }]}
-                  onLongPress={() => handleDeleteImage(img)}
-                  onPress={() =>
-                    Alert.alert("Image", "Long-press to remove this image.", [
-                      { text: "Remove", style: "destructive", onPress: () => handleDeleteImage(img) },
-                      { text: "Cancel", style: "cancel" },
-                    ])
-                  }
-                >
-                  <Image
-                    source={{ uri: img.signed_url ?? undefined }}
-                    style={styles.imageThumb}
-                    contentFit="cover"
-                  />
-                </Pressable>
-              ))}
-              <Pressable
-                style={({ pressed }) => [styles.addImageBtn, pressed && { opacity: 0.7 }]}
-                onPress={handlePickImage}
-                disabled={uploading}
-              >
-                {uploading ? (
-                  <ActivityIndicator size="small" color={Brand.sage700} />
-                ) : (
-                  <Ionicons name="add" size={28} color={Brand.sage700} />
-                )}
-              </Pressable>
-            </ScrollView>
+          ) : null}
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <Modal visible={!!viewing} transparent animationType="fade" onRequestClose={() => setViewing(null)}>
+        <View style={st.viewer}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setViewing(null)} accessibilityLabel="Close image" />
+          {viewing?.signed_url ? (
+            <Image source={{ uri: viewing.signed_url }} style={{ width, height: width }} contentFit="contain" />
+          ) : null}
+          <View style={[st.viewerBar, { paddingBottom: insets.bottom + 16 }]}>
+            <GardenButton label="Close" tone="outline" onPress={() => setViewing(null)} style={{ flex: 1 }} />
+            {!ro && viewing ? (
+              <GardenButton label="Remove" tone="coral" icon="trash-outline" onPress={() => confirmRemove(viewing)} style={{ flex: 1 }} />
+            ) : null}
           </View>
         </View>
-      )}
-    </KeyboardAvoidingView>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  flex: { flex: 1 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
-    gap: 8,
-  },
-  backBtn: { width: 32, alignItems: "flex-start" },
-  headerTitle: { flex: 1, fontFamily: FontFamilies.heading, fontSize: 16, color: "#1f2937" },
-  doneBtn: {
-    backgroundColor: Brand.sage700,
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  doneBtnText: { fontFamily: FontFamilies.bodySemiBold, fontSize: 13, color: "#fff" },
-  classLabelRow: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  classLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#374151",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  bodyInput: {
-    flex: 1,
-    fontFamily: FontFamilies.body,
-    fontSize: 15,
-    color: "#111827",
-    lineHeight: 24,
-    padding: 16,
-  },
-  imageStripContainer: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e5e7eb",
-    paddingBottom: 20,
-  },
-  imageStripHeader: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 },
-  imageStripTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
+const st = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Garden.cream },
+  nav: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: GUTTER, paddingVertical: 10 },
+  label: {
+    fontFamily: GardenFonts.bodyHeavy,
     fontSize: 12,
-    color: "#6b7280",
+    letterSpacing: 0.6,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    color: Garden.muted,
   },
-  imageStrip: { paddingHorizontal: 16, gap: 10, alignItems: "center" },
-  imageTile: {
-    width: IMG_SIZE,
-    height: IMG_SIZE,
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  imageThumb: { width: IMG_SIZE, height: IMG_SIZE },
-  addImageBtn: {
-    width: IMG_SIZE,
-    height: IMG_SIZE,
-    borderRadius: 8,
+  body: {
+    minHeight: 220,
+    borderRadius: GardenRadii.md,
     borderWidth: 1.5,
-    borderColor: "#e5e7eb",
-    borderStyle: "dashed",
+    borderColor: Garden.line,
+    backgroundColor: Garden.white,
+    padding: 14,
+    fontFamily: GardenFonts.bodySemi,
+    fontSize: 16,
+    lineHeight: 23,
+    color: Garden.ink,
+  },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  tile: {
+    borderRadius: GardenRadii.sm,
+    overflow: "hidden",
+    backgroundColor: "#f1e7d8",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f9fafb",
   },
+  addTile: { borderWidth: 1.5, borderStyle: "dashed", borderColor: Garden.sage, backgroundColor: "#f4f9f5", gap: 2 },
+  addText: { fontFamily: GardenFonts.bodyHeavy, fontSize: 13, color: Garden.sageDeep },
+  viewer: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "center" },
+  viewerBar: { position: "absolute", left: 0, right: 0, bottom: 0, flexDirection: "row", gap: 10, paddingHorizontal: GUTTER },
 });

@@ -1,4 +1,4 @@
-import { HomeTheme } from "@/components/home/homeTheme";
+import { Garden, GardenFonts, gardenSheetChrome } from "@/components/garden";
 import { SkeletonBox } from "@/components/ui/SkeletonBox";
 import { Brand, FontFamilies } from "@/constants/theme";
 import {
@@ -10,7 +10,6 @@ import {
   UPCOMING_BIRTHDAY_DAYS,
 } from "@/lib/staff-upcoming-birthdays";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -129,20 +128,10 @@ export const StaffAllBirthdaysSheet = forwardRef<BottomSheetModal, Props>(
       <BottomSheetModal
         ref={ref}
         snapPoints={["50%", "90%"]}
-        enablePanDownToClose
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop
-            {...props}
-            disappearsOnIndex={-1}
-            appearsOnIndex={0}
-            pressBehavior="close"
-          />
-        )}
-        backgroundStyle={{ backgroundColor: HomeTheme.canvas }}
-        handleIndicatorStyle={{ backgroundColor: "#C4D9C8" }}
+        {...gardenSheetChrome}
       >
         <BottomSheetScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>All Birthdays</Text>
+          <Text style={styles.title} accessibilityRole="header">All Birthdays</Text>
           <Text style={styles.subtitle}>Students & staff</Text>
 
           {loading ? (
@@ -204,9 +193,10 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 20,
-    color: "#1f2937",
+    fontFamily: GardenFonts.display,
+    fontSize: 24,
+    letterSpacing: -0.7,
+    color: Garden.ink,
     marginBottom: 4,
   },
   subtitle: {

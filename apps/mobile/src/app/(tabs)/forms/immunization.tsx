@@ -1,364 +1,225 @@
-import { Brand, FontFamilies, floatingTabBarStyle } from "@/constants/theme";
-import { SkeletonBox } from "@/components/ui/SkeletonBox";
+// Proof of Immunizations — read-only Garden viewer of the files in the
+// `immunization-records` bucket. Signed URLs are made in one batch, refreshed
+// whenever the screen regains focus, and re-signed on tap if they've gone stale.
+import {
+  Garden,
+  GardenFonts,
+  GardenRadii,
+  GardenTints,
+  HandNote,
+  PressableScale,
+  gardenCard,
+  haptic,
+  useToast,
+} from "@/components/garden";
+import {
+  formatFileSize,
+  formatShortDate,
+  isRealStorageFile,
+  MissingParamsError,
+  unwrap,
+} from "@/features/forms/formsUtils";
+import { FormDetailScreen, FormListHeading } from "@/features/forms/garden/FormParts";
+import { useFormDetail } from "@/features/forms/useFormDetail";
+import { useHideTabBar } from "@/features/forms/useHideTabBar";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native";
-import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import {
-  FlatList,
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Linking, StyleSheet, Text, View } from "react-native";
+
+const BUCKET = "immunization-records";
+const URL_TTL_S = 3600;
+/** Re-sign on tap once a URL is older than this (they expire after 1h). */
+const STALE_MS = 50 * 60 * 1000;
 
 interface ImmunizationFile {
   name: string;
+  path: string;
   signedUrl: string | null;
   sizeBytes: number | null;
   updatedAt: string | null;
 }
 
-function formatFileSize(bytes: number | null): string {
-  if (bytes == null) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
+type FilesData = { files: ImmunizationFile[]; signedAt: number };
 
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+function useOpenFile(signedAt: number | null) {
+  const toast = useToast();
+  const [opening, setOpening] = useState<string | null>(null);
+  const openRef = useRef<((f: ImmunizationFile) => Promise<void>) | null>(null);
 
-function CompletedBadge() {
-  return (
-    <View style={styles.badge}>
-      <Ionicons name="checkmark-circle" size={12} color="#047857" />
-      <Text style={styles.badgeText}>Completed</Text>
-    </View>
-  );
-}
-
-function FileRow({ file }: { file: ImmunizationFile }) {
-  const ext = file.name.split(".").pop()?.toUpperCase() ?? "FILE";
-
-  return (
-    <TouchableOpacity
-      style={styles.fileRow}
-      activeOpacity={0.7}
-      onPress={() => {
-        if (file.signedUrl) {
-          Linking.openURL(file.signedUrl);
+  const open = useCallback(
+    async (file: ImmunizationFile) => {
+      setOpening(file.path);
+      try {
+        let url = file.signedUrl;
+        if (!url || signedAt === null || Date.now() - signedAt > STALE_MS) {
+          const res = await supabase.storage.from(BUCKET).createSignedUrl(file.path, URL_TTL_S);
+          url = unwrap(res)?.signedUrl ?? null;
         }
-      }}
-      disabled={!file.signedUrl}
+        if (!url) throw new Error("no-url");
+        await Linking.openURL(url);
+      } catch {
+        toast.show({
+          tone: "error",
+          title: "Couldn't open that file",
+          message: "Check your connection and try again.",
+          action: { label: "Retry", onPress: () => void openRef.current?.(file) },
+        });
+      } finally {
+        setOpening(null);
+      }
+    },
+    [signedAt, toast],
+  );
+
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
+
+  return { opening, open };
+}
+
+function FileRow({
+  file,
+  opening,
+  onOpen,
+}: {
+  file: ImmunizationFile;
+  opening: boolean;
+  onOpen: () => void;
+}) {
+  const ext = file.name.includes(".") ? (file.name.split(".").pop()?.toUpperCase() ?? "FILE") : "FILE";
+  const meta = [formatFileSize(file.sizeBytes), formatShortDate(file.updatedAt)].filter(Boolean).join(" · ");
+  return (
+    <PressableScale
+      onPress={onOpen}
+      disabled={opening}
+      accessibilityLabel={`Open ${file.name}`}
+      accessibilityHint="Opens the file in your browser"
+      accessibilityState={{ busy: opening }}
+      style={st.row}
     >
-      <View style={styles.fileIconContainer}>
-        <Ionicons name="document-outline" size={22} color={Brand.sage700} />
-        <Text style={styles.fileExt}>{ext}</Text>
+      <View style={st.extTile}>
+        <Ionicons name="document-outline" size={18} color={GardenTints.sky.fg} />
+        <Text style={st.ext} maxFontSizeMultiplier={1.1} numberOfLines={1}>
+          {ext}
+        </Text>
       </View>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={styles.fileName} numberOfLines={1}>
+        <Text style={st.name} numberOfLines={2} maxFontSizeMultiplier={1.4}>
           {file.name}
         </Text>
-        <Text style={styles.fileMeta}>
-          {[formatFileSize(file.sizeBytes), formatDate(file.updatedAt)]
-            .filter(Boolean)
-            .join(" · ")}
-        </Text>
+        {meta ? (
+          <Text style={st.meta} maxFontSizeMultiplier={1.4}>
+            {opening ? "Opening…" : meta}
+          </Text>
+        ) : opening ? (
+          <Text style={st.meta}>Opening…</Text>
+        ) : null}
       </View>
-      {file.signedUrl ? (
-        <Ionicons
-          name="cloud-download-outline"
-          size={20}
-          color={Brand.sage700}
-        />
+      {opening ? (
+        <ActivityIndicator color={Garden.sage} />
       ) : (
-        <Ionicons name="alert-circle-outline" size={20} color="#9ca3af" />
+        <Ionicons name="open-outline" size={20} color={Garden.sageDeep} />
       )}
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 
 export default function ImmunizationScreen() {
-  const { studentId, parentId, storageStudentId } = useLocalSearchParams<{
+  const { studentId, parentId, userId, storageStudentId } = useLocalSearchParams<{
     studentId: string;
     parentId: string;
+    userId: string;
     storageStudentId: string;
   }>();
-  const router = useRouter();
-  const [files, setFiles] = useState<ImmunizationFile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const navigation = useNavigation();
-  useFocusEffect(
-    useCallback(() => {
-      navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
-      return () => {
-        navigation.getParent()?.setOptions({ tabBarStyle: floatingTabBarStyle });
+  useHideTabBar();
+
+  // storageStudentId is admin.students.id (the storage path key)
+  // falls back to studentId if not provided
+  const owner = parentId || userId;
+  const pathStudentId = storageStudentId || studentId;
+  const base = owner && pathStudentId ? `${owner}/${pathStudentId}` : null;
+
+  const detail = useFormDetail<FilesData>(
+    base,
+    async () => {
+      if (!base) throw new MissingParamsError();
+      const list = unwrap(await supabase.storage.from(BUCKET).list(`${base}/`)) ?? [];
+      const real = list.filter(isRealStorageFile);
+      const paths = real.map((f) => `${base}/${f.name}`);
+      const signed = paths.length
+        ? (unwrap(await supabase.storage.from(BUCKET).createSignedUrls(paths, URL_TTL_S)) ?? [])
+        : [];
+      const urlByPath = new Map(signed.map((s) => [s.path, s.signedUrl]));
+      return {
+        signedAt: Date.now(),
+        files: real.map((f, idx) => ({
+          name: f.name,
+          path: paths[idx],
+          signedUrl: urlByPath.get(paths[idx]) ?? signed[idx]?.signedUrl ?? null,
+          sizeBytes: (f.metadata?.size as number | undefined) ?? null,
+          updatedAt: f.updated_at ?? null,
+        })),
       };
-    }, [navigation])
+    },
+    "parent-forms-immunization",
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-
-      async function load() {
-        setLoading(true);
-        setError(null);
-
-        // storageStudentId is admin.students.id (the storage path key)
-        // falls back to studentId (applications.id) if not provided
-        const pathStudentId = storageStudentId || studentId;
-        const path = `${parentId}/${pathStudentId}/`;
-        const { data: fileList, error: listErr } = await supabase.storage
-          .from("immunization-records")
-          .list(path);
-
-        if (listErr || !fileList) {
-          if (!cancelled) {
-            setError(listErr?.message ?? "Failed to load files.");
-            setLoading(false);
-          }
-          return;
-        }
-
-        // Generate signed URLs in parallel
-        const signedResults = await Promise.all(
-          fileList.map((f) =>
-            supabase.storage
-              .from("immunization-records")
-              .createSignedUrl(`${path}/${f.name}`, 3600),
-          ),
-        );
-
-        if (!cancelled) {
-          const enriched: ImmunizationFile[] = fileList.map((f, idx) => ({
-            name: f.name,
-            signedUrl: signedResults[idx].data?.signedUrl ?? null,
-            sizeBytes: f.metadata?.size ?? null,
-            updatedAt: f.updated_at ?? null,
-          }));
-          setFiles(enriched);
-          setLoading(false);
-        }
-      }
-
-      load();
-      return () => {
-        cancelled = true;
-      };
-    }, [studentId, parentId]),
-  );
+  const { opening, open } = useOpenFile(detail.data?.signedAt ?? null);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.stickyHeader}>
-        <Pressable
-          onPress={() => router.back()}
-          style={({ pressed }) => [
-            styles.backButton,
-            pressed && styles.pressed,
-          ]}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={24} color={Brand.sage700} />
-        </Pressable>
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          Immunization Records
-        </Text>
-        <CompletedBadge />
-      </View>
-
-      {loading ? (
-        <View style={styles.skeletonContainer}>
-          {[1, 2, 3].map((i) => (
-            <View key={i} style={styles.fileRow}>
-              <SkeletonBox width={44} height={44} borderRadius={8} />
-              <View style={{ flex: 1, gap: 6 }}>
-                <SkeletonBox width="65%" height={14} borderRadius={4} />
-                <SkeletonBox width="40%" height={11} borderRadius={4} />
-              </View>
-              <SkeletonBox width={20} height={20} borderRadius={4} />
-            </View>
-          ))}
-        </View>
-      ) : error ? (
-        <View style={styles.centered}>
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        </View>
-      ) : files.length === 0 ? (
-        <View style={styles.centered}>
-          <View style={styles.neutralCard}>
-            <Text style={styles.neutralCardHeading}>No Files Found</Text>
-            <Text style={styles.neutralCardBody}>
-              No immunization records have been uploaded yet.
-            </Text>
-          </View>
-        </View>
-      ) : (
+    <FormDetailScreen title="Immunization Records" detail={detail} isEmpty={(d) => d.files.length === 0}
+      emptyTitle="No Files Found"
+      emptyBody="No immunization records have been uploaded yet."
+    >
+      {({ files }) => (
         <>
-          <View style={styles.fileCountRow}>
-            <Text style={styles.fileCountText}>
-              {files.length} {files.length === 1 ? "file" : "files"}
-            </Text>
-            <Text style={styles.fileCountSub}>
+          <View style={st.countRow}>
+            <FormListHeading>{`${files.length} ${files.length === 1 ? "file" : "files"}`}</FormListHeading>
+            <HandNote size={16} color={Garden.muted}>
               Links expire after 1 hour
-            </Text>
+            </HandNote>
           </View>
-          <FlatList
-            data={files}
-            keyExtractor={(f) => f.name}
-            renderItem={({ item }) => <FileRow file={item} />}
-            contentContainerStyle={{ paddingBottom: 40 }}
-            showsVerticalScrollIndicator={false}
-          />
+          {files.map((f) => (
+            <FileRow
+              key={f.path}
+              file={f}
+              opening={opening === f.path}
+              onOpen={() => {
+                haptic.press();
+                void open(f);
+              }}
+            />
+          ))}
         </>
       )}
-    </SafeAreaView>
+    </FormDetailScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#ffffff" },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  stickyHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-    backgroundColor: "#ffffff",
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-  },
-  pressed: { opacity: 0.5 },
-  headerTitle: {
-    flex: 1,
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: Brand.sage700,
-  },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#ecfdf5",
-    borderWidth: 1,
-    borderColor: "#a7f3d0",
-    borderRadius: 9999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  badgeText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-    color: "#047857",
-  },
-  fileCountRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
-  },
-  fileCountText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#374151",
-  },
-  fileCountSub: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-    color: "#9ca3af",
-  },
-  fileRow: {
+const st = StyleSheet.create({
+  countRow: { gap: 2 },
+  row: {
+    ...gardenCard,
+    borderRadius: GardenRadii.md,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f3f4f6",
+    padding: 14,
+    minHeight: 72,
   },
-  fileIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: "#F2F7F3",
-    borderWidth: 1,
-    borderColor: "#C8DFCB",
+  extTile: {
+    width: 48,
+    height: 48,
+    borderRadius: GardenRadii.sm,
+    backgroundColor: GardenTints.sky.bg,
     alignItems: "center",
     justifyContent: "center",
+    gap: 1,
   },
-  fileExt: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 8,
-    color: Brand.sage700,
-    marginTop: 1,
-  },
-  fileName: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#1f2937",
-  },
-  fileMeta: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "#9ca3af",
-  },
-  neutralCard: {
-    backgroundColor: "#F2F7F3",
-    borderWidth: 1,
-    borderColor: "#f3f4f6",
-    borderRadius: 12,
-    padding: 16,
-    gap: 8,
-  },
-  neutralCardHeading: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#1f2937",
-  },
-  neutralCardBody: {
-    fontFamily: FontFamilies.body,
-    fontSize: 14,
-    color: "#4b5563",
-    lineHeight: 22,
-  },
-  skeletonContainer: { paddingTop: 4 },
-  errorCard: {
-    backgroundColor: "#fff1f2",
-    borderWidth: 1,
-    borderColor: "#ffe4e6",
-    borderRadius: 12,
-    padding: 16,
-  },
-  errorText: { fontFamily: FontFamilies.body, fontSize: 14, color: "#be123c" },
+  ext: { fontFamily: GardenFonts.bodyHeavy, fontSize: 10, color: GardenTints.sky.fg },
+  name: { fontFamily: GardenFonts.bodyBold, fontSize: 15, color: Garden.ink },
+  meta: { fontFamily: GardenFonts.bodySemi, fontSize: 13, color: Garden.muted },
 });

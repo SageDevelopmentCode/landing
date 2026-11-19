@@ -1,92 +1,65 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Tabs, router } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal, BottomSheetModalProvider } from "@gorhom/bottom-sheet";
-import { Brand, BottomTabInset, floatingTabBarStyle } from "@/constants/theme";
-import { StaffMoreMenuSheet } from "@/components/StaffMoreMenuSheet";
-
-type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
-
-function tabIcon(focused: boolean, active: IoniconName, inactive: IoniconName) {
-  return (
-    <Ionicons
-      name={focused ? active : inactive}
-      size={24}
-      color={focused ? Brand.sage700 : "#9ca3af"}
-    />
-  );
-}
+import { floatingTabBarStyle } from "@/constants/theme";
+import { GardenToastProvider } from "@/components/garden/GardenToast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadMessages } from "@/features/messages/useUnreadMessages";
+import { GardenTabBar, STAFF_TABS } from "@/features/navigation/garden/GardenTabBar";
+import { StaffMoreSheet, STAFF_MORE_ROUTE_NAMES } from "@/features/staff-more/garden/StaffMoreSheet";
 
 export default function StaffLayout() {
+  const { userId } = useAuth();
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const { unread, refresh: refreshUnread } = useUnreadMessages({ userId, channelKey: "staff" });
 
   const openMoreSheet = useCallback(() => {
     bottomSheetRef.current?.present();
   }, []);
 
   return (
+    <GardenToastProvider>
     <BottomSheetModalProvider>
       <Tabs
         safeAreaInsets={{ bottom: 0 }}
+        tabBar={(props) => (
+          <GardenTabBar
+            {...props}
+            tabs={STAFF_TABS}
+            unread={unread}
+            moreOpen={moreOpen}
+            moreRoutes={STAFF_MORE_ROUTE_NAMES}
+          />
+        )}
         screenOptions={{
           headerShown: false,
-          tabBarActiveTintColor: Brand.sage700,
-          tabBarInactiveTintColor: "#9ca3af",
           tabBarStyle: floatingTabBarStyle,
-          tabBarLabelStyle: { fontSize: 11 },
-          tabBarItemStyle: { paddingVertical: 4 },
           sceneStyle: { backgroundColor: 'transparent' },
-          tabBarBackground: () => null,
         }}
       >
-        <Tabs.Screen
-          name="home"
-          options={{
-            title: "Home",
-            tabBarIcon: ({ focused }) =>
-              tabIcon(focused, "home", "home-outline"),
-          }}
-        />
+        <Tabs.Screen name="home" options={{ title: "Home" }} />
         <Tabs.Screen
           name="students"
-          options={{
-            title: "Students",
-            tabBarIcon: ({ focused }) =>
-              tabIcon(focused, "people", "people-outline"),
-          }}
+          options={{ title: "Students" }}
           listeners={{
             tabPress: () => {
               router.navigate("/(staff)/students" as any);
             },
           }}
         />
-        <Tabs.Screen
-          name="attendance"
-          options={{
-            title: "Attendance",
-            tabBarIcon: ({ focused }) =>
-              tabIcon(focused, "checkmark-done", "checkmark-done-outline"),
-          }}
-        />
+        <Tabs.Screen name="attendance" options={{ title: "Attendance" }} />
         <Tabs.Screen
           name="messages"
-          options={{
-            title: "Messages",
-            tabBarIcon: ({ focused }) =>
-              tabIcon(focused, "chatbubbles", "chatbubbles-outline"),
+          options={{ title: "Messages" }}
+          listeners={{
+            // Re-fetch the badge whenever Messages is focused (handles "read").
+            focus: () => void refreshUnread(),
           }}
         />
         <Tabs.Screen
           name="more"
-          options={{
-            title: "More",
-            tabBarIcon: ({ focused }) =>
-              tabIcon(
-                focused,
-                "ellipsis-horizontal-circle",
-                "ellipsis-horizontal-circle-outline"
-              ),
-          }}
+          options={{ title: "More" }}
           listeners={{
             tabPress: (e) => {
               e.preventDefault();
@@ -115,7 +88,8 @@ export default function StaffLayout() {
         <Tabs.Screen name="admin/tours" options={{ href: null }} />
         <Tabs.Screen name="admin/employee-hours" options={{ href: null }} />
       </Tabs>
-      <StaffMoreMenuSheet ref={bottomSheetRef} />
+      <StaffMoreSheet ref={bottomSheetRef} onChange={(i) => setMoreOpen(i >= 0)} />
     </BottomSheetModalProvider>
+    </GardenToastProvider>
   );
 }

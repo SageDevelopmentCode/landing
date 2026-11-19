@@ -1,411 +1,212 @@
-import { Brand, BottomTabInset, FontFamilies } from "@/constants/theme";
-import { notifyError } from "@/lib/discord";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/contexts/AuthContext";
+// Refer a Family — Garden. Data lives in useReferrals(); copy/share feedback
+// is handled here (toast + haptic + the Copy button's success morph).
+import {
+  Display,
+  Garden,
+  GardenButton,
+  GardenErrorCard,
+  GardenFonts,
+  GardenRadii,
+  GardenScreenHero,
+  GardenSectionHeader,
+  GardenSkeleton,
+  GardenTints,
+  Pill,
+  PressableScale,
+  haptic,
+  useRefreshFeedback,
+  useToast,
+} from "@/components/garden";
+import { BottomTabInset } from "@/constants/theme";
+import { GUTTER, ReferralRow, StatTiles } from "@/features/rewards/garden/RewardsParts";
+import { useReferrals } from "@/features/rewards/useRewards";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { RefreshControl, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type HomeReferral = {
-  id: string;
-  referred_email: string | null;
-  status: string;
-  created_at: string;
-};
-
-function timeAgo(isoString: string): string {
-  const diff = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  const d = Math.floor(diff / 86400);
-  return d === 1 ? "yesterday" : `${d} days ago`;
-}
-
 export default function ReferScreen() {
-  const router = useRouter();
-  const { userId, effectiveParentId } = useAuth();
-  const [referrals, setReferrals] = useState<HomeReferral[]>([]);
-  const [referralLink, setReferralLink] = useState("");
-  const [referralsCopied, setReferralsCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const r = useReferrals();
+  const fb = useRefreshFeedback(r.reload);
+  const toast = useToast();
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!effectiveParentId || !userId) return;
-    const refCode = userId.replace(/-/g, "").slice(0, 8).toUpperCase();
-    setReferralLink(`https://sagefield.co/apply?ref=${refCode}`);
+    return () => {
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+    };
+  }, []);
 
-    supabase
-      .schema("parent_app")
-      .from("referrals")
-      .select("id, referred_email, status, created_at")
-      .eq("referrer_id", effectiveParentId)
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
-        if (!error && data) setReferrals(data);
-        setLoading(false);
-      })
-      .catch((e) => {
-        notifyError("rewards-refer-load", e);
-        setLoading(false);
+  async function handleCopy() {
+    if (!r.referralLink) return;
+    try {
+      await Clipboard.setStringAsync(r.referralLink);
+      haptic.success();
+      setCopied(true);
+      toast.show({ tone: "success", title: "Link copied", message: r.referralLink, duration: 2000, silent: true });
+      if (copiedTimer.current) clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.show({ tone: "error", title: "Couldn't copy the link", message: r.referralLink });
+    }
+  }
+
+  async function handleShare() {
+    if (!r.referralLink) return;
+    try {
+      await Share.share({
+        message: `I think your family would love Sage Field! Use my link to apply: ${r.referralLink}`,
+        url: r.referralLink,
       });
-  }, [effectiveParentId, userId]);
-
-  async function handleCopyReferralLink() {
-    await Clipboard.setStringAsync(referralLink);
-    setReferralsCopied(true);
-    setTimeout(() => setReferralsCopied(false), 2000);
-  }
-
-  async function handleShareReferralLink() {
-    await Share.share({
-      message: `I think your family would love Sage Field! Use my link to apply: ${referralLink}`,
-      url: referralLink,
-    });
-  }
-
-  const referralCount = referrals.length;
-  const enrolledCount = referrals.filter(
-    (r) => r.status === "enrolled" || r.status === "rewarded",
-  ).length;
-  const earnedDollars =
-    referrals.filter((r) => r.status === "rewarded").length * 500;
-
-  function statusLabel(status: string) {
-    if (status === "rewarded") return "Rewarded";
-    if (status === "enrolled") return "Enrolled";
-    return "Pending";
-  }
-
-  function statusColor(status: string) {
-    if (status === "rewarded") return "#15803d";
-    if (status === "enrolled") return Brand.sage700;
-    return "#9ca3af";
+    } catch {
+      toast.show({
+        tone: "error",
+        title: "Couldn't open sharing",
+        message: "Try copying your link instead.",
+        action: { label: "Copy", onPress: () => void handleCopy() },
+      });
+    }
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable
-          style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={22} color="#1f2937" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Refer a Family</Text>
-        <View style={styles.backBtn} />
-      </View>
-
+    <SafeAreaView style={{ flex: 1, backgroundColor: Garden.cream }} edges={["top"]}>
+      <GardenScreenHero title="Refer a Family" />
       <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          { paddingBottom: BottomTabInset + 24 },
-        ]}
+        contentContainerStyle={{ paddingHorizontal: GUTTER, paddingTop: 8, paddingBottom: BottomTabInset + 32, gap: 22 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={fb.refreshing} onRefresh={() => void fb.refresh()} tintColor={Garden.sage} />
+        }
       >
-        {/* Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconBox}>
-              <Ionicons name="gift-outline" size={15} color={Brand.sage700} />
+        {r.error ? (
+          <GardenErrorCard
+            title="We couldn't load your referrals"
+            onRetry={() => void fb.retry()}
+            retrying={fb.retrying}
+          />
+        ) : null}
+
+        <View style={st.card}>
+          <View style={st.head}>
+            <View style={st.icon}>
+              <Text style={{ fontSize: 24 }}>🎁</Text>
             </View>
-            <Text style={styles.cardTitle}>Refer a Family</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeTxt}>$500 gift card</Text>
+            <View style={{ flex: 1, gap: 6 }}>
+              <Display size={22}>Refer a Family</Display>
+              <Pill tint="sage" style={{ backgroundColor: Garden.sageDeep }} textStyle={{ color: Garden.white }}>
+                $500 gift card
+              </Pill>
             </View>
           </View>
 
-          <Text style={styles.desc}>
-            Know a family who'd be a great fit for Sage Field? Share your link —
-            you'll receive a{" "}
-            <Text style={{ fontFamily: FontFamilies.bodySemiBold, color: "#1f2937" }}>
-              $500 gift card
-            </Text>{" "}
-            of your choice (Amazon, Target, Visa, etc.) once they enroll and pay
-            their first month of tuition.
+          <Text style={st.desc} maxFontSizeMultiplier={1.4}>
+            Know a family who&apos;d be a great fit for Sage Field? Share your link — you&apos;ll receive a{" "}
+            <Text style={{ fontFamily: GardenFonts.bodyHeavy, color: Garden.ink }}>$500 gift card</Text> of
+            your choice (Amazon, Target, Visa, etc.) once they enroll and pay their first month of tuition.
           </Text>
 
-          {/* Stats */}
-          <View style={styles.statsRow}>
-            {[
-              { value: referralCount, label: "Referred" },
-              { value: enrolledCount, label: "Enrolled" },
-              { value: `$${earnedDollars}`, label: "Earned" },
-            ].map((stat) => (
-              <View key={stat.label} style={styles.statBox}>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            ))}
+          <StatTiles
+            loading={r.loading}
+            referralCount={r.referralCount}
+            enrolledCount={r.enrolledCount}
+            earnedDollars={r.earnedDollars}
+          />
+
+          {r.referralLink ? (
+            <PressableScale
+              pressedScale={0.98}
+              haptics="select"
+              onPress={() => void handleCopy()}
+              accessibilityLabel={`Your referral link, ${r.referralLink}. Copy`}
+              style={[st.linkBox, copied && st.linkBoxCopied]}
+            >
+              <Ionicons name="link-outline" size={16} color={Garden.sageDeep} />
+              <Text style={st.linkText} numberOfLines={1} selectable>
+                {r.referralLink}
+              </Text>
+              <Ionicons
+                name={copied ? "checkmark-circle" : "copy-outline"}
+                size={18}
+                color={copied ? Garden.sage : Garden.muted}
+              />
+            </PressableScale>
+          ) : null}
+
+          <View style={{ gap: 10 }}>
+            <GardenButton
+              label="Copy my referral link"
+              icon="copy-outline"
+              tone="sage"
+              fullWidth
+              success={copied}
+              successLabel="Copied!"
+              disabled={!r.referralLink}
+              onPress={() => void handleCopy()}
+            />
+            <GardenButton
+              label="Share with a friend"
+              icon="share-outline"
+              tone="outline"
+              fullWidth
+              disabled={!r.referralLink}
+              onPress={() => void handleShare()}
+            />
           </View>
 
-          {/* Copy button */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.copyBtn,
-              referralsCopied && styles.copyBtnCopied,
-              pressed && { opacity: 0.8 },
-            ]}
-            onPress={handleCopyReferralLink}
-          >
-            <Ionicons
-              name={referralsCopied ? "checkmark" : "copy-outline"}
-              size={15}
-              color="#fff"
-            />
-            <Text style={styles.copyBtnText}>
-              {referralsCopied ? "Copied!" : "Copy my referral link"}
-            </Text>
-          </Pressable>
-
-          {/* Share button */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.shareBtn,
-              pressed && { opacity: 0.75 },
-            ]}
-            onPress={handleShareReferralLink}
-          >
-            <Ionicons name="share-outline" size={15} color={Brand.sage700} />
-            <Text style={styles.shareBtnText}>Share with a friend</Text>
-          </Pressable>
-
-          <Text style={styles.desc}>
-            If sharing the link isn't convenient, just let them know to mention
-            your name when they apply.
+          <Text style={st.desc} maxFontSizeMultiplier={1.4}>
+            If sharing the link isn&apos;t convenient, just let them know to mention your name when they apply.
           </Text>
         </View>
 
-        {/* Referral history */}
-        {!loading && referrals.length > 0 && (
-          <View style={styles.historySection}>
-            <Text style={styles.historyLabel}>YOUR REFERRALS</Text>
-            {referrals.map((r) => (
-              <View key={r.id} style={styles.historyRow}>
-                <View style={styles.historyAvatar}>
-                  <Ionicons name="person-outline" size={14} color={Brand.sage700} />
-                </View>
-                <View style={styles.historyBody}>
-                  <Text style={styles.historyEmail} numberOfLines={1}>
-                    {r.referred_email ?? "—"}
-                  </Text>
-                  <Text style={styles.historyMeta}>{timeAgo(r.created_at)}</Text>
-                </View>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    { backgroundColor: `${statusColor(r.status)}18` },
-                  ]}
-                >
-                  <Text
-                    style={[styles.statusBadgeTxt, { color: statusColor(r.status) }]}
-                  >
-                    {statusLabel(r.status)}
-                  </Text>
-                </View>
-              </View>
+        {r.loading ? (
+          <View style={{ gap: 10 }}>
+            <GardenSkeleton width="45%" height={22} />
+            <GardenSkeleton width="100%" height={64} radius={GardenRadii.md} />
+          </View>
+        ) : r.referrals.length > 0 ? (
+          <View style={{ gap: 10 }}>
+            <GardenSectionHeader title="Your referrals" style={{ paddingHorizontal: 0, marginBottom: 2 }} />
+            {r.referrals.map((ref, i) => (
+              <ReferralRow key={ref.id} r={ref} index={i} />
             ))}
           </View>
-        )}
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#f9fafb",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
-    backgroundColor: "#fff",
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#1f2937",
-  },
-  content: {
-    padding: 20,
-    gap: 20,
-  },
+const st = StyleSheet.create({
   card: {
-    backgroundColor: "#EEF5EF",
+    backgroundColor: GardenTints.sage.bg,
+    borderRadius: GardenRadii.card,
+    padding: 18,
+    gap: 16,
+  },
+  head: { flexDirection: "row", alignItems: "center", gap: 12 },
+  icon: {
+    width: 50,
+    height: 50,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#c2ddc8",
-    padding: 16,
-    gap: 12,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  iconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: `${Brand.sage700}22`,
+    backgroundColor: Garden.white,
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
   },
-  cardTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 15,
-    color: "#1f2937",
-    flex: 1,
-  },
-  badge: {
-    backgroundColor: Brand.sage700,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 9999,
-  },
-  badgeTxt: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-    color: "#fff",
-  },
-  desc: {
-    fontFamily: FontFamilies.body,
-    fontSize: 13,
-    color: "#4b5563",
-    lineHeight: 19,
-  },
-  statsRow: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: "rgba(255,255,255,0.7)",
-    borderWidth: 1,
-    borderColor: "#c2ddc8",
-    borderRadius: 10,
-    paddingVertical: 10,
-    alignItems: "center",
-    gap: 2,
-  },
-  statValue: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 18,
-    color: "#1f2937",
-  },
-  statLabel: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-    color: "#6b7280",
-  },
-  copyBtn: {
+  desc: { fontFamily: GardenFonts.body, fontSize: 14.5, lineHeight: 21, color: Garden.soft },
+  linkBox: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    backgroundColor: Brand.sage700,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  copyBtnCopied: {
-    backgroundColor: "#16a34a",
-  },
-  copyBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#fff",
-  },
-  shareBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 11,
-    borderRadius: 10,
+    gap: 10,
+    minHeight: 48,
+    paddingHorizontal: 14,
+    borderRadius: GardenRadii.sm,
     borderWidth: 1.5,
-    borderColor: Brand.sage700,
-    backgroundColor: "rgba(255,255,255,0.5)",
+    borderStyle: "dashed",
+    borderColor: Garden.sage,
+    backgroundColor: Garden.white,
   },
-  shareBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: Brand.sage700,
-  },
-  historySection: {
-    gap: 10,
-  },
-  historyLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 10,
-    color: "#9ca3af",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  historyRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    padding: 12,
-  },
-  historyAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#E0EDE2",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  historyBody: {
-    flex: 1,
-    gap: 2,
-  },
-  historyEmail: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 13,
-    color: "#1f2937",
-  },
-  historyMeta: {
-    fontFamily: FontFamilies.body,
-    fontSize: 11,
-    color: "#9ca3af",
-  },
-  statusBadge: {
-    borderRadius: 9999,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  statusBadgeTxt: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-  },
+  linkBoxCopied: { borderStyle: "solid", backgroundColor: GardenTints.mint.bg },
+  linkText: { flex: 1, fontFamily: GardenFonts.bodyBold, fontSize: 13.5, color: Garden.ink },
 });

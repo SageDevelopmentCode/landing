@@ -1,6 +1,7 @@
+import { Garden, GardenButton, GardenFonts, GardenTints, gardenSheetChrome } from "@/components/garden";
 import { PaymentMethodStep } from "@/components/billing/PaymentMethodStep";
 import { BillingPreviewBanner } from "@/components/billing/BillingPreviewBanner";
-import { Brand, FontFamilies, Spacing } from "@/constants/theme";
+import { Spacing } from "@/constants/theme";
 import { useStripePayment } from "@/hooks/useStripePayment";
 import {
   resolveSupplyFeeProgramType,
@@ -20,7 +21,6 @@ import {
 } from "@/lib/school-year";
 import { Ionicons } from "@expo/vector-icons";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -248,18 +248,10 @@ export function SupplyFeeSelectionSheet({
   return (
     <BottomSheetModal
       ref={sheetRef}
+      {...gardenSheetChrome}
       snapPoints={["90%"]}
       enableDynamicSizing={false}
-      enablePanDownToClose
       onDismiss={reset}
-      backdropComponent={(props) => (
-        <BottomSheetBackdrop
-          {...props}
-          disappearsOnIndex={-1}
-          appearsOnIndex={0}
-          pressBehavior="close"
-        />
-      )}
     >
       {readOnly && supplyFeePaid ? (
         <BottomSheetScrollView
@@ -277,7 +269,7 @@ export function SupplyFeeSelectionSheet({
             <Text style={s.feeNote}>School Year 26–27</Text>
           </View>
           <View style={s.paidStatusRow}>
-            <Ionicons name="checkmark-circle" size={18} color={Brand.sage700} />
+            <Ionicons name="checkmark-circle" size={18} color={Garden.sage} />
             <Text style={s.paidStatusText}>Paid</Text>
           </View>
         </BottomSheetScrollView>
@@ -338,15 +330,18 @@ export function SupplyFeeSelectionSheet({
                     <Ionicons
                       name={selected ? "checkbox" : "square-outline"}
                       size={20}
-                      color={selected ? Brand.sage700 : "#9CA3AF"}
+                      color={selected ? Garden.sage : Garden.muted}
                     />
                   </Pressable>
                 );
               })}
               {!readOnly ? (
-                <Pressable style={s.primaryBtn} onPress={() => setStep("plan")}>
-                  <Text style={s.primaryBtnText}>Continue</Text>
-                </Pressable>
+                <GardenButton
+                  label="Continue"
+                  onPress={() => setStep("plan")}
+                  fullWidth
+                  style={s.primaryBtn}
+                />
               ) : null}
             </>
           )}
@@ -377,7 +372,7 @@ export function SupplyFeeSelectionSheet({
                     <Ionicons
                       name={addBundle ? "checkbox" : "square-outline"}
                       size={20}
-                      color={addBundle ? Brand.sage700 : "#9CA3AF"}
+                      color={addBundle ? Garden.sage : Garden.muted}
                     />
                   </Pressable>
                   {addBundle && programType === "school_year" && (
@@ -440,7 +435,7 @@ export function SupplyFeeSelectionSheet({
                         <Ionicons
                           name={selected ? "checkbox" : "square-outline"}
                           size={20}
-                          color={selected ? Brand.sage700 : "#9CA3AF"}
+                          color={selected ? Garden.sage : Garden.muted}
                         />
                       </Pressable>
                     );
@@ -449,25 +444,15 @@ export function SupplyFeeSelectionSheet({
               )}
 
               {!readOnly ? (
-                <Pressable
-                  style={[
-                    s.primaryBtn,
-                    addBundle &&
-                      programType === "homeschool" &&
-                      (!selectedTier || selectedMonthIndices.size < 1) &&
-                      s.primaryBtnDisabled,
-                  ]}
-                  disabled={
-                    addBundle &&
-                    programType === "homeschool" &&
-                    (!selectedTier || selectedMonthIndices.size < 1)
-                  }
+                <GardenButton
+                  label={`Continue · ${formatCents(baseCents)}`}
                   onPress={() => setStep("payment")}
-                >
-                  <Text style={s.primaryBtnText}>
-                    Continue · {formatCents(baseCents)}
-                  </Text>
-                </Pressable>
+                  disabled={addBundle &&
+                    programType === "homeschool" &&
+                    (!selectedTier || selectedMonthIndices.size < 1)}
+                  fullWidth
+                  style={s.primaryBtn}
+                />
               ) : null}
             </>
           )}
@@ -548,23 +533,15 @@ export function SupplyFeeSelectionSheet({
                   </Pressable>
                 ))}
               </View>
-              <Pressable
-                style={[
-                  s.primaryBtn,
-                  (!selectedTier ||
-                    selectedMonthIndices.size < 1 ||
-                    selectedWeekdays.size !== requiredDays) &&
-                    s.primaryBtnDisabled,
-                ]}
-                disabled={
-                  !selectedTier ||
-                  selectedMonthIndices.size < 1 ||
-                  selectedWeekdays.size !== requiredDays
-                }
+              <GardenButton
+                label="Save plan"
                 onPress={() => setStep("plan")}
-              >
-                <Text style={s.primaryBtnText}>Save plan</Text>
-              </Pressable>
+                disabled={!selectedTier ||
+                  selectedMonthIndices.size < 1 ||
+                  selectedWeekdays.size !== requiredDays}
+                fullWidth
+                style={s.primaryBtn}
+              />
             </>
           )}
         </BottomSheetScrollView>
@@ -576,80 +553,80 @@ export function SupplyFeeSelectionSheet({
 const s = StyleSheet.create({
   sheetContent: { padding: Spacing.three, paddingBottom: 40 },
   title: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 18,
-    color: "#111827",
+    fontFamily: GardenFonts.display,
+    fontSize: 26,
+    color: Garden.ink,
     marginBottom: 4,
   },
   subtitle: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 13,
-    color: "#9CA3AF",
+    color: Garden.muted,
     marginBottom: 16,
   },
   sectionLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 11,
-    color: "#6B7280",
+    color: Garden.soft,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     marginTop: 12,
     marginBottom: 8,
   },
   feeCard: {
-    backgroundColor: "#f6faf7",
-    borderRadius: 12,
+    backgroundColor: GardenTints.sage.bg,
+    borderRadius: 16,
     padding: 14,
     gap: 4,
   },
-  feeLabel: { fontFamily: FontFamilies.body, fontSize: 13, color: "#6B7280" },
+  feeLabel: { fontFamily: GardenFonts.body, fontSize: 13, color: Garden.soft },
   feeAmount: {
-    fontFamily: FontFamilies.heading,
+    fontFamily: GardenFonts.display,
     fontSize: 22,
-    color: Brand.sage800,
+    color: Garden.sageDeep,
   },
-  feeNote: { fontFamily: FontFamilies.body, fontSize: 12, color: "#6B7280" },
+  feeNote: { fontFamily: GardenFonts.body, fontSize: 12, color: Garden.soft },
   paidStatusRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     marginTop: 16,
     alignSelf: "flex-start",
-    backgroundColor: "#dcfce7",
+    backgroundColor: GardenTints.mint.bg,
     borderRadius: 9999,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
   paidStatusText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 14,
-    color: Brand.sage700,
+    color: Garden.sage,
   },
   bundleToggle: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
+    borderColor: Garden.line,
+    borderRadius: 16,
     padding: 14,
     marginTop: 12,
   },
   bundleToggleOn: {
-    borderColor: Brand.sage700,
-    backgroundColor: "rgba(74,124,89,0.06)",
+    borderColor: Garden.sage,
+    backgroundColor: GardenTints.sage.bg,
   },
   bundleTitle: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: "#374151",
+    color: Garden.ink,
     flex: 1,
     paddingRight: 8,
   },
   bundleNote: {
-    fontFamily: FontFamilies.body,
+    fontFamily: GardenFonts.body,
     fontSize: 12,
-    color: "#6B7280",
+    color: Garden.soft,
     marginTop: 6,
   },
   row: {
@@ -657,19 +634,19 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 10,
+    borderColor: Garden.line,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 8,
   },
   rowSelected: {
-    borderColor: Brand.sage700,
-    backgroundColor: "rgba(74,124,89,0.06)",
+    borderColor: Garden.sage,
+    backgroundColor: GardenTints.sage.bg,
   },
   rowText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 14,
-    color: "#374151",
+    color: Garden.ink,
   },
   monthGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   monthChip: {
@@ -677,37 +654,25 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: Garden.line,
   },
-  monthChipOn: { backgroundColor: Brand.sage700, borderColor: Brand.sage700 },
+  monthChipOn: { backgroundColor: Garden.sage, borderColor: Garden.sage },
   monthChipText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 12,
-    color: "#374151",
+    color: Garden.ink,
   },
-  monthChipTextOn: { color: "#ffffff" },
-  primaryBtn: {
-    backgroundColor: Brand.sage700,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  primaryBtnDisabled: { opacity: 0.45 },
-  primaryBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 14,
-    color: "#ffffff",
-  },
+  monthChipTextOn: { color: Garden.white },
+  primaryBtn: { marginTop: 20 },
   secondaryBtn: {
     marginTop: 8,
     paddingVertical: 10,
     alignItems: "center",
   },
   secondaryBtnText: {
-    fontFamily: FontFamilies.bodySemiBold,
+    fontFamily: GardenFonts.bodyBold,
     fontSize: 13,
-    color: Brand.sage700,
+    color: Garden.sage,
     textDecorationLine: "underline",
   },
 });

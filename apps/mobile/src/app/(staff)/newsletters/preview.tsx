@@ -1,388 +1,250 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+// Staff newsletter preview — Garden. Reads the live draft from
+// NewsletterEditorProvider, so unsaved edits show here too. Traditional or
+// Slideshow (same names as the editor); only visible sections appear, the
+// way parents will see them.
 import {
-  Alert,
-  Dimensions,
-  FlatList,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { Image } from "expo-image";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect, useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+  Display,
+  Garden,
+  GardenEmpty,
+  GardenFonts,
+  GardenIconButton,
+  GardenRadii,
+  GardenSegmented,
+  HandNote,
+  PressableScale,
+  haptic,
+} from "@/components/garden";
+import { floatingTabBarStyle } from "@/constants/theme";
+import { GUTTER } from "@/features/staff-newsletters/garden/NewslettersStaffParts";
+import { useStaffRole } from "@/features/staff-shared/useStaffRole";
+import { useNewsletterEditor, type EditableSection, type ViewMode } from "@/features/staff-newsletters/NewsletterEditorProvider";
+import type { NewsletterSectionImage } from "@/lib/newsletters-actions";
 import { Ionicons } from "@expo/vector-icons";
-import { Brand, FontFamilies, floatingTabBarStyle } from "@/constants/theme";
-import { Newsletter, NewsletterTeacherUpdate, getNewsletter } from "@/lib/newsletters-actions";
+import { Image } from "expo-image";
+import { useFocusEffect, useNavigation, useRouter } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { FlatList, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+type PreviewSection = EditableSection & { updates: string[] };
 
-// ---------------------------------------------------------------------------
-// Traditional preview
-// ---------------------------------------------------------------------------
-
-function ImageGrid({ images }: { images: { id: string; signed_url: string | null }[] }) {
+function ImageGrid({ images, width }: { images: NewsletterSectionImage[]; width: number }) {
   if (images.length === 0) return null;
   if (images.length === 1) {
-    return (
-      <Image
-        source={{ uri: images[0].signed_url ?? undefined }}
-        style={[styles.gridImg, { width: "100%", height: 200 }]}
-        contentFit="cover"
-      />
-    );
+    return <Image source={{ uri: images[0].signed_url ?? undefined }} style={[st.gridImg, { width, height: width * 0.6 }]} contentFit="cover" />;
   }
-  if (images.length === 2) {
-    return (
-      <View style={styles.gridRow}>
-        {images.map((img) => (
-          <Image
-            key={img.id}
-            source={{ uri: img.signed_url ?? undefined }}
-            style={[styles.gridImg, { flex: 1, height: 140 }]}
-            contentFit="cover"
-          />
-        ))}
-      </View>
-    );
-  }
+  const cols = images.length === 2 ? 2 : 3;
+  const w = (width - (cols - 1) * 6) / cols;
   return (
-    <View style={styles.gridThree}>
+    <View style={st.grid}>
       {images.map((img) => (
-        <Image
-          key={img.id}
-          source={{ uri: img.signed_url ?? undefined }}
-          style={[styles.gridImg, { width: (SCREEN_WIDTH - 64) / 3, height: 100 }]}
-          contentFit="cover"
-        />
+        <Image key={img.id} source={{ uri: img.signed_url ?? undefined }} style={[st.gridImg, { width: w, height: w }]} contentFit="cover" />
       ))}
     </View>
   );
 }
 
-function TraditionalPreview({ newsletter }: { newsletter: Newsletter }) {
-  const visible = newsletter.sections.filter((s) => s.visible);
-  return (
-    <ScrollView contentContainerStyle={tStyles.container}>
-      {/* School header */}
-      <View style={tStyles.schoolHeader}>
-        <Ionicons name="school-outline" size={28} color="#fff" />
-        <Text style={tStyles.schoolName}>Sagefield School</Text>
-      </View>
-
-      {/* Title block */}
-      <View style={tStyles.titleBlock}>
-        <Text style={tStyles.nlTitle}>{newsletter.title}</Text>
-        <Text style={tStyles.nlWeek}>{newsletter.week_range}</Text>
-      </View>
-
-      {/* Sections */}
-      {visible.map((sec) => (
-        <View key={sec.id} style={tStyles.sectionCard}>
-          <Text style={tStyles.sectionLabel}>{sec.label.toUpperCase()}</Text>
-          {sec.is_class_updates ? (
-            sec.teacher_updates
-              .filter((tu) => tu.body.trim())
-              .map((tu) => (
-                <View key={tu.id} style={tStyles.teacherUpdate}>
-                  <Text style={tStyles.teacherUpdateText}>{tu.body}</Text>
-                </View>
-              ))
-          ) : (
-            <>
-              {!!sec.body && <Text style={tStyles.sectionBody}>{sec.body}</Text>}
-              <ImageGrid images={sec.images} />
-            </>
-          )}
-        </View>
-      ))}
-    </ScrollView>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Slideshow preview
-// ---------------------------------------------------------------------------
-
-function Slideshow({ newsletter }: { newsletter: Newsletter }) {
-  const visible = newsletter.sections.filter((s) => s.visible);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const flatRef = useRef<FlatList>(null);
-
-  const goTo = (idx: number) => {
-    if (idx < 0 || idx >= visible.length) return;
-    flatRef.current?.scrollToIndex({ index: idx, animated: true });
-    setActiveIndex(idx);
-  };
-
-  return (
-    <View style={ssStyles.container}>
-      <FlatList
-        ref={flatRef}
-        data={visible}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(item) => item.id}
-        onMomentumScrollEnd={(e) => {
-          const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-          setActiveIndex(idx);
-        }}
-        renderItem={({ item: sec }) => (
-          <View style={[ssStyles.slide, { width: SCREEN_WIDTH }]}>
-            {/* Image carousel */}
-            {sec.images.length > 0 && (
-              <FlatList
-                data={sec.images}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(img) => img.id}
-                style={ssStyles.imageCarousel}
-                renderItem={({ item: img }) => (
-                  <Image
-                    source={{ uri: img.signed_url ?? undefined }}
-                    style={{ width: SCREEN_WIDTH, height: 220 }}
-                    contentFit="cover"
-                  />
-                )}
-              />
-            )}
-            {sec.images.length === 0 && (
-              <View style={ssStyles.imagePlaceholder}>
-                <Ionicons name="image-outline" size={40} color="#d1d5db" />
-              </View>
-            )}
-
-            <ScrollView style={ssStyles.textArea} contentContainerStyle={ssStyles.textContent}>
-              <Text style={ssStyles.sectionLabel}>{sec.label}</Text>
-              {sec.is_class_updates ? (
-                sec.teacher_updates
-                  .filter((tu: NewsletterTeacherUpdate) => tu.body.trim())
-                  .map((tu: NewsletterTeacherUpdate) => (
-                    <Text key={tu.id} style={ssStyles.body}>{tu.body}</Text>
-                  ))
-              ) : (
-                !!sec.body && <Text style={ssStyles.body}>{sec.body}</Text>
-              )}
-            </ScrollView>
+function SectionBody({ sec }: { sec: PreviewSection }) {
+  if (sec.is_class_updates) {
+    return sec.updates.length ? (
+      <View style={{ gap: 8 }}>
+        {sec.updates.map((u, i) => (
+          <View key={i} style={st.update}>
+            <Text style={st.body}>{u}</Text>
           </View>
-        )}
-      />
-
-      {/* Dot navigation */}
-      <View style={ssStyles.dots}>
-        {visible.map((_, i) => (
-          <Pressable key={i} onPress={() => goTo(i)}>
-            <View style={[ssStyles.dot, i === activeIndex && ssStyles.dotActive]} />
-          </Pressable>
         ))}
       </View>
-
-      {/* Prev/Next buttons */}
-      <View style={ssStyles.navBtns}>
-        <Pressable
-          style={({ pressed }) => [ssStyles.navBtn, pressed && { opacity: 0.6 }, activeIndex === 0 && { opacity: 0.3 }]}
-          onPress={() => goTo(activeIndex - 1)}
-          disabled={activeIndex === 0}
-        >
-          <Ionicons name="chevron-back" size={22} color={Brand.sage700} />
-        </Pressable>
-        <Text style={ssStyles.navCount}>{activeIndex + 1} / {visible.length}</Text>
-        <Pressable
-          style={({ pressed }) => [ssStyles.navBtn, pressed && { opacity: 0.6 }, activeIndex === visible.length - 1 && { opacity: 0.3 }]}
-          onPress={() => goTo(activeIndex + 1)}
-          disabled={activeIndex === visible.length - 1}
-        >
-          <Ionicons name="chevron-forward" size={22} color={Brand.sage700} />
-        </Pressable>
-      </View>
-    </View>
-  );
+    ) : (
+      <Text style={st.emptyBody}>No class updates written yet.</Text>
+    );
+  }
+  return sec.body.trim() ? <Text style={st.body}>{sec.body}</Text> : null;
 }
 
-// ---------------------------------------------------------------------------
-// Main screen
-// ---------------------------------------------------------------------------
-
-export default function PreviewScreen() {
-  const { newsletterId } = useLocalSearchParams<{ newsletterId: string }>();
-  const insets = useSafeAreaInsets();
+export default function NewsletterPreviewScreen() {
+  const e = useNewsletterEditor();
+  const { userId } = useStaffRole();
   const router = useRouter();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const [mode, setMode] = useState<ViewMode>(e.draft?.viewMode ?? "traditional");
 
   useFocusEffect(
     useCallback(() => {
       navigation.getParent()?.setOptions({ tabBarStyle: { display: "none" } });
-      return () => {
-        navigation.getParent()?.setOptions({ tabBarStyle: floatingTabBarStyle });
-      };
-    }, [navigation])
+      return () => navigation.getParent()?.setOptions({ tabBarStyle: floatingTabBarStyle });
+    }, [navigation]),
   );
 
-  const [newsletter, setNewsletter] = useState<Newsletter | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"traditional" | "slideshow">("traditional");
+  const back = () => (router.canGoBack() ? router.back() : router.replace("/(staff)/newsletters" as never));
 
-  useEffect(() => {
-    if (!newsletterId) return;
-    getNewsletter(newsletterId)
-      .then((nl) => {
-        setNewsletter(nl);
-        setViewMode(nl.view_mode);
-      })
-      .catch((e) => Alert.alert("Error", e.message ?? "Failed to load"))
-      .finally(() => setLoading(false));
-  }, [newsletterId]);
-
-  if (loading) {
+  const d = e.draft;
+  if (!d || !e.server) {
     return (
-      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-        <Text style={styles.loadingText}>Loading preview…</Text>
-      </View>
+      <SafeAreaView style={st.safe}>
+        <View style={st.nav}>
+          <GardenIconButton icon="chevron-back" label="Back" onPress={back} />
+          <Display size={24}>Preview</Display>
+        </View>
+        <View style={{ paddingHorizontal: GUTTER }}>
+          <GardenEmpty emoji="📰" title="Nothing to preview yet" body="Open the newsletter first, then tap Preview." actionLabel="Back" onAction={back} />
+        </View>
+      </SafeAreaView>
     );
   }
 
-  if (!newsletter) return null;
+  // Everyone's saved class updates, with mine swapped for what's on screen now.
+  const sections: PreviewSection[] = d.sections
+    .filter((s) => s.visible)
+    .map((s) => {
+      if (!s.is_class_updates) return { ...s, updates: [] };
+      const saved = e.server!.sections.find((x) => x.id === s.id)?.teacher_updates ?? [];
+      const updates = saved
+        .filter((t) => t.teacher_id !== userId)
+        .map((t) => t.body)
+        .concat(d.myUpdate)
+        .filter((b) => b.trim());
+      return { ...s, updates };
+    });
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={Brand.sage700} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Preview</Text>
-        <View style={styles.modeRow}>
-          {(["traditional", "slideshow"] as const).map((mode) => (
-            <Pressable
-              key={mode}
-              style={[styles.modePill, viewMode === mode && styles.modePillActive]}
-              onPress={() => setViewMode(mode)}
-            >
-              <Text style={[styles.modePillText, viewMode === mode && styles.modePillTextActive]}>
-                {mode === "traditional" ? "Classic" : "Slides"}
-              </Text>
-            </Pressable>
-          ))}
+    <SafeAreaView style={st.safe} edges={["top", "left", "right"]}>
+      <View style={st.nav}>
+        <GardenIconButton icon="chevron-back" label="Back" onPress={back} />
+        <View style={{ flex: 1 }}>
+          <Display size={24}>Preview</Display>
+          {e.dirty ? (
+            <HandNote size={14} color={Garden.coralDeep}>
+              includes unsaved edits
+            </HandNote>
+          ) : null}
         </View>
       </View>
+      <View style={{ paddingHorizontal: GUTTER, paddingBottom: 10 }}>
+        <GardenSegmented<ViewMode>
+          accessibilityLabel="Preview layout"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "traditional", label: "Traditional" },
+            { value: "slideshow", label: "Slideshow" },
+          ]}
+        />
+      </View>
 
-      {viewMode === "traditional" ? (
-        <TraditionalPreview newsletter={newsletter} />
+      {sections.length === 0 ? (
+        <View style={{ paddingHorizontal: GUTTER }}>
+          <GardenEmpty emoji="🙈" title="Every section is hidden" body="Show at least one section in the editor so parents have something to read." tint="butter" />
+        </View>
+      ) : mode === "traditional" ? (
+        <ScrollView contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: insets.bottom + 32, gap: 12 }}>
+          <View style={st.masthead}>
+            <Ionicons name="school-outline" size={24} color={Garden.white} />
+            <Text style={st.school}>Sagefield School</Text>
+          </View>
+          <View style={st.titleCard}>
+            <Display size={24}>{d.title || "Untitled newsletter"}</Display>
+            <Text style={st.week}>{d.weekRange}</Text>
+          </View>
+          {sections.map((sec) => (
+            <View key={sec.id} style={st.card}>
+              <Text style={st.sectionLabel}>{sec.label.toUpperCase()}</Text>
+              <SectionBody sec={sec} />
+              <ImageGrid images={sec.images} width={width - GUTTER * 2 - 32} />
+            </View>
+          ))}
+        </ScrollView>
       ) : (
-        <Slideshow newsletter={newsletter} />
+        <Slideshow sections={sections} width={width} bottom={insets.bottom} />
       )}
+    </SafeAreaView>
+  );
+}
+
+function Slideshow({ sections, width, bottom }: { sections: PreviewSection[]; width: number; bottom: number }) {
+  const [i, setI] = useState(0);
+  const ref = useRef<FlatList<PreviewSection>>(null);
+  const go = (n: number) => {
+    if (n < 0 || n >= sections.length) return;
+    haptic.select();
+    ref.current?.scrollToIndex({ index: n, animated: true });
+    setI(n);
+  };
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        ref={ref}
+        data={sections}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(s) => s.id}
+        onMomentumScrollEnd={(ev) => setI(Math.round(ev.nativeEvent.contentOffset.x / width))}
+        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+        renderItem={({ item: sec }) => (
+          <ScrollView style={{ width }} contentContainerStyle={{ paddingHorizontal: GUTTER, paddingBottom: 24, gap: 12 }}>
+            {sec.images.length ? (
+              <ImageGrid images={sec.images} width={width - GUTTER * 2} />
+            ) : (
+              <View style={st.placeholder}>
+                <Ionicons name="image-outline" size={36} color={Garden.muted} />
+              </View>
+            )}
+            <Display size={22}>{sec.label}</Display>
+            <SectionBody sec={sec} />
+          </ScrollView>
+        )}
+      />
+      <View style={[st.slideNav, { paddingBottom: bottom + 12 }]}>
+        <PressableScale onPress={() => go(i - 1)} disabled={i === 0} accessibilityLabel="Previous section" style={[st.navBtn, i === 0 && { opacity: 0.35 }]}>
+          <Ionicons name="chevron-back" size={22} color={Garden.sageDeep} />
+        </PressableScale>
+        <View style={st.dots}>
+          {sections.map((s, k) => (
+            <View key={s.id} style={[st.dot, k === i && st.dotOn]} />
+          ))}
+        </View>
+        <Text style={st.count}>{`${i + 1} / ${sections.length}`}</Text>
+        <PressableScale
+          onPress={() => go(i + 1)}
+          disabled={i === sections.length - 1}
+          accessibilityLabel="Next section"
+          style={[st.navBtn, i === sections.length - 1 && { opacity: 0.35 }]}
+        >
+          <Ionicons name="chevron-forward" size={22} color={Garden.sageDeep} />
+        </PressableScale>
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  centered: { alignItems: "center", justifyContent: "center" },
-  loadingText: { fontFamily: FontFamilies.body, fontSize: 14, color: "#9ca3af" },
-  header: {
+const st = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Garden.cream },
+  nav: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: GUTTER, paddingVertical: 10 },
+  masthead: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#e5e7eb",
-    gap: 8,
-  },
-  backBtn: { width: 32, alignItems: "flex-start" },
-  headerTitle: { flex: 1, fontFamily: FontFamilies.heading, fontSize: 16, color: "#1f2937" },
-  modeRow: { flexDirection: "row", gap: 6 },
-  modePill: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: "#f3f4f6",
-  },
-  modePillActive: { backgroundColor: Brand.sage700 },
-  modePillText: { fontFamily: FontFamilies.bodySemiBold, fontSize: 12, color: "#6b7280" },
-  modePillTextActive: { color: "#fff" },
-  gridRow: { flexDirection: "row", gap: 4, marginTop: 10 },
-  gridThree: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 10 },
-  gridImg: { borderRadius: 6 },
-});
-
-const tStyles = StyleSheet.create({
-  container: { paddingBottom: 40 },
-  schoolHeader: {
-    backgroundColor: Brand.sage700,
-    padding: 24,
-    alignItems: "center",
-    gap: 8,
-  },
-  schoolName: { fontFamily: FontFamilies.heading, fontSize: 18, color: "#fff" },
-  titleBlock: { padding: 20, backgroundColor: "#fff", gap: 4 },
-  nlTitle: { fontFamily: FontFamilies.heading, fontSize: 20, color: "#111827" },
-  nlWeek: { fontFamily: FontFamilies.body, fontSize: 13, color: "#6b7280" },
-  sectionCard: {
-    margin: 16,
-    marginTop: 0,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
     gap: 10,
+    padding: 16,
+    borderRadius: GardenRadii.md,
+    backgroundColor: Garden.sageDeep,
   },
-  sectionLabel: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 11,
-    color: Brand.sage700,
-    letterSpacing: 0.8,
-  },
-  sectionBody: { fontFamily: FontFamilies.body, fontSize: 14, color: "#374151", lineHeight: 22 },
-  teacherUpdate: { gap: 2 },
-  teacherUpdateText: { fontFamily: FontFamilies.body, fontSize: 14, color: "#374151", lineHeight: 22 },
-});
-
-const ssStyles = StyleSheet.create({
-  container: { flex: 1 },
-  slide: { flex: 1 },
-  imageCarousel: { height: 220 },
-  imagePlaceholder: {
-    height: 220,
-    backgroundColor: "#f3f4f6",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  textArea: { flex: 1 },
-  textContent: { padding: 20, gap: 8 },
-  sectionLabel: { fontFamily: FontFamilies.heading, fontSize: 20, color: "#111827" },
-  body: { fontFamily: FontFamilies.body, fontSize: 15, color: "#374151", lineHeight: 24 },
-  dots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 6,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#e5e7eb",
-  },
-  dotActive: { backgroundColor: Brand.sage700, width: 18 },
-  navBtns: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#e5e7eb",
-  },
-  navBtn: { padding: 8 },
-  navCount: { fontFamily: FontFamilies.body, fontSize: 13, color: "#6b7280" },
+  school: { fontFamily: GardenFonts.display, fontSize: 18, color: Garden.white },
+  titleCard: { padding: 16, borderRadius: GardenRadii.md, backgroundColor: Garden.white, borderWidth: 1, borderColor: Garden.line, gap: 4 },
+  week: { fontFamily: GardenFonts.bodySemi, fontSize: 13.5, color: Garden.soft },
+  card: { padding: 16, borderRadius: GardenRadii.md, backgroundColor: Garden.white, borderWidth: 1, borderColor: Garden.line, gap: 10 },
+  sectionLabel: { fontFamily: GardenFonts.bodyHeavy, fontSize: 12, letterSpacing: 0.8, color: Garden.sageDeep },
+  body: { fontFamily: GardenFonts.body, fontSize: 15, lineHeight: 23, color: Garden.ink },
+  emptyBody: { fontFamily: GardenFonts.hand, fontSize: 15, color: Garden.muted },
+  update: { padding: 12, borderRadius: GardenRadii.sm, backgroundColor: "#f7f2ea" },
+  grid: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  gridImg: { borderRadius: 12, backgroundColor: "#f1e7d8" },
+  placeholder: { height: 160, borderRadius: GardenRadii.md, backgroundColor: "#f1e7d8", alignItems: "center", justifyContent: "center" },
+  slideNav: { flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: GUTTER, paddingTop: 10, borderTopWidth: 1, borderTopColor: Garden.line },
+  navBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: Garden.white, borderWidth: 1, borderColor: Garden.line, alignItems: "center", justifyContent: "center" },
+  dots: { flex: 1, flexDirection: "row", justifyContent: "center", gap: 6, flexWrap: "wrap" },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#e3d9c8" },
+  dotOn: { width: 18, backgroundColor: Garden.sageDeep },
+  count: { fontFamily: GardenFonts.bodyHeavy, fontSize: 13, color: Garden.soft },
 });

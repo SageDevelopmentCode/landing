@@ -1,3 +1,4 @@
+import { Garden, GardenFonts, gardenSheetChrome } from "@/components/garden";
 import {
   forwardRef,
   useCallback,
@@ -6,11 +7,9 @@ import {
   useMemo,
   useRef,
   useState,
-  type ComponentProps,
 } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
-  BottomSheetBackdrop,
   BottomSheetModal,
   BottomSheetScrollView,
 } from "@gorhom/bottom-sheet";
@@ -241,17 +240,6 @@ export const StaffConferenceBookingsSheet = forwardRef<
     [clearDetailMode, openDetail],
   );
 
-  const renderBackdrop = useCallback(
-    (props: ComponentProps<typeof BottomSheetBackdrop>) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.4}
-      />
-    ),
-    [],
-  );
 
   const handleDismiss = useCallback(() => {
     clearDetailMode();
@@ -264,8 +252,7 @@ export const StaffConferenceBookingsSheet = forwardRef<
     <BottomSheetModal
       ref={modalRef}
       snapPoints={snapPoints}
-      enablePanDownToClose
-      backdropComponent={renderBackdrop}
+      {...gardenSheetChrome}
       onDismiss={handleDismiss}
     >
       <BottomSheetScrollView
@@ -274,7 +261,7 @@ export const StaffConferenceBookingsSheet = forwardRef<
       >
         {isDetailMode && selectedBooking ? (
           <>
-            <Text style={styles.sheetTitle}>{selectedBooking.studentName}</Text>
+            <Text style={styles.sheetTitle} accessibilityRole="header">{selectedBooking.studentName}</Text>
             <Text style={styles.sheetSubtitle}>
               {formatConferenceDateForDisplay(selectedBooking.conferenceDate)} ·{" "}
               {selectedBooking.timeSlot}
@@ -286,7 +273,7 @@ export const StaffConferenceBookingsSheet = forwardRef<
           </>
         ) : (
           <>
-            <Text style={styles.sheetTitle}>Parent-Teacher Conferences</Text>
+            <Text style={styles.sheetTitle} accessibilityRole="header">Parent-Teacher Conferences</Text>
             <Text style={styles.sheetSubtitle}>
               {activeBookings.length}{" "}
               {activeBookings.length === 1 ? "conference" : "conferences"}{" "}
@@ -350,9 +337,10 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   sheetTitle: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 20,
-    color: "#1f2937",
+    fontFamily: GardenFonts.display,
+    fontSize: 24,
+    letterSpacing: -0.7,
+    color: Garden.ink,
     marginBottom: 4,
   },
   sheetSubtitle: {
