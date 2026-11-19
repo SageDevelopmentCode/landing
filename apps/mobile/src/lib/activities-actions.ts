@@ -474,14 +474,14 @@ export async function createActivity(
         .eq("id", activityId);
       if (error) throw error;
     }
+
+    return refetchActivity(activityId);
   } catch (e) {
     throw new ActivityPartialSaveError(
       e instanceof Error ? e.message : "Some parts of the activity didn't save.",
       activityId,
     );
   }
-
-  return refetchActivity(activityId);
 }
 
 export async function updateActivity(
@@ -492,6 +492,10 @@ export async function updateActivity(
 ): Promise<Activity> {
   // 1. Every new file goes up first; nothing in the database changes if one fails.
   const resolved = await resolveImages(payload, userId, activityId);
+  const keep = new Set(resolved.activityPaths);
+  const dropIds = original.images.filter((img) => !keep.has(img.storage_path)).map((img) => img.id);
+  const have = new Set(original.images.map((img) => img.storage_path));
+  const addPaths = resolved.activityPaths.filter((sp) => !have.has(sp));
   try {
     // 2. The activity row. RLS only lets the creator update, and a blocked
     //    update returns no error — so check a row actually changed.
@@ -514,10 +518,6 @@ export async function updateActivity(
     if (count === 0) throw new Error("You can only edit activities you created.");
 
     // 3. Activity photos: drop the removed rows, add the new ones.
-    const keep = new Set(resolved.activityPaths);
-    const dropIds = original.images.filter((img) => !keep.has(img.storage_path)).map((img) => img.id);
-    const have = new Set(original.images.map((img) => img.storage_path));
-    const addPaths = resolved.activityPaths.filter((sp) => !have.has(sp));
     if (addPaths.length) {
       const { error } = await supabase
         .schema("teachers")
@@ -539,6 +539,14 @@ export async function updateActivity(
       if (error) throw error;
     }
   } catch (e) {
+    if (addPaths.length) {
+      await supabase
+        .schema("teachers")
+        .from("activity_images")
+        .delete()
+        .eq("activity_id", activityId)
+        .in("storage_path", addPaths);
+    }
     if (resolved.uploaded.length) void supabase.storage.from("activity-images").remove(resolved.uploaded);
     throw e;
   }

@@ -168,9 +168,17 @@ export function useComposePost() {
     return { added: items.length, limit: result.assets.length > remaining };
   }, [attachments.length]);
 
-  const removeMedia = useCallback((key: string) => {
-    setMedia((prev) => prev.filter((m) => m.key !== key).map((m, i) => (m.status === "done" ? m : { ...m, order: i })));
-  }, []);
+  const removeMedia = useCallback(
+    (key: string) => {
+      setMedia((prev) => {
+        const next = prev.filter((m) => m.key !== key);
+        // After the post exists, keep display_order slots stable for done uploads.
+        if (postedId) return next;
+        return next.map((m, i) => ({ ...m, order: i }));
+      });
+    },
+    [postedId],
+  );
   const removeAttachment = useCallback((key: string) => {
     setAttachments((prev) => prev.filter((a) => a.key !== key));
   }, []);

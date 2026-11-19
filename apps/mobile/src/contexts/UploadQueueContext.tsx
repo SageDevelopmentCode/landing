@@ -148,9 +148,17 @@ export function UploadQueueProvider({ children }: { children: React.ReactNode })
   const runningRef = useRef(false);
   const failedRef = useRef<FailedRun | null>(null);
   const retryRef = useRef<(() => boolean) | null>(null);
+  const batchClearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearBatchClearTimer = useCallback(() => {
+    if (batchClearTimerRef.current != null) {
+      clearTimeout(batchClearTimerRef.current);
+      batchClearTimerRef.current = null;
+    }
+  }, []);
   useEffect(() => {
     failedRef.current = state.failed;
   }, [state.failed]);
+  useEffect(() => () => clearBatchClearTimer(), [clearBatchClearTimer]);
 
   // Gallery dirty flag — starts true so the first load always runs.
   const galleryDirtyRef = useRef(true);
@@ -165,6 +173,7 @@ export function UploadQueueProvider({ children }: { children: React.ReactNode })
   const enqueueUpload = useCallback(
     (uris: string[], payload: SharedPayload, userId: string) => {
       if (runningRef.current || uris.length === 0) return false;
+      clearBatchClearTimer();
       runningRef.current = true;
       const seq = ++batchSeq;
       const items: UploadItem[] = uris.map((uri, i) => ({ id: `${seq}-${i}`, uri, status: "pending" }));
@@ -216,11 +225,15 @@ export function UploadQueueProvider({ children }: { children: React.ReactNode })
             action: { label: "Retry", onPress: () => void retryRef.current?.() },
           });
         }
-        setTimeout(() => dispatch({ type: "BATCH_CLEAR" }), 1800);
+        clearBatchClearTimer();
+        batchClearTimerRef.current = setTimeout(() => {
+          batchClearTimerRef.current = null;
+          dispatch({ type: "BATCH_CLEAR" });
+        }, 1800);
       });
       return true;
     },
-    [toast],
+    [toast, clearBatchClearTimer],
   );
 
   const retryFailed = useCallback(() => {

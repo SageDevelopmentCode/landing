@@ -43,6 +43,10 @@ export function useFeedPosts(
   useEffect(() => {
     postsRef.current = posts;
   }, [posts]);
+  const loadingRef = useRef(loading);
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
   /** Highest page index currently loaded. */
   const pageRef = useRef(0);
   /** Bumped on every full reload / filter change so stale responses are dropped. */
@@ -264,7 +268,7 @@ export function useFeedPosts(
   const reload = useCallback(() => reloadAll(false), [reloadAll]);
 
   const loadMore = useCallback(async (): Promise<FeedResult> => {
-    if (loadMoreInFlight.current || !hasMoreRef.current) return { ok: true };
+    if (loadMoreInFlight.current || !hasMoreRef.current || loadingRef.current) return { ok: true };
     loadMoreInFlight.current = true;
     const gen = genRef.current;
     const next = pageRef.current + 1;

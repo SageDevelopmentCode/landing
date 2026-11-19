@@ -54,11 +54,14 @@ export type EditPhotoPayload = {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Signed URL lifetime for `teacher-photos` (matches Supabase `createSignedUrls`). */
+export const TEACHER_PHOTO_SIGNED_URL_TTL_SEC = 86400;
+
 export async function fetchSignedUrls(paths: string[]): Promise<Record<string, string>> {
   if (paths.length === 0) return {};
   const { data } = await supabase.storage
     .from("teacher-photos")
-    .createSignedUrls(paths, 86400);
+    .createSignedUrls(paths, TEACHER_PHOTO_SIGNED_URL_TTL_SEC);
   const map: Record<string, string> = {};
   (data ?? []).forEach((item) => {
     if (item.signedUrl && item.path) map[item.path] = item.signedUrl;

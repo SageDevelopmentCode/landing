@@ -1,6 +1,11 @@
 // Data for the Photos gallery (parent + staff): all school photos grouped by
 // day, lazy signed URLs for the rows on screen, and the date filter.
-import { fetchSignedUrls, getAllSchoolPhotos, type TeacherPhoto } from "@/lib/photos-actions";
+import {
+  fetchSignedUrls,
+  getAllSchoolPhotos,
+  TEACHER_PHOTO_SIGNED_URL_TTL_SEC,
+  type TeacherPhoto,
+} from "@/lib/photos-actions";
 import { setPhotoGallerySession } from "@/lib/photo-gallery-session";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -51,6 +56,19 @@ function groupByDate(photos: TeacherPhoto[]): PhotoSection[] {
 /** How many photos get signed URLs right away, so the first screen never sits blank. */
 const EAGER_SIGN = 30;
 
+/** Re-sign slightly before Supabase expiry during scroll / refresh. */
+const SIGNED_URL_REFRESH_BUFFER_MS = 5 * 60 * 1000;
+
+type SignedUrlEntry = { url: string; expiresAt: number };
+
+type SignedUrlCache = Record<string, SignedUrlEntry>;
+
+function needsSigning(cache: SignedUrlCache, path: string): boolean {
+  const entry = cache[path];
+  if (!entry) return true;
+  return entry.expiresAt <= Date.now() + SIGNED_URL_REFRESH_BUFFER_MS;
+}
+
 export function usePhotosGallery({
   openPath = "/(tabs)/photos/[photoId]",
 }: { openPath?: string } = {}) {
@@ -61,25 +79,35 @@ export function usePhotosGallery({
   const [error, setError] = useState<string | null>(null);
   const [selectedDates, setSelectedDates] = useState<Set<string>>(new Set());
 
-  const signedUrlsRef = useRef<Record<string, string>>({});
+  const signedUrlsRef = useRef<SignedUrlCache>({});
+  const lastViewablePathsRef = useRef<string[]>([]);
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const signMissing = useCallback(async (paths: string[]) => {
-    const missing = [...new Set(paths)].filter((p) => p && !signedUrlsRef.current[p]);
+    const cache = signedUrlsRef.current;
+    const missing = [...new Set(paths)].filter((p) => p && needsSigning(cache, p));
     if (missing.length === 0) return;
     const newUrls = await fetchSignedUrls(missing);
-    signedUrlsRef.current = { ...signedUrlsRef.current, ...newUrls };
+    const expiresAt = Date.now() + TEACHER_PHOTO_SIGNED_URL_TTL_SEC * 1000;
+    const nextCache = { ...signedUrlsRef.current };
+    for (const [path, url] of Object.entries(newUrls)) {
+      nextCache[path] = { url, expiresAt };
+    }
+    signedUrlsRef.current = nextCache;
     setSignedUrls((prev) => ({ ...prev, ...newUrls }));
   }, []);
 
-  // Signed URLs last 24h and storage paths never change, so the cache is kept
-  // across refreshes (clearing it used to leave visible tiles blank).
+  // Keep cached URLs across refresh so tiles do not flash blank; renew entries
+  // when they expire (or are near expiry) instead of treating cache as permanent.
   const load = useCallback(async (): Promise<Result> => {
     try {
       const result = await getAllSchoolPhotos();
       setPhotos(result);
       setError(null);
-      void signMissing(result.slice(0, EAGER_SIGN).map((p) => p.storage_path));
+      void signMissing([
+        ...result.slice(0, EAGER_SIGN).map((p) => p.storage_path),
+        ...lastViewablePathsRef.current,
+      ]);
       return { ok: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -108,6 +136,7 @@ export function usePhotosGallery({
           if (!Array.isArray(row)) continue;
           for (const p of row) paths.push(p.storage_path);
         }
+        lastViewablePathsRef.current = paths;
         void signMissing(paths);
       }, 150);
     },
