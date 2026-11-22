@@ -1,4 +1,4 @@
-// Garden toasts: friendly, tactile status messages that slide in from the top.
+// Garden toasts: friendly, tactile status messages that ease in from the top.
 //   const toast = useToast();
 //   const id = toast.show({ tone: "loading", title: "Uploading photo…" });
 //   toast.update(id, { tone: "success", title: "Photo updated" });
@@ -22,17 +22,18 @@ import {
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-  FadeOutUp,
-  LinearTransition,
-  SlideInUp,
+  FadeInUp,
+  FadeOut,
   runOnJS,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Garden, GardenFonts, GardenRadii, gardenShadow } from "./gardenTheme";
 import { haptic } from "./haptics";
+import { GardenMotion, gardenLayout } from "./motion";
 
 export type ToastTone = "success" | "info" | "error" | "loading";
 
@@ -70,6 +71,12 @@ const TONE_STYLE: Record<ToastTone, { bg: string; fg: string; icon: React.Compon
 };
 
 const MAX_VISIBLE = 3;
+
+// A short fade with a 12px drop: calm, no bounce.
+const TOAST_ENTER = FadeInUp.duration(240)
+  .easing(GardenMotion.ease)
+  .withInitialValues({ opacity: 0, transform: [{ translateY: -12 }] });
+const TOAST_EXIT = FadeOut.duration(160);
 
 function fireHaptic(tone: ToastTone) {
   if (tone === "success") haptic.success();
@@ -172,6 +179,7 @@ function ToastHost({ toasts, onDismiss }: { toasts: ToastItem[]; onDismiss: (id:
 
 function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) {
   const tone = TONE_STYLE[item.tone];
+  const reduce = useReducedMotion();
   const y = useSharedValue(0);
   const pan = Gesture.Pan()
     .activeOffsetY([-8, 8])
@@ -182,7 +190,7 @@ function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: () => void
       if (e.translationY < -24 || e.velocityY < -500) {
         runOnJS(onDismiss)();
       } else {
-        y.value = withSpring(0);
+        y.value = withTiming(0, { duration: 180, easing: GardenMotion.ease });
       }
     });
   const s = useAnimatedStyle(() => ({ transform: [{ translateY: y.value }] }));
@@ -190,9 +198,9 @@ function ToastCard({ item, onDismiss }: { item: ToastItem; onDismiss: () => void
   return (
     <GestureDetector gesture={pan}>
       <Animated.View
-        entering={SlideInUp.springify().damping(16)}
-        exiting={FadeOutUp.duration(180)}
-        layout={LinearTransition.springify()}
+        entering={reduce ? undefined : TOAST_ENTER}
+        exiting={TOAST_EXIT}
+        layout={reduce ? undefined : gardenLayout()}
         style={[styles.wrap, s]}
       >
         <Pressable

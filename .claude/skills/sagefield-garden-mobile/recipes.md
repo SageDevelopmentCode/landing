@@ -45,7 +45,7 @@ Use one sticky note per screen at most. It marks the single most time-relevant t
   - Only push a step when it's actually needed.
 - **Header:** `GardenSectionHeader` with `note={`${n} things need you`}`.
 - **Each card:** a `PressableScale` in `GardenTints[tint].bg` with a white numbered bubble, `HandNote` "step i of n", an emoji and title, the body text, an optional `extra` (`<SeedProgress doneFlags={…}/>`), and one `GardenButton tone="ink" size="sm" iconRight="arrow-forward"`.
-- **Entrance:** stagger with `entering={FadeInDown.delay(i * 70).springify()}`.
+- **Entrance:** stagger with `entering={reduce ? undefined : gardenEnter(i)}`.
 - **Empty state:** `<GardenEmpty emoji="🌿" title="All caught up!" body="Nothing needs your attention right now." />`.
 
 ## 4. Polaroid rail

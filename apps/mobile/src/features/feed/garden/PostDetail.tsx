@@ -59,7 +59,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { type CommentNode, type DetailAttachment, useFeedPost } from "../useFeedPost";
@@ -578,7 +578,7 @@ function SendButton({ enabled, sending, onPress }: { enabled: boolean; sending: 
       <Pressable
         onPress={() => {
           if (!enabled) return;
-          sc.value = withSequence(withSpring(0.82, { damping: 12, stiffness: 400 }), withSpring(1));
+          sc.value = withSequence(withTiming(0.92, { duration: 90 }), withTiming(1, { duration: 200 }));
           onPress();
         }}
         disabled={!enabled}

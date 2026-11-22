@@ -14,9 +14,10 @@ import {
   GardenSprings,
   GardenTints,
   HandNote,
-  PressableScale,
   Polaroid,
+  PressableScale,
   gardenCard,
+  gardenEnter,
   gardenShadow,
   initialsOf,
   pastelFor,
@@ -30,7 +31,6 @@ import { useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
-  FadeInDown,
   FadeOutDown,
   useAnimatedStyle,
   useReducedMotion,
@@ -400,7 +400,7 @@ export function LearningTab({ c, fb }: { c: Children; fb: ChildrenFeedback }) {
             return (
               <Animated.View
                 key={note.id}
-                entering={reduce ? undefined : FadeInDown.delay(Math.min(i, 6) * 50).springify()}
+                entering={reduce ? undefined : gardenEnter(i, { max: 6 })}
                 exiting={reduce ? undefined : FadeOutDown.duration(160)}
                 style={[s.noteCard, { borderLeftColor: t.fg }]}
               >
@@ -505,7 +505,7 @@ export function PickupTab({ c, fb }: { c: Children; fb: ChildrenFeedback }) {
           pk.persons.map((p, i) => (
             <Animated.View
               key={p.tempId}
-              entering={reduce ? undefined : FadeInDown.delay(Math.min(i, 6) * 50).springify()}
+              entering={reduce ? undefined : gardenEnter(i, { max: 6 })}
               exiting={reduce ? undefined : FadeOutDown.duration(160)}
             >
               <PressableScale
@@ -568,7 +568,7 @@ export function PickupSaveBar({ c, fb }: { c: Children; fb: ChildrenFeedback }) 
   if (!show) return null;
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.springify()}
+      entering={reduce ? undefined : gardenEnter()}
       exiting={reduce ? undefined : FadeOutDown.duration(160)}
       style={[s.saveBar, { bottom: BottomTabInset + 10 }]}
     >

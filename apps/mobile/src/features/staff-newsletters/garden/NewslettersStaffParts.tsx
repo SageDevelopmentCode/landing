@@ -16,6 +16,7 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenEnter,
   gardenSheetChrome,
   haptic,
 } from "@/components/garden";
@@ -24,7 +25,7 @@ import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from "@
 import { Ionicons } from "@expo/vector-icons";
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, LinearTransition, useReducedMotion } from "react-native-reanimated";
+import Animated, { LinearTransition, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { generateWeekOptions } from "../useStaffNewsletters";
 
@@ -60,7 +61,7 @@ export function NewsletterRow({
   const published = item.status === "published";
   return (
     <Animated.View
-      entering={reduce || index > 5 ? undefined : FadeInDown.delay(index * 50).springify().damping(18)}
+      entering={reduce || index > 5 ? undefined : gardenEnter(index, { max: 8 })}
       layout={reduce ? undefined : LinearTransition}
       style={{ opacity: deleting ? 0.5 : 1 }}
     >

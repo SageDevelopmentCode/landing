@@ -1,6 +1,7 @@
 // Garden versions of the Home's own sheets (profile, event detail, checklist,
 // notifications). Same refs, data and navigation as the classic Home.
 import {
+  Display,
   Garden,
   GardenButton,
   GardenEmpty,
@@ -8,9 +9,9 @@ import {
   GardenRadii,
   GardenSkeleton,
   HandNote,
-  Display,
   PressableScale,
   SeedProgress,
+  gardenLayout,
   haptic,
 } from "@/components/garden";
 import { isFieldFridayCalendarEvent } from "@/lib/calendar";
@@ -24,7 +25,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, LinearTransition } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import {
   CHECKLIST_TASKS,
   TOTAL_TASKS,
@@ -263,7 +264,7 @@ export function GardenHomeSheets({ h, fb }: { h: ParentHome; fb: GardenFeedback 
                 return (
                   <Animated.View
                     key={task.id}
-                    layout={LinearTransition.springify()}
+                    layout={gardenLayout()}
                     style={[s.task, done && s.taskDone]}
                   >
                     <Text style={[s.taskStep, done && { color: Garden.sageDeep }]}>{i + 1}</Text>

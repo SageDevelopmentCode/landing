@@ -15,6 +15,7 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenEnter,
   haptic,
 } from "@/components/garden";
 import type { Activity, ActivityChangeLogEntry, ActivityFood } from "@/lib/activities-actions";
@@ -22,7 +23,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { memo, useState } from "react";
 import { FlatList, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Animated, { FadeInDown, LinearTransition, useReducedMotion } from "react-native-reanimated";
+import Animated, { LinearTransition, useReducedMotion } from "react-native-reanimated";
 import type { PrefCount } from "../useStaffActivities";
 
 export const GUTTER = 18;
@@ -76,7 +77,7 @@ function ActivityRowImpl({
   const answered = prefs ? prefs.full + prefs.nonFull : 0;
   return (
     <Animated.View
-      entering={reduce || index > 5 ? undefined : FadeInDown.delay(index * 50).springify().damping(18)}
+      entering={reduce || index > 5 ? undefined : gardenEnter(index, { max: 8 })}
       layout={reduce ? undefined : LinearTransition}
       style={{ opacity: deleting ? 0.5 : 1 }}
     >

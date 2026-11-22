@@ -6,6 +6,7 @@ import {
   GardenIconButton,
   GardenRadii,
   PressableScale,
+  gardenEnter,
   haptic,
 } from "@/components/garden";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,7 +31,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSequence,
-  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { PendingFile, PendingImage } from "../chatShared";
@@ -321,7 +322,7 @@ export function Composer({
       ) : null}
 
       {menuOpen ? (
-        <Animated.View entering={FadeInDown.springify().damping(16)} exiting={FadeOut.duration(120)} style={c.menu}>
+        <Animated.View entering={gardenEnter()} exiting={FadeOut.duration(120)} style={c.menu}>
           <PressableScale
             onPress={() => {
               setMenuOpen(false);
@@ -383,7 +384,7 @@ export function Composer({
           <Pressable
             onPress={() => {
               if (!canSend) return;
-              sc.value = withSequence(withSpring(0.8, { damping: 12, stiffness: 420 }), withSpring(1));
+              sc.value = withSequence(withTiming(0.92, { duration: 90 }), withTiming(1, { duration: 200 }));
               onSend();
             }}
             disabled={!canSend}
@@ -523,7 +524,7 @@ const iv = StyleSheet.create({
 export function NewMessagesPill({ count, onPress }: { count: number; onPress: () => void }) {
   if (count <= 0) return null;
   return (
-    <Animated.View entering={FadeInDown.springify()} exiting={FadeOut.duration(120)} style={nm.wrap} pointerEvents="box-none">
+    <Animated.View entering={gardenEnter()} exiting={FadeOut.duration(120)} style={nm.wrap} pointerEvents="box-none">
       <PressableScale onPress={onPress} accessibilityLabel={`${count} new messages. Jump to latest`} style={nm.pill}>
         <Text style={nm.text}>{count === 1 ? "1 new message" : `${count} new messages`}</Text>
         <Ionicons name="arrow-down" size={15} color={Garden.white} />

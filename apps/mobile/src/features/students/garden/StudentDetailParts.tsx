@@ -17,6 +17,8 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenEnter,
+  gardenLayout,
   haptic,
   type GardenTint,
 } from "@/components/garden";
@@ -26,7 +28,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useEffect, useRef, useState } from "react";
 import { Linking, ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, FadeInDown, LinearTransition, useReducedMotion } from "react-native-reanimated";
+import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import {
   STUDENT_TABS,
   type NoteCategory,
@@ -191,8 +193,8 @@ function NoteCard({
   const deleting = d.deletingId === note.id;
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.delay(Math.min(index, 6) * 50).springify()}
-      layout={reduce ? undefined : LinearTransition.springify().damping(20)}
+      entering={reduce ? undefined : gardenEnter(index, { max: 6 })}
+      layout={reduce ? undefined : gardenLayout()}
       style={[note_.card, deleting && { opacity: 0.5 }]}
     >
       <PressableScale

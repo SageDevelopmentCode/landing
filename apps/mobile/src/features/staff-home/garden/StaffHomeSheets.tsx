@@ -18,6 +18,7 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenPopIn,
   gardenSheetChrome,
   type GardenTint,
 } from "@/components/garden";
@@ -35,7 +36,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { ActivityIndicator, Linking, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import {
   formatEventTime,
   formatFullDate,
@@ -287,6 +288,9 @@ function StudentActionBody({
                 studentName: student.name ?? "",
                 program: student.program ?? "",
                 classroom: "",
+                // Home's roster is school-wide, so skip the "assigned to me" check
+                // (same as the Students tab's All students view).
+                allStudentsView: "1",
               },
             });
           }}
@@ -331,7 +335,7 @@ function StudentActionBody({
                 {tile.label}
               </Text>
               {tile.active && !tile.saving ? (
-                <Animated.View entering={ZoomIn.springify()} style={sa.tileCheck}>
+                <Animated.View entering={gardenPopIn()} style={sa.tileCheck}>
                   <Ionicons name="checkmark-circle" size={18} color={Garden.white} />
                 </Animated.View>
               ) : null}
@@ -515,7 +519,7 @@ function PickupSheet({ h, fb }: { h: StaffHome; fb: StaffHomeFeedback }) {
                   ]}
                 >
                   <View style={[pk.radio, selected && { borderColor: Garden.sage }]}>
-                    {selected ? <Animated.View entering={ZoomIn.springify()} style={pk.radioDot} /> : null}
+                    {selected ? <Animated.View entering={gardenPopIn()} style={pk.radioDot} /> : null}
                   </View>
                   <GardenAvatar name={p.name} size={38} />
                   <View style={{ flex: 1 }}>

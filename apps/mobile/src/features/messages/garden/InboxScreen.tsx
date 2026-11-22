@@ -14,6 +14,7 @@ import {
   GardenSegmented,
   READ_ONLY_TOAST,
   gardenCard,
+  gardenEnter,
   haptic,
   useToast,
 } from "@/components/garden";
@@ -21,7 +22,7 @@ import { BottomTabInset } from "@/constants/theme";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { TeacherSuggestion } from "../messagingApi";
 import { useInbox, type Inbox } from "../useInbox";
@@ -280,7 +281,7 @@ function DmEmpty({
         <Text style={st.label}>START A CONVERSATION</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingBottom: 8, paddingRight: 8 }}>
           {m.teachers.map((t, i) => (
-            <Animated.View key={t.id} entering={FadeInDown.delay(i * 70).springify()} style={st.teacher}>
+            <Animated.View key={t.id} entering={gardenEnter(i, { max: 8 })} style={st.teacher}>
               <GardenAvatar name={t.full_name} uri={t.profile_image_url} seed={t.id} size={72} />
               <Text style={st.teacherName} numberOfLines={2}>
                 {t.full_name}

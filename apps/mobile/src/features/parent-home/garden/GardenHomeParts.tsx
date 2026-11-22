@@ -20,6 +20,7 @@ import {
   SeedProgress,
   StickyNote,
   gardenCard,
+  gardenEnter,
   gardenShadowSm,
   haptic,
   type GardenTint,
@@ -45,7 +46,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { buildHomeTuitionCards, type HomeTuitionCard } from "../buildHomeTuitionCards";
 import {
   CHECKLIST_TASKS,
@@ -343,7 +344,7 @@ export function NextStepsStack({
           <GardenEmpty emoji="🌿" title="All caught up!" body="Nothing needs your attention right now." />
         ) : (
           steps.map((st, i) => (
-            <Animated.View key={st.key} entering={FadeInDown.delay(i * 70).springify()}>
+            <Animated.View key={st.key} entering={gardenEnter(i, { max: 8 })}>
               <PressableScale
                 onPress={st.onPress}
                 accessibilityLabel={`Step ${i + 1}: ${st.title}. ${st.body}`}

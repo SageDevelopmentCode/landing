@@ -22,6 +22,7 @@ import {
   HandNote,
   PressableScale,
   gardenCard,
+  gardenEnter,
   gardenSheetChrome,
   haptic,
 } from "@/components/garden";
@@ -31,7 +32,7 @@ import { BottomSheetFlatList, BottomSheetModal, BottomSheetScrollView } from "@g
 import { Ionicons } from "@expo/vector-icons";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import type { FeedList as ParentFeed } from "../useParentFeed";
 import { AttachmentRow, MediaMosaic, PostTypePill, ReactionBar } from "./FeedBits";
 import type { FeedFeedback } from "./useFeedFeedback";
@@ -123,7 +124,7 @@ function PostCardImpl({ post, f, fb, index }: CardProps) {
   const deletable = f.canDelete(post);
 
   return (
-    <Animated.View entering={index < 4 ? FadeInDown.delay(index * 60).springify().damping(18) : undefined}>
+    <Animated.View entering={index < 4 ? gardenEnter(index, { max: 8 }) : undefined}>
       <PressableScale
         pressedScale={0.985}
         haptics={false}

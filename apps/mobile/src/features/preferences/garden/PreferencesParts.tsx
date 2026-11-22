@@ -17,6 +17,7 @@ import {
   GardenRadii,
   GardenSkeleton,
   GardenSpace,
+  GardenSprings,
   GardenTints,
   HandNote,
   MIN_TAP,
@@ -24,6 +25,8 @@ import {
   PressableScale,
   SeedProgress,
   gardenCard,
+  gardenEnter,
+  gardenLayout,
   type GardenTint,
 } from "@/components/garden";
 import {
@@ -40,8 +43,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Animated, {
   FadeIn,
-  FadeInDown,
-  LinearTransition,
   useAnimatedStyle,
   useReducedMotion,
   withSpring,
@@ -179,7 +180,7 @@ function LevelTile({
 }) {
   const reduce = useReducedMotion();
   const pop = useAnimatedStyle(() => ({
-    transform: [{ scale: reduce ? 1 : withSpring(selected ? 1.12 : 1, { damping: 11, stiffness: 260 }) }],
+    transform: [{ scale: reduce ? 1 : withSpring(selected ? 1.04 : 1, GardenSprings.gentle) }],
   }));
   return (
     <PressableScale
@@ -262,7 +263,7 @@ export function AutoFillCard({ p, fb }: { p: ActivityPreferences; fb: Preference
   const currentOption = LEVEL_OPTIONS.find((o) => o.level === currentDefault);
 
   return (
-    <Animated.View layout={LinearTransition.springify().damping(20)} style={st.autoCard}>
+    <Animated.View layout={gardenLayout()} style={st.autoCard}>
       <Pressable
         onPress={() => setExpanded((v) => !v)}
         disabled={disabled}
@@ -401,8 +402,8 @@ export function ActivityCard({
 
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.delay(Math.min(index, 5) * 60).springify().damping(18)}
-      layout={reduce ? undefined : LinearTransition.springify().damping(20)}
+      entering={reduce ? undefined : gardenEnter(index, { max: 5 })}
+      layout={reduce ? undefined : gardenLayout()}
       style={st.card}
     >
       {act.cover_image_url ? (

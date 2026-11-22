@@ -1,4 +1,4 @@
-// Springy, tactile press — the mobile stand-in for Garden hover effects.
+// Gentle, tactile press — the mobile stand-in for Garden hover effects.
 import { forwardRef, type ReactNode } from "react";
 import {
   Pressable,
@@ -21,7 +21,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 export type PressableScaleProps = Omit<PressableProps, "style" | "children"> & {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** Scale when pressed. Default 0.96. */
+  /** Scale when pressed. Default 0.97. */
   pressedScale?: number;
   /** Haptic on press-in. Default "tap". Pass false to disable. */
   haptics?: false | keyof typeof haptic;
@@ -32,7 +32,7 @@ export const PressableScale = forwardRef<View, PressableScaleProps>(
     {
       children,
       style,
-      pressedScale = 0.96,
+      pressedScale = 0.97,
       haptics = "tap",
       onPressIn,
       onPressOut,

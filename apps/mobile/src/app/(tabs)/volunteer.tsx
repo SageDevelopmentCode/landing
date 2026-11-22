@@ -9,6 +9,7 @@ import {
   GardenSpace,
   GardenTints,
   gardenCard,
+  gardenEnter,
 } from "@/components/garden";
 import { BottomTabInset } from "@/constants/theme";
 import { VolunteerSheet } from "@/features/volunteer/garden/VolunteerSheet";
@@ -16,7 +17,7 @@ import { useVolunteerInterest } from "@/features/volunteer/useVolunteerInterest"
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VolunteerScreen() {
@@ -32,7 +33,7 @@ export default function VolunteerScreen() {
         contentContainerStyle={[st.scroll, { paddingBottom: BottomTabInset + 32 }]}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={reduce ? undefined : FadeInDown.springify().damping(18)} style={st.card}>
+        <Animated.View entering={reduce ? undefined : gardenEnter()} style={st.card}>
           <View style={st.iconBadge}>
             <Text style={{ fontSize: 30 }}>💚</Text>
           </View>

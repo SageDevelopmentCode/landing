@@ -108,7 +108,7 @@ function BirthdayCard({ birthday }: { birthday: StaffBirthday }) {
       onPress={() =>
         router.push({
           pathname: "/(staff)/students/[studentId]" as any,
-          params: { studentId: birthday.studentId },
+          params: { studentId: birthday.studentId, studentName: birthday.name ?? "", allStudentsView: "1" },
         })
       }
     >

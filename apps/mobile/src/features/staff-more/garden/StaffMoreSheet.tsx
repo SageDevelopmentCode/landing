@@ -7,7 +7,7 @@ import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useRouter, useSegments } from "expo-router";
 import { forwardRef, useCallback, useRef, useState, type RefObject } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Display,
@@ -19,6 +19,7 @@ import {
   MIN_TAP,
   Pill,
   PressableScale,
+  gardenEnter,
   gardenSheetChrome,
 } from "@/components/garden";
 import {
@@ -164,7 +165,7 @@ export const StaffMoreSheet = forwardRef<BottomSheetModal, Props>(function Staff
   );
 
   const name = me.firstName;
-  const enter = (i: number) => (reduce ? undefined : FadeInDown.delay(60 + i * 30).springify().damping(16));
+  const enter = (i: number) => (reduce ? undefined : gardenEnter(i, { base: 60 }));
 
   // Running index so the stagger flows top to bottom across sections.
   const adminCount = isSuperAdmin ? ADMIN.length : 0;

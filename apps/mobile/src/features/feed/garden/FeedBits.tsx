@@ -33,7 +33,6 @@ import Animated, {
   useSharedValue,
   withDelay,
   withSequence,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -57,15 +56,15 @@ function Particle({ emoji, x, onDone }: { emoji: string; x: number; onDone: () =
   const ty = useSharedValue(0);
   const tx = useSharedValue(0);
   const o = useSharedValue(1);
-  const sc = useSharedValue(0.4);
+  const sc = useSharedValue(0.8);
   useEffect(() => {
-    const drift = (Math.random() - 0.5) * 56;
-    ty.value = withTiming(-72, { duration: 820 });
-    tx.value = withTiming(drift, { duration: 820 });
-    sc.value = withSequence(withTiming(1.4, { duration: 170 }), withTiming(1, { duration: 650 }));
+    const drift = (Math.random() - 0.5) * 28;
+    ty.value = withTiming(-44, { duration: 760 });
+    tx.value = withTiming(drift, { duration: 760 });
+    sc.value = withSequence(withTiming(1.1, { duration: 200 }), withTiming(1, { duration: 560 }));
     o.value = withDelay(
-      300,
-      withTiming(0, { duration: 520 }, (fin) => {
+      240,
+      withTiming(0, { duration: 500 }, (fin) => {
         if (fin) runOnJS(onDone)();
       }),
     );
@@ -98,7 +97,7 @@ function ReactionPill({
   const prevMine = useRef(mine);
   useEffect(() => {
     if (mine && !prevMine.current && !reduce) {
-      pop.value = withSequence(withSpring(1.22, { damping: 8, stiffness: 320 }), withSpring(1));
+      pop.value = withSequence(withTiming(1.08, { duration: 140 }), withTiming(1, { duration: 220 }));
     }
     prevMine.current = mine;
   }, [mine, pop, reduce]);

@@ -32,17 +32,17 @@ function EmojiParticle({
   onDone: () => void;
 }) {
   const translateY = useSharedValue(0);
-  const translateX = useSharedValue((Math.random() - 0.5) * 36);
+  const translateX = useSharedValue((Math.random() - 0.5) * 18);
   const opacity = useSharedValue(1);
-  const scale = useSharedValue(0.4);
+  const scale = useSharedValue(0.8);
 
   useEffect(() => {
-    translateY.value = withTiming(-68, { duration: 850 });
-    translateX.value = withTiming((Math.random() - 0.5) * 52, { duration: 850 });
-    scale.value = withSequence(withTiming(1.4, { duration: 180 }), withTiming(1.0, { duration: 670 }));
+    translateY.value = withTiming(-44, { duration: 760 });
+    translateX.value = withTiming((Math.random() - 0.5) * 26, { duration: 760 });
+    scale.value = withSequence(withTiming(1.1, { duration: 200 }), withTiming(1.0, { duration: 560 }));
     opacity.value = withDelay(
-      320,
-      withTiming(0, { duration: 530 }, (finished) => {
+      240,
+      withTiming(0, { duration: 500 }, (finished) => {
         if (finished) runOnJS(onDone)();
       }),
     );

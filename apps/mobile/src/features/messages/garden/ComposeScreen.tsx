@@ -11,13 +11,14 @@ import {
   PressableScale,
   READ_ONLY_TOAST,
   gardenCard,
+  gardenEnter,
   useToast,
 } from "@/components/garden";
 import { useAuth } from "@/contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef } from "react";
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { TeacherSuggestion } from "../messagingApi";
 import { useComposeMessage } from "../useComposeMessage";
@@ -101,7 +102,7 @@ export function ComposeScreen() {
           renderItem={({ item, index }) => {
             const busy = c.selectingId === item.id;
             return (
-              <Animated.View entering={FadeInDown.delay(index * 50).springify().damping(18)}>
+              <Animated.View entering={gardenEnter(index, { max: 8 })}>
                 <PressableScale
                   pressedScale={0.98}
                   disabled={!!c.selectingId && !busy}

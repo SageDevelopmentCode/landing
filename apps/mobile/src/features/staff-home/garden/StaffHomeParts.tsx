@@ -21,6 +21,8 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenLayout,
+  gardenPopIn,
   gardenShadowSm,
   haptic,
   type GardenTint,
@@ -53,7 +55,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, LinearTransition, ZoomIn } from "react-native-reanimated";
+import Animated, { FadeIn, LinearTransition } from "react-native-reanimated";
 import {
   STATUS_FILTER_CHIPS,
   emptyTeacherRosterSummary,
@@ -92,7 +94,7 @@ export function StatusPill({ status }: { status: StudentDayStatus }) {
   const meta = STATUS_META[status];
   const t = GardenTints[meta.tint];
   return (
-    <Animated.View key={status} entering={ZoomIn.springify()} style={[ui.pill, { backgroundColor: t.bg }]}>
+    <Animated.View key={status} entering={gardenPopIn()} style={[ui.pill, { backgroundColor: t.bg }]}>
       <Ionicons name={meta.icon} size={12} color={t.fg} />
       <Text style={[ui.pillText, { color: t.fg }]} maxFontSizeMultiplier={1.3}>
         {meta.label}
@@ -469,7 +471,7 @@ function StudentRow({
   const name = shortName(student.name);
 
   return (
-    <Animated.View layout={LinearTransition.springify().damping(20)}>
+    <Animated.View layout={gardenLayout()}>
       <PressableScale
         pressedScale={0.98}
         onPress={() => h.openStudentActions(student)}
@@ -1440,7 +1442,7 @@ function BirthdayRow({ h, b }: { h: StaffHome; b: StaffBirthday }) {
       onPress={() =>
         h.router.push({
           pathname: "/(staff)/students/[studentId]" as any,
-          params: { studentId: b.studentId },
+          params: { studentId: b.studentId, studentName: b.name ?? "", allStudentsView: "1" },
         })
       }
       accessibilityLabel={`${name}, ${meta}. Opens profile`}

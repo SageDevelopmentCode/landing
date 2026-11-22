@@ -2,202 +2,165 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
-import { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Ionicons } from "@expo/vector-icons";
+import {
+  Display,
+  Garden,
+  GardenButton,
+  GardenFonts,
+  GardenSpace,
+  HandNote,
+  MIN_TAP,
+  gardenEnter,
+} from "@/components/garden";
+import { WelcomePhotoStack } from "@/features/welcome/garden/WelcomePhotoStack";
 
-import { Brand, FontFamilies } from "@/constants/theme";
+function openLegal(url: string) {
+  void openBrowserAsync(url, { presentationStyle: WebBrowserPresentationStyle.AUTOMATIC });
+}
 
-const SLIDES = [
-  require("@/assets/images/stock/Stock1.webp"),
-  require("@/assets/images/stock/Stock2.webp"),
-  require("@/assets/images/stock/Stock3.webp"),
-  require("@/assets/images/stock/Stock4.webp"),
-  require("@/assets/images/stock/Stock5.webp"),
-  require("@/assets/images/stock/Stock6.webp"),
-  require("@/assets/images/stock/Stock7.webp"),
-  require("@/assets/images/stock/Stock8.webp"),
-  require("@/assets/images/stock/Stock9.webp"),
-  require("@/assets/images/stock/Stock10.webp"),
-  require("@/assets/images/stock/Stock11.webp"),
-];
+function enter(i: number) {
+  return gardenEnter(i, { base: 260 });
+}
 
-export default function LoginScreen() {
+export default function WelcomeScreen() {
   const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(
-    () => Math.floor(Math.random() * SLIDES.length)
-  );
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
-    }, 7000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <SafeAreaView style={styles.safe}>
+      <StatusBar style="dark" />
+      {/* Scrolls only when Dynamic Type or a short screen needs it. */}
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        alwaysBounceVertical={false}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.photos}>
+          <WelcomePhotoStack />
+        </View>
 
-      {/* Background slideshow */}
-      <Image
-        source={SLIDES[currentIndex]}
-        style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        transition={{ duration: 800 }}
-      />
-
-      {/* Gradient overlay */}
-      <View
-        style={[
-          StyleSheet.absoluteFill,
-          // @ts-ignore — experimental_backgroundImage is available in RN 0.83+
-          {
-            experimental_backgroundImage:
-              "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.50) 45%, rgba(0,0,0,0.15) 75%, transparent 100%)",
-          },
-        ]}
-      />
-
-      {/* Content */}
-      <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
-          <Image
-            source={require("@/assets/images/Logo.png")}
-            style={styles.logo}
-            contentFit="contain"
-          />
+          <Animated.View entering={enter(0)} style={styles.center}>
+            <Image
+              source={require("@/assets/images/Logo.png")}
+              style={styles.logo}
+              contentFit="contain"
+              accessibilityLabel="Sage Field logo"
+            />
+          </Animated.View>
 
-          <Text style={styles.heading}>Welcome to{"\n"}Sage Field</Text>
+          <Animated.View entering={enter(1)} style={styles.center}>
+            <Display size={38} style={styles.heading}>
+              {"Welcome to\nSage Field"}
+            </Display>
+            <HandNote size={22} style={styles.tagline}>
+              A place where curiosity grows.
+            </HandNote>
+          </Animated.View>
 
-          <Text style={styles.tagline}>A place where curiosity grows.</Text>
+          <Animated.View entering={enter(2)} style={styles.actions}>
+            <GardenButton
+              label="Log in to continue"
+              tone="coral"
+              iconRight="arrow-forward"
+              fullWidth
+              onPress={() => router.replace("/login")}
+            />
+            <GardenButton
+              label="Interested in Sage Field?"
+              tone="outline"
+              iconRight="chevron-forward"
+              fullWidth
+              onPress={() => router.push("/interested")}
+            />
+          </Animated.View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={() => router.replace("/login")}
-          >
-            <Text style={styles.buttonText}>Log in to continue</Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [styles.textLinkRow, pressed && { opacity: 0.6 }]}
-            onPress={() => router.push("/interested")}
-          >
-            <Text style={styles.textLink}>Interested in Sage Field?</Text>
-            <Ionicons name="chevron-forward" size={15} color="rgba(255,255,255,0.7)" />
-          </Pressable>
+          <Animated.View entering={enter(3)} style={styles.legalRow}>
+            <Pressable
+              onPress={() => openLegal("https://sagefield.co/privacy")}
+              hitSlop={12}
+              accessibilityRole="link"
+              style={styles.legalHit}
+            >
+              <Text maxFontSizeMultiplier={1.3} style={styles.legalLink}>
+                Privacy Policy
+              </Text>
+            </Pressable>
+            <Text style={styles.legalDot}>·</Text>
+            <Pressable
+              onPress={() => openLegal("https://sagefield.co/terms")}
+              hitSlop={12}
+              accessibilityRole="link"
+              style={styles.legalHit}
+            >
+              <Text maxFontSizeMultiplier={1.3} style={styles.legalLink}>
+                Terms of Use
+              </Text>
+            </Pressable>
+          </Animated.View>
         </View>
-
-        <View style={styles.legalRow}>
-          <Pressable
-            onPress={() =>
-              openBrowserAsync("https://sagefield.co/privacy", {
-                presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-              })
-            }
-          >
-            <Text style={styles.legalLink}>Privacy Policy</Text>
-          </Pressable>
-          <Text style={styles.legalDot}>·</Text>
-          <Pressable
-            onPress={() =>
-              openBrowserAsync("https://sagefield.co/terms", {
-                presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
-              })
-            }
-          >
-            <Text style={styles.legalLink}>Terms of Use</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: Garden.cream,
   },
-  safeArea: {
+  photos: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: "center",
+    paddingHorizontal: GardenSpace.gutter,
+    paddingTop: 12,
   },
   content: {
-    paddingHorizontal: 32,
-    paddingBottom: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 4,
+  },
+  center: {
     alignItems: "center",
-    gap: 12,
   },
   logo: {
-    width: 120,
-    height: 60,
-    marginBottom: 4,
+    width: 56,
+    height: 48,
+    marginBottom: 12,
   },
   heading: {
-    fontFamily: FontFamilies.heading,
-    fontSize: 34,
-    color: "#ffffff",
     textAlign: "center",
-    lineHeight: 44,
   },
   tagline: {
-    fontFamily: FontFamilies.body,
-    fontSize: 15,
-    color: "rgba(255,255,255,0.75)",
     textAlign: "center",
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  button: {
-    backgroundColor: Brand.coral,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignSelf: "stretch",
-    alignItems: "center",
     marginTop: 8,
   },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    fontFamily: FontFamilies.bodySemiBold,
-    fontSize: 16,
-    color: "#ffffff",
-  },
-  textLinkRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  textLink: {
-    fontFamily: FontFamilies.body,
-    fontSize: 15,
-    color: "rgba(255,255,255,0.7)",
+  actions: {
+    gap: 12,
+    marginTop: 24,
   },
   legalRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    paddingBottom: 12,
+    gap: 6,
+    marginTop: 8,
+  },
+  legalHit: {
+    minHeight: MIN_TAP,
+    justifyContent: "center",
+    paddingHorizontal: 4,
   },
   legalLink: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "rgba(255,255,255,0.5)",
+    fontFamily: GardenFonts.bodySemi,
+    fontSize: 12.5,
+    color: Garden.muted,
   },
   legalDot: {
-    fontFamily: FontFamilies.body,
-    fontSize: 12,
-    color: "rgba(255,255,255,0.35)",
+    fontFamily: GardenFonts.bodySemi,
+    fontSize: 12.5,
+    color: Garden.muted,
   },
 });

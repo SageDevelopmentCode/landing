@@ -102,7 +102,8 @@ export const gardenCard: ViewStyle = {
 };
 
 export const GardenSprings = {
-  press: { damping: 18, stiffness: 420, mass: 0.6 },
-  pop: { damping: 11, stiffness: 260, mass: 0.7 },
-  gentle: { damping: 20, stiffness: 180 },
+  // Tuned to settle without overshoot: smooth, not bouncy.
+  press: { damping: 26, stiffness: 380, mass: 0.6 },
+  pop: { damping: 22, stiffness: 240, mass: 0.7 },
+  gentle: { damping: 24, stiffness: 170 },
 } as const;

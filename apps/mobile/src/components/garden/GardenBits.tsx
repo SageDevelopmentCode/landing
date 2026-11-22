@@ -2,7 +2,7 @@
 // polaroids, seed progress, section headers, empty + skeleton states.
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -18,7 +18,6 @@ import Animated, {
   useSharedValue,
   withRepeat,
   withSequence,
-  withSpring,
   withTiming,
 } from "react-native-reanimated";
 import {
@@ -26,7 +25,6 @@ import {
   Garden,
   GardenFonts,
   GardenRadii,
-  GardenSprings,
   GardenTints,
   gardenShadowSm,
   type GardenTint,
@@ -61,9 +59,15 @@ export function Pill({
 
 // ─── Count badge ─────────────────────────────────────────────────────────────
 export function CountBadge({ count, color = Garden.coralDeep }: { count: number; color?: string }) {
-  const scale = useSharedValue(0.6);
+  const scale = useSharedValue(1);
+  const mounted = useRef(false);
   useEffect(() => {
-    scale.value = withSequence(withSpring(1.25, GardenSprings.pop), withSpring(1, GardenSprings.pop));
+    // No pop on first render; a soft nudge only when the count changes.
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    scale.value = withSequence(withTiming(1.08, { duration: 140 }), withTiming(1, { duration: 220 }));
   }, [count, scale]);
   const s = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   if (count <= 0) return null;
@@ -227,7 +231,7 @@ function Seed({ done, index }: { done: boolean; index: number }) {
       return;
     }
     scale.value = done
-      ? withSequence(withSpring(1.35, GardenSprings.pop), withSpring(1, GardenSprings.pop))
+      ? withSequence(withTiming(1.1, { duration: 160 }), withTiming(1, { duration: 240 }))
       : withTiming(0.85, { duration: 160 });
   }, [done, reduce, scale]);
   const s = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));

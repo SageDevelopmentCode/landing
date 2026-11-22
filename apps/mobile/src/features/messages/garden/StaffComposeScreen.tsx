@@ -16,6 +16,7 @@ import {
   MIN_TAP,
   PressableScale,
   gardenCard,
+  gardenPopIn,
   haptic,
   useToast,
 } from "@/components/garden";
@@ -34,7 +35,7 @@ import {
   Text,
   View,
 } from "react-native";
-import Animated, { FadeIn, FadeInDown, ZoomIn, useReducedMotion } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { pickChatImage } from "../chatShared";
 import { useStaffCompose, type StaffCompose } from "../useStaffCompose";
@@ -246,7 +247,7 @@ function RecipientCard({ card, selected, onPress }: { card: Card; selected: bool
       style={[st.card, selected && st.cardSelected]}
     >
       {selected ? (
-        <Animated.View entering={reduce ? undefined : ZoomIn.springify().damping(14)} style={st.check}>
+        <Animated.View entering={reduce ? undefined : gardenPopIn()} style={st.check}>
           <Ionicons name="checkmark" size={13} color={Garden.white} />
         </Animated.View>
       ) : null}
