@@ -104,6 +104,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="children" options={{ href: null }} />
         <Tabs.Screen name="attendance" options={{ href: null }} />
         <Tabs.Screen name="teacher" options={{ href: null }} />
+        <Tabs.Screen name="teacher-favorites" options={{ href: null }} />
         <Tabs.Screen name="settings" options={{ href: null }} />
         <Tabs.Screen name="rewards" options={{ href: null }} />
         <Tabs.Screen name="newsletters" options={{ href: null }} />

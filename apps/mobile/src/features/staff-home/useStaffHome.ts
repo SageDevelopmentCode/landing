@@ -12,6 +12,7 @@ import {
   type TourBooking,
 } from "@/lib/admin-actions";
 import { notifyDiscord, notifyError } from "@/lib/discord";
+import { getPublishedNewsletters, type ParentNewsletterListItem } from "@/lib/newsletters-actions";
 import { groupStudentsByTeacher } from "@/lib/group-by-teacher";
 import {
   getChicagoDateTimeParts,
@@ -40,6 +41,7 @@ import {
   getUpcomingBirthdays,
   type StaffBirthday,
 } from "@/lib/staff-upcoming-birthdays";
+import { useTeacherFavoritesSeen } from "@/features/teacher-favorites/useTeacherFavoritesSeen";
 import { getStudentDisplayName } from "@/lib/student-display-name";
 import { supabase } from "@/lib/supabase";
 import type { BottomSheetModal } from "@gorhom/bottom-sheet";
@@ -82,6 +84,9 @@ const FAIL: WriteResult = { ok: false };
 
 export function useStaffHome() {
   const router = useRouter();
+  // Teacher Favorites section "New!" badge (device flag, re-read on focus).
+  const { seen: teacherFavoritesSeen, open: openTeacherFavorites } =
+    useTeacherFavoritesSeen("staff");
 
   // ── Profile ──────────────────────────────────────────────────────────────────
   const [fullName, setFullName] = useState("");
@@ -183,6 +188,11 @@ export function useStaffHome() {
   const [allBirthdays, setAllBirthdays] = useState<StaffBirthday[]>([]);
   const [birthdaysLoading, setBirthdaysLoading] = useState(true);
   const [birthdaysError, setBirthdaysError] = useState(false);
+
+  // ── Newsletters (latest published, same rail as the parent Home) ─────────────
+  const [homeNewsletters, setHomeNewsletters] = useState<ParentNewsletterListItem[]>([]);
+  const [newslettersLoading, setNewslettersLoading] = useState(true);
+  const [newslettersError, setNewslettersError] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<StaffUpcomingCalendarEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState(false);
@@ -402,6 +412,29 @@ export function useStaffHome() {
     }
   }, []);
 
+  const loadNewsletters = useCallback(async (opts?: { silent?: boolean }): Promise<LoadResult> => {
+    if (!opts?.silent) setNewslettersLoading(true);
+    try {
+      setHomeNewsletters(await getPublishedNewsletters(5));
+      setNewslettersError(false);
+      return { ok: true };
+    } catch (e) {
+      notifyError("staff-home-newsletters", e);
+      setNewslettersError(true);
+      return { ok: false };
+    } finally {
+      setNewslettersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadNewsletters();
+  }, [loadNewsletters]);
+
+  const openNewsletters = useCallback(() => {
+    router.push("/(staff)/school-newsletters" as never);
+  }, [router]);
+
   const loadUpcomingEvents = useCallback(async (opts?: { silent?: boolean }): Promise<LoadResult> => {
     if (!opts?.silent) setEventsLoading(true);
     try {
@@ -465,6 +498,7 @@ export function useStaffHome() {
       const results = await Promise.all([
         loadTodayStudents({ silent: true }),
         loadBirthdays({ silent: true }),
+        loadNewsletters({ silent: true }),
         loadUpcomingEvents({ silent: true }),
         loadWeekActivityPrefs(
           acts.published.map((a) => ({ id: a.id, activity_date: a.activity_date })),
@@ -484,6 +518,7 @@ export function useStaffHome() {
     loadActivities,
     loadTodayStudents,
     loadBirthdays,
+    loadNewsletters,
     loadUpcomingEvents,
     loadWeekActivityPrefs,
     loadSchoolDayFoodPrefs,
@@ -1269,6 +1304,14 @@ export function useStaffHome() {
 
   return {
     router,
+    // newsletters
+    homeNewsletters,
+    newslettersLoading,
+    newslettersError,
+    openNewsletters,
+    // teacher favorites
+    teacherFavoritesSeen,
+    openTeacherFavorites,
     // profile
     fullName,
     firstName,

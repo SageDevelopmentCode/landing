@@ -27,7 +27,6 @@ import {
 } from "@/components/garden";
 import { FallLeavesOverlay } from "@/components/FallLeavesOverlay";
 import { getGreeting } from "@/components/HomeHeroHeader";
-import { API_BASE_URL } from "@/constants/config";
 import {
   formatConferenceDateForDisplay,
   getUpcomingConferenceEntries,
@@ -38,7 +37,6 @@ import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useMemo, type ReactNode } from "react";
 import {
-  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -57,6 +55,8 @@ import {
   toYMD,
 } from "../constants";
 import { IntroSlideshow } from "../IntroSlideshow";
+import { TeacherFavoritesSection } from "@/features/teacher-favorites/garden/TeacherFavoritesSection";
+import { NewslettersHomeRail } from "@/features/newsletters/garden/NewslettersHomeRail";
 import { ParentHomeExternalSheets } from "../ParentHomeExternalSheets";
 import type { CalendarEvent } from "../types";
 import type { ParentHome } from "../useParentHome";
@@ -658,6 +658,18 @@ export function TeacherChips({
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Teacher favorites — shared section (also on the staff Home)
+// ─────────────────────────────────────────────────────────────────────────────
+export function TeacherFavoritesHome({ h }: { h: ParentHome }) {
+  return (
+    <TeacherFavoritesSection
+      isNew={h.teacherFavoritesSeen === false}
+      onOpen={h.openTeacherFavorites}
+    />
+  );
+}
+
 const tc = StyleSheet.create({
   card: {
     width: 132,
@@ -1130,69 +1142,15 @@ const tu = StyleSheet.create({
 // Newsletters
 // ─────────────────────────────────────────────────────────────────────────────
 export function NewslettersRail({ h }: { h: ParentHome }) {
-  if (h.loading || (!h.newslettersLoading && h.homeNewsletters.length === 0)) return null;
+  if (h.loading) return null;
   return (
-    <View style={{ marginBottom: 26 }}>
-      <GardenSectionHeader title="Newsletters" onAction={() => h.router.push("/(tabs)/newsletters" as any)} />
-      {h.newslettersLoading ? (
-        <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: GUTTER }}>
-          {[0, 1].map((i) => (
-            <GardenSkeleton key={i} width={170} height={150} radius={22} />
-          ))}
-        </View>
-      ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 10, paddingHorizontal: GUTTER, paddingBottom: 6 }}
-        >
-          {h.homeNewsletters.map((item) => (
-            <PressableScale
-              key={item.id}
-              accessibilityRole="link"
-              accessibilityLabel={`${item.title}, ${item.week_range}. Opens in browser`}
-              onPress={() => Linking.openURL(`${API_BASE_URL}/newsletter/${item.id}`)}
-              style={nl.card}
-            >
-              <View style={nl.image}>
-                {item.cover_image_url ? (
-                  <Image source={{ uri: item.cover_image_url }} style={StyleSheet.absoluteFill} contentFit="cover" />
-                ) : (
-                  <Text style={{ fontSize: 28 }}>📰</Text>
-                )}
-              </View>
-              <View style={{ padding: 11, gap: 2 }}>
-                <Text style={nl.title} numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <Text style={nl.week} numberOfLines={1}>
-                  {item.week_range}
-                </Text>
-                {item.access_password ? (
-                  <View style={nl.pw}>
-                    <Ionicons name="lock-closed-outline" size={11} color={Garden.soft} />
-                    <Text style={nl.week}>Password: </Text>
-                    <Text selectable style={[nl.week, { fontFamily: GardenFonts.bodyHeavy, color: Garden.ink }]}>
-                      {item.access_password}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            </PressableScale>
-          ))}
-        </ScrollView>
-      )}
-    </View>
+    <NewslettersHomeRail
+      items={h.homeNewsletters}
+      loading={h.newslettersLoading}
+      onViewAll={() => h.router.push("/(tabs)/newsletters" as any)}
+    />
   );
 }
-
-const nl = StyleSheet.create({
-  card: { width: 170, ...gardenCard, borderRadius: 22, overflow: "hidden" },
-  image: { aspectRatio: 16 / 9, width: "100%", backgroundColor: Garden.peach, alignItems: "center", justifyContent: "center" },
-  title: { fontFamily: GardenFonts.bodyBold, fontSize: 13.5, color: Garden.ink, lineHeight: 18 },
-  week: { fontFamily: GardenFonts.body, fontSize: 11.5, color: Garden.soft },
-  pw: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 4 },
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Photos, rewards, feedback

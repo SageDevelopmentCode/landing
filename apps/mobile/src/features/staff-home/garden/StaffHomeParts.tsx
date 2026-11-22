@@ -28,6 +28,8 @@ import {
   type GardenTint,
 } from "@/components/garden";
 import { getGreeting } from "@/components/HomeHeroHeader";
+import { NewslettersHomeRail } from "@/features/newsletters/garden/NewslettersHomeRail";
+import { TeacherFavoritesSection } from "@/features/teacher-favorites/garden/TeacherFavoritesSection";
 import { getTeacherColors } from "@/lib/group-by-teacher";
 import { CONFERENCE_TEACHERS } from "@/lib/parent-teacher-conference";
 import { SCHOOL_YEAR_START } from "@/lib/school-year-attendance";
@@ -1526,6 +1528,45 @@ const ui = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Newsletters — shared rail (same as the parent Home)
+// ─────────────────────────────────────────────────────────────────────────────
+export function NewslettersStaff({ h, fb }: { h: StaffHome; fb: StaffHomeFeedback }) {
+  if (h.newslettersError && h.homeNewsletters.length === 0) {
+    return (
+      <View style={{ marginBottom: 26 }}>
+        <GardenSectionHeader title="Newsletters" />
+        <View style={{ paddingHorizontal: GUTTER }}>
+          <GardenErrorCard
+            title="Couldn't load newsletters"
+            onRetry={() => void fb.retry()}
+            retrying={fb.retrying}
+          />
+        </View>
+      </View>
+    );
+  }
+  return (
+    <NewslettersHomeRail
+      items={h.homeNewsletters}
+      loading={h.newslettersLoading}
+      onViewAll={h.openNewsletters}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Teacher favorites — shared section (same as the parent Home)
+// ─────────────────────────────────────────────────────────────────────────────
+export function TeacherFavoritesStaff({ h }: { h: StaffHome }) {
+  return (
+    <TeacherFavoritesSection
+      isNew={h.teacherFavoritesSeen === false}
+      onOpen={h.openTeacherFavorites}
+    />
+  );
+}
 
 export const common = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Garden.cream },
