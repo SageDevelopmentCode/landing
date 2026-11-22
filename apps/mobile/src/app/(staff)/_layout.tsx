@@ -70,6 +70,7 @@ export default function StaffLayout() {
         {/* Hidden screens — accessible via the More sheet */}
         <Tabs.Screen name="feed" options={{ href: null }} />
         <Tabs.Screen name="teacher" options={{ href: null }} />
+        <Tabs.Screen name="teacher-favorites" options={{ href: null }} />
         <Tabs.Screen name="calendar" options={{ href: null }} />
         <Tabs.Screen name="hours" options={{ href: null }} />
         <Tabs.Screen name="class-updates" options={{ href: null }} />
@@ -82,6 +83,7 @@ export default function StaffLayout() {
         <Tabs.Screen name="care-log" options={{ href: null }} />
         <Tabs.Screen name="activities" options={{ href: null }} />
         <Tabs.Screen name="newsletters" options={{ href: null }} />
+        <Tabs.Screen name="school-newsletters" options={{ href: null }} />
         <Tabs.Screen name="photos" options={{ href: null }} />
         <Tabs.Screen name="notifications" options={{ href: null }} />
         <Tabs.Screen name="teacher-ids" options={{ href: null }} />

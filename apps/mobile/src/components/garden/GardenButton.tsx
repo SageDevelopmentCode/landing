@@ -15,7 +15,6 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
-  ZoomIn,
 } from "react-native-reanimated";
 import {
   DISPLAY_MAX_SCALE,
@@ -25,6 +24,7 @@ import {
   MIN_TAP,
 } from "./gardenTheme";
 import { haptic } from "./haptics";
+import { gardenPopIn } from "./motion";
 
 type Tone = "coral" | "sage" | "ink" | "outline" | "butter";
 
@@ -137,7 +137,7 @@ export function GardenButton({
         {loading ? (
           <ActivityIndicator size="small" color={t.text} />
         ) : showSuccess ? (
-          <Animated.View entering={ZoomIn.springify()}>
+          <Animated.View entering={gardenPopIn()}>
             <Ionicons name="checkmark-circle" size={size === "sm" ? 16 : 19} color={t.text} />
           </Animated.View>
         ) : icon ? (

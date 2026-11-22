@@ -11,6 +11,7 @@ import {
   GardenSkeleton,
   GardenTints,
   PressableScale,
+  gardenEnter,
   gardenShadowSm,
 } from "@/components/garden";
 import {
@@ -23,7 +24,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import type { StudentAttendance } from "../useStudentAttendance";
 import { formatYMD, PROGRAM_TINT, STATUS_META, StatusPill } from "./AttendanceBits";
 import { AttendanceDetailSheet } from "./AttendanceDetailSheet";
@@ -128,7 +129,7 @@ function DayRow({
       ? `${record.picked_up_by_name}${record.picked_up_by_relationship ? ` · ${record.picked_up_by_relationship}` : ""}`
       : null;
   return (
-    <Animated.View entering={reduce || index > 8 ? undefined : FadeInDown.delay(index * 40).springify()}>
+    <Animated.View entering={reduce || index > 8 ? undefined : gardenEnter(index, { max: 8 })}>
       <PressableScale
         pressedScale={0.98}
         onPress={() => att.openRecord(record)}

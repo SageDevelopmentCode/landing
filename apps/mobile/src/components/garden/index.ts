@@ -1,4 +1,5 @@
 export * from "./gardenTheme";
+export { GardenMotion, gardenEnter, gardenLayout, gardenPopIn } from "./motion";
 export { haptic } from "./haptics";
 export { PressableScale, type PressableScaleProps } from "./PressableScale";
 export { GardenButton, type GardenButtonProps } from "./GardenButton";

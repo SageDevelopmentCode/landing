@@ -212,7 +212,7 @@ function TabButton({
   const pop = useSharedValue(1);
   useEffect(() => {
     if (active && !reduce) {
-      pop.value = withSequence(withSpring(1.16, GardenSprings.pop), withSpring(1, GardenSprings.pop));
+      pop.value = withSequence(withTiming(1.06, { duration: 140 }), withTiming(1, { duration: 220 }));
     }
   }, [active, reduce, pop]);
   const iconStyle = useAnimatedStyle(() => ({ transform: [{ scale: pop.value }] }));

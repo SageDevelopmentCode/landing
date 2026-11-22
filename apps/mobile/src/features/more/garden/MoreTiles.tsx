@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { useCallback, useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { ZoomIn, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import {
   Display,
   Garden,
@@ -14,6 +14,7 @@ import {
   GardenTints,
   PressableScale,
   gardenCard,
+  gardenPopIn,
   useToast,
   type GardenTint,
 } from "@/components/garden";
@@ -122,7 +123,7 @@ export function WideTile({
           {item.label}
         </Text>
         {badge && (
-          <Animated.View entering={reduce ? undefined : ZoomIn.springify()} style={s.duePill}>
+          <Animated.View entering={reduce ? undefined : gardenPopIn()} style={s.duePill}>
             <Text style={s.duePillText} maxFontSizeMultiplier={1.2} numberOfLines={1}>
               {badge.text}
             </Text>

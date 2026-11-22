@@ -11,13 +11,14 @@ The parent Home (`apps/mobile/src/app/(tabs)/home.tsx`) is the reference build. 
 Same brand as the website. Read "The feel" and "Non-negotiables" in the web skill (`.claude/skills/sagefield-garden/SKILL.md`) for the voice, palette and copy rules. On a phone the feel becomes:
 - **Warm cream paper** (`Garden.cream`) with pastel tints. Coral is for "do this" and sage is for calm and success.
 - **Chunky display type** (Bricolage), **rounded body text** (Nunito) and **small handwritten notes** (Gochi Hand).
-- **Tactile, springy feedback:** everything you touch squishes, buzzes softly and answers back with a toast, a state change or a checkmark.
+- **Tactile, gentle feedback:** everything you touch gives a little, buzzes softly and answers back with a toast, a state change or a checkmark. Motion is smooth and quiet, never bouncy.
 - **One calm vertical story** ordered by priority. Never a wall of equal cards.
 
 ## Non-negotiables
 1. **Keep real copy word for word.** Reuse existing strings. Toasts and handwritten notes ("step 1 of 2", "say hi to a teacher") are UI feedback only. They never state facts, prices or dates.
 2. **Every tap target is at least 44×44pt** (`MIN_TAP`). Small links get `hitSlop` of 10–12.
 3. **Reduced motion always works.** Gate motion with Reanimated's `useReducedMotion()`. Confetti, pulsing skeletons and big entrances are skipped, and the final state renders without animation.
+   **Calm motion:** no overshoot. Use `gardenEnter` / `gardenPopIn` / `gardenLayout` instead of `.springify()` or `ZoomIn`. Pops stay at or below 1.1×, entrances move 12px or less, and staggers are about 40ms.
 4. **No new native modules.** Don't add react-native-svg, lottie, moti or expo-blur. A native module needs a new dev build and breaks OTA (`eas update`). Plain Views, Reanimated, Ionicons and emoji cover every recipe.
 5. **Writes go through the screen's data hook**, which returns `{ ok, error?, canceled? }`. The UI reacts to that result with feedback and never calls Supabase directly.
 6. **Respect read-only preview.** When `isReadOnlyPreview` is set (an admin is viewing as a parent), block writes and show the info toast ("Preview mode").
@@ -71,7 +72,11 @@ export default function ChildrenScreen() {
 | `GardenFonts` | `display` (Bricolage 800), `displayBold`, `body` / `bodySemi` / `bodyBold` / `bodyHeavy` (Nunito), `hand` (Gochi Hand) | all text |
 | `GardenRadii` | `sm` 14, `md` 20, `card` 28, `panel` 36, `pill` 999 | shapes |
 | `gardenCard`, `gardenShadow`, `gardenShadowSm` | | white card surface and shadows |
-| `GardenSprings` | `press`, `pop`, `gentle` | Reanimated springs |
+| `GardenSprings` | `press`, `pop`, `gentle` | Reanimated springs, all tuned to settle without overshoot |
+| `GardenMotion` | `fast` 160, `base` 220, `slow` 300 ms, `ease` (out-cubic) | timing presets for `withTiming` |
+| `gardenEnter(i, { step?, max?, base? })` | fade + 8px rise, 40ms capped stagger | list and card `entering` |
+| `gardenPopIn(delay?)` | fade + scale from 0.85 | check icons, pills, dots `entering` |
+| `gardenLayout()` | eased `LinearTransition` | lists that reflow (`layout`) |
 | `MIN_TAP` = 44, `DISPLAY_MAX_SCALE` = 1.35 | | tap size and Dynamic Type cap for display text |
 
 Fonts load in `src/app/_layout.tsx` (`@expo-google-fonts/bricolage-grotesque`, `nunito` and `gochi-hand`). A new weight must be added to `useFonts` there.
@@ -79,12 +84,12 @@ Fonts load in `src/app/_layout.tsx` (`@expo-google-fonts/bricolage-grotesque`, `
 ## Components (`src/components/garden/`, import from `@/components/garden`)
 | Component | When to use |
 |---|---|
-| `PressableScale` | Any tappable card, tile, chip or row. Springs to 0.96 with a light haptic. Props: `pressedScale`, `haptics` (`"tap"` \| `"select"` \| `"press"` \| `false`), `accessibilityLabel`. It replaces hover. |
+| `PressableScale` | Any tappable card, tile, chip or row. Eases to 0.97 with a light haptic. Props: `pressedScale`, `haptics` (`"tap"` \| `"select"` \| `"press"` \| `false`), `accessibilityLabel`. It replaces hover. |
 | `GardenButton` | Real buttons. Tones: `coral` \| `sage` \| `ink` \| `outline` \| `butter`. Sizes: `md` \| `sm`. Also `icon`, `iconRight`, `loading` and `loadingLabel` ("Opening…"), `success` and `successLabel` (✓ morph), `fullWidth`. It has a toy shadow that presses down. **The mobile coral face is coral-deep**, because white text on light coral is too faint at phone sizes. |
 | `Display` | Bricolage headings (`size` 22 for sections, 26–28 for sheets, 36 for the hero). Has `accessibilityRole="header"` and a Dynamic Type cap. |
 | `HandNote` | Gochi Hand notes: the Home greeting, step counters ("step 1 of 3"), sticky-note labels ("next up →"), notes *under* a heading. Never above a heading, never paragraphs. |
 | `Pill` | Status chip with a `tint`. |
-| `CountBadge` | Unread counts. Pops when the count changes and renders nothing at 0. |
+| `CountBadge` | Unread counts. Nudges softly when the count changes (not on first render) and renders nothing at 0. |
 | `StickyNote` | A "today" or "next up" note with tape. `tilt` is clamped to ±2°. |
 | `Polaroid` | A child photo with a taped frame, initials fallback, handwritten caption and subcaption. |
 | `SeedProgress` | Step progress as dots that sprout 🌱. Accepts `doneFlags` for out-of-order steps and announces as a progressbar. |

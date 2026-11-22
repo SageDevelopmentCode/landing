@@ -9,17 +9,18 @@ import {
   GardenSkeleton,
   GardenSpace,
   GardenTints,
+  HandNote,
   Pill,
   PressableScale,
   StickyNote,
-  HandNote,
   gardenCard,
+  gardenEnter,
   type GardenTint,
 } from "@/components/garden";
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import type { HomeReferral } from "../useRewards";
 
 export const GUTTER = GardenSpace.gutter;
@@ -94,7 +95,7 @@ export function RewardCard({
   const t = GardenTints[tint];
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.delay(index * 80).springify().damping(18)}
+      entering={reduce ? undefined : gardenEnter(index, { max: 8 })}
       style={{ paddingHorizontal: GUTTER }}
     >
       <PressableScale
@@ -158,7 +159,7 @@ export function ReferralRow({ r, index }: { r: HomeReferral; index: number }) {
   const label = statusLabel(r.status);
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.delay(Math.min(index, 6) * 50).springify().damping(18)}
+      entering={reduce ? undefined : gardenEnter(index, { max: 6 })}
       style={st.historyRow}
       accessible
       accessibilityLabel={`${r.referred_email ?? "Referral"}, ${timeAgo(r.created_at)}, ${label}`}

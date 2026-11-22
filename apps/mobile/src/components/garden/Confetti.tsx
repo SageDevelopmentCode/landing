@@ -13,7 +13,7 @@ import Animated, {
 import { Garden } from "./gardenTheme";
 
 const COLORS = [Garden.coral, Garden.butter, Garden.mint, Garden.sky, Garden.lav, Garden.peach];
-const COUNT = 36;
+const COUNT = 24;
 
 type Piece = { id: number; x: number; dx: number; delay: number; color: string; w: number; h: number; spin: number };
 
@@ -27,12 +27,12 @@ function makePieces(seed: number): Piece[] {
     return {
       id: i,
       x: width / 2 + (r(1) - 0.5) * 80,
-      dx: (r(2) - 0.5) * width * 1.1,
+      dx: (r(2) - 0.5) * width * 0.8,
       delay: r(3) * 120,
       color: COLORS[i % COLORS.length],
       w: 6 + r(4) * 6,
       h: 10 + r(5) * 8,
-      spin: (r(6) - 0.5) * 900,
+      spin: (r(6) - 0.5) * 400,
     };
   });
 }
@@ -53,7 +53,7 @@ function ConfettiPiece({ p, onDone }: { p: Piece; onDone?: () => void }) {
   const s = useAnimatedStyle(() => {
     const v = t.value;
     // Up then down arc.
-    const y = height * 0.55 - Math.sin(v * Math.PI * 0.85) * height * 0.45 + v * v * height * 0.35;
+    const y = height * 0.55 - Math.sin(v * Math.PI * 0.85) * height * 0.32 + v * v * height * 0.35;
     return {
       opacity: v < 0.85 ? 1 : (1 - v) / 0.15,
       transform: [

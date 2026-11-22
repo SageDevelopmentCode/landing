@@ -17,13 +17,15 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenEnter,
+  gardenLayout,
   haptic,
   type GardenTint,
 } from "@/components/garden";
 import { StatusPill } from "@/features/staff-home/garden/StaffHomeParts";
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, FadeInDown, LinearTransition, useReducedMotion } from "react-native-reanimated";
+import Animated, { FadeIn, LinearTransition, useReducedMotion } from "react-native-reanimated";
 import {
   PROGRAMS,
   formatDateLabel,
@@ -251,7 +253,7 @@ function RosterRowView({
   }
 
   return (
-    <Animated.View layout={LinearTransition.springify().damping(20)}>
+    <Animated.View layout={gardenLayout()}>
       <PressableScale
         pressedScale={0.98}
         onPress={() => a.openActions(program, row)}
@@ -447,7 +449,7 @@ function DaySection({ a, day, index }: { a: StaffAttendance; day: DayHeadcount; 
   const isToday = day.date === a.today;
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.delay(Math.min(index, 8) * 40).springify()}
+      entering={reduce ? undefined : gardenEnter(index, { max: 8 })}
       style={[ui.daySection, isToday && { borderColor: Garden.sage, borderWidth: 2 }]}
     >
       <View style={ui.dayHead}>

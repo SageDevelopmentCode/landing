@@ -21,11 +21,15 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenLayout,
+  gardenPopIn,
   gardenShadowSm,
   haptic,
   type GardenTint,
 } from "@/components/garden";
 import { getGreeting } from "@/components/HomeHeroHeader";
+import { NewslettersHomeRail } from "@/features/newsletters/garden/NewslettersHomeRail";
+import { TeacherFavoritesSection } from "@/features/teacher-favorites/garden/TeacherFavoritesSection";
 import { getTeacherColors } from "@/lib/group-by-teacher";
 import { CONFERENCE_TEACHERS } from "@/lib/parent-teacher-conference";
 import { SCHOOL_YEAR_START } from "@/lib/school-year-attendance";
@@ -53,7 +57,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, LinearTransition, ZoomIn } from "react-native-reanimated";
+import Animated, { FadeIn, LinearTransition } from "react-native-reanimated";
 import {
   STATUS_FILTER_CHIPS,
   emptyTeacherRosterSummary,
@@ -92,7 +96,7 @@ export function StatusPill({ status }: { status: StudentDayStatus }) {
   const meta = STATUS_META[status];
   const t = GardenTints[meta.tint];
   return (
-    <Animated.View key={status} entering={ZoomIn.springify()} style={[ui.pill, { backgroundColor: t.bg }]}>
+    <Animated.View key={status} entering={gardenPopIn()} style={[ui.pill, { backgroundColor: t.bg }]}>
       <Ionicons name={meta.icon} size={12} color={t.fg} />
       <Text style={[ui.pillText, { color: t.fg }]} maxFontSizeMultiplier={1.3}>
         {meta.label}
@@ -469,7 +473,7 @@ function StudentRow({
   const name = shortName(student.name);
 
   return (
-    <Animated.View layout={LinearTransition.springify().damping(20)}>
+    <Animated.View layout={gardenLayout()}>
       <PressableScale
         pressedScale={0.98}
         onPress={() => h.openStudentActions(student)}
@@ -1440,7 +1444,7 @@ function BirthdayRow({ h, b }: { h: StaffHome; b: StaffBirthday }) {
       onPress={() =>
         h.router.push({
           pathname: "/(staff)/students/[studentId]" as any,
-          params: { studentId: b.studentId },
+          params: { studentId: b.studentId, studentName: b.name ?? "", allStudentsView: "1" },
         })
       }
       accessibilityLabel={`${name}, ${meta}. Opens profile`}
@@ -1524,6 +1528,45 @@ const ui = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Newsletters — shared rail (same as the parent Home)
+// ─────────────────────────────────────────────────────────────────────────────
+export function NewslettersStaff({ h, fb }: { h: StaffHome; fb: StaffHomeFeedback }) {
+  if (h.newslettersError && h.homeNewsletters.length === 0) {
+    return (
+      <View style={{ marginBottom: 26 }}>
+        <GardenSectionHeader title="Newsletters" />
+        <View style={{ paddingHorizontal: GUTTER }}>
+          <GardenErrorCard
+            title="Couldn't load newsletters"
+            onRetry={() => void fb.retry()}
+            retrying={fb.retrying}
+          />
+        </View>
+      </View>
+    );
+  }
+  return (
+    <NewslettersHomeRail
+      items={h.homeNewsletters}
+      loading={h.newslettersLoading}
+      onViewAll={h.openNewsletters}
+    />
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Teacher favorites — shared section (same as the parent Home)
+// ─────────────────────────────────────────────────────────────────────────────
+export function TeacherFavoritesStaff({ h }: { h: StaffHome }) {
+  return (
+    <TeacherFavoritesSection
+      isNew={h.teacherFavoritesSeen === false}
+      onOpen={h.openTeacherFavorites}
+    />
+  );
+}
 
 export const common = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Garden.cream },

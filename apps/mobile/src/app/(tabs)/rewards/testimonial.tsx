@@ -12,6 +12,7 @@ import {
   GardenSkeleton,
   GardenTints,
   MIN_TAP,
+  gardenPopIn,
   haptic,
   useGardenGoBack,
   useToast,
@@ -23,7 +24,7 @@ import { GUTTER, PromptsNote } from "@/features/rewards/garden/RewardsParts";
 import { useTestimonial } from "@/features/rewards/useRewards";
 import { useEffect, useRef } from "react";
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, ZoomIn, useReducedMotion } from "react-native-reanimated";
+import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const MAX_TEXT = 2000;
@@ -78,7 +79,7 @@ export default function TestimonialScreen() {
             </View>
           ) : t.submitted ? (
             <View style={st.success}>
-              <Animated.View entering={reduce ? undefined : ZoomIn.springify()} style={st.successIcon}>
+              <Animated.View entering={reduce ? undefined : gardenPopIn()} style={st.successIcon}>
                 <Text style={{ fontSize: 34 }}>☕</Text>
               </Animated.View>
               <Display size={28} style={{ textAlign: "center" }}>

@@ -15,11 +15,12 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenEnter,
 } from "@/components/garden";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { formatProgram } from "../formsUtils";
 import type { DocRow, FormsIndex } from "../useFormsIndex";
 import { goBackOr } from "./FormParts";
@@ -88,7 +89,7 @@ function DocRowCard({ row, index }: { row: DocRow; index: number }) {
   const t = GardenTints[row.tint];
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.delay(Math.min(index, 6) * 50).springify().damping(18)}
+      entering={reduce ? undefined : gardenEnter(index, { max: 6 })}
     >
       <PressableScale
         onPress={() => router.push({ pathname: row.pathname as never, params: row.params })}

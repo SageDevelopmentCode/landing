@@ -14,6 +14,7 @@ import {
   PressableScale,
   StickyNote,
   gardenCard,
+  gardenEnter,
   gardenShadow,
   haptic,
 } from "@/components/garden";
@@ -23,7 +24,6 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   FadeIn,
-  FadeInDown,
   FadeInLeft,
   FadeInRight,
   useReducedMotion,
@@ -127,7 +127,7 @@ export function NextUpNote({ c }: { c: ParentCalendar }) {
   if (!evt) return null;
   const isToday = evt.event_date === c.todayYMD;
   return (
-    <Animated.View entering={FadeInDown.springify().damping(18)} style={{ paddingHorizontal: 22, marginBottom: 18, marginTop: 4 }}>
+    <Animated.View entering={gardenEnter()} style={{ paddingHorizontal: 22, marginBottom: 18, marginTop: 4 }}>
       <StickyNote tilt={-1.2}>
         <HandNote size={18} color="#7a5a00">
           {isToday ? "today at Sage Field" : "coming up next"}
@@ -539,7 +539,7 @@ export function Agenda({ c, fb }: { c: ParentCalendar; fb: CalendarFeedback }) {
           </Animated.View>
         ) : (
           groups.map((g, gi) => (
-            <Animated.View key={g.ymd} entering={FadeInDown.delay(Math.min(gi, 6) * 50).springify().damping(18)} style={{ gap: 8 }}>
+            <Animated.View key={g.ymd} entering={gardenEnter(gi, { max: 6 })} style={{ gap: 8 }}>
               {!c.selectedDate && groups.length > 1 ? (
                 <View style={ag.dayHead}>
                   <Text style={ag.dayHeadText} maxFontSizeMultiplier={1.3}>
@@ -621,7 +621,7 @@ const ag = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 export function AddEventFab({ fb }: { fb: CalendarFeedback }) {
   return (
-    <Animated.View entering={FadeInDown.delay(250).springify()} style={fab.wrap} pointerEvents="box-none">
+    <Animated.View entering={gardenEnter(0, { base: 250 })} style={fab.wrap} pointerEvents="box-none">
       <PressableScale
         onPress={() => fb.openAdd()}
         accessibilityLabel="Add your event"

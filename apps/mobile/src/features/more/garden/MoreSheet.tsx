@@ -7,7 +7,7 @@ import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useRouter, useSegments } from "expo-router";
 import { forwardRef, useCallback, useRef, useState, type RefObject } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Display,
@@ -17,6 +17,7 @@ import {
   HandNote,
   MIN_TAP,
   PressableScale,
+  gardenEnter,
   gardenSheetChrome,
 } from "@/components/garden";
 import { useMoreMenu } from "../useMoreMenu";
@@ -111,7 +112,7 @@ export const MoreSheet = forwardRef<BottomSheetModal, Props>(function MoreSheet(
   );
 
   const name = me.firstName;
-  const enter = (i: number) => (reduce ? undefined : FadeInDown.delay(60 + i * 35).springify().damping(16));
+  const enter = (i: number) => (reduce ? undefined : gardenEnter(i, { base: 60 }));
 
   return (
     <BottomSheetModal

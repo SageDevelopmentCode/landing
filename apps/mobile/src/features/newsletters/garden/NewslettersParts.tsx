@@ -13,6 +13,7 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenEnter,
   haptic,
   type RefreshFeedback,
 } from "@/components/garden";
@@ -20,7 +21,7 @@ import type { ParentNewsletterListItem } from "@/lib/newsletters-actions";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import type { NewsletterActions } from "./useNewsletterActions";
 
 const GUTTER = GardenSpace.gutter;
@@ -114,7 +115,7 @@ export function FeaturedNewsletter({
   const reduce = useReducedMotion();
   return (
     <Animated.View
-      entering={reduce ? undefined : FadeInDown.springify().damping(18)}
+      entering={reduce ? undefined : gardenEnter()}
       style={{ paddingHorizontal: GUTTER, marginBottom: 22 }}
     >
       <PressableScale
@@ -168,7 +169,7 @@ export function NewsletterCard({
   return (
     <Animated.View
       style={{ width: cardWidth }}
-      entering={reduce ? undefined : FadeInDown.delay(Math.min(index, 6) * 50).springify().damping(18)}
+      entering={reduce ? undefined : gardenEnter(index, { max: 6 })}
     >
       <PressableScale
         accessibilityRole="link"

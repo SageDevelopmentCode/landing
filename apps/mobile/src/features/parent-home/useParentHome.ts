@@ -48,6 +48,7 @@ import {
 } from "@/lib/parent-teacher-conference";
 import type { PaidHomeschoolByStudent } from "@/lib/school-year-billing";
 import { PARENT_CALENDAR_ADD_INTRO_SEEN } from "@/lib/parent-onboarding-flags";
+import { useTeacherFavoritesSeen } from "@/features/teacher-favorites/useTeacherFavoritesSeen";
 import {
   CHECKLIST_TASKS,
   DROP_OFF_SLOTS,
@@ -139,6 +140,9 @@ export function useParentHome({ autoPrompts = true }: UseParentHomeOptions = {})
 
   const [teachers, setTeachers] = useState<TeacherSuggestion[]>([]);
   const [teachersLoading, setTeachersLoading] = useState(true);
+  // Teacher Favorites section "New!" badge (device flag, re-read on focus).
+  const { seen: teacherFavoritesSeen, open: openTeacherFavorites } =
+    useTeacherFavoritesSeen("parent");
   const [startingConvTeacherId, setStartingConvTeacherId] = useState<
     string | null
   >(null);
@@ -1550,6 +1554,9 @@ export function useParentHome({ autoPrompts = true }: UseParentHomeOptions = {})
     showFallLeaves,
     setShowFallLeaves,
     markFallLeavesPlayed,
+    // teacher favorites
+    teacherFavoritesSeen,
+    openTeacherFavorites,
     // action needed
     showActionTuition,
     showActionActivity,

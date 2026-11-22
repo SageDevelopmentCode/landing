@@ -14,8 +14,10 @@ import {
   DayRoster,
   EventsList,
   HealthFoodSection,
+  NewslettersStaff,
   StaffAlerts,
   StaffHero,
+  TeacherFavoritesStaff,
   common,
 } from "@/features/staff-home/garden/StaffHomeParts";
 import { StaffHomeChrome } from "@/features/staff-home/garden/StaffHomeSheets";
@@ -50,6 +52,8 @@ export default function StaffHomeScreen() {
         <ActivitiesRail h={h} fb={fb} />
         <EventsList h={h} fb={fb} />
         <BirthdaysList h={h} fb={fb} />
+        <NewslettersStaff h={h} fb={fb} />
+        <TeacherFavoritesStaff h={h} />
       </ScrollView>
       <StaffHomeChrome h={h} fb={fb} />
     </SafeAreaView>

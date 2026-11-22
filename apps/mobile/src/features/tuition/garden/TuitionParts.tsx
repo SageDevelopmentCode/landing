@@ -12,12 +12,13 @@ import {
   GardenRadii,
   GardenSectionHeader,
   GardenSkeleton,
-  gardenShadowSm,
   Pill,
   PressableScale,
+  gardenEnter,
+  gardenShadowSm,
 } from "@/components/garden";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
+import Animated, { useReducedMotion } from "react-native-reanimated";
 import {
   firstNames,
   formatCents,
@@ -218,11 +219,11 @@ export function PaymentHistory({ c }: { c: ParentTuition }) {
             </Text>
             <View style={{ gap: 10 }}>
               {section.data.map((tx, ti) => {
-                const delay = Math.min(offsets[si] + ti, 8) * 50;
+                const delay = Math.min(offsets[si] + ti, 8) * 40;
                 return (
                   <Animated.View
                     key={tx.id}
-                    entering={reduce ? undefined : FadeInDown.delay(delay).springify()}
+                    entering={reduce ? undefined : gardenEnter(0, { base: delay })}
                   >
                     <TxRow
                       tx={tx}

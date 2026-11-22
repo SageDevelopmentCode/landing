@@ -1,6 +1,6 @@
 // Pill text / search input with a focus ring and a clear button.
 import { Ionicons } from "@expo/vector-icons";
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, type ReactNode } from "react";
 import {
   Pressable,
   StyleSheet,
@@ -20,12 +20,14 @@ export type GardenFieldProps = TextInputProps & {
   containerStyle?: StyleProp<ViewStyle>;
   /** Rounded rectangle instead of a pill (multiline notes). */
   boxed?: boolean;
+  /** Trailing slot after the input, e.g. a show/hide password toggle. */
+  right?: ReactNode;
   /** Swap the input, e.g. BottomSheetTextInput inside sheets. */
   InputComponent?: React.ComponentType<TextInputProps & { ref?: React.Ref<TextInput> }>;
 };
 
 export const GardenField = forwardRef<TextInput, GardenFieldProps>(function GardenField(
-  { icon, clearable, containerStyle, boxed, InputComponent, value, onChangeText, onFocus, onBlur, style, ...rest },
+  { icon, clearable, containerStyle, boxed, right, InputComponent, value, onChangeText, onFocus, onBlur, style, ...rest },
   ref,
 ) {
   const [focused, setFocused] = useState(false);
@@ -70,6 +72,7 @@ export const GardenField = forwardRef<TextInput, GardenFieldProps>(function Gard
           <Ionicons name="close-circle" size={18} color={Garden.muted} />
         </Pressable>
       ) : null}
+      {right ?? null}
     </View>
   );
 });

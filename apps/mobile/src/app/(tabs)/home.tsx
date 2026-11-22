@@ -20,6 +20,7 @@ import {
   PhotosCta,
   RewardsCard,
   TeacherChips,
+  TeacherFavoritesHome,
   TodayNote,
   TuitionSection,
   common,
@@ -53,6 +54,7 @@ export default function HomeScreen() {
         {!h.loading ? <NextStepsStack h={h} style={{ marginBottom: 28 }} /> : null}
         <ChildrenPolaroids h={h} />
         <TeacherChips h={h} fb={fb} />
+        <TeacherFavoritesHome h={h} />
         <EventsList h={h} />
         <ActivitiesRail h={h} />
         <TuitionSection h={h} />

@@ -11,6 +11,7 @@ import {
   HandNote,
   MIN_TAP,
   PressableScale,
+  gardenPopIn,
   gardenSheetChrome,
   haptic,
 } from "@/components/garden";
@@ -18,7 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { StyleSheet, Switch, Text, View } from "react-native";
-import Animated, { ZoomIn } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NOTE_CATEGORIES, type StudentDetailHook } from "../useStudentDetail";
 import { CATEGORY_TINT } from "./StudentDetailParts";
@@ -101,7 +102,7 @@ export function StudentNoteSheet({ d, fb }: { d: StudentDetailHook; fb: StudentD
                   ]}
                 >
                   {on ? (
-                    <Animated.View entering={ZoomIn}>
+                    <Animated.View entering={gardenPopIn()}>
                       <Ionicons name="checkmark" size={14} color={Garden.white} />
                     </Animated.View>
                   ) : null}
@@ -150,7 +151,7 @@ export function StudentNoteSheet({ d, fb }: { d: StudentDetailHook; fb: StudentD
             {d.pendingAttachments.length > 0 ? (
               <View style={s.pending}>
                 {d.pendingAttachments.map((a, i) => (
-                  <Animated.View key={`${a.uri}-${i}`} entering={ZoomIn.springify()} style={{ position: "relative" }}>
+                  <Animated.View key={`${a.uri}-${i}`} entering={gardenPopIn()} style={{ position: "relative" }}>
                     {a.isImage ? (
                       <Image source={{ uri: a.uri }} style={s.thumb} contentFit="cover" />
                     ) : (

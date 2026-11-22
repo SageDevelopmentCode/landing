@@ -13,6 +13,7 @@ import {
   MIN_TAP,
   PressableScale,
   SeedProgress,
+  gardenPopIn,
   gardenSheetChrome,
   haptic,
   useToast,
@@ -29,7 +30,7 @@ import {
 } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, ZoomIn, useReducedMotion } from "react-native-reanimated";
+import Animated, { FadeIn, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   AVAILABILITY_OPTIONS,
@@ -209,7 +210,7 @@ export function VolunteerSheet({
     >
       {success ? (
         <BottomSheetView style={st.success}>
-          <Animated.View entering={reduce ? undefined : ZoomIn.springify()} style={st.successIcon}>
+          <Animated.View entering={reduce ? undefined : gardenPopIn()} style={st.successIcon}>
             <Ionicons name="checkmark" size={44} color={Garden.white} />
           </Animated.View>
           <Display size={28} style={{ textAlign: "center" }}>

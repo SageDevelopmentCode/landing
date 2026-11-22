@@ -8,10 +8,11 @@ import {
   GardenSkeleton,
   PressableScale,
   gardenCard,
+  gardenEnter,
 } from "@/components/garden";
 import type { ChannelWithMeta } from "@/lib/channel-actions";
 import { StyleSheet, Text, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { ATTACHMENT_PREVIEW, shortTimeAgo, type ConversationRow } from "../messagingApi";
 
 export const INBOX_GUTTER = 18;
@@ -29,7 +30,7 @@ export function ConversationCard({
   const unread = item.unreadCount > 0;
   const preview = item.lastMessagePreview === "" ? ATTACHMENT_PREVIEW : (item.lastMessagePreview ?? "No messages yet");
   return (
-    <Animated.View entering={index < 8 ? FadeInDown.delay(index * 35).springify().damping(18) : undefined}>
+    <Animated.View entering={index < 8 ? gardenEnter(index, { max: 8 }) : undefined}>
       <PressableScale
         pressedScale={0.98}
         onPress={() => onOpen(item)}
@@ -84,7 +85,7 @@ export function ChannelCard({
       ? c.description
       : `${c.memberCount} ${c.memberCount === 1 ? "member" : "members"}`;
   return (
-    <Animated.View entering={index < 8 ? FadeInDown.delay(index * 35).springify().damping(18) : undefined}>
+    <Animated.View entering={index < 8 ? gardenEnter(index, { max: 8 }) : undefined}>
       <PressableScale
         pressedScale={0.98}
         onPress={() => onOpen(c)}

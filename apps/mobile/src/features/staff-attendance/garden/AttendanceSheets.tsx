@@ -19,6 +19,7 @@ import {
   Pill,
   PressableScale,
   gardenCard,
+  gardenPopIn,
   gardenSheetChrome,
   haptic,
 } from "@/components/garden";
@@ -29,7 +30,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal, BottomSheetScrollView, BottomSheetView } from "@gorhom/bottom-sheet";
 import { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   DOW_SHORT,
@@ -116,7 +117,7 @@ function ActionSheet({ a, fb }: { a: StaffAttendance; fb: StaffAttendanceFeedbac
                       {busy ? (
                         <ActivityIndicator size="small" color={checked ? Garden.white : Garden.sage} />
                       ) : checked ? (
-                        <Animated.View entering={ZoomIn.springify()}>
+                        <Animated.View entering={gardenPopIn()}>
                           <Ionicons name="checkmark" size={18} color={Garden.white} />
                         </Animated.View>
                       ) : null}
@@ -257,7 +258,7 @@ function PickupSheet({ a, fb }: { a: StaffAttendance; fb: StaffAttendanceFeedbac
                   </View>
                   <View style={[s.radio, on && { borderColor: Garden.sage, backgroundColor: Garden.sage }]}>
                     {on ? (
-                      <Animated.View entering={ZoomIn}>
+                      <Animated.View entering={gardenPopIn()}>
                         <Ionicons name="checkmark" size={14} color={Garden.white} />
                       </Animated.View>
                     ) : null}
