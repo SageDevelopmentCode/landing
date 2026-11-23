@@ -12,7 +12,7 @@ import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import ParentFeedClient from "./ParentFeedClient";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { getFeedPosts } from "@/app/teacher/feed/actions";
-import { getReels, type ReelPost } from "@/app/teacher/feed/reelActions";
+import { getReels } from "@/app/teacher/feed/reelActions";
 
 export default async function ParentFeedPage() {
   const supabase = await createServerSupabaseClient();
@@ -83,7 +83,7 @@ export default async function ParentFeedPage() {
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <DashboardHeader>
+      <DashboardHeader sticky>
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -103,7 +103,7 @@ export default async function ParentFeedPage() {
 
       <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1">
         <Suspense>
           <ParentFeedClient
             currentUser={currentUser}
