@@ -8,7 +8,7 @@ import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
 import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import EmergencyContactsPage from "./EmergencyContactsPage";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
-import { getParentEmergencyContacts } from "@/app/actions/getParentEmergencyContacts";
+import { loadEmergencyContacts } from "@/app/lib/get-emergency-contacts";
 
 export default async function EmergencyContactsRoute() {
   const supabase = await createServerSupabaseClient();
@@ -33,7 +33,7 @@ export default async function EmergencyContactsRoute() {
   const effectiveParentId = grant?.owner_id ?? user.id;
 
   const [contacts, { data: adminUser }, { data: enrolledCheck }] = await Promise.all([
-    getParentEmergencyContacts(effectiveParentId),
+    loadEmergencyContacts(effectiveParentId),
     adminClient
       .schema("admin")
       .from("users")
@@ -62,37 +62,30 @@ export default async function EmergencyContactsRoute() {
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
 
   return (
-    <div className="bg-welcome-bg">
-      <div className="min-h-screen flex flex-col">
-        <DashboardHeader>
-          <div className="flex items-center">
-            <Link href="/">
-              <Image
-                src="/assets/Logo.png"
-                alt="Sage Field"
-                width={50}
-                height={24}
-                className="object-contain"
-              />
-            </Link>
-          </div>
-          <div className="flex items-center justify-center">
-            <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
-          </div>
-          <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
-        </DashboardHeader>
+    <div className="bg-welcome-bg min-h-screen flex flex-col">
+      <DashboardHeader sticky>
+        <div className="flex items-center">
+          <Link href="/">
+            <Image
+              src="/assets/Logo.png"
+              alt="Sage Field"
+              width={50}
+              height={24}
+              className="object-contain"
+            />
+          </Link>
+        </div>
+        <div className="flex items-center justify-center">
+          <DashboardNav hasEnrolledStudent={(enrolledCheck ?? []).length > 0} />
+        </div>
+        <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
+      </DashboardHeader>
 
-        <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-        <main className="flex-1 max-w-2xl mx-auto px-6 py-12 w-full">
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-              Emergency Contacts
-            </h1>
-          </div>
-          <EmergencyContactsPage contacts={contacts} />
-        </main>
-      </div>
+      <main className="flex-1">
+        <EmergencyContactsPage contacts={contacts} />
+      </main>
       <Footer />
     </div>
   );

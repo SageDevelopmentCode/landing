@@ -96,6 +96,8 @@ export default function DashboardNav({
 
   function navHref(parentPath: string) {
     if (!impersonateBase) return parentPath;
+    // Public pages (e.g. /download) have no admin preview; link to them as-is.
+    if (!parentPath.startsWith("/parent/")) return parentPath;
     const [path, query] = parentPath.split("?");
     const slug = path.replace("/parent/", "");
     const base = `${impersonateBase}/${slug}`;

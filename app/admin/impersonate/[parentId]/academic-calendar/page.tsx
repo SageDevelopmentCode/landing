@@ -34,7 +34,7 @@ export default async function ImpersonateAcademicCalendarPage({
         </div>
         <ImpersonateNotificationBell parentId={parentId} />
       </header>
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 pointer-events-none select-none">
+      <main className="flex-1 pointer-events-none select-none">
         <ParentAcademicCalendarClient />
       </main>
     </div>
