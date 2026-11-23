@@ -25,6 +25,8 @@ import type { Database } from '@/app/types/database.types'
 
 type AuthorizedPickupPlanRow =
   Database['parent_app']['Tables']['student_authorized_pickup_plan']['Row']
+type AuthorizedPickupPersonRow =
+  Database['parent_app']['Tables']['student_authorized_pickup_persons']['Row']
 
 export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
   const supabase = await createServerSupabaseClient()
@@ -42,5 +44,5 @@ export async function saveAuthorizedPickup(payload: AuthorizedPickupPayload) {
     context: 'Authorized Pickup',
     userId: user.id,
     userEmail: user.email,
-  }) as Promise<{ data?: AuthorizedPickupPlanRow; error?: string }>
+  }) as Promise<{ data?: AuthorizedPickupPlanRow; persons?: AuthorizedPickupPersonRow[]; error?: string }>
 }

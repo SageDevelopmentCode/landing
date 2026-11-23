@@ -1,115 +1,33 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { X, Plus, Trash2, CheckCircle, PenLine } from "lucide-react";
-import { Dancing_Script } from "next/font/google";
+import { useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Database } from "@/app/types/database.types";
-import type {
-  SignatureMap,
-  EnrollmentSignature,
-} from "@/app/types/enrollment-signatures";
-import {
-  CONTRACT_4_ID,
-  CONTRACT_4_TOTAL_SECTIONS,
-} from "@/app/types/enrollment-signatures";
-import SectionSignatureBlock from "./SectionSignatureBlock";
+import type { SignatureMap, EnrollmentSignature } from "@/app/types/enrollment-signatures";
+import { CONTRACT_4_ID, CONTRACT_4_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
 import { saveMedicationPlan } from "@/app/actions/saveMedicationPlan";
 import type { MedicationEntry } from "@/app/actions/saveMedicationPlan";
-import { formatPhone } from "@/app/utils/formatPhone";
-
-const dancingScript = Dancing_Script({
-  subsets: ["latin"],
-  variable: "--font-dancing-script",
-});
+import GardenSheet from "@/app/parent/_garden/sheet";
+import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
+import ConfirmDialog from "@/app/parent/_garden/ConfirmDialog";
+import { usePortalFeedback } from "@/app/parent/_garden/feedback";
+import { useUnsavedGuard } from "@/app/parent/_garden/unsaved";
+import { CheckboxRow, InlineError, LockedNote, PhoneField, SavedNote, TextArea, TextField, TrashIcon } from "@/app/parent/_garden/fields";
+import { Spinner, btnGhostSm, btnSageSm, cardBase } from "@/app/parent/_garden/ui";
+import { FactsCard, LegalText, NoteCard, SheetStep, SigningFooter, signedLabel, useScrollToSection } from "./garden/sheetParts";
 
 type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
-type StudentMedicationPlan =
-  Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
-type StudentMedication =
-  Database["parent_app"]["Tables"]["student_medications"]["Row"];
+type StudentMedicationPlan = Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
+type StudentMedication = Database["parent_app"]["Tables"]["student_medications"]["Row"];
 
-function ReadOnlyField({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div>
-      <p className="text-xs font-semibold text-gray-500 font-body mb-0.5">
-        {label}
-      </p>
-      <p className="text-sm text-gray-700 font-body">{value || "—"}</p>
-    </div>
-  );
-}
+type MedCard = MedicationEntry & { key: string };
 
-function FormField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div>
-      <label className="block text-xs font-semibold text-gray-600 font-body mb-1">
-        {label}
-      </label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-3 py-2 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white"
-      />
-    </div>
-  );
-}
+let keySeq = 0;
+const nextKey = () => `med-${++keySeq}`;
 
-function FormTextarea({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div>
-      <label className="block text-xs font-semibold text-gray-600 font-body mb-1">
-        {label}
-      </label>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        rows={3}
-        className="w-full px-3 py-2 rounded-lg border border-gray-200 font-body text-sm text-gray-800 placeholder:text-gray-400 outline-none focus:border-primary transition-colors bg-white resize-none"
-      />
-    </div>
-  );
-}
-
-function SectionHeader({ number, title }: { number: string; title: string }) {
-  return (
-    <h3 className="text-sm font-bold font-heading text-gray-800 pb-2 border-b border-gray-100">
-      {number}. {title}
-    </h3>
-  );
-}
-
-function blankMedication(): MedicationEntry {
+function blankMedication(): MedCard {
   return {
+    key: nextKey(),
     medicationName: "",
     conditionReason: "",
     dosageFrequency: "",
@@ -121,19 +39,29 @@ function blankMedication(): MedicationEntry {
   };
 }
 
-function initMedications(rows: StudentMedication[]): MedicationEntry[] {
+function initMedications(rows: StudentMedication[]): MedCard[] {
   if (rows.length === 0) return [blankMedication()];
-  return rows.map((r) => ({
-    medicationName: r.medication_name ?? "",
-    conditionReason: r.condition_reason ?? "",
-    dosageFrequency: r.dosage_frequency ?? "",
-    physicianName: r.physician_name ?? "",
-    physicianPhone: r.physician_phone ?? "",
-    expirationDate: r.expiration_date ?? "",
-    isDaily: r.is_daily ?? false,
-    isEmergencyOnly: r.is_emergency_only ?? false,
-  }));
+  return rows
+    .slice()
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .map((r) => ({
+      key: nextKey(),
+      medicationName: r.medication_name ?? "",
+      conditionReason: r.condition_reason ?? "",
+      dosageFrequency: r.dosage_frequency ?? "",
+      physicianName: r.physician_name ?? "",
+      physicianPhone: r.physician_phone ?? "",
+      expirationDate: r.expiration_date ?? "",
+      isDaily: r.is_daily ?? false,
+      isEmergencyOnly: r.is_emergency_only ?? false,
+    }));
 }
+
+const strip = (cards: MedCard[]): MedicationEntry[] => cards.map(({ key: _key, ...m }) => m);
+const hasData = (m: MedCard) =>
+  [m.medicationName, m.conditionReason, m.dosageFrequency, m.physicianName, m.physicianPhone, m.expirationDate].some((v) => v.trim() !== "") ||
+  m.isDaily ||
+  m.isEmergencyOnly;
 
 interface MedicationPlanModalProps {
   isOpen: boolean;
@@ -147,8 +75,10 @@ interface MedicationPlanModalProps {
     medications: StudentMedication[];
   };
   onSignaturesSaved: (updated: SignatureMap) => void;
-  onPlanSaved: (plan: StudentMedicationPlan) => void;
+  /** `medications` are the rows the server now holds (so lists don't go stale). */
+  onPlanSaved: (plan: StudentMedicationPlan, medications?: StudentMedication[]) => void;
   readOnly?: boolean;
+  readOnlyPreview?: boolean;
 }
 
 export default function MedicationPlanModal({
@@ -162,70 +92,94 @@ export default function MedicationPlanModal({
   onSignaturesSaved,
   onPlanSaved,
   readOnly,
+  readOnlyPreview,
 }: MedicationPlanModalProps) {
-  const [medications, setMedications] = useState<MedicationEntry[]>(() =>
-    initMedications(existingPlan.medications),
-  );
-  const [emergencyProcedure, setEmergencyProcedure] = useState(
-    existingPlan.plan?.emergency_procedure ?? "",
-  );
-  const [specialInstructions, setSpecialInstructions] = useState(
-    existingPlan.plan?.special_instructions ?? "",
+  const reduce = useReducedMotion();
+  const { runSave } = usePortalFeedback(readOnlyPreview);
+  const [medications, setMedications] = useState<MedCard[]>(() => initMedications(existingPlan.medications));
+  const [emergencyProcedure, setEmergencyProcedure] = useState(existingPlan.plan?.emergency_procedure ?? "");
+  const [specialInstructions, setSpecialInstructions] = useState(existingPlan.plan?.special_instructions ?? "");
+  const [savedSnapshot, setSavedSnapshot] = useState(() =>
+    JSON.stringify([strip(initMedications(existingPlan.medications)), existingPlan.plan?.emergency_procedure ?? "", existingPlan.plan?.special_instructions ?? ""]),
   );
   const [planReady, setPlanReady] = useState(!!existingPlan.plan);
   const [localSigs, setLocalSigs] = useState<SignatureMap>(existingSignatures);
-  const [isSaving, startSave] = useTransition();
+  const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [nameErrors, setNameErrors] = useState<Record<string, boolean>>({});
+  const [justSaved, setJustSaved] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<MedCard | null>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const scrollTo = useScrollToSection(bodyRef);
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
+  const snapshot = JSON.stringify([strip(medications), emergencyProcedure, specialInstructions]);
+  const dirty = !readOnly && snapshot !== savedSnapshot;
+  const guard = useUnsavedGuard(dirty);
+  const close = () => guard.confirm(onClose);
 
-  const updateMedication = (
-    index: number,
-    field: keyof MedicationEntry,
-    value: string | boolean,
-  ) => {
-    setMedications((prev) =>
-      prev.map((m, i) => (i === index ? { ...m, [field]: value } : m)),
-    );
+  const touch = () => setJustSaved(false);
+
+  const updateMedication = <K extends keyof MedicationEntry>(key: string, field: K, value: MedicationEntry[K]) => {
+    touch();
+    setMedications((prev) => prev.map((m) => (m.key === key ? { ...m, [field]: value } : m)));
+    if (field === "medicationName" && nameErrors[key]) setNameErrors((prev) => ({ ...prev, [key]: false }));
   };
 
   const addMedication = () => {
-    setMedications((prev) => [...prev, blankMedication()]);
+    touch();
+    const card = blankMedication();
+    setMedications((prev) => [...prev, card]);
+    window.setTimeout(() => scrollTo(`med-card-${card.key}`), 200);
   };
 
-  const removeMedication = (index: number) => {
-    setMedications((prev) => prev.filter((_, i) => i !== index));
+  const removeMedication = (key: string) => {
+    touch();
+    setMedications((prev) => prev.filter((m) => m.key !== key));
   };
 
-  const handleSave = () => {
-    const hasBlankName = medications.some((m) => !m.medicationName.trim());
-    if (hasBlankName) {
+  const handleSave = async () => {
+    const blank = medications.filter((m) => !m.medicationName.trim());
+    if (blank.length > 0) {
+      setNameErrors(Object.fromEntries(blank.map((m) => [m.key, true])));
       setSaveError("Each medication entry requires a medication name.");
+      scrollTo(`med-card-${blank[0].key}`);
       return;
     }
+    setNameErrors({});
     setSaveError(null);
-    setSaveSuccess(false);
-    startSave(async () => {
-      const result = await saveMedicationPlan({
-        studentId,
-        medications,
-        emergencyProcedure,
-        specialInstructions,
-      });
-      if (result.error) {
-        setSaveError(result.error);
-      } else if (result.data) {
-        setPlanReady(true);
-        setSaveSuccess(true);
-        onPlanSaved(result.data as StudentMedicationPlan);
-      }
+    setSaving(true);
+    const firstSave = !planReady;
+    const out: { plan: StudentMedicationPlan | null; meds: StudentMedication[] | undefined; error: string | null } = {
+      plan: null,
+      meds: undefined,
+      error: null,
+    };
+    await runSave({
+      successTitle: "Medication plan saved",
+      successMessage: firstSave ? "You can now sign the authorization below." : undefined,
+      errorTitle: "Couldn't save the medication plan",
+      retry: () => void handleSave(),
+      fn: async () => {
+        const result = await saveMedicationPlan({ studentId, medications: strip(medications), emergencyProcedure, specialInstructions });
+        if (result.error || !result.data) {
+          out.error = result.error ?? "Something went wrong. Please try again.";
+          return { ok: false, error: out.error };
+        }
+        out.plan = result.data as StudentMedicationPlan;
+        out.meds = result.medications as StudentMedication[] | undefined;
+        return { ok: true };
+      },
     });
+    setSaving(false);
+    if (out.plan) {
+      setPlanReady(true);
+      setSavedSnapshot(snapshot);
+      setJustSaved(true);
+      onPlanSaved(out.plan, out.meds);
+      if (firstSave) window.setTimeout(() => scrollTo("med-sec-7"), 300);
+    } else if (out.error) {
+      setSaveError(out.error);
+    }
   };
 
   const handleSectionSaved = (sectionId: number, sig: EnrollmentSignature) => {
@@ -235,393 +189,257 @@ export default function MedicationPlanModal({
     onSignaturesSaved(updated);
   };
 
-  const signedCount = Array.from(
-    { length: CONTRACT_4_TOTAL_SECTIONS },
-    (_, i) => i + 1,
-  ).filter((i) => !!localSigs[`${CONTRACT_4_ID}-${i}`]).length;
-  const allSigned = signedCount === CONTRACT_4_TOTAL_SECTIONS;
-
-  const dobFormatted =
-    [app.dob_month, app.dob_day, app.dob_year].filter(Boolean).join("/") ||
-    null;
+  const signedCount = localSigs[`${CONTRACT_4_ID}-1`] ? 1 : 0;
+  const dob = [app.dob_month, app.dob_day, app.dob_year].filter(Boolean).join("/") || null;
+  const needsSave = !planReady || dirty;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className={dancingScript.variable}>
-          {/* Backdrop */}
-          <motion.div
-            className="fixed inset-0 bg-black/60 z-[60]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
+    <>
+      <GardenSheet
+        open={isOpen}
+        onClose={close}
+        size="wide"
+        bodyRef={bodyRef}
+        icon="💊"
+        title="Emergency Medication Plan"
+        note={!readOnly && dirty ? "Unsaved changes" : signedLabel(signedCount, CONTRACT_4_TOTAL_SECTIONS)}
+        footer={
+          <SigningFooter
+            total={CONTRACT_4_TOTAL_SECTIONS}
+            signed={signedCount}
+            readOnly={readOnly}
+            onClose={close}
+            save={needsSave ? { label: "Save Medication Plan", busy: saving, onClick: () => void handleSave() } : null}
+            onNext={() => scrollTo("med-sec-7")}
           />
+        }
+      >
+        <fieldset disabled={readOnly} className="m-0 flex min-w-0 flex-col gap-10 border-0 p-0 pt-2">
+          <SheetStep n={1} title="Student Information" done>
+            <FactsCard
+              rows={[
+                { label: "Full Legal Name", value: app.child_legal_name },
+                { label: "Date of Birth", value: dob },
+                { label: "Grade Level", value: app.child_grade },
+                { label: "Preferred Name", value: app.preferred_name },
+              ]}
+            />
+          </SheetStep>
 
-          {/* Right-side drawer */}
-          <motion.div
-            className="fixed inset-y-0 right-0 w-full max-w-3xl z-[70] bg-white flex flex-col shadow-2xl"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Sticky Header */}
-            <div className="flex-shrink-0 sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between z-10">
-              <div>
-                <h2 className="text-base font-bold font-heading text-gray-800">
-                  Emergency Medication Plan
-                </h2>
-                <p className="text-xs text-gray-400 font-body mt-0.5">
-                  {signedCount} of {CONTRACT_4_TOTAL_SECTIONS} sections signed
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
+          <SheetStep n={2} title="Parent/Guardian" done>
+            <FactsCard
+              title="Primary Guardian"
+              rows={[
+                { label: "Full Name", value: app.g1_full_name },
+                { label: "Mobile Phone", value: app.g1_cell_phone },
+              ]}
+            />
+            {app.g2_full_name ? (
+              <FactsCard
+                title="Secondary Guardian"
+                rows={[
+                  { label: "Full Name", value: app.g2_full_name },
+                  { label: "Mobile Phone", value: app.g2_cell_phone },
+                ]}
+              />
+            ) : null}
+          </SheetStep>
 
-            {/* Scrollable body */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">
-              <fieldset disabled={readOnly} className="flex flex-col gap-10 border-0 p-0 m-0 min-w-0">
-                {/* Section 1: Student Information */}
-                <div className="flex flex-col gap-4">
-                  <SectionHeader number="1" title="Student Information" />
-                  <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl px-4 py-4">
-                    <ReadOnlyField
-                      label="Full Legal Name"
-                      value={app.child_legal_name}
-                    />
-                    <ReadOnlyField label="Date of Birth" value={dobFormatted} />
-                    <ReadOnlyField
-                      label="Grade Level"
-                      value={app.child_grade}
-                    />
-                    <ReadOnlyField
-                      label="Preferred Name"
-                      value={app.preferred_name}
-                    />
-                  </div>
-                </div>
+          <SheetStep n={3} title="Emergency Contact (other than parent)" done>
+            <NoteCard tone="sky">
+              In case of emergency, school staff will contact the parent/guardian listed above first. If unreachable, staff will contact the
+              emergency contact listed on your student&apos;s health form. To update emergency contacts, please edit the Emergency Contact, Health,
+              and Immunization Form.
+            </NoteCard>
+          </SheetStep>
 
-                {/* Section 2: Parent/Guardian */}
-                <div className="flex flex-col gap-4">
-                  <SectionHeader number="2" title="Parent/Guardian" />
-                  <div className="flex flex-col gap-3">
-                    <p className="text-xs font-semibold text-gray-500 font-body uppercase tracking-wide">
-                      Primary Guardian
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl px-4 py-4">
-                      <ReadOnlyField
-                        label="Full Name"
-                        value={app.g1_full_name}
-                      />
-                      <ReadOnlyField
-                        label="Mobile Phone"
-                        value={app.g1_cell_phone}
-                      />
-                    </div>
-                    {app.g2_full_name && (
-                      <>
-                        <p className="text-xs font-semibold text-gray-500 font-body uppercase tracking-wide">
-                          Secondary Guardian
-                        </p>
-                        <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-xl px-4 py-4">
-                          <ReadOnlyField
-                            label="Full Name"
-                            value={app.g2_full_name}
-                          />
-                          <ReadOnlyField
-                            label="Mobile Phone"
-                            value={app.g2_cell_phone}
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Section 3: Emergency Contact */}
-                <div className="flex flex-col gap-4">
-                  <SectionHeader
-                    number="3"
-                    title="Emergency Contact (other than parent)"
-                  />
-                  <div className="bg-gray-50 rounded-xl px-4 py-4">
-                    <p className="text-xs text-gray-500 font-body">
-                      In case of emergency, school staff will contact the
-                      parent/guardian listed above first. If unreachable, staff
-                      will contact the emergency contact listed on your
-                      student&apos;s health form. To update emergency contacts,
-                      please edit the Emergency Contact, Health, and
-                      Immunization Form.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Section 4: Medication Information */}
-                <div className="flex flex-col gap-4">
-                  <SectionHeader number="4" title="Medication Information" />
-                  <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    List all medications your child may require while at school.
-                    Include both daily medications and emergency-use
-                    medications.
-                  </p>
-
-                  <div className="flex flex-col gap-6">
-                    {medications.map((med, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-xl px-4 py-4 flex flex-col gap-3 bg-white"
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-gray-500 font-body uppercase tracking-wide">
-                            Medication {index + 1}
-                          </p>
-                          {medications.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeMedication(index)}
-                              className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 font-body transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              Remove
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <FormField
-                            label="Medication Name"
-                            value={med.medicationName}
-                            onChange={(v) =>
-                              updateMedication(index, "medicationName", v)
-                            }
-                            placeholder="e.g., EpiPen, Albuterol"
-                          />
-                          <FormField
-                            label="Condition / Reason"
-                            value={med.conditionReason}
-                            onChange={(v) =>
-                              updateMedication(index, "conditionReason", v)
-                            }
-                            placeholder="e.g., Severe allergy, Asthma"
-                          />
-                          <FormField
-                            label="Dosage & Frequency"
-                            value={med.dosageFrequency}
-                            onChange={(v) =>
-                              updateMedication(index, "dosageFrequency", v)
-                            }
-                            placeholder="e.g., 0.3mg as needed"
-                          />
-                          <FormField
-                            label="Prescribing Physician"
-                            value={med.physicianName}
-                            onChange={(v) =>
-                              updateMedication(index, "physicianName", v)
-                            }
-                            placeholder="Dr. Name"
-                          />
-                          <FormField
-                            label="Physician Phone"
-                            value={med.physicianPhone}
-                            onChange={(v) =>
-                              updateMedication(
-                                index,
-                                "physicianPhone",
-                                formatPhone(v),
-                              )
-                            }
-                            placeholder="(555) 000-0000"
-                          />
-                          <FormField
-                            label="Expiration Date"
-                            value={med.expirationDate}
-                            onChange={(v) =>
-                              updateMedication(index, "expirationDate", v)
-                            }
-                            placeholder="MM/YYYY"
-                          />
-                        </div>
-
-                        <div className="flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={med.isDaily}
-                              onChange={(e) =>
-                                updateMedication(
-                                  index,
-                                  "isDaily",
-                                  e.target.checked,
-                                )
-                              }
-                              className="w-4 h-4 rounded border-gray-300 accent-primary"
-                            />
-                            <span className="text-xs font-body text-gray-600">
-                              Daily medication
-                            </span>
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={med.isEmergencyOnly}
-                              onChange={(e) =>
-                                updateMedication(
-                                  index,
-                                  "isEmergencyOnly",
-                                  e.target.checked,
-                                )
-                              }
-                              className="w-4 h-4 rounded border-gray-300 accent-primary"
-                            />
-                            <span className="text-xs font-body text-gray-600">
-                              Emergency use only
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={addMedication}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-gray-300 text-sm font-body text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-colors cursor-pointer w-fit"
+          <SheetStep n={4} title="Medication Information">
+            <LegalText>
+              <p>List all medications your child may require while at school. Include both daily medications and emergency-use medications.</p>
+            </LegalText>
+            <ul className="flex flex-col gap-4">
+              <AnimatePresence initial={false}>
+                {medications.map((med, index) => (
+                  <motion.li
+                    key={med.key}
+                    id={`med-card-${med.key}`}
+                    layout={!reduce}
+                    initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
+                    transition={{ duration: 0.22 }}
+                    className={`${cardBase} flex flex-col gap-3 px-4 py-4 sm:px-5`}
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Medication
-                  </button>
-                </div>
-
-                {/* Section 5: Emergency Procedure */}
-                <div className="flex flex-col gap-4">
-                  <SectionHeader number="5" title="Emergency Procedure" />
-                  <FormTextarea
-                    label="Briefly describe symptoms or situations when medication should be given"
-                    value={emergencyProcedure}
-                    onChange={setEmergencyProcedure}
-                    placeholder="e.g., Administer EpiPen immediately if child shows signs of anaphylaxis (hives, difficulty breathing, swelling)..."
-                  />
-                </div>
-
-                {/* Section 6: Special Instructions */}
-                <div className="flex flex-col gap-4">
-                  <SectionHeader number="6" title="Special Instructions" />
-                  <FormTextarea
-                    label="Storage requirements, assistance needed, or other notes"
-                    value={specialInstructions}
-                    onChange={setSpecialInstructions}
-                    placeholder="e.g., Store EpiPen at room temperature, keep in child's backpack at all times..."
-                  />
-                </div>
-
-                {/* Save Button */}
-                {!readOnly && (
-                  <div className="flex flex-col gap-3">
-                    {saveError && (
-                      <p className="text-xs text-red-500 font-body">
-                        {saveError}
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-extrabold">
+                        <span aria-hidden="true">💊 </span>Medication {index + 1}
                       </p>
-                    )}
-                    {saveSuccess && (
-                      <p className="text-xs text-emerald-600 font-body">
-                        Medication plan saved successfully.
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleSave}
-                      disabled={isSaving}
-                      className="w-fit px-5 py-2.5 bg-primary text-white text-sm font-semibold font-body rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                    >
-                      {isSaving ? "Saving..." : "Save Medication Plan"}
-                    </button>
-                  </div>
-                )}
-
-                {/* Section 7: Authorization and Release */}
-                <div className="flex flex-col gap-4">
-                  <SectionHeader number="7" title="Authorization and Release" />
-                  <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    I hereby authorize Sage Field Private School staff to
-                    administer the medication(s) listed above to my child in
-                    accordance with the instructions provided. I understand that
-                    school staff are not licensed medical professionals and will
-                    follow the instructions given to the best of their ability.
-                    I release Sage Field Private School and its staff from
-                    liability for any adverse reactions that occur when
-                    medication is administered as directed.
-                  </p>
-                  <p className="text-sm text-gray-600 font-body leading-relaxed">
-                    I agree to provide medication in its original, clearly
-                    labeled container and to update this form whenever
-                    medication information changes.
-                  </p>
-
-                  {!readOnly && !planReady ? (
-                    <div className="mt-4 border border-dashed border-amber-200 rounded-xl px-4 py-3 bg-amber-50">
-                      <p className="text-xs text-amber-700 font-body">
-                        Complete and save the medication plan above before
-                        signing this section.
-                      </p>
+                      {!readOnly && medications.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => (hasData(med) ? setConfirmRemove(med) : removeMedication(med.key))}
+                          className={`${btnGhostSm} !min-h-10 !px-4 text-[var(--sf-coral-deep)]`}
+                          aria-label={`Remove medication ${index + 1}`}
+                        >
+                          <TrashIcon className="h-3.5 w-3.5" />
+                          Remove
+                        </button>
+                      ) : null}
                     </div>
-                  ) : (
-                    <SectionSignatureBlock
-                      sectionId={1}
-                      contractId={CONTRACT_4_ID}
-                      studentId={studentId}
-                      parentName={parentName}
-                      existingSig={localSigs[`${CONTRACT_4_ID}-1`]}
-                      onSectionSaved={handleSectionSaved}
-                      readOnly={readOnly}
-                    />
-                  )}
-                </div>
-              </fieldset>
-            </div>
-
-            {/* Sticky Footer */}
-            <div
-              className={`flex-shrink-0 sticky bottom-0 border-t px-6 py-4 flex items-center justify-between ${
-                allSigned
-                  ? "bg-emerald-50 border-emerald-200"
-                  : "bg-white border-gray-100"
-              }`}
-            >
-              {allSigned ? (
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-emerald-600" />
-                  <span className="text-sm font-semibold text-emerald-700 font-body">
-                    All sections signed — form complete
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <PenLine className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm text-gray-500 font-body">
-                    {CONTRACT_4_TOTAL_SECTIONS - signedCount} section
-                    {CONTRACT_4_TOTAL_SECTIONS - signedCount !== 1 ? "s" : ""}{" "}
-                    remaining
-                  </span>
-                </div>
-              )}
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-xs font-semibold font-body text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                Close
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <TextField
+                        label="Medication Name"
+                        required
+                        value={med.medicationName}
+                        onChange={(v) => updateMedication(med.key, "medicationName", v)}
+                        placeholder="e.g., EpiPen, Albuterol"
+                        error={nameErrors[med.key] ? "Each medication entry requires a medication name." : null}
+                      />
+                      <TextField
+                        label="Condition / Reason"
+                        value={med.conditionReason}
+                        onChange={(v) => updateMedication(med.key, "conditionReason", v)}
+                        placeholder="e.g., Severe allergy, Asthma"
+                      />
+                      <TextField
+                        label="Dosage & Frequency"
+                        value={med.dosageFrequency}
+                        onChange={(v) => updateMedication(med.key, "dosageFrequency", v)}
+                        placeholder="e.g., 0.3mg as needed"
+                      />
+                      <TextField
+                        label="Prescribing Physician"
+                        value={med.physicianName}
+                        onChange={(v) => updateMedication(med.key, "physicianName", v)}
+                        placeholder="Dr. Name"
+                      />
+                      <PhoneField
+                        label="Physician Phone"
+                        value={med.physicianPhone}
+                        onChange={(v) => updateMedication(med.key, "physicianPhone", v)}
+                        placeholder="(555) 000-0000"
+                      />
+                      <TextField
+                        label="Expiration Date"
+                        value={med.expirationDate}
+                        onChange={(v) => updateMedication(med.key, "expirationDate", v)}
+                        placeholder="MM/YYYY"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <CheckboxRow checked={med.isDaily} onChange={(v) => updateMedication(med.key, "isDaily", v)} disabled={readOnly}>
+                        Daily medication
+                      </CheckboxRow>
+                      <CheckboxRow
+                        checked={med.isEmergencyOnly}
+                        onChange={(v) => updateMedication(med.key, "isEmergencyOnly", v)}
+                        disabled={readOnly}
+                      >
+                        Emergency use only
+                      </CheckboxRow>
+                    </div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+            {!readOnly ? (
+              <button type="button" onClick={addMedication} className={`${btnGhostSm} self-start`}>
+                <span aria-hidden="true">＋</span> Add Medication
               </button>
+            ) : null}
+          </SheetStep>
+
+          <SheetStep n={5} title="Emergency Procedure">
+            <TextArea
+              label="Briefly describe symptoms or situations when medication should be given"
+              value={emergencyProcedure}
+              onChange={(v) => {
+                touch();
+                setEmergencyProcedure(v);
+              }}
+              placeholder="e.g., Administer EpiPen immediately if child shows signs of anaphylaxis (hives, difficulty breathing, swelling)..."
+              disabled={readOnly}
+            />
+          </SheetStep>
+
+          <SheetStep n={6} title="Special Instructions">
+            <TextArea
+              label="Storage requirements, assistance needed, or other notes"
+              value={specialInstructions}
+              onChange={(v) => {
+                touch();
+                setSpecialInstructions(v);
+              }}
+              placeholder="e.g., Store EpiPen at room temperature, keep in child's backpack at all times..."
+              disabled={readOnly}
+            />
+          </SheetStep>
+
+          {!readOnly ? (
+            <div className={`${cardBase} flex flex-col gap-3 bg-[var(--sf-butter)]/40 px-5 py-5`}>
+              {saveError ? <InlineError>{saveError}</InlineError> : null}
+              {justSaved && !saveError ? <SavedNote>Medication plan saved successfully.</SavedNote> : null}
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void handleSave()}
+                  disabled={saving || (planReady && !dirty)}
+                  aria-busy={saving || undefined}
+                  className={btnSageSm}
+                >
+                  {saving ? <Spinner /> : null}
+                  {saving ? "Saving…" : "Save Medication Plan"}
+                </button>
+                <span className="text-xs font-bold text-[var(--sf-soft)]" aria-live="polite">
+                  {dirty ? "Unsaved changes" : planReady ? "✓ Saved" : "Not saved yet"}
+                </span>
+              </div>
             </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+          ) : null}
+
+          <SheetStep n={7} title="Authorization and Release" done={signedCount === 1} id="med-sec-7">
+            <LegalText>
+              <p>
+                I hereby authorize Sage Field Private School staff to administer the medication(s) listed above to my child in accordance with
+                the instructions provided. I understand that school staff are not licensed medical professionals and will follow the
+                instructions given to the best of their ability. I release Sage Field Private School and its staff from liability for any
+                adverse reactions that occur when medication is administered as directed.
+              </p>
+              <p>
+                I agree to provide medication in its original, clearly labeled container and to update this form whenever medication
+                information changes.
+              </p>
+            </LegalText>
+            {!readOnly && !planReady ? (
+              <LockedNote>Save the medication plan above to unlock signing.</LockedNote>
+            ) : (
+              <SignatureBlock
+                sectionId={1}
+                contractId={CONTRACT_4_ID}
+                studentId={studentId}
+                parentName={parentName}
+                existingSig={localSigs[`${CONTRACT_4_ID}-1`]}
+                onSectionSaved={handleSectionSaved}
+                readOnly={readOnly}
+                readOnlyPreview={readOnlyPreview}
+                label="Emergency Medication Plan"
+              />
+            )}
+          </SheetStep>
+        </fieldset>
+      </GardenSheet>
+      <ConfirmDialog
+        open={!!confirmRemove}
+        onClose={() => setConfirmRemove(null)}
+        onConfirm={() => {
+          if (confirmRemove) removeMedication(confirmRemove.key);
+          setConfirmRemove(null);
+        }}
+        title="Remove this medication?"
+        body={confirmRemove?.medicationName ? <>“{confirmRemove.medicationName}” will be removed from the plan when you save.</> : "This medication will be removed from the plan when you save."}
+        confirmLabel="Remove medication"
+      />
+      {guard.dialog}
+    </>
   );
 }
