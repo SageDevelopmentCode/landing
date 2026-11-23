@@ -102,7 +102,7 @@ async function studentNamesByParentId(
 
 Deno.serve(async (req) => {
   const secret = Deno.env.get("WEBHOOK_SECRET");
-  if (secret && req.headers.get("x-webhook-secret") !== secret) {
+  if (!secret || req.headers.get("x-webhook-secret") !== secret) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
   );
 
   const pushTitle = formatTitle(record);

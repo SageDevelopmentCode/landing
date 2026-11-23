@@ -4129,7 +4129,7 @@ CREATE OR REPLACE TRIGGER "set_updated_at" BEFORE UPDATE ON "donations"."donatio
 
 
 
-CREATE OR REPLACE TRIGGER "feed-post-notification" AFTER INSERT ON "feed"."posts" FOR EACH ROW EXECUTE FUNCTION "supabase_functions"."http_request"('https://vonuwpzepwrbdlectspd.supabase.co/functions/v1/send-feed-notification', 'POST', '{"Content-type":"application/json","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvbnV3cHplcHdyYmRsZWN0c3BkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjI0OTQ1MCwiZXhwIjoyMDg3ODI1NDUwfQ.3WsQFnDPv-gfhYhGvCMGAOHvWhIrdGDZVgZhIT8SnfU","x-webhook-secret":"sagefield"}', '{}', '5000');
+CREATE OR REPLACE TRIGGER "feed-post-notification" AFTER INSERT ON "feed"."posts" FOR EACH ROW EXECUTE FUNCTION "supabase_functions"."http_request"('https://vonuwpzepwrbdlectspd.supabase.co/functions/v1/send-feed-notification', 'POST', '{"Content-type":"application/json","Authorization":"Bearer <removed: superseded by 20261123120000_notification_triggers_use_vault.sql>","x-webhook-secret":"sagefield"}', '{}', '5000');
 
 
 
@@ -4169,7 +4169,7 @@ CREATE OR REPLACE TRIGGER "testimonials_updated_at" BEFORE UPDATE ON "marketing"
 
 
 
-CREATE OR REPLACE TRIGGER "send-message-notification" AFTER INSERT ON "messaging"."messages" FOR EACH ROW EXECUTE FUNCTION "supabase_functions"."http_request"('https://vonuwpzepwrbdlectspd.supabase.co/functions/v1/send-message-notification', 'POST', '{"Content-type":"application/json","Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvbnV3cHplcHdyYmRsZWN0c3BkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjI0OTQ1MCwiZXhwIjoyMDg3ODI1NDUwfQ.3WsQFnDPv-gfhYhGvCMGAOHvWhIrdGDZVgZhIT8SnfU","x-webhook-secret":"sagefield"}', '{}', '5000');
+CREATE OR REPLACE TRIGGER "send-message-notification" AFTER INSERT ON "messaging"."messages" FOR EACH ROW EXECUTE FUNCTION "supabase_functions"."http_request"('https://vonuwpzepwrbdlectspd.supabase.co/functions/v1/send-message-notification', 'POST', '{"Content-type":"application/json","Authorization":"Bearer <removed: superseded by 20261123120000_notification_triggers_use_vault.sql>","x-webhook-secret":"sagefield"}', '{}', '5000');
 
 
 
