@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { SignatureMap, EnrollmentSignature } from "@/app/types/enrollment-signatures";
 import { CONTRACT_5_ID, CONTRACT_5_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
 import { savePhotoReleaseConsent } from "@/app/actions/savePhotoReleaseConsent";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
 import { usePortalFeedback } from "@/app/parent/_garden/feedback";
 import { useUnsavedGuard } from "@/app/parent/_garden/unsaved";

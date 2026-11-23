@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
 import { CheckIcon } from "@/app/parent/_garden/ui";
 import { CONTRACT_1_SECTIONS, CONTRACT_2_SECTIONS } from "./contractContent";

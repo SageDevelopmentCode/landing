@@ -7,7 +7,7 @@ import type { SignatureMap, EnrollmentSignature } from "@/app/types/enrollment-s
 import { CONTRACT_4_ID, CONTRACT_4_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
 import { saveMedicationPlan } from "@/app/actions/saveMedicationPlan";
 import type { MedicationEntry } from "@/app/actions/saveMedicationPlan";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
 import ConfirmDialog from "@/app/parent/_garden/ConfirmDialog";
 import { usePortalFeedback } from "@/app/parent/_garden/feedback";
@@ -57,7 +57,11 @@ function initMedications(rows: StudentMedication[]): MedCard[] {
     }));
 }
 
-const strip = (cards: MedCard[]): MedicationEntry[] => cards.map(({ key: _key, ...m }) => m);
+const strip = (cards: MedCard[]): MedicationEntry[] => cards.map((c) => {
+    const copy: Partial<MedCard> = { ...c };
+    delete copy.key;
+    return copy as MedicationEntry;
+  });
 const hasData = (m: MedCard) =>
   [m.medicationName, m.conditionReason, m.dosageFrequency, m.physicianName, m.physicianPhone, m.expirationDate].some((v) => v.trim() !== "") ||
   m.isDaily ||
