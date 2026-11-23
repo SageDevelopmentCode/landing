@@ -91,7 +91,7 @@ export default async function ImpersonatePreferencesPage({
         </div>
         <ImpersonateNotificationBell parentId={parentId} />
       </header>
-      <main className="flex-1 flex overflow-hidden pointer-events-none select-none">
+      <main className="flex-1 pointer-events-none select-none">
         <PreferencesPageClient
           students={children}
           activities={activities}
@@ -99,6 +99,7 @@ export default async function ImpersonatePreferencesPage({
           savedPreferences={savedPreferences}
           studentDefaults={studentDefaults}
           schoolDayFoodPreferences={schoolDayFoodPreferences}
+          readOnlyPreview
         />
       </main>
     </div>

@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient, createAdminClient } from "@/app/lib/supabase-server"
 import { sendDiscordNotification, createTestimonialEmbed } from "@/app/lib/discord"
+import { resolveActingParentId } from "@/app/lib/parent-access"
 
 export async function submitTestimonial(opts: {
   testimonial: string
@@ -12,6 +13,8 @@ export async function submitTestimonial(opts: {
   if (!user) return { success: false, error: "Not authenticated" }
 
   const adminClient = createAdminClient()
+  // Shared-access co-parents submit on behalf of the primary account, so "Submitted" shows for both.
+  const actingParentId = await resolveActingParentId(user.id)
 
   const { data: adminUser } = await adminClient
     .schema("admin")
@@ -27,7 +30,7 @@ export async function submitTestimonial(opts: {
     .schema("marketing")
     .from("testimonials")
     .insert({
-      parent_id: user.id,
+      parent_id: actingParentId,
       parent_name: parentName,
       parent_email: parentEmail,
       child_name: opts.childName,
