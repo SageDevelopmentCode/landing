@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/app/lib/supabase-server";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import AdminPreviewBanner from "../../AdminPreviewBanner";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
@@ -54,14 +55,20 @@ export default async function ImpersonateFeedPage({
         </div>
         <ImpersonateNotificationBell parentId={parentId} />
       </header>
-      <main className="flex-1 flex flex-col overflow-hidden pointer-events-none select-none">
-        <ParentFeedClient
-          currentUser={currentUser}
-          initialPosts={initialPosts}
-          initialReelPosts={initialReelPosts}
-          profileImageUrl={adminUser.profile_image_url ?? null}
-          teachers={teachers ?? []}
-        />
+      <main className="flex-1 pointer-events-none select-none">
+        {/* Admins can browse posts, open media and comments; writes show the Preview toast. */}
+        <div className="pointer-events-auto select-text">
+          <Suspense>
+            <ParentFeedClient
+              currentUser={currentUser}
+              initialPosts={initialPosts}
+              initialReelPosts={initialReelPosts}
+              profileImageUrl={adminUser.profile_image_url ?? null}
+              teachers={teachers ?? []}
+              readOnlyPreview
+            />
+          </Suspense>
+        </div>
       </main>
     </div>
   );
