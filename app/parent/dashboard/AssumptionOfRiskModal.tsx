@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { SignatureMap, EnrollmentSignature } from "@/app/types/enrollment-signatures";
 import { CONTRACT_6_ID, CONTRACT_6_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
 import { FactsCard, LegalText, SheetStep, SigningFooter, signedLabel, useScrollToSection } from "./garden/sheetParts";
 

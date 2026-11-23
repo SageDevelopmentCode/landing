@@ -1,7 +1,7 @@
 "use client";
 
 import type { Database } from "@/app/types/database.types";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import { InfoRow } from "@/app/parent/_garden/fields";
 import { cardBase } from "@/app/parent/_garden/ui";
 import { PROGRAM_LABELS } from "@/app/lib/application-programs";

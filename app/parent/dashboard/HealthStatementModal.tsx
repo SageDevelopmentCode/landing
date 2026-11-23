@@ -8,7 +8,7 @@ import { uploadReligiousExemption } from "@/app/actions/uploadReligiousExemption
 import { deleteReligiousExemption } from "@/app/actions/deleteReligiousExemption";
 import { listReligiousExemptions } from "@/app/actions/listReligiousExemptions";
 import type { Database } from "@/app/types/database.types";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
 import FileDropZone, { displayFileName, type DropZoneFile } from "@/app/parent/_garden/FileDropZone";
 import { usePortalFeedback } from "@/app/parent/_garden/feedback";

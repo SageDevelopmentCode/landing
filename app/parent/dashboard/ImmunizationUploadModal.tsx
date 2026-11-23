@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { uploadImmunizationRecord } from "@/app/actions/uploadImmunizationRecord";
 import { listImmunizationRecords } from "@/app/actions/listImmunizationRecords";
 import { deleteImmunizationRecord } from "@/app/actions/deleteImmunizationRecord";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import FileDropZone, { displayFileName, type DropZoneFile } from "@/app/parent/_garden/FileDropZone";
 import { usePortalFeedback } from "@/app/parent/_garden/feedback";
 import { ErrorCard } from "@/app/parent/_garden/states";
@@ -69,7 +69,6 @@ export default function ImmunizationUploadModal({
   useEffect(() => {
     if (!isOpen) return;
     // Loading on open; setState happens after the awaited request.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadFiles();
     // Only reload when the sheet opens or the child changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps

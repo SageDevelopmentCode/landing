@@ -7,7 +7,7 @@ import type { SignatureMap, EnrollmentSignature } from "@/app/types/enrollment-s
 import { CONTRACT_7_ID, CONTRACT_7_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
 import { saveAuthorizedPickup } from "@/app/actions/saveAuthorizedPickup";
 import type { PickupPersonEntry } from "@/app/actions/saveAuthorizedPickup";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
 import ConfirmDialog from "@/app/parent/_garden/ConfirmDialog";
 import { usePortalFeedback } from "@/app/parent/_garden/feedback";
@@ -46,7 +46,11 @@ function initPersons(rows: AuthorizedPickupPerson[]): PersonCard[] {
     }));
 }
 
-const strip = (cards: PersonCard[]): PickupPersonEntry[] => cards.map(({ key: _key, ...p }) => p);
+const strip = (cards: PersonCard[]): PickupPersonEntry[] => cards.map((c) => {
+    const copy: Partial<PersonCard> = { ...c };
+    delete copy.key;
+    return copy as PickupPersonEntry;
+  });
 const hasData = (p: PersonCard) => Object.entries(p).some(([k, v]) => k !== "key" && String(v).trim() !== "");
 
 type PersonErrors = Partial<Record<"fullName" | "relationship" | "phone", string>>;

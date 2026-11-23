@@ -5,7 +5,7 @@ import type { Database } from "@/app/types/database.types";
 import type { SignatureMap, EnrollmentSignature } from "@/app/types/enrollment-signatures";
 import { CONTRACT_3_ID, CONTRACT_3_TOTAL_SECTIONS } from "@/app/types/enrollment-signatures";
 import { saveHealthInfo } from "@/app/actions/saveHealthInfo";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./garden/EnrollmentSheet";
 import SignatureBlock from "@/app/parent/_garden/SignatureBlock";
 import { usePortalFeedback } from "@/app/parent/_garden/feedback";
 import { useUnsavedGuard } from "@/app/parent/_garden/unsaved";

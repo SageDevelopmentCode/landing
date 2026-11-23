@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import GardenSheet from "@/app/parent/_garden/sheet";
+import GardenSheet from "./EnrollmentSheet";
 import { Segmented } from "@/app/parent/_garden/tabs";
 import { CheckboxRow, InlineError } from "@/app/parent/_garden/fields";
 import { usePortalFeedback } from "@/app/parent/_garden/feedback";
