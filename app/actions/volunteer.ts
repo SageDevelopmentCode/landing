@@ -29,18 +29,34 @@ export async function submitVolunteerInterest(
   data: VolunteerFormData,
 ): Promise<VolunteerResponse> {
   try {
-    const validated = volunteerSchema.parse(data);
-
-    const adminClient = createAdminClient();
     const {
       data: { user },
     } = await (await createServerSupabaseClient()).auth.getUser();
+    if (!user) {
+      return {
+        success: false,
+        message: "Please sign in again to send your volunteer interest.",
+        error: "Unauthorized",
+      };
+    }
+
+    const validated = volunteerSchema.parse(data);
+
+    const adminClient = createAdminClient();
+    const { data: parentRow } = await adminClient
+      .schema("admin")
+      .from("users")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+    const parentName = (parentRow?.full_name as string | null | undefined)?.trim() || "Unknown";
+    const parentEmail = (parentRow?.email as string | null | undefined) || user.email || "Unknown";
 
     const { error: dbError } = await adminClient
       .schema("admin")
       .from("volunteer_interests")
       .insert({
-        parent_id: user?.id ?? null,
+        parent_id: user.id,
         skills: validated.skills,
         help_areas: validated.helpAreas,
         availability: validated.availability,
@@ -62,6 +78,8 @@ export async function submitVolunteerInterest(
       title: "🙋 New Volunteer Interest",
       color: 0x4a7c59,
       fields: [
+        { name: "Parent", value: parentName, inline: true },
+        { name: "Email", value: parentEmail, inline: true },
         {
           name: "Skills & Experience",
           value: validated.skills,

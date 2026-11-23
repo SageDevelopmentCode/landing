@@ -1,164 +1,111 @@
 "use client";
 
-import { useState } from "react";
-import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { submitAndroidDownloadRequest } from "@/app/actions/androidDownload";
+import { GardenDialog } from "@/app/parent/_garden/sheet";
+import { InlineError, TextField } from "@/app/parent/_garden/fields";
+import { Spinner, btnSheetPrimary } from "@/app/parent/_garden/ui";
+import { useToast } from "@/app/_garden/toast";
 
 interface AndroidDownloadSheetProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function AndroidDownloadSheet({
-  isOpen,
-  onClose,
-}: AndroidDownloadSheetProps) {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MSG = "Please enter a valid email address.";
+
+/**
+ * "Download for Android" beta request as a Garden dialog. Must render inside a
+ * `GardenToastProvider` (the /download page provides one). Same props as before.
+ */
+export default function AndroidDownloadSheet({ isOpen, onClose }: AndroidDownloadSheetProps) {
+  const toast = useToast();
   const [email, setEmail] = useState("");
+  const [touched, setTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<{
-    type: "success" | "error" | null;
-    message: string;
-  }>({ type: null, message: "" });
+  const [serverError, setServerError] = useState<string | null>(null);
+  const mounted = useRef(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  const trimmed = email.trim();
+  const valid = EMAIL_RE.test(trimmed);
+  const fieldError = touched && trimmed !== "" && !valid ? EMAIL_MSG : null;
+
+  function close() {
+    if (isSubmitting) return;
+    setServerError(null);
+    setTouched(false);
+    onClose();
+  }
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    setTouched(true);
+    if (!valid || isSubmitting) return;
     setIsSubmitting(true);
-    setSubmitStatus({ type: null, message: "" });
+    setServerError(null);
 
+    let result: { success: boolean; message: string };
     try {
-      const result = await submitAndroidDownloadRequest(email);
-      if (result.success) {
-        setSubmitStatus({ type: "success", message: result.message });
-        setEmail("");
-        setTimeout(() => {
-          onClose();
-          setSubmitStatus({ type: null, message: "" });
-        }, 2000);
-      } else {
-        setSubmitStatus({ type: "error", message: result.message });
-      }
+      result = await submitAndroidDownloadRequest(trimmed);
     } catch {
-      setSubmitStatus({
-        type: "error",
-        message: "An unexpected error occurred. Please try again.",
+      result = { success: false, message: "An unexpected error occurred. Please try again." };
+    }
+    if (!mounted.current) return;
+    setIsSubmitting(false);
+
+    if (result.success) {
+      toast.show({ tone: "success", title: "Request sent", message: result.message });
+      setEmail("");
+      setTouched(false);
+      onClose();
+    } else {
+      setServerError(result.message);
+      toast.show({
+        tone: "error",
+        title: "Couldn't send the link",
+        message: result.message,
+        action: { label: "Try again", onClick: () => void handleSubmit() },
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
-
-          {/* Sheet */}
-          <motion.div
-            className="fixed z-[70] bg-white rounded-t-2xl md:rounded-2xl shadow-2xl
-                       bottom-0 left-0 right-0 md:bottom-auto md:left-1/2 md:top-1/2
-                       md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md
-                       max-h-[90vh] overflow-y-auto"
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6 md:p-8">
-              {/* Header */}
-              <div className="flex justify-between items-start mb-5">
-                <div>
-                  <h2 className="text-xl font-heading font-bold text-gray-800">
-                    Download for Android
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1.5 font-body leading-relaxed">
-                    Our Android app is currently in beta. Enter your email and
-                    we&apos;ll send you a direct download link.
-                  </p>
-                </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0 cursor-pointer ml-3"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-
-              {/* Form */}
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                {submitStatus.type && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`flex items-center gap-2 p-4 rounded-lg ${
-                      submitStatus.type === "success"
-                        ? "bg-green-50 text-green-800 border border-green-200"
-                        : "bg-red-50 text-red-800 border border-red-200"
-                    }`}
-                  >
-                    {submitStatus.type === "success" ? (
-                      <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    )}
-                    <p className="text-sm font-body">{submitStatus.message}</p>
-                  </motion.div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 font-body">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg
-                               focus:border-primary focus:outline-none transition-colors
-                               font-body text-gray-900 placeholder:text-gray-500
-                               disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    placeholder="your@email.com"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full px-6 py-3 bg-primary text-white font-semibold
-                             rounded-lg hover:bg-primary-hover transition-all duration-200
-                             font-body cursor-pointer flex items-center justify-center gap-2
-                             disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    "Send Me the Link"
-                  )}
-                </button>
-              </form>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>,
-    document.body,
+  return (
+    <GardenDialog open={isOpen} onClose={close} title="Download for Android">
+      <p className="mt-2 text-[15px] font-semibold leading-relaxed text-[var(--sf-soft)]">
+        Our Android app is currently in beta. Enter your email and we&apos;ll send you a direct download link.
+      </p>
+      <form className="mt-5 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+        {serverError ? <InlineError>{serverError}</InlineError> : null}
+        <TextField
+          label="Email"
+          required
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          value={email}
+          onChange={(v) => {
+            setEmail(v);
+            if (serverError) setServerError(null);
+          }}
+          onBlur={() => setTouched(true)}
+          error={fieldError}
+          disabled={isSubmitting}
+          placeholder="your@email.com"
+          data-autofocus
+        />
+        <button type="submit" className={btnSheetPrimary} disabled={isSubmitting || !valid} aria-busy={isSubmitting || undefined}>
+          {isSubmitting ? <Spinner /> : null}
+          {isSubmitting ? "Sending..." : "Send Me the Link"}
+        </button>
+      </form>
+    </GardenDialog>
   );
 }
