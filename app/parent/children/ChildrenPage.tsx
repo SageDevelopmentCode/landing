@@ -1,32 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import {
-  Image as ImageIcon,
-  Mail,
-  UserX,
-  MessageCircle,
-  ChevronRight,
-  Camera,
-  Loader2,
-  User,
-  UserPlus,
-  Pencil,
-  Trash2,
-  Plus,
-  X,
-  Check,
-} from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { uploadStudentProfileImage } from "@/app/actions/uploadStudentProfileImage";
 import { compressImage } from "@/app/utils/compressImage";
 import {
-  PickupPersonForm,
-  blankPickupPerson,
-  pickupPersonRowToEditable,
-  validatePickupPersonEntry,
   editableToPickupEntries,
+  pickupPersonRowToEditable,
   type EditablePickupPerson,
 } from "@/app/components/authorized-pickup/PickupPersonForm";
 import { saveAuthorizedPickup } from "@/app/actions/saveAuthorizedPickup";
@@ -37,2149 +19,507 @@ import {
   type LearningNote,
   type LearningNoteCategory,
 } from "@/app/actions/saveParentLearningNote";
-import { formatPhone } from "@/app/utils/formatPhone";
-import { getParentStudentAttendance } from "@/app/actions/getParentStudentAttendance";
-import {
-  ATT_FILTER_TABS,
-  filterAttendanceRecords,
-  getAttendanceStatus,
-  PROGRAM_CONFIG,
-  type AttendanceFilter,
-  type UnifiedAttendanceRecord,
-  type UserMap,
-} from "@/shared/parent/student-attendance";
-import { updateStudentProfile } from "@/app/actions/updateStudentProfile";
-import { DetailSidebar } from "@/app/admin/components/DetailSidebar";
-import {
-  SidebarField,
-  SidebarSection,
-} from "@/app/components/SidebarPrimitives";
-import NextImage from "next/image";
-import type { Database } from "@/app/types/database.types";
+import { updateStudentProfile, type ProfileFields } from "@/app/actions/updateStudentProfile";
 import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
-
-type Student = Database["admin"]["Tables"]["students"]["Row"];
-type AuthorizedPickupPlan =
-  Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
-type AuthorizedPickupPerson =
-  Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
-
-type ContentTab =
-  | "teacher"
-  | "attendance"
-  | "learning"
-  | "photos"
-  | "pickup"
-  | "profile";
+import PortalShell from "@/app/parent/_garden/PortalShell";
+import ChildSwitcher, { type SwitcherChild } from "@/app/parent/_garden/ChildSwitcher";
+import { PillTabs } from "@/app/parent/_garden/tabs";
+import { EmptyState } from "@/app/parent/_garden/states";
+import { usePortalFeedback } from "@/app/parent/_garden/feedback";
+import { Arrow, firstNameOf } from "@/app/parent/_garden/ui";
+import {
+  CATEGORY_META,
+  CHILD_TABS,
+  PROFILE_SECTIONS,
+  SECTION_FIELDS,
+  formatProgramLabel,
+  parseTab,
+  type AuthorizedPickupPerson,
+  type AuthorizedPickupPlan,
+  type ChildTab,
+  type SectionKey,
+  type Student,
+} from "./garden/childrenData";
+import ChildBanner from "./garden/ChildBanner";
+import TeacherTab from "./garden/TeacherTab";
+import LearningTab, { type SaveOutcome } from "./garden/LearningTab";
+import PickupTab, { type PickupState } from "./garden/PickupTab";
+import ProfileTab, { ProfileSectionSheet, type SectionDraft } from "./garden/ProfileTab";
+import { AttendanceHistory, attendanceNote, useAttendanceHistory } from "./garden/AttendanceHistory";
 
 interface Props {
   students: Student[];
   teachersByStudent: Record<string, TeacherAssignment[]>;
   nonEnrolledAppByStudent: Record<string, string>;
   studentProgramMap: Record<string, string>;
-  pickupByStudent: Record<
-    string,
-    { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
-  >;
+  pickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
   notesByStudent: Record<string, LearningNote[]>;
+  /** A dashboard-access grantee: edit controls are hidden (as before). */
   isSharedAccess?: boolean;
+  /** Admin "view as parent": everything renders, writes are blocked with the Preview toast. */
+  readOnlyPreview?: boolean;
+  /** Where the Photos card links (the admin preview has its own route). */
+  photosHref?: string;
 }
 
-function formatProgramLabel(program: string | undefined | null): string | null {
-  switch (program) {
-    case "summer_26":
-      return "Summer 2026";
-    case "school_year_26_27":
-      return "School Year 26–27";
-    case "both":
-      return "Summer & School Year";
-    case "homeschool_drop_in":
-      return "Homeschool Drop-In";
-    default:
-      return null;
-  }
-}
+const PANEL_ID = "child-tab-panel";
 
-function getInitials(name: string | null): string {
-  if (!name) return "?";
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
-function computeAge(
-  month: string | null,
-  day: string | null,
-  year: string | null,
-): number | null {
-  if (!month || !day || !year) return null;
-  const dob = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  if (isNaN(dob.getTime())) return null;
-  const today = new Date();
-  let age = today.getFullYear() - dob.getFullYear();
-  const m = today.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-  return age;
-}
-
-function formatDOB(
-  month: string | null,
-  day: string | null,
-  year: string | null,
-): string {
-  if (!month && !day && !year) return "—";
-  return [month, day, year].filter(Boolean).join("/");
-}
-
-function Field({ label, value }: { label: string; value: string | null }) {
+export default function ChildrenPage(props: Props) {
   return (
-    <div className="py-2.5 border-b border-gray-50 last:border-0">
-      <p className="text-xs font-body text-gray-400 uppercase tracking-wide mb-0.5">
-        {label}
-      </p>
-      <p className="text-sm font-body text-gray-700">
-        {value?.trim() || (
-          <span className="text-gray-300 italic">Not provided</span>
-        )}
-      </p>
-    </div>
+    <PortalShell>
+      <ChildrenContent {...props} />
+    </PortalShell>
   );
 }
 
-function SectionCard({
-  title,
-  headerAction,
-  children,
-}: {
-  title: string;
-  headerAction?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold font-heading text-[#4a7c59]">
-          {title}
-        </h3>
-        {headerAction}
-      </div>
-      {children}
-    </div>
-  );
+function withCacheBust(url: string) {
+  return `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
 }
 
-function EmptyStateCard({
-  icon: Icon,
-  title,
-  subtitle,
-}: {
-  icon: React.ElementType;
-  title: string;
-  subtitle: string;
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-12 text-center">
-      <div
-        className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
-        style={{ backgroundColor: "#d4e6d0" }}
-      >
-        <Icon
-          className="w-6 h-6"
-          style={{ color: "#4a7c59" }}
-          strokeWidth={1.5}
-        />
-      </div>
-      <p className="text-base font-semibold font-heading text-gray-700 mb-1">
-        {title}
-      </p>
-      <p className="text-sm font-body text-gray-400">{subtitle}</p>
-    </div>
-  );
-}
-
-const TEACHER_CARD_DATA: Record<
-  string,
-  { role: string; image: string; about: string; email: string }
-> = {
-  "Sabrina Obnamia": {
-    role: "Lead Teacher & Director",
-    image: "/assets/team/sabrina.jpg",
-    email: "sabrina@sagefieldschool.com",
-    about:
-      "Ms. Sabrina brings a wealth of experience to Sage Field. She holds a Bachelor's degree in Elementary Education with a concentration in Early Childhood Development from Biola University and a Teaching Credential. Her background includes working with children in a wide range of roles both in the U.S. and internationally—spanning special education, Pre-K, homeschooling, tutoring, coaching, traditional schooling, nature school guide, and more.",
-  },
-  "Paige Wood": {
-    role: "Primary Lead Teacher",
-    image: "/assets/team/Paige.webp",
-    email: "paige@sagefieldschool.com",
-    about:
-      "Ms. Paige is the Lead Primary Teacher at Sage Field Private School. She has a passion for outdoor-based learning and creating environments where young children feel safe, curious, and inspired. With experience in Montessori-style education and outdoor learning, she brings creativity and intentionality to every lesson.",
-  },
-  "Zelinda Melo": {
-    role: "Lower Elementary Teacher",
-    image: "/assets/team/Zelinda2.JPG",
-    email: "zelinda@sagefieldschool.com",
-    about:
-      "Ms. Zelinda has a deep love for children and a heart for nurturing their growth in a safe and encouraging environment. She looks forward to supporting each child's learning journey and being a positive presence in their day.",
-  },
-  "Edith DeLuna": {
-    role: "Primary and Lower Elementary Teacher Aide",
-    image: "/assets/team/Edith.jpg",
-    email: "",
-    about:
-      "Edith has been working with children from a young age and has experience with both nannying and working in schools. She has been especially influenced by the Montessori method, which focuses on independence, curiosity, and hands-on learning. Her goal is to help each child build confidence, discover their strengths, and become more independent in a caring environment. Edith also loves spending time outdoors and enjoys making learning fun, meaningful, and engaging for children.",
-  },
-  "Craig Wilkerson": {
-    role: "Music Teacher",
-    image: "/assets/team/Craig Wilkerson.JPG",
-    email: "",
-    about:
-      "Craig Wilkerson is a singer-songwriter, music educator, husband, and father. He joins Sage Field as our music teacher for students ages 4–11, bringing experience as a pre-K music instructor alongside his work in administrative management and human resources at Opus One Music. His background in teaching and songwriting adds to Sage Field's emphasis on creative expression and hands-on learning.",
-  },
-};
-
-function TeacherCard({
-  name,
-  role,
-  about,
-  imageSrc,
-  email,
-  teacherId,
-  onMessage,
-}: {
-  name: string;
-  role: string;
-  about: string;
-  imageSrc?: string;
-  email: string;
-  teacherId: string;
-  onMessage: () => void;
-}) {
-  return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100">
-      {imageSrc ? (
-        <div className="relative w-full h-90">
-          <NextImage
-            src={imageSrc}
-            alt={name}
-            fill
-            className="object-cover object-top"
-          />
-        </div>
-      ) : (
-        <div
-          className="flex items-center justify-center w-full h-48"
-          style={{ backgroundColor: "#d4e6d0" }}
-        >
-          <span
-            className="text-4xl font-bold font-heading"
-            style={{ color: "#4a7c59" }}
-          >
-            {getInitials(name)}
-          </span>
-        </div>
-      )}
-      <div className="p-5 space-y-2">
-        <p className="text-lg font-semibold font-heading text-gray-800">
-          {name}
-        </p>
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#4a7c59]/10 text-[#4a7c59]">
-          {role}
-        </span>
-        <p className="text-sm font-body text-gray-500 leading-relaxed">
-          {about}
-        </p>
-        <div className="flex gap-2 pt-2">
-          <button
-            onClick={onMessage}
-            className="flex items-center gap-1.5 flex-1 justify-center px-3 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20 transition-colors cursor-pointer"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            Message
-          </button>
-          <a
-            href={`mailto:${email}`}
-            className="flex items-center gap-1.5 flex-1 justify-center px-3 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
-          >
-            <Mail className="w-3.5 h-3.5" />
-            Email
-          </a>
-          <Link
-            href={`/parent/profile/${teacherId}`}
-            className="flex items-center gap-1.5 flex-1 justify-center px-3 py-2 rounded-xl text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-          >
-            <User className="w-3.5 h-3.5" />
-            View Profile
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function formatProgramName(key: string): string {
-  const summerMatch = key.match(/^summer[_-]?(\d{2,4})$/i);
-  if (summerMatch) {
-    const yr = summerMatch[1];
-    const full = yr.length === 2 ? `20${yr}` : yr;
-    return `Summer ${full}`;
-  }
-  const syMatch = key.match(/^school[_-]year[_-](\d{2,4})[_-](\d{2,4})$/i);
-  if (syMatch) {
-    const [, a, b] = syMatch;
-    const fa = a.length === 2 ? `20${a}` : a;
-    const fb = b.length === 2 ? `20${b}` : b;
-    return `School Year ${fa}-${fb}`;
-  }
-  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function TeacherTab({
-  teachers,
-  onMessage,
-}: {
-  teachers: TeacherAssignment[];
-  onMessage: (teacherId: string, teacherName: string) => void;
-}) {
-  const programMap = new Map<string, TeacherAssignment[]>();
-  for (const t of teachers) {
-    const key = t.program ?? "General";
-    if (!programMap.has(key)) programMap.set(key, []);
-    programMap.get(key)!.push(t);
-  }
-  const programs = [...programMap.keys()];
-
-  const [activeProgram, setActiveProgram] = useState<string>(programs[0] ?? "");
-
-  if (teachers.length === 0) {
-    return (
-      <div>
-        <h3 className="text-sm font-semibold font-heading text-[#4a7c59] mb-4">
-          Teacher Info
-        </h3>
-        <div className="flex flex-col items-center justify-center bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <div
-            className="flex items-center justify-center w-14 h-14 rounded-full mb-4"
-            style={{ backgroundColor: "#d4e6d0" }}
-          >
-            <UserX
-              className="w-6 h-6"
-              style={{ color: "#4a7c59" }}
-              strokeWidth={1.5}
-            />
-          </div>
-          <p className="text-base font-semibold font-heading text-gray-700 mb-1">
-            No teacher assigned yet
-          </p>
-          <p className="text-sm font-body text-gray-400">
-            Teacher assignments will appear here once assigned.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const seen = new Set<string>();
-  const uniqueTeachers = (programMap.get(activeProgram) ?? []).filter((t) => {
-    if (seen.has(t.teacher_id)) return false;
-    seen.add(t.teacher_id);
-    return true;
-  });
-
-  return (
-    <div>
-      {programs.length > 1 && (
-        <div className="flex gap-4 border-b border-gray-200 mb-5">
-          {programs.map((p) => (
-            <button
-              key={p}
-              onClick={() => setActiveProgram(p)}
-              className={`pb-2 text-sm font-semibold transition-colors cursor-pointer border-b-2 -mb-px ${
-                activeProgram === p
-                  ? "border-[#4a7c59] text-[#4a7c59]"
-                  : "border-transparent text-gray-400 hover:text-[#4a7c59]"
-              }`}
-            >
-              {formatProgramName(p)}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-        {uniqueTeachers.map((t) => {
-          const card = TEACHER_CARD_DATA[t.teacher_name ?? ""];
-          return (
-            <TeacherCard
-              key={t.id}
-              name={t.teacher_name ?? "Unknown Teacher"}
-              role={card?.role ?? "Teacher"}
-              imageSrc={card?.image}
-              about={card?.about ?? ""}
-              email={card?.email ?? ""}
-              teacherId={t.teacher_id}
-              onMessage={() => onMessage(t.teacher_id, t.teacher_name ?? "")}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function AttendanceTab({
-  records,
-  userMap,
-  loading,
-}: {
-  records: UnifiedAttendanceRecord[];
-  userMap: UserMap;
-  loading: boolean;
-}) {
-  const [filter, setFilter] = useState<AttendanceFilter>("all");
-  const [selectedRecord, setSelectedRecord] =
-    useState<UnifiedAttendanceRecord | null>(null);
-
-  const formatYMD = (ymd: string) =>
-    new Date(ymd + "T00:00:00").toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-
-  const formatPickupTime = (hhmm: string) => {
-    const [h, m] = hhmm.split(":").map(Number);
-    const d = new Date();
-    d.setHours(h, m, 0, 0);
-    return d.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const filteredRecords = filterAttendanceRecords(records, filter);
-
-  return (
-    <>
-      {!loading && records.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3">
-          {ATT_FILTER_TABS.map(({ key, label }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setFilter(key)}
-              className={`px-3 py-1.5 rounded-full text-xs font-body border transition-colors ${
-                filter === key
-                  ? "bg-[#4a7c59] border-[#4a7c59] text-white"
-                  : "bg-white border-gray-200 text-gray-500 hover:bg-gray-50"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        {loading ? (
-          <div className="space-y-0">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between px-4 py-3 border-b border-gray-100"
-              >
-                <div className="h-4 w-28 bg-gray-100 rounded animate-pulse" />
-                <div className="h-4 w-24 bg-gray-100 rounded animate-pulse" />
-                <div className="h-5 w-20 bg-gray-100 rounded-full animate-pulse" />
-              </div>
-            ))}
-          </div>
-        ) : filteredRecords.length === 0 ? (
-          <p className="text-sm text-gray-400 px-4 py-6">
-            No attendance records found.
-          </p>
-        ) : (
-          <div>
-            <div className="grid grid-cols-3 px-4 py-2 border-b border-gray-100 bg-gray-50">
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Date
-              </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                Program
-              </span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-400 text-right">
-                Status
-              </span>
-            </div>
-            {filteredRecords.map((r, i) => {
-              const cfg = PROGRAM_CONFIG[r.program];
-              const status = getAttendanceStatus(r);
-              return (
-                <div
-                  key={`${r.program}-${r.id}`}
-                  onClick={() => setSelectedRecord(r)}
-                  className={`grid grid-cols-3 px-4 py-3 cursor-pointer transition-colors hover:bg-gray-50 ${
-                    i < filteredRecords.length - 1 ? "border-b border-gray-100" : ""
-                  }`}
-                >
-                  <span className="text-sm text-gray-700">
-                    {formatYMD(r.date)}
-                  </span>
-                  <span
-                    className="text-xs font-medium px-2.5 py-0.5 rounded-full self-center w-fit"
-                    style={{ color: cfg.color, backgroundColor: cfg.bg }}
-                  >
-                    {cfg.label}
-                  </span>
-                  <div className="flex justify-end">
-                    {status === "absent" ? (
-                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                        Absent
-                      </span>
-                    ) : status === "picked_up" ? (
-                      <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">
-                        Picked Up
-                      </span>
-                    ) : (
-                      <span
-                        className="text-xs font-medium px-2.5 py-0.5 rounded-full"
-                        style={{ backgroundColor: "#eaf2ec", color: "#4a7c59" }}
-                      >
-                        Attended
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <DetailSidebar
-        isOpen={!!selectedRecord}
-        onClose={() => setSelectedRecord(null)}
-        title="Attendance Record"
-      >
-        {selectedRecord &&
-          (() => {
-            const cfg = PROGRAM_CONFIG[selectedRecord.program];
-            const status = getAttendanceStatus(selectedRecord);
-            const recordedBy =
-              userMap[selectedRecord.recorded_by]?.full_name ?? "Staff";
-            const pickupRecordedBy = selectedRecord.pickup_recorded_by
-              ? (userMap[selectedRecord.pickup_recorded_by]?.full_name ??
-                "Staff")
-              : null;
-            return (
-              <SidebarSection title="Record Details">
-                <SidebarField
-                  label="Date"
-                  value={formatYMD(selectedRecord.date)}
-                />
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-xs text-gray-400">Program</span>
-                  <span
-                    className="text-xs font-medium px-2.5 py-0.5 rounded-full w-fit"
-                    style={{ color: cfg.color, backgroundColor: cfg.bg }}
-                  >
-                    {cfg.label}
-                  </span>
-                </div>
-                {status === "absent" ? (
-                  <SidebarField label="Status" value="Marked absent" />
-                ) : (
-                  <>
-                    <SidebarField label="Recorded By" value={recordedBy} />
-                    {selectedRecord.pickup_time && (
-                      <>
-                        <SidebarField
-                          label="Pickup Time"
-                          value={formatPickupTime(selectedRecord.pickup_time)}
-                        />
-                        {selectedRecord.picked_up_by_name && (
-                          <SidebarField
-                            label="Picked Up By"
-                            value={[
-                              selectedRecord.picked_up_by_name,
-                              selectedRecord.picked_up_by_relationship,
-                            ]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          />
-                        )}
-                        {pickupRecordedBy && (
-                          <SidebarField
-                            label="Pickup Recorded By"
-                            value={pickupRecordedBy}
-                          />
-                        )}
-                      </>
-                    )}
-                  </>
-                )}
-                {selectedRecord.notes && (
-                  <SidebarField label="Notes" value={selectedRecord.notes} />
-                )}
-              </SidebarSection>
-            );
-          })()}
-      </DetailSidebar>
-    </>
-  );
-}
-
-const CATEGORY_META: Record<
-  LearningNoteCategory,
-  { label: string; cls: string }
-> = {
-  academic: { label: "Academic", cls: "bg-blue-50 text-blue-600" },
-  social: { label: "Social", cls: "bg-purple-50 text-purple-600" },
-  behavioral: { label: "Behavioral", cls: "bg-orange-50 text-orange-600" },
-  health: { label: "Health", cls: "bg-red-50 text-red-600" },
-  other: { label: "Other", cls: "bg-gray-100 text-gray-500" },
-};
-
-function LearningTab({
-  studentId,
-  initialNotes,
-  learningStyle,
-  strengthsInterests,
-  currentChallenges,
-  isSharedAccess,
-}: {
-  studentId: string;
-  initialNotes: LearningNote[];
-  learningStyle: string | null;
-  strengthsInterests: string | null;
-  currentChallenges: string | null;
-  isSharedAccess?: boolean;
-}) {
-  const [notes, setNotes] = useState<LearningNote[]>(initialNotes);
-  const [showForm, setShowForm] = useState(false);
-  const [noteText, setNoteText] = useState("");
-  const [category, setCategory] = useState<LearningNoteCategory>("academic");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState("");
-  const [editCategory, setEditCategory] =
-    useState<LearningNoteCategory>("academic");
-  const [editSaving, setEditSaving] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
-
-  async function handleSave() {
-    if (!noteText.trim()) return;
-    setSaving(true);
-    setSaveError(null);
-    const result = await saveParentLearningNote({
-      studentId,
-      category,
-      noteText,
-    });
-    setSaving(false);
-    if (result.error) {
-      setSaveError(result.error);
-      return;
-    }
-    if (result.note) setNotes((prev) => [result.note!, ...prev]);
-    setNoteText("");
-    setCategory("academic");
-    setShowForm(false);
-  }
-
-  async function handleDelete(noteId: string) {
-    setDeletingId(noteId);
-    const result = await deleteParentLearningNote(noteId);
-    setDeletingId(null);
-    if (!result.error) setNotes((prev) => prev.filter((n) => n.id !== noteId));
-  }
-
-  function startEdit(note: LearningNote) {
-    setEditingId(note.id);
-    setEditText(note.note_text);
-    setEditCategory(note.category);
-    setEditError(null);
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setEditText("");
-    setEditError(null);
-  }
-
-  async function handleEditSave(noteId: string) {
-    if (!editText.trim()) return;
-    setEditSaving(true);
-    setEditError(null);
-    const result = await updateParentLearningNote({
-      noteId,
-      category: editCategory,
-      noteText: editText,
-    });
-    setEditSaving(false);
-    if (result.error) {
-      setEditError(result.error);
-      return;
-    }
-    if (result.note) {
-      setNotes((prev) => prev.map((n) => (n.id === noteId ? result.note! : n)));
-    }
-    setEditingId(null);
-    setEditText("");
-  }
-
-  const inputCls =
-    "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
-  const hasProfile = learningStyle || strengthsInterests || currentChallenges;
-
-  return (
-    <div className="space-y-4">
-      {hasProfile && (
-        <SectionCard title="Learning Profile">
-          <Field label="Learning Style" value={learningStyle} />
-          <Field label="Strengths & Interests" value={strengthsInterests} />
-          <Field label="Current Challenges" value={currentChallenges} />
-        </SectionCard>
-      )}
-      <SectionCard title="Special Requests">
-        {notes.length === 0 && !showForm && (
-          <p className="text-sm font-body text-gray-400 italic py-1 mb-3">
-            No special requests yet. Let teachers know if your child needs any
-            extra support.
-          </p>
-        )}
-
-        {notes.length > 0 && (
-          <ul className="divide-y divide-gray-50 mb-4">
-            {notes.map((note) => {
-              const meta = CATEGORY_META[note.category] ?? CATEGORY_META.other;
-              const date = new Date(note.created_at).toLocaleDateString(
-                "en-US",
-                { month: "short", day: "numeric" },
-              );
-              const isEditing = editingId === note.id;
-              return (
-                <li key={note.id} className="py-3">
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <select
-                        className={inputCls}
-                        value={editCategory}
-                        onChange={(e) =>
-                          setEditCategory(
-                            e.target.value as LearningNoteCategory,
-                          )
-                        }
-                      >
-                        {(
-                          Object.keys(CATEGORY_META) as LearningNoteCategory[]
-                        ).map((k) => (
-                          <option key={k} value={k}>
-                            {CATEGORY_META[k].label}
-                          </option>
-                        ))}
-                      </select>
-                      <textarea
-                        className={`${inputCls} resize-none`}
-                        rows={3}
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                      />
-                      {editError && (
-                        <p className="text-xs text-red-500">{editError}</p>
-                      )}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditSave(note.id)}
-                          disabled={editSaving || !editText.trim()}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {editSaving ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <Check className="w-3 h-3" />
-                          )}
-                          Save
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-                        >
-                          <X className="w-3 h-3" />
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-3 items-start">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-xs font-body text-gray-400">
-                            {date}
-                          </span>
-                          <span
-                            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${meta.cls}`}
-                          >
-                            {meta.label}
-                          </span>
-                        </div>
-                        <p className="text-sm font-body text-gray-700 leading-relaxed">
-                          {note.note_text}
-                        </p>
-                      </div>
-                      {!isSharedAccess && (
-                        <div className="flex gap-1.5 flex-shrink-0 mt-0.5">
-                          <button
-                            onClick={() => startEdit(note)}
-                            className="text-gray-300 hover:text-[#4a7c59] transition-colors cursor-pointer"
-                            aria-label="Edit note"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(note.id)}
-                            disabled={deletingId === note.id}
-                            className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer disabled:opacity-50"
-                            aria-label="Delete note"
-                          >
-                            {deletingId === note.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-
-        {showForm ? (
-          <div className="space-y-3 pt-1">
-            <div>
-              <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">
-                Category
-              </label>
-              <select
-                className={inputCls}
-                value={category}
-                onChange={(e) =>
-                  setCategory(e.target.value as LearningNoteCategory)
-                }
-              >
-                {(Object.keys(CATEGORY_META) as LearningNoteCategory[]).map(
-                  (k) => (
-                    <option key={k} value={k}>
-                      {CATEGORY_META[k].label}
-                    </option>
-                  ),
-                )}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-body text-gray-400 uppercase tracking-wide mb-1">
-                Note <span className="text-red-400">*</span>
-              </label>
-              <textarea
-                className={`${inputCls} resize-none`}
-                rows={3}
-                placeholder="e.g. My child is needing extra help with reading comprehension this month."
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-              />
-            </div>
-            {saveError && <p className="text-xs text-red-500">{saveError}</p>}
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                disabled={saving || !noteText.trim()}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Check className="w-3.5 h-3.5" />
-                )}
-                Save
-              </button>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setNoteText("");
-                  setSaveError(null);
-                }}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : !isSharedAccess ? (
-          <button
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#4a7c59]/10 text-[#4a7c59] hover:bg-[#4a7c59]/20 transition-colors cursor-pointer mt-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Note
-          </button>
-        ) : null}
-      </SectionCard>
-    </div>
-  );
-}
-
-function PickupTab({
-  pickup,
-  studentId,
-  isSharedAccess,
-}: {
-  pickup: {
-    plan: AuthorizedPickupPlan | null;
-    persons: AuthorizedPickupPerson[];
-  };
-  studentId: string;
-  isSharedAccess?: boolean;
-}) {
-  const [persons, setPersons] = useState<EditablePickupPerson[]>(() =>
-    pickup.persons.map(pickupPersonRowToEditable),
-  );
-  const [plan, setPlan] = useState(pickup.plan);
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState<EditablePickupPerson | null>(null);
-  const [addingNew, setAddingNew] = useState(false);
-  const [newDraft, setNewDraft] = useState<EditablePickupPerson>(blankPickupPerson);
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  // Dates from the plan (or empty strings if no plan yet)
-  const [dateOfRequest, setDateOfRequest] = useState(
-    plan?.date_of_request ?? "",
-  );
-  const [effectiveUntil, setEffectiveUntil] = useState(
-    plan?.effective_until ?? "",
-  );
-
-  function validatePerson(p: EditablePickupPerson): string | null {
-    return validatePickupPersonEntry(p);
-  }
-
-  async function commitSave(updatedPersons: EditablePickupPerson[]) {
-    setSaving(true);
-    setFormError(null);
-    const result = await saveAuthorizedPickup({
-      studentId,
-      dateOfRequest: dateOfRequest || new Date().toISOString().slice(0, 10),
-      effectiveUntil: effectiveUntil || "",
-      persons: editableToPickupEntries(updatedPersons),
-    });
-    setSaving(false);
-    if (result.error) {
-      setFormError(result.error);
-      return false;
-    }
-    if (result.data) setPlan(result.data);
-    return true;
-  }
-
-  async function handleSaveEdit() {
-    if (!editDraft) return;
-    const err = validatePerson(editDraft);
-    if (err) {
-      setFormError(err);
-      return;
-    }
-    const updated = persons.map((p) =>
-      p._key === editDraft._key ? editDraft : p,
-    );
-    const ok = await commitSave(updated);
-    if (ok) {
-      setPersons(updated);
-      setEditingKey(null);
-      setEditDraft(null);
-    }
-  }
-
-  async function handleSaveNew() {
-    const err = validatePerson(newDraft);
-    if (err) {
-      setFormError(err);
-      return;
-    }
-    const updated = [...persons, newDraft];
-    const ok = await commitSave(updated);
-    if (ok) {
-      setPersons(updated);
-      setAddingNew(false);
-      setNewDraft(blankPickupPerson());
-    }
-  }
-
-  async function handleDelete(key: string) {
-    const updated = persons.filter((p) => p._key !== key);
-    const ok = await commitSave(updated);
-    if (ok) setPersons(updated);
-  }
-
-  function startEdit(person: EditablePickupPerson) {
-    setAddingNew(false);
-    setFormError(null);
-    setEditingKey(person._key);
-    setEditDraft({ ...person });
-  }
-
-  function startAdd() {
-    setEditingKey(null);
-    setEditDraft(null);
-    setFormError(null);
-    setNewDraft(blankPickupPerson());
-    setAddingNew(true);
-  }
-
-  const hasAnyData = plan || persons.length > 0;
-
-  return (
-    <div className="space-y-4">
-      {/* Persons list */}
-      <SectionCard
-        title={`Authorized Persons${persons.length > 0 ? ` (${persons.length})` : ""}`}
-      >
-        {persons.length === 0 && !addingNew && (
-          <p className="text-sm font-body text-gray-400 italic py-1">
-            No authorized pickup persons on file.
-          </p>
-        )}
-
-        {persons.map((person, i) => (
-          <div
-            key={person._key}
-            className={i > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""}
-          >
-            {editingKey === person._key && editDraft ? (
-              <PickupPersonForm
-                person={editDraft}
-                onChange={(field, value) =>
-                  setEditDraft((prev) =>
-                    prev ? { ...prev, [field]: value } : prev,
-                  )
-                }
-                onCancel={() => {
-                  setEditingKey(null);
-                  setEditDraft(null);
-                  setFormError(null);
-                }}
-                onSave={handleSaveEdit}
-                saving={saving}
-                error={formError}
-              />
-            ) : (
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-700 mb-1">
-                    {person.fullName}
-                  </p>
-                  <Field
-                    label="Relationship"
-                    value={person.relationship || null}
-                  />
-                  <Field label="Phone" value={person.phone || null} />
-                  {person.email && <Field label="Email" value={person.email} />}
-                  {person.dlStateIdNumber && (
-                    <Field
-                      label="DL / State ID"
-                      value={person.dlStateIdNumber}
-                    />
-                  )}
-                  {person.vehicleInfo && (
-                    <Field label="Vehicle" value={person.vehicleInfo} />
-                  )}
-                  {person.licensePlateState && (
-                    <Field
-                      label="License Plate State"
-                      value={person.licensePlateState}
-                    />
-                  )}
-                </div>
-                {!isSharedAccess && (
-                  <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
-                    <button
-                      onClick={() => startEdit(person)}
-                      disabled={saving}
-                      className="p-1.5 text-gray-400 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
-                      title="Edit"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(person._key)}
-                      disabled={saving}
-                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-40"
-                      title="Delete"
-                    >
-                      {saving ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
-
-        {addingNew && (
-          <div
-            className={
-              persons.length > 0 ? "pt-3 mt-3 border-t border-gray-100" : ""
-            }
-          >
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-              New Person
-            </p>
-            <PickupPersonForm
-              person={newDraft}
-              onChange={(field, value) =>
-                setNewDraft((prev) => ({ ...prev, [field]: value }))
-              }
-              onCancel={() => {
-                setAddingNew(false);
-                setFormError(null);
-              }}
-              onSave={handleSaveNew}
-              saving={saving}
-              error={formError}
-            />
-          </div>
-        )}
-
-        {!isSharedAccess && !addingNew && editingKey === null && (
-          <button
-            onClick={startAdd}
-            className="mt-3 flex items-center gap-1.5 text-sm text-[#4a7c59] font-semibold hover:underline cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Add person
-          </button>
-        )}
-      </SectionCard>
-
-      {/* Plan dates */}
-      {hasAnyData && plan && (
-        <SectionCard title="Pickup Plan">
-          <Field label="Date of Request" value={plan.date_of_request ?? null} />
-          <Field label="Effective Until" value={plan.effective_until ?? null} />
-        </SectionCard>
-      )}
-    </div>
-  );
-}
-
-type SectionKey = "medical" | "learning" | "regulation" | "support";
-
-const SECTION_FIELDS: Record<SectionKey, string[]> = {
-  medical: [
-    "has_medical_conditions",
-    "medical_conditions_description",
-    "has_allergies",
-    "allergies_description",
-    "has_emergency_medications",
-    "emergency_medications_description",
-  ],
-  learning: ["learning_style", "strengths_interests", "current_challenges"],
-  regulation: [
-    "dysregulation_response",
-    "regulation_strategies",
-    "activities_to_avoid",
-  ],
-  support: [
-    "needs_aide",
-    "needs_aide_description",
-    "history_flags",
-    "history_explanation",
-  ],
-};
-
-function ProfileSectionEditBtn({
-  section,
-  isSharedAccess,
-  editingSection,
-  onEdit,
-}: {
-  section: SectionKey;
-  isSharedAccess?: boolean;
-  editingSection: SectionKey | null;
-  onEdit: (section: SectionKey) => void;
-}) {
-  if (isSharedAccess) return null;
-  return (
-    <button
-      onClick={() => onEdit(section)}
-      disabled={editingSection !== null}
-      className="p-1 text-gray-300 hover:text-[#4a7c59] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-40"
-      aria-label={`Edit ${section}`}
-    >
-      <Pencil className="w-3.5 h-3.5" />
-    </button>
-  );
-}
-
-function ProfileSectionActionRow({
-  section,
-  sectionError,
-  editingSection,
-  saving,
-  onSave,
-  onCancel,
-}: {
-  section: SectionKey;
-  sectionError: string | null;
-  editingSection: SectionKey | null;
-  saving: boolean;
-  onSave: (section: SectionKey) => void;
-  onCancel: () => void;
-}) {
-  return (
-    <>
-      {sectionError && editingSection === section && (
-        <p className="text-xs text-red-500 mt-2">{sectionError}</p>
-      )}
-      <div className="flex gap-2 mt-3">
-        <button
-          onClick={() => onSave(section)}
-          disabled={saving}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#4a7c59] text-white hover:bg-[#3d6b4a] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {saving ? (
-            <Loader2 className="w-3 h-3 animate-spin" />
-          ) : (
-            <Check className="w-3 h-3" />
-          )}
-          Save
-        </button>
-        <button
-          onClick={onCancel}
-          disabled={saving}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer"
-        >
-          <X className="w-3 h-3" />
-          Cancel
-        </button>
-      </div>
-    </>
-  );
-}
-
-function ProfileTab({
-  child,
-  onSave,
-  isSharedAccess,
-}: {
-  child: Student;
-  onSave: (updated: Partial<Student>) => void;
-  isSharedAccess?: boolean;
-}) {
-  const [editingSection, setEditingSection] = useState<SectionKey | null>(null);
-  const [draft, setDraft] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
-  const [sectionError, setSectionError] = useState<string | null>(null);
-
-  const inputCls =
-    "w-full text-sm font-body text-gray-800 border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#4a7c59] focus:ring-1 focus:ring-[#4a7c59]";
-  const labelCls =
-    "block text-xs font-body text-gray-400 uppercase tracking-wide mb-1";
-
-  function enterEdit(section: SectionKey) {
-    const snapshot = Object.fromEntries(
-      SECTION_FIELDS[section].map((f) => [
-        f,
-        (child[f as keyof Student] as string | null) ?? "",
-      ]),
-    );
-    setDraft(snapshot);
-    setSectionError(null);
-    setEditingSection(section);
-  }
-
-  function cancelEdit() {
-    setEditingSection(null);
-    setDraft({});
-    setSectionError(null);
-  }
-
-  async function handleSave(section: SectionKey) {
-    setSaving(true);
-    setSectionError(null);
-    const payload: Partial<Student> = {};
-    for (const key of SECTION_FIELDS[section]) {
-      (payload as Record<string, string | null>)[key] =
-        draft[key]?.trim() || null;
-    }
-    const result = await updateStudentProfile(child.id, payload);
-    setSaving(false);
-    if (result.error) {
-      setSectionError(result.error);
-      return;
-    }
-    onSave(payload);
-    setEditingSection(null);
-    setDraft({});
-  }
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-      {/* Medical Info */}
-      <SectionCard
-        title="Medical Info"
-        headerAction={
-          editingSection !== "medical" ? (
-            <ProfileSectionEditBtn
-              section="medical"
-              isSharedAccess={isSharedAccess}
-              editingSection={editingSection}
-              onEdit={enterEdit}
-            />
-          ) : undefined
-        }
-      >
-        {editingSection === "medical" ? (
-          <>
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Has Medical Conditions</label>
-              <select
-                className={inputCls}
-                value={draft.has_medical_conditions}
-                onChange={(e) =>
-                  setDraft((p) => ({
-                    ...p,
-                    has_medical_conditions: e.target.value,
-                  }))
-                }
-              >
-                <option value="">— Select —</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-            {draft.has_medical_conditions === "yes" && (
-              <div className="py-2.5 border-b border-gray-50">
-                <label className={labelCls}>
-                  Medical Conditions Description
-                </label>
-                <textarea
-                  className={`${inputCls} resize-none`}
-                  rows={3}
-                  value={draft.medical_conditions_description}
-                  onChange={(e) =>
-                    setDraft((p) => ({
-                      ...p,
-                      medical_conditions_description: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            )}
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Has Allergies</label>
-              <select
-                className={inputCls}
-                value={draft.has_allergies}
-                onChange={(e) =>
-                  setDraft((p) => ({ ...p, has_allergies: e.target.value }))
-                }
-              >
-                <option value="">— Select —</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-            {draft.has_allergies === "yes" && (
-              <div className="py-2.5 border-b border-gray-50">
-                <label className={labelCls}>Allergies Description</label>
-                <textarea
-                  className={`${inputCls} resize-none`}
-                  rows={3}
-                  value={draft.allergies_description}
-                  onChange={(e) =>
-                    setDraft((p) => ({
-                      ...p,
-                      allergies_description: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            )}
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Has Emergency Medications</label>
-              <select
-                className={inputCls}
-                value={draft.has_emergency_medications}
-                onChange={(e) =>
-                  setDraft((p) => ({
-                    ...p,
-                    has_emergency_medications: e.target.value,
-                  }))
-                }
-              >
-                <option value="">— Select —</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-            {draft.has_emergency_medications === "yes" && (
-              <div className="py-2.5">
-                <label className={labelCls}>
-                  Emergency Medications Description
-                </label>
-                <textarea
-                  className={`${inputCls} resize-none`}
-                  rows={3}
-                  value={draft.emergency_medications_description}
-                  onChange={(e) =>
-                    setDraft((p) => ({
-                      ...p,
-                      emergency_medications_description: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            )}
-            <ProfileSectionActionRow
-              section="medical"
-              sectionError={sectionError}
-              editingSection={editingSection}
-              saving={saving}
-              onSave={handleSave}
-              onCancel={cancelEdit}
-            />
-          </>
-        ) : (
-          <>
-            <Field
-              label="Has Medical Conditions"
-              value={child.has_medical_conditions}
-            />
-            {child.has_medical_conditions?.toLowerCase() === "yes" && (
-              <Field
-                label="Medical Conditions"
-                value={child.medical_conditions_description}
-              />
-            )}
-            <Field label="Has Allergies" value={child.has_allergies} />
-            {child.has_allergies?.toLowerCase() === "yes" && (
-              <Field label="Allergies" value={child.allergies_description} />
-            )}
-            <Field
-              label="Has Emergency Medications"
-              value={child.has_emergency_medications}
-            />
-            {child.has_emergency_medications?.toLowerCase() === "yes" && (
-              <Field
-                label="Emergency Medications"
-                value={child.emergency_medications_description}
-              />
-            )}
-          </>
-        )}
-      </SectionCard>
-
-      {/* Learning Profile */}
-      <SectionCard
-        title="Learning Profile"
-        headerAction={
-          editingSection !== "learning" ? (
-            <ProfileSectionEditBtn
-              section="learning"
-              isSharedAccess={isSharedAccess}
-              editingSection={editingSection}
-              onEdit={enterEdit}
-            />
-          ) : undefined
-        }
-      >
-        {editingSection === "learning" ? (
-          <>
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Learning Style</label>
-              <textarea
-                className={`${inputCls} resize-none`}
-                rows={3}
-                value={draft.learning_style}
-                onChange={(e) =>
-                  setDraft((p) => ({ ...p, learning_style: e.target.value }))
-                }
-              />
-            </div>
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Strengths & Interests</label>
-              <textarea
-                className={`${inputCls} resize-none`}
-                rows={3}
-                value={draft.strengths_interests}
-                onChange={(e) =>
-                  setDraft((p) => ({
-                    ...p,
-                    strengths_interests: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="py-2.5">
-              <label className={labelCls}>Current Challenges</label>
-              <textarea
-                className={`${inputCls} resize-none`}
-                rows={3}
-                value={draft.current_challenges}
-                onChange={(e) =>
-                  setDraft((p) => ({
-                    ...p,
-                    current_challenges: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <ProfileSectionActionRow
-              section="learning"
-              sectionError={sectionError}
-              editingSection={editingSection}
-              saving={saving}
-              onSave={handleSave}
-              onCancel={cancelEdit}
-            />
-          </>
-        ) : (
-          <>
-            <Field label="Learning Style" value={child.learning_style} />
-            <Field
-              label="Strengths & Interests"
-              value={child.strengths_interests}
-            />
-            <Field
-              label="Current Challenges"
-              value={child.current_challenges}
-            />
-          </>
-        )}
-      </SectionCard>
-
-      {/* Regulation & Support */}
-      <SectionCard
-        title="Regulation & Support"
-        headerAction={
-          editingSection !== "regulation" ? (
-            <ProfileSectionEditBtn
-              section="regulation"
-              isSharedAccess={isSharedAccess}
-              editingSection={editingSection}
-              onEdit={enterEdit}
-            />
-          ) : undefined
-        }
-      >
-        {editingSection === "regulation" ? (
-          <>
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Dysregulation Response</label>
-              <textarea
-                className={`${inputCls} resize-none`}
-                rows={3}
-                value={draft.dysregulation_response}
-                onChange={(e) =>
-                  setDraft((p) => ({
-                    ...p,
-                    dysregulation_response: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Regulation Strategies</label>
-              <textarea
-                className={`${inputCls} resize-none`}
-                rows={3}
-                value={draft.regulation_strategies}
-                onChange={(e) =>
-                  setDraft((p) => ({
-                    ...p,
-                    regulation_strategies: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="py-2.5">
-              <label className={labelCls}>Activities to Avoid</label>
-              <textarea
-                className={`${inputCls} resize-none`}
-                rows={3}
-                value={draft.activities_to_avoid}
-                onChange={(e) =>
-                  setDraft((p) => ({
-                    ...p,
-                    activities_to_avoid: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <ProfileSectionActionRow
-              section="regulation"
-              sectionError={sectionError}
-              editingSection={editingSection}
-              saving={saving}
-              onSave={handleSave}
-              onCancel={cancelEdit}
-            />
-          </>
-        ) : (
-          <>
-            <Field
-              label="Dysregulation Response"
-              value={child.dysregulation_response}
-            />
-            <Field
-              label="Regulation Strategies"
-              value={child.regulation_strategies}
-            />
-            <Field
-              label="Activities to Avoid"
-              value={child.activities_to_avoid}
-            />
-          </>
-        )}
-      </SectionCard>
-
-      {/* Additional Support */}
-      <SectionCard
-        title="Additional Support"
-        headerAction={
-          editingSection !== "support" ? (
-            <ProfileSectionEditBtn
-              section="support"
-              isSharedAccess={isSharedAccess}
-              editingSection={editingSection}
-              onEdit={enterEdit}
-            />
-          ) : undefined
-        }
-      >
-        {editingSection === "support" ? (
-          <>
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>Needs Aide</label>
-              <select
-                className={inputCls}
-                value={draft.needs_aide}
-                onChange={(e) =>
-                  setDraft((p) => ({ ...p, needs_aide: e.target.value }))
-                }
-              >
-                <option value="">— Select —</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-            {draft.needs_aide === "yes" && (
-              <div className="py-2.5 border-b border-gray-50">
-                <label className={labelCls}>Aide Description</label>
-                <textarea
-                  className={`${inputCls} resize-none`}
-                  rows={3}
-                  value={draft.needs_aide_description}
-                  onChange={(e) =>
-                    setDraft((p) => ({
-                      ...p,
-                      needs_aide_description: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            )}
-            <div className="py-2.5 border-b border-gray-50">
-              <label className={labelCls}>History Flags</label>
-              <select
-                className={inputCls}
-                value={draft.history_flags}
-                onChange={(e) =>
-                  setDraft((p) => ({ ...p, history_flags: e.target.value }))
-                }
-              >
-                <option value="">— Select —</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-            {draft.history_flags === "yes" && (
-              <div className="py-2.5">
-                <label className={labelCls}>History Explanation</label>
-                <textarea
-                  className={`${inputCls} resize-none`}
-                  rows={3}
-                  value={draft.history_explanation}
-                  onChange={(e) =>
-                    setDraft((p) => ({
-                      ...p,
-                      history_explanation: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            )}
-            <ProfileSectionActionRow
-              section="support"
-              sectionError={sectionError}
-              editingSection={editingSection}
-              saving={saving}
-              onSave={handleSave}
-              onCancel={cancelEdit}
-            />
-          </>
-        ) : (
-          <>
-            <Field label="Needs Aide" value={child.needs_aide} />
-            {child.needs_aide?.toLowerCase() === "yes" && (
-              <Field
-                label="Aide Description"
-                value={child.needs_aide_description}
-              />
-            )}
-            <Field label="History Flags" value={child.history_flags} />
-            {child.history_flags?.toLowerCase() === "yes" && (
-              <Field
-                label="History Explanation"
-                value={child.history_explanation}
-              />
-            )}
-          </>
-        )}
-      </SectionCard>
-    </div>
-  );
-}
-
-function ChildProfile({
-  child,
-  teachers,
-  enrollmentAppId,
-  initialProfileImageUrl,
-  pickup,
-  initialNotes,
-  isSharedAccess,
-}: {
-  child: Student;
-  teachers: TeacherAssignment[];
-  enrollmentAppId?: string;
-  initialProfileImageUrl: string | null;
-  pickup: {
-    plan: AuthorizedPickupPlan | null;
-    persons: AuthorizedPickupPerson[];
-  };
-  initialNotes: LearningNote[];
-  isSharedAccess?: boolean;
-}) {
-  const searchParams = useSearchParams();
-  const initialTab =
-    (searchParams.get("tab") as ContentTab | null) ?? "teacher";
-  const [activeTab, setActiveTab] = useState<ContentTab>(initialTab);
-  const [childData, setChildData] = useState<Student>(child);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(
-    initialProfileImageUrl,
-  );
-  const [avatarHovered, setAvatarHovered] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [attendanceRecords, setAttendanceRecords] = useState<
-    UnifiedAttendanceRecord[]
-  >([]);
-  const [attendanceUserMap, setAttendanceUserMap] = useState<UserMap>({});
-  const [attendanceLoading, setAttendanceLoading] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
-
-  useEffect(() => {
-    let cancelled = false;
-    getParentStudentAttendance(child.id)
-      .then(({ records, userMap }) => {
-        if (cancelled) return;
-        setAttendanceRecords(records);
-        setAttendanceUserMap(userMap);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setAttendanceRecords([]);
-        setAttendanceUserMap({});
-      })
-      .finally(() => {
-        if (!cancelled) setAttendanceLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [child.id]);
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const raw = e.target.files?.[0];
-    if (!raw) return;
-    setUploading(true);
-    const file = await compressImage(raw, { maxDimension: 400 });
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("studentId", child.id);
-    const result = await uploadStudentProfileImage(formData);
-    setUploading(false);
-    if ("url" in result) setCurrentImageUrl(result.url);
-    e.target.value = "";
-  }
-
-  const age = computeAge(child.dob_month, child.dob_day, child.dob_year);
-  const dob = formatDOB(child.dob_month, child.dob_day, child.dob_year);
-  const initials = getInitials(child.child_legal_name);
-
-  const contentTabs: { id: ContentTab; label: string }[] = [
-    { id: "teacher", label: "Teacher Info" },
-    { id: "attendance", label: "Attendance" },
-    { id: "learning", label: "Learning" },
-    { id: "photos", label: "Photos" },
-    { id: "pickup", label: "Pickup" },
-    { id: "profile", label: "Profile" },
-  ];
-
-  return (
-    <div>
-      {/* Profile Hero */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 flex items-center gap-6">
-        <div
-          className={`relative flex-shrink-0 w-20 h-20 rounded-full overflow-hidden ${isSharedAccess ? "" : "cursor-pointer"}`}
-          onMouseEnter={() => !isSharedAccess && setAvatarHovered(true)}
-          onMouseLeave={() => setAvatarHovered(false)}
-          onClick={() =>
-            !uploading && !isSharedAccess && fileInputRef.current?.click()
-          }
-        >
-          {currentImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={currentImageUrl}
-              alt={child.child_legal_name ?? ""}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div
-              className="w-full h-full flex items-center justify-center text-2xl font-bold font-heading"
-              style={{ backgroundColor: "#d4e6d0", color: "#4a7c59" }}
-            >
-              {initials}
-            </div>
-          )}
-          {!isSharedAccess && (avatarHovered || uploading) && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              {uploading ? (
-                <Loader2 className="w-6 h-6 text-white animate-spin" />
-              ) : (
-                <Camera className="w-6 h-6 text-white" />
-              )}
-            </div>
-          )}
-        </div>
-        {!isSharedAccess && (
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-        )}
-        <div className="min-w-0">
-          <h2 className="text-2xl font-bold font-heading text-gray-800 mb-1">
-            {child.child_legal_name ?? "Unknown"}
-          </h2>
-          <p className="text-sm font-body text-gray-400">
-            {dob !== "—" && (
-              <>
-                Born {dob}
-                {age !== null && (
-                  <span className="ml-2 text-gray-500">
-                    · {age} years old
-                    {child.child_grade ? ` · ${child.child_grade}` : ""}
-                  </span>
-                )}
-              </>
-            )}
-            {dob === "—" && "Date of birth not provided"}
-          </p>
-          {child.special_interests?.trim() && (
-            <p className="text-sm font-body text-gray-500 mt-1.5">
-              <span className="text-gray-400">Interests: </span>
-              {child.special_interests}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {enrollmentAppId ? (
-        <a
-          href={`/parent/dashboard?app=${enrollmentAppId}`}
-          className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-4 hover:bg-amber-100 transition-colors no-underline"
-        >
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-gray-800">
-              Enrollment not complete
-            </div>
-            <div className="text-xs text-amber-600 mt-0.5">
-              Finish setting up this child&apos;s enrollment to access teacher
-              info, attendance, and more.
-            </div>
-          </div>
-          <div className="flex-shrink-0 flex items-center gap-1.5">
-            <span className="text-sm font-semibold text-amber-700">
-              Complete enrollment
-            </span>
-            <ChevronRight className="w-4 h-4 text-amber-700" strokeWidth={2} />
-          </div>
-        </a>
-      ) : (
-        <>
-          {/* Content tabs */}
-          <div className="flex gap-1 mb-6">
-            {contentTabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-1.5 text-sm rounded-full transition-colors cursor-pointer ${
-                  activeTab === tab.id
-                    ? "bg-[#4a7c59] text-white font-semibold"
-                    : "text-gray-500 hover:text-[#4a7c59]"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab content */}
-          {activeTab === "teacher" && (
-            <TeacherTab
-              teachers={teachers}
-              onMessage={(teacherId, teacherName) =>
-                router.push(
-                  `/parent/messages?studentId=${child.id}&recipientId=${teacherId}&recipientName=${encodeURIComponent(teacherName)}`,
-                )
-              }
-            />
-          )}
-          {activeTab === "attendance" && (
-            <AttendanceTab
-              key={child.id}
-              records={attendanceRecords}
-              userMap={attendanceUserMap}
-              loading={attendanceLoading}
-            />
-          )}
-          {activeTab === "learning" && (
-            <LearningTab
-              studentId={child.id}
-              initialNotes={initialNotes}
-              learningStyle={child.learning_style}
-              strengthsInterests={child.strengths_interests}
-              currentChallenges={child.current_challenges}
-              isSharedAccess={isSharedAccess}
-            />
-          )}
-
-          {activeTab === "photos" && (
-            <EmptyStateCard
-              icon={ImageIcon}
-              title="Photos coming soon"
-              subtitle="Photos from school activities and events will appear here."
-            />
-          )}
-
-          {activeTab === "pickup" && (
-            <PickupTab
-              pickup={pickup}
-              studentId={child.id}
-              isSharedAccess={isSharedAccess}
-            />
-          )}
-
-          {activeTab === "profile" && (
-            <ProfileTab
-              child={childData}
-              onSave={(updated) =>
-                setChildData((prev) => ({ ...prev, ...updated }))
-              }
-              isSharedAccess={isSharedAccess}
-            />
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-export default function ChildrenPage({
-  students,
+function ChildrenContent({
+  students: initialStudents,
   teachersByStudent,
   nonEnrolledAppByStudent,
   studentProgramMap,
   pickupByStudent,
   notesByStudent,
   isSharedAccess,
+  readOnlyPreview,
+  photosHref = "/parent/photos",
 }: Props) {
-  // Sort: enrolled children first, non-enrolled last
-  const sortedChildren = [...students].sort((a, b) => {
-    const aEnrolled = !nonEnrolledAppByStudent[a.id];
-    const bEnrolled = !nonEnrolledAppByStudent[b.id];
-    if (aEnrolled === bEnrolled) return 0;
-    return aEnrolled ? -1 : 1;
-  });
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const reduce = useReducedMotion();
+  const { runSave, blockedByPreview } = usePortalFeedback(readOnlyPreview);
+  const canEdit = !isSharedAccess;
+  const browse = readOnlyPreview ? "pointer-events-auto" : "";
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  // ─── Page-level state, keyed by student id ─────────────────────────────────
+  // Lives above the tabs so switching tabs or children never resets it.
+  const [studentsById, setStudentsById] = useState<Record<string, Student>>(() =>
+    Object.fromEntries(initialStudents.map((s) => [s.id, s])),
+  );
+  const [notesById, setNotesById] = useState<Record<string, LearningNote[]>>(() => ({ ...notesByStudent }));
+  const [pickupById, setPickupById] = useState<Record<string, PickupState>>(() =>
+    Object.fromEntries(
+      initialStudents.map((s) => {
+        const p = pickupByStudent[s.id];
+        return [s.id, { plan: p?.plan ?? null, persons: (p?.persons ?? []).map(pickupPersonRowToEditable) }];
+      }),
+    ),
+  );
+  // The request dates sent with every pickup save, from the page-load plan (unchanged behaviour).
+  const [pickupDates] = useState<Record<string, { dateOfRequest: string; effectiveUntil: string }>>(() =>
+    Object.fromEntries(
+      initialStudents.map((s) => {
+        const plan = pickupByStudent[s.id]?.plan;
+        return [s.id, { dateOfRequest: plan?.date_of_request ?? "", effectiveUntil: plan?.effective_until ?? "" }];
+      }),
+    ),
+  );
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [noteBusyId, setNoteBusyId] = useState<string | null>(null);
+  const [pickupBusyKey, setPickupBusyKey] = useState<string | null>(null);
+  const [editingSection, setEditingSection] = useState<SectionKey | null>(null);
 
-  if (students.length === 0) {
+  // Retries from toasts run later; they read the latest pickup list from here.
+  const pickupRef = useRef(pickupById);
+  useEffect(() => {
+    pickupRef.current = pickupById;
+  }, [pickupById]);
+
+  // Enrolled children first, non-enrolled last (as before).
+  const sortedChildren = useMemo(
+    () =>
+      initialStudents
+        .map((s) => studentsById[s.id] ?? s)
+        .sort((a, b) => {
+          const aEnrolled = !nonEnrolledAppByStudent[a.id];
+          const bEnrolled = !nonEnrolledAppByStudent[b.id];
+          if (aEnrolled === bEnrolled) return 0;
+          return aEnrolled ? -1 : 1;
+        }),
+    [initialStudents, studentsById, nonEnrolledAppByStudent],
+  );
+
+  // ─── URL state: ?studentId= & ?tab= (validated) ────────────────────────────
+  const rawTab = searchParams.get("tab");
+  const rawStudent = searchParams.get("studentId");
+  const tab = parseTab(rawTab);
+  const activeId = sortedChildren.find((s) => s.id === rawStudent)?.id ?? sortedChildren[0]?.id ?? null;
+
+  // Shallow URL update: Next.js syncs `history.replaceState` with useSearchParams without
+  // re-running the server page (router.replace would refetch all the page data per click).
+  const writeParams = useCallback((patch: Record<string, string>) => {
+    const sp = new URLSearchParams(window.location.search);
+    for (const [k, v] of Object.entries(patch)) sp.set(k, v);
+    window.history.replaceState(null, "", `${window.location.pathname}?${sp.toString()}`);
+  }, []);
+
+  // Normalise an invalid ?tab= / ?studentId= once (e.g. the retired "photos" tab).
+  useEffect(() => {
+    const patch: Record<string, string> = {};
+    if (rawTab !== null && rawTab !== tab) patch.tab = tab;
+    if (rawStudent !== null && activeId && rawStudent !== activeId) patch.studentId = activeId;
+    if (Object.keys(patch).length) writeParams(patch);
+  }, [rawTab, rawStudent, tab, activeId, writeParams]);
+
+  const selectTab = (t: ChildTab) => writeParams({ tab: t, ...(activeId ? { studentId: activeId } : {}) });
+  const selectChild = (id: string) => writeParams({ studentId: id, tab });
+
+  // On phones the tab rail scrolls sideways: keep the selected tab (and chip) in view without moving the page.
+  const railsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    railsRef.current?.querySelectorAll<HTMLElement>('[role="tablist"]').forEach((list) => {
+      const sel = list.querySelector<HTMLElement>('[aria-selected="true"]');
+      if (!sel || list.scrollWidth <= list.clientWidth) return;
+      const left = sel.offsetLeft - list.offsetLeft;
+      if (left < list.scrollLeft || left + sel.offsetWidth > list.scrollLeft + list.clientWidth) {
+        list.scrollTo({ left: Math.max(0, left - 24), behavior: reduce ? "auto" : "smooth" });
+      }
+    });
+  }, [tab, activeId, reduce]);
+
+  const child = activeId ? studentsById[activeId] : null;
+  const att = useAttendanceHistory(activeId, tab === "attendance" && !!activeId && !nonEnrolledAppByStudent[activeId]);
+
+  // ─── Writes (all through runSave) ──────────────────────────────────────────
+  async function uploadPhoto(studentId: string, file: File) {
+    setUploadingId(studentId);
+    await runSave({
+      loadingTitle: "Uploading photo…",
+      successTitle: "Photo updated",
+      errorTitle: "Photo didn't upload",
+      retry: () => void uploadPhoto(studentId, file),
+      fn: async () => {
+        const compressed = await compressImage(file, { maxDimension: 400 });
+        const formData = new FormData();
+        formData.append("file", compressed);
+        formData.append("studentId", studentId);
+        const result = await uploadStudentProfileImage(formData);
+        if ("error" in result) return { ok: false, error: result.error };
+        // Same storage path every time, so bust the cache or the old photo keeps showing.
+        const url = withCacheBust(result.url);
+        setStudentsById((prev) => ({ ...prev, [studentId]: { ...prev[studentId], profile_image_url: url } }));
+        return { ok: true };
+      },
+    });
+    setUploadingId(null);
+  }
+
+  async function saveNote(studentId: string, d: { noteId: string | null; category: LearningNoteCategory; text: string }): Promise<SaveOutcome> {
+    let error: string | undefined;
+    const ok = await runSave({
+      successTitle: d.noteId ? "Request updated" : "Special request added",
+      successMessage: CATEGORY_META[d.category].label,
+      errorTitle: "Couldn't save your request",
+      fn: async () => {
+        const result = d.noteId
+          ? await updateParentLearningNote({ noteId: d.noteId, category: d.category, noteText: d.text })
+          : await saveParentLearningNote({ studentId, category: d.category, noteText: d.text });
+        if (result.error) {
+          error = result.error;
+          return { ok: false, error: result.error };
+        }
+        const note = result.note;
+        if (note) {
+          setNotesById((prev) => {
+            const list = prev[studentId] ?? [];
+            return { ...prev, [studentId]: d.noteId ? list.map((n) => (n.id === d.noteId ? note : n)) : [note, ...list] };
+          });
+        }
+        return { ok: true };
+      },
+    });
+    return { ok, error };
+  }
+
+  async function deleteNote(studentId: string, note: LearningNote): Promise<boolean> {
+    if (noteBusyId) return false;
+    setNoteBusyId(note.id);
+    const ok = await runSave({
+      successTitle: "Request removed",
+      errorTitle: "Couldn't remove that request",
+      retry: () => void deleteNote(studentId, note),
+      fn: async () => {
+        const result = await deleteParentLearningNote(note.id);
+        if (result.error) return { ok: false, error: result.error };
+        setNotesById((prev) => ({ ...prev, [studentId]: (prev[studentId] ?? []).filter((n) => n.id !== note.id) }));
+        return { ok: true };
+      },
+    });
+    setNoteBusyId(null);
+    return ok;
+  }
+
+  /** Saves the whole list with `saveAuthorizedPickup` (same payload as before) and updates state on success. */
+  async function commitPickup(
+    studentId: string,
+    busyKey: string,
+    build: (persons: EditablePickupPerson[]) => EditablePickupPerson[],
+    copy: { successTitle: string; successMessage?: string; errorTitle: string; retry?: () => void },
+  ): Promise<SaveOutcome> {
+    if (pickupBusyKey) return { ok: false };
+    const current = pickupRef.current[studentId] ?? { plan: null, persons: [] };
+    const updated = build(current.persons);
+    const dates = pickupDates[studentId] ?? { dateOfRequest: "", effectiveUntil: "" };
+    let error: string | undefined;
+    setPickupBusyKey(busyKey);
+    const ok = await runSave({
+      ...copy,
+      fn: async () => {
+        const result = await saveAuthorizedPickup({
+          studentId,
+          dateOfRequest: dates.dateOfRequest || new Date().toISOString().slice(0, 10),
+          effectiveUntil: dates.effectiveUntil || "",
+          persons: editableToPickupEntries(updated),
+        });
+        if (result.error) {
+          error = result.error;
+          return { ok: false, error: result.error };
+        }
+        setPickupById((prev) => ({
+          ...prev,
+          [studentId]: { plan: result.data ?? prev[studentId]?.plan ?? null, persons: updated },
+        }));
+        return { ok: true };
+      },
+    });
+    setPickupBusyKey(null);
+    return { ok, error };
+  }
+
+  function savePerson(studentId: string, p: EditablePickupPerson, mode: "add" | "edit") {
+    const name = p.fullName.trim();
+    return commitPickup(
+      studentId,
+      mode === "add" ? "new" : p._key,
+      (persons) => (mode === "add" ? [...persons, p] : persons.map((x) => (x._key === p._key ? p : x))),
+      mode === "add"
+        ? { successTitle: `${name} added`, successMessage: "Pickup list saved", errorTitle: "Couldn't add that person" }
+        : { successTitle: "Pickup list saved", successMessage: `${name} updated`, errorTitle: "Couldn't save pickup changes" },
+    );
+  }
+
+  async function removePerson(studentId: string, p: EditablePickupPerson): Promise<boolean> {
+    const r = await commitPickup(studentId, p._key, (persons) => persons.filter((x) => x._key !== p._key), {
+      successTitle: "Pickup list saved",
+      successMessage: `${p.fullName} removed`,
+      errorTitle: `Couldn't remove ${p.fullName}`,
+      retry: () => void removePerson(studentId, p),
+    });
+    return r.ok;
+  }
+
+  async function saveSection(studentId: string, section: SectionKey, draft: SectionDraft): Promise<SaveOutcome> {
+    const payload: ProfileFields = {};
+    for (const key of SECTION_FIELDS[section]) payload[key] = draft[key]?.trim() || null;
+    let error: string | undefined;
+    const ok = await runSave({
+      successTitle: PROFILE_SECTIONS[section].successTitle,
+      errorTitle: "Couldn't save changes",
+      fn: async () => {
+        const result = await updateStudentProfile(studentId, payload);
+        if (result.error) {
+          error = result.error;
+          return { ok: false, error: result.error };
+        }
+        setStudentsById((prev) => ({ ...prev, [studentId]: { ...prev[studentId], ...payload } }));
+        return { ok: true };
+      },
+    });
+    return { ok, error };
+  }
+
+  function messageTeacher(t: TeacherAssignment) {
+    if (blockedByPreview() || !activeId) return false;
+    router.push(
+      `/parent/messages?studentId=${activeId}&recipientId=${t.teacher_id}&recipientName=${encodeURIComponent(t.teacher_name ?? "")}`,
+    );
+    return true;
+  }
+
+  // ─── Render ────────────────────────────────────────────────────────────────
+  if (sortedChildren.length === 0 || !child || !activeId) {
     return (
-      <div className="flex-1 flex items-center justify-center text-center py-24">
-        <div>
-          <p className="text-gray-400 font-body text-lg">
-            No enrolled children found.
-          </p>
-          <p className="text-gray-300 font-body text-sm mt-1">
-            If you believe this is an error, please contact us.
-          </p>
-        </div>
+      <div className="mx-auto w-full max-w-6xl px-6 pb-20 pt-8 sm:pt-12">
+        <h1 className="sf-display mb-6 text-[2.6rem] leading-none sm:text-[3.2rem]">My Children</h1>
+        <EmptyState emoji="🌱" title="No enrolled children found." body="If you believe this is an error, please contact us." />
       </div>
     );
   }
 
-  const activeChild = sortedChildren[activeIndex];
+  const switcherItems: SwitcherChild[] = sortedChildren.map((s, i) => ({
+    id: s.id,
+    name: s.child_legal_name ?? `Child ${i + 1}`,
+    imageUrl: s.profile_image_url,
+    sub: formatProgramLabel(studentProgramMap[s.id]) ?? s.child_grade,
+    attention: !!nonEnrolledAppByStudent[s.id],
+    attentionLabel: "Enrollment not complete",
+  }));
+  const multiple = sortedChildren.length > 1;
+  const enrollmentAppId = nonEnrolledAppByStudent[activeId];
+  const first = firstNameOf(child.child_legal_name ?? "");
+  const tabLabel = CHILD_TABS.find((t) => t.value === tab)?.label ?? "";
+  const notes = notesById[activeId] ?? [];
+  const pickup = pickupById[activeId] ?? { plan: null, persons: [] };
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {/* ── Left: Children sidebar ── */}
-      <aside className="hidden md:flex flex-col w-56 flex-shrink-0 overflow-y-auto px-3 pt-8 gap-1 bg-white border-r border-gray-100">
-        <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider px-2 pb-2">
-          Children
+    <div className="mx-auto w-full max-w-6xl px-6 pb-20 pt-8 sm:pt-12">
+      <h1 className="sf-display text-[2.6rem] leading-none sm:text-[3.2rem]">My Children</h1>
+      {multiple ? (
+        <p className="sf-hand mt-1.5 text-lg leading-tight text-[var(--sf-sage-deep)]">
+          {sortedChildren.length} little ones · pick a child to see their day
         </p>
-        {sortedChildren.map((child, i) => {
-          const isActive = i === activeIndex;
-          const profileImageUrl =
-            ((child as Record<string, unknown>).profile_image_url as
-              | string
-              | null) ?? null;
-          const name = child.child_legal_name ?? `Child ${i + 1}`;
-          const programLabel = formatProgramLabel(studentProgramMap[child.id]);
-          return (
-            <button
-              key={child.id}
-              onClick={() => setActiveIndex(i)}
-              className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors cursor-pointer ${
-                isActive
-                  ? "bg-[#4a7c59]/10 text-gray-800"
-                  : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
-              }`}
-            >
-              {profileImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profileImageUrl}
-                  alt={name}
-                  className="w-7 h-7 rounded-full object-cover shrink-0"
-                />
-              ) : (
-                <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 bg-[#4a7c59]">
-                  {getInitials(name)}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-body font-medium truncate leading-tight">
-                  {name}
-                </p>
-                {programLabel && (
-                  <p className="text-xs font-body text-gray-400 truncate leading-tight">
-                    {programLabel}
-                  </p>
-                )}
-              </div>
-              {nonEnrolledAppByStudent[child.id] && (
-                <span className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
-              )}
-            </button>
-          );
-        })}
-      </aside>
+      ) : null}
 
-      {/* ── Right: Main content ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile: horizontal child tab bar */}
-        <div className="md:hidden flex gap-2 overflow-x-auto px-4 py-2 border-b border-gray-100 bg-white shrink-0">
-          {sortedChildren.map((child, i) => {
-            const isActive = i === activeIndex;
-            const profileImageUrl =
-              ((child as Record<string, unknown>).profile_image_url as
-                | string
-                | null) ?? null;
-            const name = child.child_legal_name ?? `Child ${i + 1}`;
-            return (
-              <button
-                key={child.id}
-                onClick={() => setActiveIndex(i)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-body font-medium whitespace-nowrap transition-colors shrink-0 ${
-                  isActive
-                    ? "bg-[#4a7c59]/10 text-gray-800"
-                    : "text-gray-400 hover:text-gray-600 hover:bg-black/5"
-                }`}
-              >
-                {profileImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={profileImageUrl}
-                    alt={name}
-                    className="w-6 h-6 rounded-full object-cover shrink-0"
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0 bg-[#4a7c59]">
-                    {getInitials(name)}
-                  </div>
-                )}
-                <span className="max-w-[10ch] truncate">{name}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto px-6 py-12">
-            <div className="mb-10">
-              <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-                My Children
-              </h1>
+      <div className={`mt-8 ${multiple ? "lg:grid lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-10" : ""}`}>
+        {multiple ? (
+          <aside className={`hidden lg:block ${browse}`} aria-label="Your children">
+            <ChildSwitcher items={switcherItems} activeId={activeId} onChange={selectChild} variant="cards" label="Choose a child" controls={PANEL_ID} />
+          </aside>
+        ) : null}
+
+        <div ref={railsRef} className="flex min-w-0 flex-col gap-7">
+          {multiple ? (
+            <div className={`lg:hidden ${browse}`}>
+              <ChildSwitcher items={switcherItems} activeId={activeId} onChange={selectChild} variant="chips" label="Choose a child" controls={PANEL_ID} className="no-scrollbar" />
             </div>
-            <ChildProfile
-              key={activeChild.id}
-              child={activeChild}
-              teachers={teachersByStudent[activeChild.id] ?? []}
-              enrollmentAppId={nonEnrolledAppByStudent[activeChild.id]}
-              initialProfileImageUrl={
-                ((activeChild as Record<string, unknown>).profile_image_url as
-                  | string
-                  | null) ?? null
-              }
-              pickup={
-                pickupByStudent[activeChild.id] ?? { plan: null, persons: [] }
-              }
-              initialNotes={notesByStudent[activeChild.id] ?? []}
-              isSharedAccess={isSharedAccess}
-            />
-          </div>
+          ) : null}
+
+          <ChildBanner
+            key={activeId}
+            student={child}
+            imageUrl={child.profile_image_url}
+            program={studentProgramMap[activeId]}
+            canChangePhoto={canEdit}
+            uploading={uploadingId === activeId}
+            onBeforePick={() => !blockedByPreview()}
+            onPickPhoto={(file) => void uploadPhoto(activeId, file)}
+          />
+
+          {enrollmentAppId ? (
+            <a
+              href={`/parent/dashboard?app=${enrollmentAppId}`}
+              className="group flex flex-col gap-3 rounded-[28px] bg-[var(--sf-butter)]/70 px-6 py-5 no-underline transition hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] sm:flex-row sm:items-center"
+            >
+              <span className="text-3xl" aria-hidden="true">
+                📝
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="sf-display block text-2xl leading-tight text-[var(--sf-ink)]">Enrollment not complete</span>
+                <span className="mt-1 block text-sm font-semibold text-[#7a5b00]">
+                  Finish setting up this child&apos;s enrollment to access teacher info, attendance, and more.
+                </span>
+              </span>
+              <span className="inline-flex min-h-11 items-center gap-1.5 self-start rounded-full bg-[var(--sf-ink)] px-5 text-sm font-extrabold text-white shadow-[0_4px_0_0_#000] sm:self-auto">
+                Complete enrollment <Arrow />
+              </span>
+            </a>
+          ) : (
+            <>
+              <div className={browse}>
+                <PillTabs
+                  className="no-scrollbar"
+                  label={`${first}'s details`}
+                  value={tab}
+                  onChange={selectTab}
+                  options={CHILD_TABS.map((t) => ({ value: t.value, label: t.label, icon: t.icon, controls: PANEL_ID }))}
+                />
+              </div>
+
+              <motion.div
+                key={`${activeId}-${tab}`}
+                id={PANEL_ID}
+                role="tabpanel"
+                aria-label={`${first} · ${tabLabel}`}
+                initial={reduce ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                className="min-w-0"
+              >
+                {tab === "teacher" ? <TeacherTab teachers={teachersByStudent[activeId] ?? []} onMessage={messageTeacher} /> : null}
+
+                {tab === "attendance" ? (
+                  <div className={browse}>
+                    <AttendanceHistory
+                      att={att}
+                      heading={
+                        <div>
+                          <h3 className="sf-display text-2xl leading-tight">{first}&apos;s Attendance</h3>
+                          {attendanceNote(att) ? (
+                            <p className="sf-hand mt-0.5 text-lg leading-tight text-[var(--sf-sage-deep)]">{attendanceNote(att)}</p>
+                          ) : null}
+                        </div>
+                      }
+                    />
+                  </div>
+                ) : null}
+
+                {tab === "learning" ? (
+                  <LearningTab
+                    student={child}
+                    notes={notes}
+                    canEdit={canEdit}
+                    busyNoteId={noteBusyId}
+                    blockedByPreview={blockedByPreview}
+                    onSaveNote={(d) => saveNote(activeId, d)}
+                    onDeleteNote={(n) => deleteNote(activeId, n)}
+                    onEditProfile={() => {
+                      if (!blockedByPreview()) setEditingSection("learning");
+                    }}
+                  />
+                ) : null}
+
+                {tab === "pickup" ? (
+                  <PickupTab
+                    pickup={pickup}
+                    canEdit={canEdit}
+                    busyKey={pickupBusyKey}
+                    blockedByPreview={blockedByPreview}
+                    onSavePerson={(p, mode) => savePerson(activeId, p, mode)}
+                    onRemovePerson={(p) => removePerson(activeId, p)}
+                  />
+                ) : null}
+
+                {tab === "profile" ? (
+                  <ProfileTab
+                    student={child}
+                    canEdit={canEdit}
+                    onEdit={(k) => {
+                      if (!blockedByPreview()) setEditingSection(k);
+                    }}
+                  />
+                ) : null}
+              </motion.div>
+            </>
+          )}
+
+          <Link
+            href={photosHref}
+            className={`group flex items-center gap-4 rounded-[28px] bg-[var(--sf-sky)]/70 px-5 py-4 no-underline transition hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sage)] ${browse}`}
+          >
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl" aria-hidden="true">
+              📸
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="sf-display block text-xl leading-tight text-[var(--sf-ink)]">Photos</span>
+              <span className="block text-sm font-semibold text-[#2d5d86]">Photos from school activities and events</span>
+            </span>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[var(--sf-ink)] transition group-hover:translate-x-0.5" aria-hidden="true">
+              <Arrow className="h-4 w-4" />
+            </span>
+          </Link>
         </div>
       </div>
+
+      <ProfileSectionSheet
+        key={activeId}
+        student={child}
+        section={editingSection}
+        onClose={() => setEditingSection(null)}
+        onSave={(section, draft) => saveSection(activeId, section, draft)}
+      />
     </div>
   );
 }

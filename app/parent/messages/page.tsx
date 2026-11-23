@@ -74,7 +74,7 @@ export default async function MessagesRoute({
   const initialTab = params.tab === "community" ? "community" : "direct";
 
   return (
-    <div className="bg-welcome-bg h-screen overflow-hidden">
+    <div className="bg-welcome-bg h-screen supports-[height:100dvh]:h-dvh overflow-hidden">
       <div className="h-full flex flex-col">
         <DashboardHeader>
           <div className="flex items-center">

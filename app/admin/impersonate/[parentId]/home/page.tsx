@@ -9,6 +9,8 @@ import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../../ImpersonateNotificationBell";
 import { getConferenceTeacherAssignments } from "@/app/lib/get-conference-teacher-assignments";
 import { getConferenceBookings } from "@/app/lib/get-conference-bookings";
+import { getTeacherFavoritePhotos } from "@/app/lib/get-teacher-favorite-photos";
+import { getPublishedNewslettersList } from "@/app/actions/newsletter";
 import HomePageClient from "@/app/parent/home/HomePageClient";
 import { getOnboardingProgressForParent } from "@/app/actions/getOnboardingProgress";
 import type {
@@ -74,6 +76,8 @@ export default async function ImpersonateHomePage({
     { data: defaultPrefsData },
     publishedActivities,
     { data: testimonialData },
+    teacherPhotos,
+    homeNewsletters,
   ] = await Promise.all([
     studentIds.length > 0
       ? adminClient
@@ -147,6 +151,8 @@ export default async function ImpersonateHomePage({
       .eq("is_deleted", false)
       .limit(1)
       .maybeSingle(),
+    getTeacherFavoritePhotos(),
+    getPublishedNewslettersList(5),
   ]);
 
   const studentMap: StudentMap = {};
@@ -359,6 +365,8 @@ export default async function ImpersonateHomePage({
           conferenceStudents={conferenceStudents}
           conferenceBookingsByStudent={bookingsByStudentId}
           conferenceTakenSlotKeys={takenSlotKeys}
+          teacherPhotos={teacherPhotos}
+          newsletters={homeNewsletters}
         />
       </main>
     </div>

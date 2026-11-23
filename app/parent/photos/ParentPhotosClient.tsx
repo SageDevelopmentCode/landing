@@ -1,440 +1,417 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Camera, X, ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  getPhotoSignedUrlsBatch,
-  getFullResSignedUrl,
-} from "@/app/actions/photos";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { getPhotoSignedUrlsBatch } from "@/app/actions/photos";
 import type { TeacherPhoto } from "@/app/actions/photos";
-
-// ─── Date Grouping ────────────────────────────────────────────────────────────
-
-type DateGroup = {
-  date: string;
-  label: string;
-  shortLabel: string;
-  photos: TeacherPhoto[];
-};
-
-function groupPhotosByDate(photos: TeacherPhoto[]): DateGroup[] {
-  const map = new Map<string, TeacherPhoto[]>();
-  for (const p of photos) {
-    const key = p.taken_on ?? "no-date";
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(p);
-  }
-  return Array.from(map.entries())
-    .sort(([a], [b]) => {
-      if (a === "no-date") return 1;
-      if (b === "no-date") return -1;
-      return b.localeCompare(a);
-    })
-    .map(([date, photos]) => ({
-      date,
-      label:
-        date === "no-date"
-          ? "No date"
-          : new Date(date + "T00:00:00").toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            }),
-      shortLabel:
-        date === "no-date"
-          ? "No date"
-          : new Date(date + "T00:00:00").toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            }),
-      photos,
-    }));
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string | null): string | null {
-  if (!iso) return null;
-  const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-// ─── Photo Lightbox ───────────────────────────────────────────────────────────
-
-function PhotoLightboxSlide({
-  photo,
-  cachedUrl,
-  onCached,
-}: {
-  photo: TeacherPhoto;
-  cachedUrl?: string;
-  onCached: (path: string, url: string) => void;
-}) {
-  const [fetchedUrl, setFetchedUrl] = useState<string | null>(null);
-  const displayUrl = cachedUrl ?? fetchedUrl ?? photo.signed_url ?? null;
-
-  useEffect(() => {
-    if (cachedUrl) return;
-
-    let cancelled = false;
-    getFullResSignedUrl(photo.storage_path).then((url) => {
-      if (cancelled || !url) return;
-      onCached(photo.storage_path, url);
-      setFetchedUrl(url);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [photo.storage_path, cachedUrl, onCached]);
-
-  if (!displayUrl) {
-    return (
-      <div
-        className="w-[72vw] max-w-[80vw] h-[55vh] rounded-xl bg-gray-700 animate-pulse"
-        aria-hidden
-      />
-    );
-  }
-
-  return (
-    <motion.img
-      key={photo.id}
-      initial={{ opacity: 0.6 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.15 }}
-      src={displayUrl}
-      alt={photo.caption ?? ""}
-      className="max-h-[90vh] max-w-[80vw] object-contain rounded-xl"
-    />
-  );
-}
-
-function PhotoLightbox({
-  photos,
-  initialIndex,
-  onClose,
-}: {
-  photos: TeacherPhoto[];
-  initialIndex: number;
-  onClose: () => void;
-}) {
-  const [idx, setIdx] = useState(initialIndex);
-  const photo = photos[idx];
-  const [fullResCache, setFullResCache] = useState<Record<string, string>>({});
-  const prefetchRequestedRef = useRef<Set<string>>(new Set());
-
-  const cacheUrl = useCallback((path: string, url: string) => {
-    setFullResCache((prev) => (prev[path] ? prev : { ...prev, [path]: url }));
-  }, []);
-
-  useEffect(() => {
-    [-1, 1].forEach((d) => {
-      const adj = photos[idx + d];
-      if (!adj) return;
-      const path = adj.storage_path;
-      if (prefetchRequestedRef.current.has(path)) return;
-      prefetchRequestedRef.current.add(path);
-      getFullResSignedUrl(path).then((url) => {
-        if (url) cacheUrl(path, url);
-      });
-    });
-  }, [idx, photos, cacheUrl]);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") setIdx((i) => Math.max(0, i - 1));
-      if (e.key === "ArrowRight")
-        setIdx((i) => Math.min(photos.length - 1, i + 1));
-    }
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose, photos.length]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] bg-black/90 flex items-center justify-center p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 p-2 text-white/70 hover:text-white cursor-pointer transition-colors"
-      >
-        <X className="w-5 h-5" />
-      </button>
-
-      <button
-        onClick={() => setIdx((i) => Math.max(0, i - 1))}
-        disabled={idx === 0}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-default cursor-pointer transition-colors"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-
-      <button
-        onClick={() => setIdx((i) => Math.min(photos.length - 1, i + 1))}
-        disabled={idx === photos.length - 1}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white disabled:opacity-20 disabled:cursor-default cursor-pointer transition-colors"
-      >
-        <ChevronRight className="w-6 h-6" />
-      </button>
-
-      {photo && (
-        <PhotoLightboxSlide
-          key={photo.storage_path}
-          photo={photo}
-          cachedUrl={fullResCache[photo.storage_path]}
-          onCached={cacheUrl}
-        />
-      )}
-
-      {(photo.caption || photo.taken_on) && (
-        <div className="absolute bottom-6 left-0 right-0 text-center px-4 space-y-0.5 pointer-events-none">
-          {photo.caption && (
-            <p className="text-sm text-white/80 font-body">{photo.caption}</p>
-          )}
-          {photo.taken_on && (
-            <p className="text-xs text-white/50 font-body">
-              {formatDate(photo.taken_on)}
-            </p>
-          )}
-        </div>
-      )}
-    </motion.div>
-  );
-}
-
-// ─── Photo Card ───────────────────────────────────────────────────────────────
-
-function ParentPhotoCard({
-  photo,
-  onOpen,
-}: {
-  photo: TeacherPhoto;
-  onOpen: (p: TeacherPhoto) => void;
-}) {
-  const [loaded, setLoaded] = useState(false);
-
-  return (
-    <motion.div
-      data-storage-path={photo.storage_path}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="relative aspect-square overflow-hidden cursor-pointer bg-gray-100"
-      onClick={() => onOpen(photo)}
-    >
-      {(!photo.signed_url || !loaded) && (
-        <div className="absolute inset-0 bg-[#e8ede9] animate-pulse" />
-      )}
-      {photo.signed_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={photo.signed_url}
-          alt={photo.caption ?? ""}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-            loaded ? "opacity-100" : "opacity-0"
-          }`}
-          onLoad={() => setLoaded(true)}
-        />
-      )}
-    </motion.div>
-  );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
+import PortalShell from "@/app/parent/_garden/PortalShell";
+import { SectionHeader } from "@/app/parent/_garden/ui";
+import { EmptyState, ErrorCard } from "@/app/parent/_garden/states";
+import { groupPhotosByDate, photoAlt, photoCountLabel, type DateGroup } from "./garden/photos";
+import PhotoLightbox from "./garden/PhotoLightbox";
 
 interface Props {
   initialPhotos: TeacherPhoto[];
 }
 
-export default function ParentPhotosClient({ initialPhotos }: Props) {
-  const [photos, setPhotos] = useState<TeacherPhoto[]>(initialPhotos);
-  const [lightboxPhoto, setLightboxPhoto] = useState<TeacherPhoto | null>(null);
-
-  const dateGroups = useMemo(() => groupPhotosByDate(photos), [photos]);
-
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
-  const [activeDate, setActiveDate] = useState<string | null>(() =>
-    initialPhotos.length > 0 ? (initialPhotos[0].taken_on ?? "no-date") : null,
+export default function ParentPhotosClient(props: Props) {
+  return (
+    <PortalShell className="w-full">
+      <PhotosContent {...props} />
+    </PortalShell>
   );
+}
 
-  // ─── Signed-URL loading ───────────────────────────────────────────────────
-  const CHUNK_SIZE = 30;
+const CHUNK_SIZE = 30;
+/** Roughly how many photos to add each time the parent nears the bottom. */
+const BATCH_PHOTOS = 180;
 
-  // Fetch all signed URLs in parallel chunks on mount.
-  // Earlier chunks resolve first, so photos near the top appear quickly.
-  // Fetch all signed URLs in parallel chunks on mount.
-  // Earlier chunks resolve first, so photos near the top appear quickly.
+/** How many date groups to render to cover at least `photos` more photos after `from`. */
+function groupsToCover(groups: DateGroup[], from: number, photos: number): number {
+  let n = from;
+  let count = 0;
+  while (n < groups.length && (count < photos || n === from)) {
+    count += groups[n].photos.length;
+    n++;
+  }
+  return n;
+}
+
+function PhotosContent({ initialPhotos }: Props) {
+  // Grouping and order are fixed for the page; signed URLs live in their own map so a batch of
+  // URLs re-renders only the tiles, not a regrouping of every photo.
+  const dateGroups = useMemo(() => groupPhotosByDate(initialPhotos), [initialPhotos]);
+  // Grid order, so the lightbox arrows follow what the parent sees (not upload order).
+  const ordered = useMemo(() => dateGroups.flatMap((g) => g.photos), [dateGroups]);
+  const indexById = useMemo(() => new Map(ordered.map((p, i) => [p.id, i])), [ordered]);
+
+  const [urls, setUrls] = useState<Record<string, string>>(() => {
+    const seed: Record<string, string> = {};
+    for (const p of initialPhotos) if (p.signed_url) seed[p.storage_path] = p.signed_url;
+    return seed;
+  });
+  const [failedPaths, setFailedPaths] = useState<Set<string>>(new Set());
+  const [signAttempt, setSignAttempt] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [activeDate, setActiveDate] = useState<string | null>(dateGroups[0]?.date ?? null);
+
+  /* ─── Progressive rendering: dates render in batches as the parent scrolls ─── */
+
+  const [renderCount, setRenderCount] = useState(() => groupsToCover(dateGroups, 0, BATCH_PHOTOS));
+  const renderedGroups = useMemo(() => dateGroups.slice(0, renderCount), [dateGroups, renderCount]);
+  const hasMore = renderCount < dateGroups.length;
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (initialPhotos.length === 0) return;
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) setRenderCount((n) => groupsToCover(dateGroups, n, BATCH_PHOTOS));
+      },
+      { rootMargin: "1200px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [dateGroups, hasMore, renderCount]);
 
-    const chunks: string[][] = [];
-    for (let i = 0; i < initialPhotos.length; i += CHUNK_SIZE) {
-      chunks.push(
-        initialPhotos.slice(i, i + CHUNK_SIZE).map((p) => p.storage_path),
-      );
-    }
+  /* ─── Signed URLs: only for rendered dates, in grid order, 30 at a time ─── */
 
-    let cancelled = false;
-    chunks.forEach((chunkPaths) => {
-      getPhotoSignedUrlsBatch(chunkPaths).then((urlMap) => {
-        if (cancelled) return;
-        setPhotos((prev) =>
-          prev.map((p) =>
-            urlMap[p.storage_path]
-              ? { ...p, signed_url: urlMap[p.storage_path] }
-              : p,
-          ),
-        );
-      });
-    });
+  const requested = useRef<Set<string>>(new Set());
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
     return () => {
-      cancelled = true;
+      mounted.current = false;
     };
-  }, [initialPhotos]);
+  }, []);
 
-  // ─── TOC scroll tracking ──────────────────────────────────────────────────
-  function scrollToSection(date: string) {
+  // Requests are never cancelled when more dates render (results are idempotent); they are only
+  // dropped after unmount. Each path is requested once unless it failed.
+  useEffect(() => {
+    const todo = renderedGroups
+      .flatMap((g) => g.photos.map((p) => p.storage_path))
+      .filter((path) => !requested.current.has(path));
+    if (todo.length === 0) return;
+    todo.forEach((path) => requested.current.add(path));
+    void (async () => {
+      for (let i = 0; i < todo.length; i += CHUNK_SIZE) {
+        if (!mounted.current) return;
+        const chunk = todo.slice(i, i + CHUNK_SIZE);
+        let urlMap: Record<string, string> = {};
+        try {
+          urlMap = await getPhotoSignedUrlsBatch(chunk);
+        } catch {
+          urlMap = {};
+        }
+        if (!mounted.current) return;
+        const missing = chunk.filter((p) => !urlMap[p]);
+        if (Object.keys(urlMap).length > 0) setUrls((prev) => ({ ...prev, ...urlMap }));
+        if (missing.length > 0) {
+          missing.forEach((p) => requested.current.delete(p));
+          setFailedPaths((prev) => new Set([...prev, ...missing]));
+        }
+      }
+    })();
+  }, [renderedGroups, signAttempt]);
+
+  /** Re-sign a single tile whose URL expired or failed. */
+  const resignOne = useCallback(async (path: string) => {
+    try {
+      const urlMap = await getPhotoSignedUrlsBatch([path]);
+      if (urlMap[path]) {
+        setUrls((prev) => ({ ...prev, [path]: urlMap[path] }));
+        setFailedPaths((prev) => {
+          if (!prev.has(path)) return prev;
+          const next = new Set(prev);
+          next.delete(path);
+          return next;
+        });
+      }
+      return !!urlMap[path];
+    } catch {
+      return false;
+    }
+  }, []);
+
+  /* ─── Date rail ─── */
+
+  const sectionRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const railRef = useRef<HTMLDivElement>(null);
+  const chipRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+  const pendingScroll = useRef<string | null>(null);
+
+  /** Scrolls the page so a date section sits just under the sticky rail. DOM only, no state. */
+  const scrollToSection = useCallback((date: string) => {
     const el = sectionRefs.current.get(date);
-    const container = scrollContainerRef.current;
-    if (!el || !container) return;
-    container.scrollTo({ top: el.offsetTop - 72, behavior: "smooth" });
+    if (!el) return false;
+    const railH = railRef.current?.getBoundingClientRect().height ?? 0;
+    const top = el.getBoundingClientRect().top + window.scrollY - railH - 12;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+    return true;
+  }, []);
+
+  function jumpTo(date: string) {
     setActiveDate(date);
+    const idx = dateGroups.findIndex((g) => g.date === date);
+    if (idx >= renderCount) {
+      // Render up to (and a little past) that date first, then scroll once it's in the DOM.
+      pendingScroll.current = date;
+      setRenderCount(groupsToCover(dateGroups, idx, 60));
+      return;
+    }
+    scrollToSection(date);
   }
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container || dateGroups.length === 0) return;
+    const date = pendingScroll.current;
+    if (date && scrollToSection(date)) pendingScroll.current = null;
+  }, [renderCount, scrollToSection]);
+
+  useEffect(() => {
+    if (renderedGroups.length === 0) return;
     const observer = new IntersectionObserver(
       (entries) => {
         const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length > 0) {
-          const topmost = visible.reduce((a, b) =>
-            a.boundingClientRect.top <= b.boundingClientRect.top ? a : b,
-          );
-          setActiveDate((topmost.target as HTMLElement).dataset.date ?? null);
-        }
+        if (visible.length === 0) return;
+        const topmost = visible.reduce((a, b) => (a.boundingClientRect.top <= b.boundingClientRect.top ? a : b));
+        setActiveDate((topmost.target as HTMLElement).dataset.date ?? null);
       },
-      { root: container, threshold: 0, rootMargin: "-60px 0px -60% 0px" },
+      { threshold: 0, rootMargin: "-90px 0px -60% 0px" },
     );
     sectionRefs.current.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [dateGroups]);
+  }, [renderedGroups]);
+
+  // Keep the active chip visible inside the rail (horizontal scroll only, never the page).
+  useEffect(() => {
+    const rail = railRef.current?.querySelector<HTMLElement>("[data-rail-scroll]");
+    const chip = activeDate ? chipRefs.current.get(activeDate) : null;
+    if (!rail || !chip) return;
+    const left = chip.offsetLeft - rail.clientWidth / 2 + chip.clientWidth / 2;
+    rail.scrollTo({ left, behavior: "smooth" });
+  }, [activeDate]);
+
+  const failedCount = failedPaths.size;
 
   return (
-    <div className="flex-1 flex overflow-hidden">
-      {/* TOC sidebar */}
-      {photos.length > 0 && (
-        <aside className="w-44 flex-shrink-0 border-r border-gray-100 overflow-y-auto py-4 hidden md:flex flex-col">
-          <p className="px-4 mb-2 text-xs font-medium text-gray-400 font-body uppercase tracking-wide">
-            Dates
-          </p>
-          {dateGroups.map(({ date, shortLabel, photos: groupPhotos }) => (
-            <button
-              key={date}
-              onClick={() => scrollToSection(date)}
-              className={`w-full text-left px-4 py-2 transition-colors cursor-pointer ${
-                activeDate === date
-                  ? "text-[#4a7c59] font-semibold bg-[#4a7c59]/5"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              }`}
-            >
-              <span className="text-xs font-body block leading-tight">
-                {shortLabel}
-              </span>
-              <span className="text-xs text-gray-400 font-body">
-                {groupPhotos.length} photo{groupPhotos.length !== 1 ? "s" : ""}
-              </span>
-            </button>
-          ))}
-        </aside>
-      )}
+    <div className="relative">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(55%_60%_at_12%_8%,rgba(232,216,241,0.6),transparent_70%),radial-gradient(50%_55%_at_92%_4%,rgba(207,230,251,0.6),transparent_70%)]"
+        aria-hidden="true"
+      />
 
-      {/* Main content */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-        <div className="px-6 pt-6 pb-4">
-          <h1 className="text-xl font-semibold font-body text-gray-900">
-            Photos
-          </h1>
-          <p className="text-sm text-gray-400 font-body mt-0.5">
-            {photos.length > 0
-              ? `${photos.length} photo${photos.length !== 1 ? "s" : ""}`
-              : "No photos have been shared yet"}
+      <div className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-8 sm:pt-12">
+        {/* Hero */}
+        <header className="mb-6">
+          <h1 className="sf-display text-[2.6rem] leading-none sm:text-[3.4rem]">Photos</h1>
+          <p className="sf-hand mt-2 text-xl leading-tight text-[var(--sf-sage-deep)]">
+            {initialPhotos.length > 0 ? photoCountLabel(initialPhotos.length) : "No photos have been shared yet"}
           </p>
-        </div>
+        </header>
 
-        {photos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[#4a7c59]/10 flex items-center justify-center mb-4">
-              <Camera className="w-8 h-8 text-[#4a7c59]" />
-            </div>
-            <h2 className="text-base font-semibold font-body text-gray-800 mb-1">
-              No photos yet
-            </h2>
-            <p className="text-sm text-gray-400 font-body">
-              Photos shared by the school will appear here.
-            </p>
-          </div>
+        {initialPhotos.length === 0 ? (
+          <EmptyState emoji="📷" title="No photos yet" body="Photos shared by the school will appear here." tint="lav" />
         ) : (
-          <div className="pb-8">
-            {dateGroups.map((group) => (
-              <section
-                key={group.date}
-                data-date={group.date}
-                ref={(el) => {
-                  if (el) sectionRefs.current.set(group.date, el);
-                  else sectionRefs.current.delete(group.date);
+          <>
+            {/* Sticky date rail */}
+            <div ref={railRef} className="sticky top-0 z-20 -mx-6 mb-2 bg-[var(--sf-cream)]/85 px-6 py-3 backdrop-blur-md">
+              <nav aria-label="Jump to a date">
+                <div data-rail-scroll className="-mx-6 flex snap-x gap-2 overflow-x-auto px-6 scrollbar-hide [scroll-padding-inline:1.5rem]">
+                  {dateGroups.map((g) => {
+                    const active = activeDate === g.date;
+                    return (
+                      <button
+                        key={g.date}
+                        ref={(el) => {
+                          if (el) chipRefs.current.set(g.date, el);
+                          else chipRefs.current.delete(g.date);
+                        }}
+                        type="button"
+                        onClick={() => jumpTo(g.date)}
+                        aria-current={active ? "true" : undefined}
+                        className={`inline-flex min-h-11 shrink-0 snap-start items-center gap-2 whitespace-nowrap rounded-full px-4 text-sm font-extrabold transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] cursor-pointer ${
+                          active
+                            ? "bg-[var(--sf-ink)] text-white shadow-[0_3px_0_0_#000]"
+                            : "bg-white text-[var(--sf-ink)] ring-1 ring-[var(--sf-ink)]/10 hover:-translate-y-0.5 hover:bg-[var(--sf-butter)]/60"
+                        }`}
+                      >
+                        {g.shortLabel}
+                        <span
+                          className={`rounded-full px-1.5 text-[11px] leading-5 ${active ? "bg-white/20" : "bg-[var(--sf-ink)]/[0.07] text-[var(--sf-soft)]"}`}
+                        >
+                          {g.photos.length}
+                          <span className="sr-only"> {g.photos.length === 1 ? "photo" : "photos"}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </nav>
+            </div>
+
+            {failedCount > 0 ? (
+              <ErrorCard
+                className="mb-6"
+                title="We couldn't load photos"
+                body={`${photoCountLabel(failedCount)} didn't load. Please check your connection and try again.`}
+                onRetry={() => {
+                  setFailedPaths(new Set());
+                  setSignAttempt((n) => n + 1);
                 }}
-              >
-                <div className="px-6 pt-5 pb-2 flex items-baseline gap-2">
-                  <h2 className="text-sm font-semibold font-body text-gray-500">
-                    {group.label}
-                  </h2>
-                  <span className="text-xs text-gray-400 font-body">
-                    {group.photos.length} photo
-                    {group.photos.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-6 gap-0.5">
-                  {group.photos.map((photo) => (
-                    <ParentPhotoCard
-                      key={photo.id}
-                      photo={photo}
-                      onOpen={setLightboxPhoto}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+              />
+            ) : null}
+
+            <div className="flex flex-col gap-12 pt-4">
+              {renderedGroups.map((group) => (
+                <DateSection
+                  key={group.date}
+                  group={group}
+                  sectionRef={(el) => {
+                    if (el) sectionRefs.current.set(group.date, el);
+                    else sectionRefs.current.delete(group.date);
+                  }}
+                  failedPaths={failedPaths}
+                  urls={urls}
+                  onOpen={(p) => setLightboxIndex(indexById.get(p.id) ?? null)}
+                  onResign={resignOne}
+                />
+              ))}
+            </div>
+
+            {hasMore ? (
+              <div ref={sentinelRef} className="mt-10 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setRenderCount((n) => groupsToCover(dateGroups, n, BATCH_PHOTOS))}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-extrabold text-[var(--sf-ink)] ring-2 ring-[var(--sf-ink)]/10 shadow-[0_3px_0_0_rgba(43,42,38,0.12)] transition hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-[var(--sf-sky)] cursor-pointer"
+                >
+                  Show earlier photos
+                </button>
+              </div>
+            ) : null}
+          </>
         )}
       </div>
 
       <AnimatePresence>
-        {lightboxPhoto && (
+        {lightboxIndex !== null && ordered[lightboxIndex] ? (
           <PhotoLightbox
-            key={`${lightboxPhoto.id}-${photos.findIndex((p) => p.id === lightboxPhoto.id)}`}
-            photos={photos}
-            initialIndex={photos.findIndex((p) => p.id === lightboxPhoto.id)}
-            onClose={() => setLightboxPhoto(null)}
+            key="lightbox"
+            photos={ordered}
+            urls={urls}
+            index={lightboxIndex}
+            onIndexChange={setLightboxIndex}
+            onClose={() => setLightboxIndex(null)}
           />
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
+  );
+}
+
+function DateSection({
+  group,
+  sectionRef,
+  failedPaths,
+  urls,
+  onOpen,
+  onResign,
+}: {
+  group: DateGroup;
+  sectionRef: (el: HTMLElement | null) => void;
+  failedPaths: Set<string>;
+  urls: Record<string, string>;
+  onOpen: (p: TeacherPhoto) => void;
+  onResign: (path: string) => Promise<boolean>;
+}) {
+  const headingId = `photos-${group.date}`;
+  return (
+    <section ref={sectionRef} data-date={group.date} aria-labelledby={headingId} className="scroll-mt-24">
+      <SectionHeader id={headingId} title={group.label} note={photoCountLabel(group.photos.length)} />
+      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 lg:grid-cols-6">
+        {group.photos.map((photo) => (
+          <li key={photo.id}>
+            <PhotoTile photo={photo} url={urls[photo.storage_path] ?? null} failed={failedPaths.has(photo.storage_path)} onOpen={onOpen} onResign={onResign} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function PhotoTile({
+  photo,
+  url,
+  failed,
+  onOpen,
+  onResign,
+}: {
+  photo: TeacherPhoto;
+  url: string | null;
+  failed: boolean;
+  onOpen: (p: TeacherPhoto) => void;
+  onResign: (path: string) => Promise<boolean>;
+}) {
+  // Track which URL finished loading / errored, so a re-signed URL starts fresh.
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  const [erroredUrl, setErroredUrl] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const loaded = !!url && loadedUrl === url;
+  const broken = (failed && !url) || (!!url && erroredUrl === url);
+
+  if (broken) {
+    return (
+      <button
+        type="button"
+        disabled={retrying}
+        onClick={async () => {
+          setRetrying(true);
+          await onResign(photo.storage_path);
+          setErroredUrl(null);
+          setRetrying(false);
+        }}
+        className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-[18px] bg-[var(--sf-coral)]/15 text-center text-xs font-extrabold text-[var(--sf-coral-deep)] ring-1 ring-[var(--sf-coral)]/30 transition hover:bg-[var(--sf-coral)]/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] cursor-pointer"
+        aria-label={`Reload photo: ${photoAlt(photo)}`}
+      >
+        <span className="text-lg" aria-hidden="true">{retrying ? "⏳" : "↻"}</span>
+        {retrying ? "Loading…" : "Reload"}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(photo)}
+      className="group relative block aspect-square w-full overflow-hidden rounded-[18px] bg-[var(--sf-mint)]/40 shadow-[0_10px_24px_-18px_rgba(43,42,38,0.6)] ring-1 ring-[var(--sf-ink)]/[0.06] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_30px_-18px_rgba(43,42,38,0.6)] focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] cursor-zoom-in"
+    >
+      {!loaded ? <span className="absolute inset-0 animate-pulse bg-[var(--sf-ink)]/[0.06] motion-reduce:animate-none" aria-hidden="true" /> : null}
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element -- signed storage URL
+        <img
+          src={url}
+          alt={photoAlt(photo)}
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setLoadedUrl(url)}
+          onError={() => setErroredUrl(url)}
+          className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] duration-500 group-hover:scale-105 group-focus-visible:scale-105 motion-reduce:transition-none ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      ) : (
+        <span className="sr-only">{photoAlt(photo)}</span>
+      )}
+      {photo.caption ? (
+        <span
+          className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/55 to-transparent px-2.5 pb-2 pt-6 text-left text-[11px] font-bold text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"
+          aria-hidden="true"
+        >
+          {photo.caption}
+        </span>
+      ) : null}
+    </button>
   );
 }

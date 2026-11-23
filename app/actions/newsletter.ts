@@ -578,16 +578,20 @@ export async function getNewsletterMetaPublic(
   return { id: data.id, title: data.title, week_range: data.week_range }
 }
 
-export async function getPublishedNewslettersList(): Promise<DBNewsletterListItem[]> {
+/** Published newsletters, newest first. Pass `limit` to fetch (and sign covers for) only the latest few. */
+export async function getPublishedNewslettersList(limit?: number): Promise<DBNewsletterListItem[]> {
   const adminClient = createAdminClient()
 
-  const { data: rows, error } = await adminClient
+  let query = adminClient
     .schema('newsletters')
     .from('newsletters')
     .select('id, title, week_range, cover_image_path, access_password, published_at')
     .eq('is_deleted', false)
     .eq('status', 'published')
     .order('published_at', { ascending: false })
+  if (limit) query = query.limit(limit)
+
+  const { data: rows, error } = await query
 
   if (error || !rows || rows.length === 0) {
     if (error) console.error('getPublishedNewslettersList error:', error)

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Video, MapPin } from "lucide-react";
 import type {
   ConferenceTeacherDisplay,
@@ -43,6 +44,7 @@ export default function UpcomingParentTeacherConferenceCard({
   conferenceTakenSlotKeys,
   readOnly = false,
 }: Props) {
+  const router = useRouter();
   const [ptcOpen, setPtcOpen] = useState(false);
 
   const todayYmd = useMemo(
@@ -72,61 +74,55 @@ export default function UpcomingParentTeacherConferenceCard({
 
   return (
     <>
-      <div className="flex flex-col gap-3">
-        {upcomingEntries.map((entry) => {
-          const { weekday, day, month } = formatDateBlock(
-            entry.booking.conferenceDate,
-          );
-          const isVirtual = entry.booking.format === "virtual";
+      <section aria-labelledby="home-conferences">
+        <h2 id="home-conferences" className="sr-only">
+          Parent-teacher conferences
+        </h2>
+        <ul className="flex flex-col gap-3">
+          {upcomingEntries.map((entry) => {
+            const { weekday, day, month } = formatDateBlock(entry.booking.conferenceDate);
+            const isVirtual = entry.booking.format === "virtual";
 
-          return (
-            <button
-              key={entry.studentId}
-              type="button"
-              onClick={() => setPtcOpen(true)}
-              className="w-full text-left rounded-xl border border-emerald-100 bg-white px-3 py-3 flex items-center gap-3 hover:shadow-sm hover:border-emerald-200 transition-all cursor-pointer"
-            >
-              <div className="shrink-0 w-12 rounded-lg bg-emerald-600 text-white flex flex-col items-center py-1.5">
-                <span className="text-[10px] font-semibold font-body uppercase leading-none">
-                  {weekday}
-                </span>
-                <span className="text-lg font-bold font-heading leading-tight">
-                  {day}
-                </span>
-                <span className="text-[10px] font-semibold font-body uppercase leading-none">
-                  {month}
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-1 flex-1 min-w-0">
-                <span className="text-sm font-bold text-gray-800 font-heading">
-                  {entry.studentName}
-                </span>
-                <span className="text-xs text-gray-600 font-body">
-                  with {entry.teacherName}
-                </span>
-                <span className="text-xs text-gray-500 font-body">
-                  {formatConferenceDateForDisplay(entry.booking.conferenceDate)} ·{" "}
-                  {entry.booking.timeSlot}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs text-emerald-700 font-body mt-0.5">
-                  {isVirtual ? (
-                    <>
-                      <Video size={12} className="shrink-0" />
-                      Virtual
-                    </>
-                  ) : (
-                    <>
-                      <MapPin size={12} className="shrink-0" />
-                      In person at Sage Field
-                    </>
-                  )}
-                </span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+            return (
+              <li key={entry.studentId}>
+                <button
+                  type="button"
+                  onClick={() => setPtcOpen(true)}
+                  className="sf-ticket group flex w-full items-stretch gap-0 overflow-hidden rounded-[26px] bg-[var(--sf-lav)]/80 text-left transition hover:-translate-y-0.5 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] cursor-pointer"
+                  aria-label={`Conference for ${entry.studentName} with ${entry.teacherName}, ${formatConferenceDateForDisplay(entry.booking.conferenceDate)} at ${entry.booking.timeSlot}. View details`}
+                >
+                  <span className="flex w-24 shrink-0 flex-col items-center justify-center border-r-2 border-dashed border-[#6b3f86]/25 py-4 pl-4 text-[#6b3f86]">
+                    <span className="text-[11px] font-extrabold uppercase leading-none tracking-wide">{weekday}</span>
+                    <span className="sf-display text-4xl leading-none">{day}</span>
+                    <span className="text-[11px] font-extrabold uppercase leading-none tracking-wide">{month}</span>
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5 py-4 pl-4 pr-8">
+                    <span className="sf-hand text-base leading-none text-[#6b3f86]">parent-teacher conference</span>
+                    <span className="truncate text-[17px] font-extrabold">{entry.studentName}</span>
+                    <span className="text-sm font-bold text-[var(--sf-soft)]">with {entry.teacherName}</span>
+                    <span className="text-sm font-bold text-[var(--sf-soft)]">
+                      {formatConferenceDateForDisplay(entry.booking.conferenceDate)} · {entry.booking.timeSlot}
+                    </span>
+                    <span className="mt-1 inline-flex items-center gap-1 self-start rounded-full bg-white/80 px-2.5 py-0.5 text-xs font-extrabold text-[#6b3f86]">
+                      {isVirtual ? (
+                        <>
+                          <Video size={12} className="shrink-0" aria-hidden="true" />
+                          Virtual
+                        </>
+                      ) : (
+                        <>
+                          <MapPin size={12} className="shrink-0" aria-hidden="true" />
+                          In person at Sage Field
+                        </>
+                      )}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
       <ParentTeacherConferenceSection
         parentId={parentId}
@@ -138,6 +134,7 @@ export default function UpcomingParentTeacherConferenceCard({
         open={ptcOpen}
         onOpenChange={setPtcOpen}
         readOnly={readOnly}
+        onBooked={() => router.refresh()}
       />
     </>
   );

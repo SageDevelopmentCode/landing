@@ -40,6 +40,7 @@ export default async function ImpersonateMessagesPage({
           effectiveParentId={parentId}
           initialRecipientId={null}
           initialRecipientName={null}
+          readOnlyPreview
         />
       </main>
     </div>

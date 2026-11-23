@@ -403,6 +403,7 @@ export default async function ImpersonateBillingPage({
       </header>
       <main className="flex-1 flex overflow-hidden">
         <BillingPage
+          readOnlyPreview
           transactions={transactions}
           studentMap={studentMap}
           pendingRequests={pendingRequests}

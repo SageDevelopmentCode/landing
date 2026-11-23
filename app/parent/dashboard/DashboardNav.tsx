@@ -113,8 +113,9 @@ export default function DashboardNav({
         {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Desktop nav — unchanged */}
-      <nav className="hidden md:flex items-center gap-2">
+      {/* Desktop nav. md–lg: icons only (label kept for screen readers + tooltip); lg–xl: labels only
+          with tighter spacing; xl+: the full icon + label + badge. Keeps the header from overflowing. */}
+      <nav className="hidden md:flex items-center gap-0.5 xl:gap-2">
         {primaryNavItems.map(({ label, icon: Icon, href, badge, iconColor }) => {
           const resolvedHref = navHref(href);
           const isActive = href !== "#" && pathname === resolvedHref.split("?")[0];
@@ -122,16 +123,19 @@ export default function DashboardNav({
             <Link
               key={label}
               href={resolvedHref}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-body rounded-md transition-colors whitespace-nowrap ${
+              title={label}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex items-center gap-1.5 px-2.5 lg:px-2 xl:px-3 py-1.5 text-sm font-body rounded-md transition-colors whitespace-nowrap ${
                 isActive
                   ? "text-[#4a7c59] bg-[#4a7c59]/8 font-semibold"
                   : "text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50"
               }`}
             >
-              <Icon className={`w-4 h-4 ${!isActive ? (iconColor ?? "") : ""}`} />
-              {label}
+              {/* md: icon only · lg: label only · xl: icon + label */}
+              <Icon className={`w-4 h-4 lg:hidden xl:block ${!isActive ? (iconColor ?? "") : ""}`} aria-hidden="true" />
+              <span className="sr-only lg:not-sr-only lg:whitespace-nowrap">{label}</span>
               {badge && (
-                <span className="ml-1 text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
+                <span className="ml-1 hidden xl:inline text-[10px] font-semibold uppercase rounded-full px-2 py-0.5 shrink-0 bg-green-100 text-green-700">
                   {badge}
                 </span>
               )}
@@ -143,7 +147,7 @@ export default function DashboardNav({
         <div className="relative" ref={moreRef}>
           <button
             onClick={() => setMoreOpen((v) => !v)}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-body text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50 rounded-md transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 xl:px-3 py-1.5 text-sm font-body text-gray-600 hover:text-[#4a7c59] hover:bg-gray-50 rounded-md transition-colors cursor-pointer whitespace-nowrap"
           >
             More
             <ChevronDown

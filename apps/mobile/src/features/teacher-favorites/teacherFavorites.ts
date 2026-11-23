@@ -1,6 +1,7 @@
 // Teacher favorites — static answers from the teachers' "favorite things" form.
 // Shown on the parent Teacher Favorites screen ((tabs)/teacher-favorites.tsx).
 // Keep each teacher's words; only list punctuation was tidied into chips.
+// Keep in sync with shared/parent/teacher-favorites.ts (the web parent Home copy).
 import type { GardenTint } from "@/components/garden";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -87,10 +88,14 @@ export const TEACHER_FAVORITES: TeacherFavorites[] = [
   {
     fullName: "Sabrina Obnamia",
     favorites: {
-      drink: ["Pink drink from Starbucks"],
-      food: ["Chipotle"],
-      sweet: ["Unreal Extra dark chocolate"],
-      snack: ["Meat sticks"],
+      drink: ["Olipop", "Iced sugar free vanilla oat milk latte"],
+      food: ["Chipotle", "Cava", "Poke Works"],
+      sweet: ["Hu dark chocolate bites", "Unreal dark chocolate"],
+      snack: [
+        "Beef jerky",
+        "Beef sticks",
+        "Greek yogurt pouches (Siggi’s / Once Upon a Farm / Stonyfield)",
+      ],
       colors: ["Light pink"],
       scents: ["Any natural fresh scents (no artificial fragrances)"],
       hobbies: ["Biking & swimming"],
