@@ -105,7 +105,7 @@ export default async function RewardsPage() {
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <DashboardHeader>
+      <DashboardHeader sticky>
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -130,11 +130,11 @@ export default async function RewardsPage() {
 
       <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-8">
+      <main className="flex-1">
         <RewardsClient
           referrals={referrals}
           hasSubmittedTestimonial={hasSubmittedTestimonial}
-          userId={user.id}
+          effectiveParentId={effectiveParentId}
           studentFirstName={studentFirstName}
         />
       </main>

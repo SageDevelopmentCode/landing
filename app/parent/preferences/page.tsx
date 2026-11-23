@@ -139,7 +139,7 @@ export default async function PreferencesPage() {
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
-        <DashboardHeader>
+        <DashboardHeader sticky>
           <div className="flex items-center">
             <Link href="/">
               <Image
@@ -164,7 +164,7 @@ export default async function PreferencesPage() {
 
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-        <main className="flex-1 flex overflow-hidden">
+        <main className="flex-1">
           <PreferencesPageClient
             students={children}
             activities={activities}
