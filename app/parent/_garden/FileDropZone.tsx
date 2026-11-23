@@ -94,10 +94,11 @@ export default function FileDropZone({
   const shownError = localError ?? error ?? null;
 
   const take = (list: FileList | null) => {
+    // Snapshot first: the input's FileList is live, so clearing the input empties it.
+    const picked = list ? Array.from(list) : [];
     // Reset so picking the same file again (after an error) still fires onChange.
     if (inputRef.current) inputRef.current.value = "";
-    if (!list || list.length === 0 || busy) return;
-    const picked = Array.from(list);
+    if (picked.length === 0 || busy) return;
     const problem = validateUploadBatch(picked, files.length, { maxFiles, acceptedTypes, maxBytes });
     setLocalError(problem);
     if (!problem) onFiles(picked);
