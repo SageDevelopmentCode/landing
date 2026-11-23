@@ -3,6 +3,9 @@
 import { createServerSupabaseClient, createAdminClient } from '@/app/lib/supabase-server'
 import { sendDiscordNotification, createErrorEmbed } from '@/app/lib/discord'
 import { assertStudentBelongsToParent, resolveActingParentId } from '@/app/lib/parent-access'
+import type { Database } from '@/app/types/database.types'
+
+type StudentMedicationRow = Database['parent_app']['Tables']['student_medications']['Row']
 
 export interface MedicationEntry {
   medicationName: string
@@ -34,6 +37,25 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
 
   const adminClient = createAdminClient()
 
+  const notifyError = async (context: string, message: string) => {
+    try {
+      let parentName = 'N/A', childName = 'N/A'
+      try {
+        const [{ data: u }, { data: s }] = await Promise.all([
+          adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
+          adminClient.schema('admin').from('students').select('child_legal_name').eq('id', payload.studentId).single(),
+        ])
+        parentName = u?.full_name ?? 'N/A'
+        childName = s?.child_legal_name ?? 'N/A'
+      } catch {}
+      await sendDiscordNotification(createErrorEmbed({
+        context,
+        error: message,
+        details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': payload.studentId },
+      }))
+    } catch {}
+  }
+
   // 1. Upsert the plan row
   const { data, error: planError } = await adminClient
     .schema('parent_app')
@@ -52,54 +74,26 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
     .single()
 
   if (planError) {
-    void (async () => {
-      let parentName = 'N/A', childName = 'N/A'
-      try {
-        const [{ data: u }, { data: s }] = await Promise.all([
-          adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
-          adminClient.schema('admin').from('students').select('child_legal_name').eq('id', payload.studentId).single(),
-        ])
-        parentName = u?.full_name ?? 'N/A'
-        childName = s?.child_legal_name ?? 'N/A'
-      } catch {}
-      await sendDiscordNotification(createErrorEmbed({
-        context: 'Medication Plan – Upsert Plan',
-        error: planError.message,
-        details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': payload.studentId },
-      }))
-    })().catch(() => {})
+    void notifyError('Medication Plan – Upsert Plan', planError.message)
     return { error: planError.message }
   }
 
-  // 2. Delete existing medication rows for this student
-  const { error: deleteError } = await adminClient
+  // 2. Remember the current medication rows, so they can be removed by id once
+  //    the replacements are safely stored (a failed insert must never wipe the plan).
+  const { data: oldRows, error: listError } = await adminClient
     .schema('parent_app')
     .from('student_medications')
-    .delete()
+    .select('id')
     .eq('parent_id', actingParentId)
     .eq('student_id', payload.studentId)
 
-  if (deleteError) {
-    void (async () => {
-      let parentName = 'N/A', childName = 'N/A'
-      try {
-        const [{ data: u }, { data: s }] = await Promise.all([
-          adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
-          adminClient.schema('admin').from('students').select('child_legal_name').eq('id', payload.studentId).single(),
-        ])
-        parentName = u?.full_name ?? 'N/A'
-        childName = s?.child_legal_name ?? 'N/A'
-      } catch {}
-      await sendDiscordNotification(createErrorEmbed({
-        context: 'Medication Plan – Delete Old Medications',
-        error: deleteError.message,
-        details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': payload.studentId },
-      }))
-    })().catch(() => {})
-    return { error: deleteError.message }
+  if (listError) {
+    void notifyError('Medication Plan – List Old Medications', listError.message)
+    return { error: listError.message }
   }
 
-  // 3. Insert new medication rows
+  // 3. Insert the new medication rows
+  let medications: StudentMedicationRow[] = []
   if (payload.medications.length > 0) {
     const rows = payload.medications.map((m, i) => ({
       parent_id: actingParentId,
@@ -115,31 +109,41 @@ export async function saveMedicationPlan(payload: MedicationPlanPayload) {
       sort_order: i,
     }))
 
-    const { error: insertError } = await adminClient
+    const { data: inserted, error: insertError } = await adminClient
       .schema('parent_app')
       .from('student_medications')
       .insert(rows)
+      .select()
 
     if (insertError) {
-      void (async () => {
-        let parentName = 'N/A', childName = 'N/A'
-        try {
-          const [{ data: u }, { data: s }] = await Promise.all([
-            adminClient.schema('admin').from('users').select('full_name').eq('id', user.id).single(),
-            adminClient.schema('admin').from('students').select('child_legal_name').eq('id', payload.studentId).single(),
-          ])
-          parentName = u?.full_name ?? 'N/A'
-          childName = s?.child_legal_name ?? 'N/A'
-        } catch {}
-        await sendDiscordNotification(createErrorEmbed({
-          context: 'Medication Plan – Insert Medications',
-          error: insertError.message,
-          details: { 'Parent': parentName, 'Email': user.email ?? 'N/A', 'Child': childName, 'Student ID': payload.studentId },
-        }))
-      })().catch(() => {})
+      void notifyError('Medication Plan – Insert Medications', insertError.message)
       return { error: insertError.message }
+    }
+    medications = inserted ?? []
+  }
+
+  // 4. Delete the old rows by id
+  const oldIds = (oldRows ?? []).map((r) => r.id)
+  if (oldIds.length > 0) {
+    const { error: deleteError } = await adminClient
+      .schema('parent_app')
+      .from('student_medications')
+      .delete()
+      .in('id', oldIds)
+
+    if (deleteError) {
+      // Roll back the new rows so the plan isn't duplicated; the old rows are untouched.
+      if (medications.length > 0) {
+        await adminClient
+          .schema('parent_app')
+          .from('student_medications')
+          .delete()
+          .in('id', medications.map((m) => m.id))
+      }
+      void notifyError('Medication Plan – Delete Old Medications', deleteError.message)
+      return { error: deleteError.message }
     }
   }
 
-  return { data }
+  return { data, medications }
 }

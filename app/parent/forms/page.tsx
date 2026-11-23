@@ -235,7 +235,7 @@ export default async function FormsRoute() {
   return (
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
-        <DashboardHeader>
+        <DashboardHeader sticky>
           <div className="flex items-center">
             <Link href="/">
               <Image
@@ -255,12 +255,7 @@ export default async function FormsRoute() {
 
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-        <main className="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-              Forms &amp; Documents
-            </h1>
-          </div>
+        <main className="flex-1">
           <FormsPage
             apps={approvedApps}
             signaturesByStudent={signaturesByStudent}
@@ -272,8 +267,7 @@ export default async function FormsRoute() {
             healthStatementByStudent={healthStatementByStudent}
             religiousExemptionCountByStudent={religiousExemptionCountByStudent}
             parentId={effectiveParentId}
-            parentName={fullName ?? ""}
-            isSharedAccess={isSharedAccess}
+            parentName={primaryOwnerName ?? fullName ?? ""}
           />
         </main>
       </div>

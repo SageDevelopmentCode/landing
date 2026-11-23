@@ -13,7 +13,7 @@ export async function persistAuthorizedPickup(
   parentId: string,
   payload: AuthorizedPickupPayload,
   errorContext: ErrorContext
-): Promise<{ data?: unknown; error?: string }> {
+): Promise<{ data?: unknown; persons?: unknown[]; error?: string }> {
   const notifyError = async (context: string, error: string) => {
     let parentName = 'N/A'
     let childName = 'N/A'
@@ -74,6 +74,7 @@ export async function persistAuthorizedPickup(
     return { error: deleteError.message }
   }
 
+  let persons: unknown[] = []
   if (payload.persons.length > 0) {
     const rows = payload.persons.map((p, i) => ({
       parent_id: parentId,
@@ -88,16 +89,18 @@ export async function persistAuthorizedPickup(
       license_plate_state: p.licensePlateState || null,
     }))
 
-    const { error: insertError } = await adminClient
+    const { data: inserted, error: insertError } = await adminClient
       .schema('parent_app')
       .from('student_authorized_pickup_persons')
       .insert(rows)
+      .select()
 
     if (insertError) {
       void notifyError(`${errorContext.context} – Insert Persons`, insertError.message).catch(() => {})
       return { error: insertError.message }
     }
+    persons = inserted ?? []
   }
 
-  return { data }
+  return { data, persons }
 }

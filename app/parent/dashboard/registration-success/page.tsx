@@ -1,7 +1,8 @@
 import { getStripe } from "@/app/lib/stripe";
-import Link from "next/link";
-import { CheckCircle } from "lucide-react";
 import { getBillingProgramLabel } from "@/app/lib/application-programs";
+import { createServerSupabaseClient } from "@/app/lib/supabase-server";
+import { resolveActingParentId } from "@/app/lib/parent-access";
+import RegistrationSuccessCard from "../garden/RegistrationSuccessCard";
 
 interface Props {
   searchParams: Promise<{ session_id?: string }>;
@@ -15,22 +16,32 @@ export default async function RegistrationSuccessPage({ searchParams }: Props) {
 
   if (session_id) {
     try {
+      const supabase = await createServerSupabaseClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const session = await getStripe().checkout.sessions.retrieve(session_id);
-      const cents = session.amount_total ?? 0;
-      amountFormatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "usd",
-      }).format(cents / 100);
 
-      if (session.metadata?.application_ids) {
-        // Combined payment — generic label
-        programLabel = "all enrolled programs";
-      } else {
-        const program = session.metadata?.program ?? "summer_26";
-        programLabel =
-          program === "homeschool_drop_in"
-            ? "Homeschool Drop-In"
-            : getBillingProgramLabel(program);
+      // Only show payment details to the parent the session belongs to (or their shared-access users).
+      // Anyone else holding the link sees the generic success message.
+      const actingParentId = user ? await resolveActingParentId(user.id) : null;
+      if (actingParentId && session.metadata?.parent_id === actingParentId) {
+        const cents = session.amount_total ?? 0;
+        amountFormatted = new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "usd",
+        }).format(cents / 100);
+
+        if (session.metadata?.application_ids) {
+          // Combined payment — generic label
+          programLabel = "all enrolled programs";
+        } else {
+          const program = session.metadata?.program ?? "summer_26";
+          programLabel =
+            program === "homeschool_drop_in"
+              ? "Homeschool Drop-In"
+              : getBillingProgramLabel(program);
+        }
       }
     } catch (err) {
       console.error("Failed to retrieve Stripe session:", err);
@@ -38,38 +49,14 @@ export default async function RegistrationSuccessPage({ searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-welcome-bg flex flex-col items-center justify-center px-6 py-24">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-        <div className="flex justify-center mb-5">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
-            <CheckCircle className="w-8 h-8 text-emerald-600" />
-          </div>
-        </div>
-
-        <h1 className="text-2xl font-bold font-heading text-gray-800 mb-2">
-          You&apos;re registered!
-        </h1>
-
-        {amountFormatted && (
-          <p className="text-lg font-semibold text-emerald-600 font-body mb-3">
-            {amountFormatted} received
-          </p>
-        )}
-
-        <p className="text-sm text-gray-500 font-body mb-2">
+    <RegistrationSuccessCard amount={amountFormatted}>
+      {amountFormatted ? (
+        <p>
           Thank you! Your child is now registered for {programLabel}. We&apos;ll be in touch with next steps soon.
         </p>
-        <p className="text-sm text-gray-500 font-body mb-8">
-          A receipt has been sent to your email.
-        </p>
-
-        <Link
-          href="/parent/dashboard"
-          className="inline-block px-6 py-3 bg-emerald-600 text-white text-sm font-semibold font-body rounded-xl hover:bg-emerald-700 transition-colors"
-        >
-          Back to Dashboard
-        </Link>
-      </div>
-    </div>
+      ) : (
+        <p>Thank you! We&apos;ll be in touch with next steps soon.</p>
+      )}
+    </RegistrationSuccessCard>
   );
 }

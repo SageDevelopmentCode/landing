@@ -1,25 +1,18 @@
 "use client";
 
-import { useState, useEffect, useRef, useTransition } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { X, Upload, Trash2, FileText, CheckCircle, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { uploadImmunizationRecord } from "@/app/actions/uploadImmunizationRecord";
 import { listImmunizationRecords } from "@/app/actions/listImmunizationRecords";
 import { deleteImmunizationRecord } from "@/app/actions/deleteImmunizationRecord";
+import GardenSheet from "@/app/parent/_garden/sheet";
+import FileDropZone, { displayFileName, type DropZoneFile } from "@/app/parent/_garden/FileDropZone";
+import { usePortalFeedback } from "@/app/parent/_garden/feedback";
+import { ErrorCard } from "@/app/parent/_garden/states";
+import { SavedNote } from "@/app/parent/_garden/fields";
+import { btnGhostSm, btnSheetPrimary } from "@/app/parent/_garden/ui";
+import { LegalText } from "./garden/sheetParts";
 
 const MAX_FILES = 5;
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ACCEPTED_TYPES = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic"];
-const ACCEPTED_EXT = ".pdf,.jpg,.jpeg,.png,.webp,.heic";
-
-interface StorageFile {
-  name: string;
-  id: string;
-  updated_at: string;
-  created_at: string;
-  last_accessed_at: string;
-  metadata: Record<string, unknown>;
-}
 
 interface Props {
   isOpen: boolean;
@@ -28,13 +21,13 @@ interface Props {
   studentId: string;
   studentName: string;
   onUploadComplete: (studentId: string) => void;
+  /** Called with the real file count every time the list reloads (uploads and deletes). */
+  onFilesChanged?: (studentId: string, count: number) => void;
   readOnly?: boolean;
+  readOnlyPreview?: boolean;
 }
 
-function formatFileName(name: string): string {
-  // Strip timestamp prefix (e.g. "1710000000000-filename.pdf" -> "filename.pdf")
-  return name.replace(/^\d+-/, "");
-}
+type StorageFile = { name: string; id: string | null };
 
 export default function ImmunizationUploadModal({
   isOpen,
@@ -43,286 +36,154 @@ export default function ImmunizationUploadModal({
   studentId,
   studentName,
   onUploadComplete,
+  onFilesChanged,
   readOnly,
+  readOnlyPreview,
 }: Props) {
+  const { toast, blockedByPreview } = usePortalFeedback(readOnlyPreview);
   const [files, setFiles] = useState<StorageFile[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [deletingPath, setDeletingPath] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<{ current: number; total: number } | null>(null);
+  const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [, startTransition] = useTransition();
 
-  const loadFiles = async () => {
-    setIsLoading(true);
-    setError(null);
-    const result = await listImmunizationRecords(parentId, studentId);
-    if ("error" in result && result.error) {
-      setError(result.error);
-    } else {
-      setFiles((result.files as StorageFile[]).filter((f) => f.name !== ".emptyFolderPlaceholder"));
+  const loadFiles = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const result = await listImmunizationRecords(parentId, studentId);
+      if ("error" in result && result.error) {
+        setLoadError(result.error);
+      } else {
+        const list = (result.files as StorageFile[]).filter((f) => f.name !== ".emptyFolderPlaceholder");
+        setFiles(list);
+        onFilesChanged?.(studentId, list.length);
+      }
+    } catch {
+      setLoadError("We couldn't load your files.");
     }
-    setIsLoading(false);
-  };
+    setLoading(false);
+  }, [parentId, studentId, onFilesChanged]);
 
   useEffect(() => {
-    if (isOpen) loadFiles();
+    if (!isOpen) return;
+    // Loading on open; setState happens after the awaited request.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadFiles();
+    // Only reload when the sheet opens or the child changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+  }, [isOpen, studentId]);
 
-  const handleUpload = async (selectedFiles: FileList | null) => {
-    if (!selectedFiles || selectedFiles.length === 0) return;
+  const handleFiles = async (picked: File[]) => {
+    if (blockedByPreview()) return;
     setError(null);
-
-    const toUpload = Array.from(selectedFiles);
-
-    if (files.length + toUpload.length > MAX_FILES) {
-      setError(`You can upload a maximum of ${MAX_FILES} files. You currently have ${files.length}.`);
-      return;
-    }
-
-    for (const f of toUpload) {
-      if (!ACCEPTED_TYPES.includes(f.type)) {
-        setError(`"${f.name}" is not a supported file type. Please upload PDF, JPG, PNG, WEBP, or HEIC.`);
-        return;
-      }
-      if (f.size > MAX_FILE_SIZE) {
-        setError(`"${f.name}" exceeds the 10MB limit.`);
-        return;
-      }
-    }
-
-    setIsUploading(true);
-    for (const f of toUpload) {
+    let uploaded = 0;
+    for (const [i, f] of picked.entries()) {
+      setUploading({ current: i + 1, total: picked.length });
       const fd = new FormData();
       fd.append("parentId", parentId);
       fd.append("studentId", studentId);
       fd.append("file", f);
-
       let result: { path?: string; error?: string };
       try {
         result = await uploadImmunizationRecord(fd);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        setError(
-          msg.toLowerCase().includes('body exceeded') || msg.includes('413')
-            ? `"${f.name}" is too large to upload. Please keep files under 10MB.`
-            : `Upload failed: ${msg}`
-        );
-        setIsUploading(false);
-        return;
+        result = {
+          error:
+            msg.toLowerCase().includes("body exceeded") || msg.includes("413")
+              ? `"${f.name}" is too large to upload. Please keep files under 10MB.`
+              : `Upload failed: ${msg}`,
+        };
       }
+      if (result.error) {
+        setError(result.error);
+        toast.show({ tone: "error", title: "Upload failed", message: result.error });
+        break;
+      }
+      uploaded++;
+    }
+    setUploading(null);
+    if (uploaded > 0) {
+      toast.show({ tone: "success", title: uploaded === 1 ? "File uploaded" : `${uploaded} files uploaded`, message: studentName });
+      await loadFiles();
+      onUploadComplete(studentId);
+    }
+  };
+
+  const handleDelete = async (file: DropZoneFile) => {
+    if (blockedByPreview()) return;
+    const path = `${parentId}/${studentId}/${file.key}`;
+    setDeletingKey(file.key);
+    setError(null);
+    try {
+      const result = await deleteImmunizationRecord(path, parentId);
       if ("error" in result && result.error) {
         setError(result.error);
-        setIsUploading(false);
-        return;
+        toast.show({ tone: "error", title: "Couldn't delete the file", message: result.error });
+      } else {
+        toast.show({ tone: "success", title: "File deleted", message: file.name });
+        await loadFiles();
       }
+    } catch {
+      toast.show({ tone: "error", title: "Couldn't delete the file", message: "Please check your connection and try again." });
     }
-    setIsUploading(false);
-    await loadFiles();
-    startTransition(() => {
-      onUploadComplete(studentId);
-    });
+    setDeletingKey(null);
   };
 
-  const handleDelete = async (fileName: string) => {
-    const path = `${parentId}/${studentId}/${fileName}`;
-    setDeletingPath(path);
-    setError(null);
-    const result = await deleteImmunizationRecord(path, parentId);
-    if ("error" in result && result.error) {
-      setError(result.error);
-    } else {
-      await loadFiles();
-    }
-    setDeletingPath(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => setIsDragging(false);
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    handleUpload(e.dataTransfer.files);
-  };
+  const dropFiles: DropZoneFile[] = files.map((f) => ({ key: f.name, name: displayFileName(f.name) }));
+  const busy = !!uploading || !!deletingKey;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            className="fixed inset-0 bg-black/60 z-[60]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+    <GardenSheet
+      open={isOpen}
+      onClose={onClose}
+      icon="🛡️"
+      title="Proof of Immunizations"
+      note={studentName}
+      footer={
+        <div>
+          <button
+            type="button"
             onClick={onClose}
-          />
-          <motion.div
-            className="fixed inset-y-0 right-0 w-full max-w-lg z-[70] bg-white flex flex-col shadow-2xl"
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            disabled={busy}
+            className={files.length > 0 || readOnly ? btnSheetPrimary : `${btnGhostSm} w-full min-h-[52px] text-base`}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center">
-                  <ShieldCheck className="w-4 h-4 text-green-600" />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold font-heading text-gray-800">
-                    Proof of Immunizations
-                  </h2>
-                  <p className="text-xs text-gray-400 font-body">{studentName}</p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-6">
-              {/* Info */}
-              <p className="text-sm text-gray-500 font-body">
-                Upload your child&apos;s current immunization records. If your child has no current immunization record, you may instead upload a notarized religious exemption affidavit. Accepted formats: PDF, JPG, PNG, WEBP, HEIC. Max 10MB per file.
-              </p>
-
-              {/* File count */}
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-gray-500 font-body">
-                  Uploaded files
-                </p>
-                <span
-                  className={`text-xs font-semibold font-body px-2 py-0.5 rounded-full ${
-                    files.length >= MAX_FILES
-                      ? "bg-red-50 text-red-600"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {files.length} / {MAX_FILES}
-                </span>
-              </div>
-
-              {/* File list */}
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-gray-200 border-t-emerald-500 rounded-full animate-spin" />
-                </div>
-              ) : files.length === 0 ? (
-                <p className="text-sm text-gray-400 font-body text-center py-4">
-                  No files uploaded yet.
-                </p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {files.map((file) => {
-                    const filePath = `${parentId}/${studentId}/${file.name}`;
-                    const isDeleting = deletingPath === filePath;
-                    return (
-                      <div
-                        key={file.id ?? file.name}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"
-                      >
-                        <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <p className="flex-1 text-sm font-body text-gray-700 truncate">
-                          {formatFileName(file.name)}
-                        </p>
-                        {!readOnly && (
-                          <button
-                            onClick={() => handleDelete(file.name)}
-                            disabled={isDeleting}
-                            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50"
-                          >
-                            {isDeleting ? (
-                              <div className="w-4 h-4 border-2 border-gray-200 border-t-red-400 rounded-full animate-spin" />
-                            ) : (
-                              <Trash2 className="w-4 h-4" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Upload zone */}
-              {!readOnly && files.length < MAX_FILES && (
-                <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-2xl px-6 py-10 flex flex-col items-center gap-3 cursor-pointer transition-colors ${
-                    isDragging
-                      ? "border-emerald-400 bg-emerald-50"
-                      : "border-gray-200 hover:border-emerald-300 hover:bg-green-50/30"
-                  }`}
-                >
-                  {isUploading ? (
-                    <div className="w-6 h-6 border-2 border-gray-200 border-t-emerald-500 rounded-full animate-spin" />
-                  ) : (
-                    <Upload className="w-6 h-6 text-gray-400" />
-                  )}
-                  <div className="text-center">
-                    <p className="text-sm font-semibold text-gray-600 font-heading">
-                      {isUploading ? "Uploading..." : "Click or drag to upload"}
-                    </p>
-                    <p className="text-xs text-gray-400 font-body mt-0.5">
-                      PDF, JPG, PNG, WEBP, HEIC — up to 10MB each
-                    </p>
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept={ACCEPTED_EXT}
-                    className="hidden"
-                    onChange={(e) => handleUpload(e.target.files)}
-                  />
-                </div>
-              )}
-
-              {error && (
-                <p className="text-sm text-red-500 font-body bg-red-50 rounded-xl px-4 py-3">
-                  {error}
-                </p>
-              )}
-
-              {files.length > 0 && (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200">
-                  <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  <p className="text-sm font-body text-emerald-700">
-                    {files.length === 1
-                      ? "1 file uploaded successfully."
-                      : `${files.length} files uploaded successfully.`}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100">
-              <button
-                onClick={onClose}
-                className="w-full py-2.5 rounded-xl bg-gray-800 text-white text-sm font-semibold font-heading hover:bg-gray-700 transition-colors cursor-pointer"
-              >
-                Done
-              </button>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            Done
+          </button>
+          <p className="mt-2 text-center text-xs font-bold text-[var(--sf-soft)]" aria-live="polite">
+            {files.length > 0 ? `✓ ${files.length} of ${MAX_FILES} files uploaded` : "No files uploaded yet"}
+          </p>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-5 pt-2">
+        <LegalText>
+          <p>
+            Upload your child&apos;s current immunization records. If your child has no current immunization record, you may instead upload a
+            notarized religious exemption affidavit. Accepted formats: PDF, JPG, PNG, WEBP, HEIC. Max 10MB per file.
+          </p>
+        </LegalText>
+        {loadError && !loading ? (
+          <ErrorCard title="We couldn't load your files" body={loadError} onRetry={() => void loadFiles()} />
+        ) : (
+          <FileDropZone
+            files={dropFiles}
+            maxFiles={MAX_FILES}
+            loading={loading}
+            uploading={uploading}
+            deletingKey={deletingKey}
+            error={error}
+            readOnly={readOnly}
+            onFiles={(picked) => void handleFiles(picked)}
+            onDelete={(f) => void handleDelete(f)}
+          />
+        )}
+        {files.length > 0 && !loading ? (
+          <SavedNote>{files.length === 1 ? "1 file uploaded successfully." : `${files.length} files uploaded successfully.`}</SavedNote>
+        ) : null}
+      </div>
+    </GardenSheet>
   );
 }

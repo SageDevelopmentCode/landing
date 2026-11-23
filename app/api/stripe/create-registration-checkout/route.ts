@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getStripe } from "@/app/lib/stripe";
 import { getOrCreateStripeCustomer } from "@/app/lib/stripe-customer";
+import { createAdminClient, createServerSupabaseClient } from "@/app/lib/supabase-server";
+import { assertCanActAsParent } from "@/app/lib/parent-access";
 import {
   ALL_PROGRAM_VALUES,
   ALL_DROP_IN_PROGRAM_VALUES,
@@ -16,7 +18,11 @@ const schema = z.object({
   applicationId: z.string(),
   coverFees: z.boolean().optional().default(false),
   paymentMethod: z.enum(["card", "ach"]).optional().default("card"),
-  program: z.enum(ALL_PROGRAM_VALUES).default("summer_26"),
+  // A null program falls back to summer_26, the same as the combined checkout.
+  program: z.preprocess(
+    (v) => v ?? undefined,
+    z.enum(ALL_PROGRAM_VALUES).default("summer_26"),
+  ),
   dropInProgram: z
     .enum(ALL_DROP_IN_PROGRAM_VALUES)
     .nullable()
@@ -25,8 +31,33 @@ const schema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
     const body = await request.json();
     const validated = schema.parse(body);
+
+    // Only the parent (or someone with active shared access to them) may start this checkout.
+    const access = await assertCanActAsParent(user.id, validated.parentId);
+    if (access.error) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const { data: ownedApp } = await createAdminClient()
+      .schema("parent_app")
+      .from("applications")
+      .select("id")
+      .eq("id", validated.applicationId)
+      .eq("user_id", validated.parentId)
+      .eq("student_id", validated.studentId)
+      .maybeSingle();
+    if (!ownedApp) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const {
       parentId,
