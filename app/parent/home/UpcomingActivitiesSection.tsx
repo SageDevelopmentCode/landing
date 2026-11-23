@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
 import type { Activity } from "@/app/actions/activities";
+import { Arrow, SectionHeader } from "@/app/parent/_garden/ui";
 
 type Props = {
   activities: Activity[];
@@ -20,6 +20,8 @@ function formatCardDate(dateStr: string): string {
   });
 }
 
+const TILTS = ["-2deg", "1.5deg", "-1deg", "2deg"];
+
 export default function UpcomingActivitiesSection({
   activities,
   onSelectActivity,
@@ -28,88 +30,78 @@ export default function UpcomingActivitiesSection({
   onAutoFillClick,
 }: Props) {
   return (
-    <section>
-      <div className="mb-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-heading font-semibold text-gray-800">
-            Upcoming Activities
-          </h2>
-          {showAutoFillButton && onAutoFillClick ? (
+    <section aria-labelledby="home-activities">
+      <SectionHeader
+        id="home-activities"
+        title="Upcoming Activities"
+        note={activities.length > 0 ? "Tap an activity to set participation preferences" : undefined}
+        action={
+          showAutoFillButton && onAutoFillClick ? (
             <button
               type="button"
               onClick={onAutoFillClick}
-              className="text-sm font-semibold font-body text-[#4a7c59] hover:text-[#3d6849] transition-colors cursor-pointer shrink-0"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[var(--sf-butter)] px-4 text-sm font-extrabold text-[#5c4400] shadow-[0_4px_0_0_#e0c35c] transition-all hover:-translate-y-0.5 hover:shadow-[0_6px_0_0_#e0c35c] focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] active:translate-y-0.5 active:shadow-[0_1px_0_0_#e0c35c] cursor-pointer"
             >
               Auto-Fill ⚡
             </button>
-          ) : null}
-        </div>
-        {activities.length > 0 ? (
-          <p className="text-sm text-gray-500 font-body mt-1">
-            Tap an activity to set participation preferences
-          </p>
-        ) : null}
-      </div>
+          ) : null
+        }
+      />
       {activities.length === 0 ? (
-        <p className="text-sm text-gray-400 font-body">No upcoming activities.</p>
+        <p className="rounded-[24px] bg-white/70 px-5 py-5 text-sm font-bold text-[var(--sf-soft)]">No upcoming activities.</p>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-          {activities.map((activity) => {
+        <div
+          className="-mx-6 flex snap-x snap-mandatory gap-5 overflow-x-auto px-6 -mb-4 pb-8 pt-3 [scroll-padding-inline:1.5rem] scrollbar-hide"
+          role="list"
+        >
+          {activities.map((activity, i) => {
             const thumb = activity.images[0]?.signed_url ?? null;
             return (
-              <button
-                key={activity.id}
-                type="button"
-                onClick={() => onSelectActivity(activity)}
-                className="group shrink-0 w-[220px] sm:w-[260px] rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden text-left cursor-pointer transition-all hover:shadow-md hover:border-[#4a7c59]/25 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a7c59]/40"
-              >
-                <div className="relative h-32 sm:h-36 overflow-hidden">
-                  {thumb ? (
-                    <Image
-                      src={thumb}
-                      alt=""
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300 text-2xl">
-                      🎀
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/5 group-hover:bg-black/10 transition-colors" />
-                  <span className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/90 shadow-sm flex items-center justify-center">
-                    <ChevronRight
-                      size={14}
-                      className="text-[#4a7c59] group-hover:translate-x-0.5 transition-transform"
-                    />
-                  </span>
-                </div>
-                <div className="p-3.5 flex flex-col gap-2">
-                  <div>
-                    <p className="text-sm font-semibold font-heading text-gray-800 line-clamp-2 leading-snug">
-                      {activity.title}
-                    </p>
+              <div key={activity.id} role="listitem" className="shrink-0 snap-start">
+                <button
+                  type="button"
+                  onClick={() => onSelectActivity(activity)}
+                  className="sf-polaroid group block w-[220px] text-left transition-[rotate,translate,box-shadow] duration-300 hover:!rotate-0 hover:-translate-y-1 focus-visible:!rotate-0 focus-visible:-translate-y-1 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] sm:w-[250px] cursor-pointer"
+                  style={{ rotate: TILTS[i % TILTS.length] }}
+                  aria-label={`${activity.title}${activity.activity_date ? `, ${formatCardDate(activity.activity_date)}` : ""}. Set preferences`}
+                >
+                  <div className="relative h-32 overflow-hidden rounded-[3px] bg-[var(--sf-peach)] sm:h-36">
+                    {thumb ? (
+                      <Image
+                        src={thumb}
+                        alt=""
+                        fill
+                        sizes="250px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-3xl" aria-hidden="true">
+                        🎀
+                      </div>
+                    )}
                     {activity.activity_date ? (
-                      <p className="text-xs text-[#4a7c59] font-body mt-1">
+                      <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2.5 py-1 text-xs font-extrabold text-[var(--sf-ink)] shadow-sm">
                         {formatCardDate(activity.activity_date)}
-                      </p>
+                      </span>
                     ) : null}
                   </div>
-                  <span className="inline-flex items-center gap-1 self-start px-2.5 py-1 rounded-full text-xs font-semibold font-body bg-[#EEF5EF] text-[#4a7c59] group-hover:bg-[#ddeede] transition-colors">
-                    Set preferences
-                    <ChevronRight size={12} />
-                  </span>
-                </div>
-              </button>
+                  <div className="px-1 pb-0.5 pt-3">
+                    <p className="line-clamp-2 min-h-[2.6em] text-[15px] font-extrabold leading-snug text-[var(--sf-ink)]">
+                      {activity.title}
+                    </p>
+                    <span className="mt-2 inline-flex min-h-8 items-center gap-1 rounded-full bg-[var(--sf-mint)] px-3 text-xs font-extrabold text-[var(--sf-sage-deep)] transition group-hover:bg-[var(--sf-sage)] group-hover:text-white group-focus-visible:bg-[var(--sf-sage)] group-focus-visible:text-white">
+                      Set preferences <Arrow className="h-3 w-3" />
+                    </span>
+                  </div>
+                </button>
+              </div>
             );
           })}
         </div>
       )}
       {readOnly ? (
-        <p className="text-xs text-gray-400 font-body mt-2">
-          Preview mode — preferences cannot be saved.
-        </p>
+        <p className="mt-1 text-xs font-bold text-[var(--sf-soft)]">Preview mode — preferences cannot be saved.</p>
       ) : null}
     </section>
   );

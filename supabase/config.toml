@@ -406,3 +406,19 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+# Notification functions are called by database triggers, not by signed-in users.
+# They authenticate with the x-webhook-secret header (WEBHOOK_SECRET), so the gateway
+# must not require a JWT: the new sb_secret_ keys are not JWTs.
+# If you deploy from apps/mobile/supabase instead, pass --no-verify-jwt for these four.
+[functions.send-message-notification]
+verify_jwt = false
+
+[functions.send-channel-message-notification]
+verify_jwt = false
+
+[functions.send-activity-notification]
+verify_jwt = false
+
+[functions.send-feed-notification]
+verify_jwt = false

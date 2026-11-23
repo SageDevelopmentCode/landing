@@ -321,7 +321,7 @@ export function SchoolYearBillingSection({
           <StepHeader
             step="2"
             title="Tuition"
-            subtitle="November tuition due November 1"
+            subtitle="Tuition due December 1"
           />
           <View style={styles.stepCards}>
             {homeschoolApps.map((app) => {

@@ -166,7 +166,7 @@ export default async function ChildrenRoute() {
 
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-        <main className="flex-1 flex overflow-hidden">
+        <main className="flex-1">
           <Suspense>
             <ChildrenPage students={children} teachersByStudent={teachersByStudent} nonEnrolledAppByStudent={nonEnrolledAppByStudent} studentProgramMap={studentProgramMap} pickupByStudent={pickupByStudent} notesByStudent={notesByStudent} isSharedAccess={isSharedAccess} />
           </Suspense>

@@ -7,6 +7,8 @@ import { getPublishedActivities } from "@/app/actions/activities";
 import { computePaidDates } from "@/app/lib/compute-paid-dates";
 import { getConferenceTeacherAssignments } from "@/app/lib/get-conference-teacher-assignments";
 import { getConferenceBookings } from "@/app/lib/get-conference-bookings";
+import { getTeacherFavoritePhotos } from "@/app/lib/get-teacher-favorite-photos";
+import { getPublishedNewslettersList } from "@/app/actions/newsletter";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -142,7 +144,7 @@ export default async function ParentHomePage() {
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
   const studentIds = students.map((s) => s.id);
 
-  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, { data: prefsData }, { data: defaultPrefsData }, onboardingCompletedIds, publishedActivities, { data: testimonialData }] =
+  const [{ data: checkInsData }, { data: eventsData }, { data: paymentsData }, { data: referralsData }, { data: dropOffData }, { data: txData }, { data: summerData }, { data: prefsData }, { data: defaultPrefsData }, onboardingCompletedIds, publishedActivities, { data: testimonialData }, teacherPhotos, homeNewsletters] =
     await Promise.all([
       studentIds.length > 0
         ? adminClient
@@ -215,6 +217,8 @@ export default async function ParentHomePage() {
         .eq("is_deleted", false)
         .limit(1)
         .maybeSingle(),
+      getTeacherFavoritePhotos(),
+      getPublishedNewslettersList(5),
     ]);
 
   const studentMap: StudentMap = {};
@@ -432,6 +436,8 @@ export default async function ParentHomePage() {
           conferenceStudents={conferenceStudents}
           conferenceBookingsByStudent={bookingsByStudentId}
           conferenceTakenSlotKeys={takenSlotKeys}
+          teacherPhotos={teacherPhotos}
+          newsletters={homeNewsletters}
         />
       </main>
 

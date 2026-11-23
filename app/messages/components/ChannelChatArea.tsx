@@ -187,6 +187,11 @@ interface ChannelChatAreaProps {
   onMemberRemoved?: (channelId: string) => void;
   // Design system: pass true for admin styling, false for the green-theme parent/teacher styling
   adminStyle?: boolean;
+  /** Parent portal Garden skin (accent colour, rounded header/composer). Off by default, so teacher/admin are unchanged. */
+  gardenStyle?: boolean;
+  /** Admin "view as parent": skip read receipts and stop every write (calls `onReadOnlyAttempt` instead). */
+  readOnlyPreview?: boolean;
+  onReadOnlyAttempt?: () => void;
 }
 
 export default function ChannelChatArea({
@@ -198,7 +203,16 @@ export default function ChannelChatArea({
   onMessageSent,
   onMemberRemoved,
   adminStyle = false,
+  gardenStyle = false,
+  readOnlyPreview = false,
+  onReadOnlyAttempt,
 }: ChannelChatAreaProps) {
+  // Preview guard: true means "stop, this is a write in admin preview".
+  const blockedByPreview = () => {
+    if (!readOnlyPreview) return false;
+    onReadOnlyAttempt?.();
+    return true;
+  };
   const [messages, setMessages] = useState<ChannelMessageRow[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [draft, setDraft] = useState("");
@@ -261,7 +275,7 @@ export default function ChannelChatArea({
       });
       setMessages(data);
       setLoadingMessages(false);
-      if (isMember) {
+      if (isMember && !readOnlyPreview) {
         markChannelRead(channel.id, userId);
       }
     });
@@ -317,7 +331,7 @@ export default function ChannelChatArea({
 
           onMessageSent(channel.id, { body: raw.body, created_at: raw.created_at, sender_id: raw.sender_id });
 
-          if (raw.sender_id !== userId) {
+          if (raw.sender_id !== userId && !readOnlyPreview) {
             markChannelRead(channel.id, userId);
           }
         }
@@ -360,6 +374,7 @@ export default function ChannelChatArea({
   }, [channel.id, isMember, userId]);
 
   const handleJoin = async () => {
+    if (blockedByPreview()) return;
     setJoining(true);
     const ok = await joinChannel(channel.id, userId);
     if (ok) {
@@ -371,6 +386,7 @@ export default function ChannelChatArea({
 
   const handleLeave = async () => {
     if (channel.is_default) return;
+    if (blockedByPreview()) return;
     setLeaving(true);
     const ok = await leaveChannel(channel.id, userId);
     if (ok) {
@@ -383,6 +399,7 @@ export default function ChannelChatArea({
 
   const handleRemoveMember = async (member: ChannelMember) => {
     if (userRole !== "super_admin" || member.role !== "parent") return;
+    if (blockedByPreview()) return;
     const confirmed = window.confirm(`Remove ${member.full_name} from #${channel.name}?`);
     if (!confirmed) return;
 
@@ -427,6 +444,7 @@ export default function ChannelChatArea({
 
   const handleSend = async () => {
     if ((!draft.trim() && !imageFile && !attachedFile) || !isMember || sending) return;
+    if (blockedByPreview()) return;
     const body = draft.trim();
     setDraft("");
     setSendError(null);
@@ -507,6 +525,7 @@ export default function ChannelChatArea({
 
   const handleReact = async (msgId: string, emoji: string) => {
     if (!isMember) return;
+    if (blockedByPreview()) return;
     setReactionPickerMsgId(null);
     setReactionSheetMsgId(null);
     const updated = await toggleReaction(msgId, emoji);
@@ -524,6 +543,7 @@ export default function ChannelChatArea({
 
   const handleEditSave = async (msgId: string) => {
     if (!editDraft.trim()) return;
+    if (blockedByPreview()) return;
     const ok = await editChannelMessage(msgId, editDraft);
     if (ok) {
       setMessages((prev) =>
@@ -535,6 +555,7 @@ export default function ChannelChatArea({
   };
 
   const handleDelete = async (msgId: string) => {
+    if (blockedByPreview()) return;
     setDeletingMsgId(msgId);
     const ok = await deleteChannelMessage(msgId);
     if (ok) {
@@ -543,29 +564,38 @@ export default function ChannelChatArea({
     setDeletingMsgId(null);
   };
 
-  const green = "#4a7c59";
-  const greenDark = "#3d6849";
+  const green = gardenStyle ? "#4a6354" : "#4a7c59";
+  const greenDark = gardenStyle ? "#3a4f43" : "#3d6849";
+  const g = gardenStyle;
 
   const annotated = annotateMessages(messages);
 
   return (
     <>
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
-        <button onClick={onBack} className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer">
+      <div className={g ? "flex min-h-[68px] items-center gap-2.5 px-3 py-2 sm:px-4 border-b border-[var(--sf-ink)]/[0.08] bg-[var(--sf-cream)] shrink-0" : "flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0"}>
+        <button
+          onClick={onBack}
+          aria-label="Back"
+          className={g ? "md:hidden inline-flex h-11 w-11 items-center justify-center rounded-full text-[var(--sf-ink)] hover:bg-[var(--sf-ink)]/[0.06] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] cursor-pointer" : "md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"}
+        >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div
-          className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-sm font-semibold font-body"
+          className={g ? "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-white text-sm font-semibold" : "w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-sm font-semibold font-body"}
           style={{ backgroundColor: green }}
         >
           <Hash className="w-4 h-4" />
         </div>
-        <div>
-          <p className="text-sm font-semibold font-body text-gray-800">{channel.name}</p>
+        <div className={g ? "min-w-0" : undefined}>
+          {g ? (
+            <h2 className="truncate text-[16.5px] font-extrabold leading-tight text-[var(--sf-ink)]">{channel.name}</h2>
+          ) : (
+            <p className="text-sm font-semibold font-body text-gray-800">{channel.name}</p>
+          )}
           <button
             onClick={handleOpenMembers}
-            className="text-[11px] text-[#4a7c59] font-body hover:underline underline-offset-2 text-left cursor-pointer"
+            className={g ? "text-xs font-extrabold text-[var(--sf-sage-deep)] hover:underline underline-offset-2 text-left cursor-pointer" : "text-[11px] text-[#4a7c59] font-body hover:underline underline-offset-2 text-left cursor-pointer"}
           >
             {channel.memberCount} member{channel.memberCount !== 1 ? "s" : ""}
           </button>
@@ -584,8 +614,8 @@ export default function ChannelChatArea({
           <button
             onClick={handleJoin}
             disabled={joining}
-            className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors text-white disabled:opacity-50"
-            style={{ backgroundColor: green }}
+            className={g ? "ml-auto inline-flex min-h-11 items-center gap-1.5 rounded-full px-5 text-sm font-extrabold text-white bg-[var(--sf-coral-deep)] shadow-[0_4px_0_0_#b85a4f] cursor-pointer transition hover:-translate-y-0.5 disabled:opacity-50" : "ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg cursor-pointer transition-colors text-white disabled:opacity-50"}
+            style={g ? undefined : { backgroundColor: green }}
           >
             {joining ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
             Join Channel
@@ -777,7 +807,7 @@ export default function ChannelChatArea({
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-100 shrink-0">
+      <div className={g ? "border-t border-[var(--sf-ink)]/[0.08] bg-[var(--sf-cream)] shrink-0" : "border-t border-gray-100 shrink-0"}>
         {sendError && <p className="px-4 pt-2 text-xs text-red-500">{sendError}</p>}
         {imagePreview && (
           <div className="px-4 pt-2 flex items-center gap-2">
@@ -810,21 +840,24 @@ export default function ChannelChatArea({
             <input ref={attachmentInputRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" className="hidden" onChange={handleFileSelect} />
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"
+              className={g ? "w-11 h-11 rounded-full flex items-center justify-center text-[var(--sf-sage-deep)] hover:bg-[var(--sf-ink)]/[0.06] transition-colors cursor-pointer shrink-0" : "w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"}
               title="Attach image"
+              aria-label="Attach image"
             >
               <ImageIcon className="w-5 h-5" />
             </button>
             <button
               onClick={() => attachmentInputRef.current?.click()}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"
+              className={g ? "w-11 h-11 rounded-full flex items-center justify-center text-[var(--sf-sage-deep)] hover:bg-[var(--sf-ink)]/[0.06] transition-colors cursor-pointer shrink-0" : "w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"}
               title="Attach file"
+              aria-label="Attach file"
             >
               <Paperclip className="w-5 h-5" />
             </button>
             <input
               type="text"
               placeholder={`Message #${channel.name}`}
+              aria-label={`Message #${channel.name}`}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => {
@@ -833,13 +866,14 @@ export default function ChannelChatArea({
                   handleSend();
                 }
               }}
-              className="flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
+              className={g ? "min-w-0 flex-1 min-h-11 px-4 rounded-full bg-white text-[15px] font-semibold text-[var(--sf-ink)] ring-[1.5px] ring-[var(--sf-ink)]/10 placeholder:text-[var(--sf-soft)]/70 focus:outline-none focus:ring-[var(--sf-sage)]" : "flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"}
             />
             <button
               onClick={handleSend}
               disabled={(!draft.trim() && !imageFile && !attachedFile) || sending}
-              className="w-10 h-10 rounded-xl text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-              style={{ backgroundColor: sending ? greenDark : green }}
+              aria-label={sending ? "Sending" : "Send message"}
+              className={g ? "w-11 h-11 rounded-full text-white flex items-center justify-center transition cursor-pointer shrink-0 bg-[var(--sf-coral-deep)] shadow-[0_3px_0_0_#b85a4f] disabled:bg-[#d9d2c5] disabled:shadow-none" : "w-10 h-10 rounded-xl text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 disabled:opacity-50"}
+              style={g ? undefined : { backgroundColor: sending ? greenDark : green }}
             >
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
@@ -849,8 +883,8 @@ export default function ChannelChatArea({
             <button
               onClick={handleJoin}
               disabled={joining}
-              className="px-5 py-2 rounded-xl text-sm font-semibold font-body text-white transition-colors cursor-pointer disabled:opacity-50"
-              style={{ backgroundColor: green }}
+              className={g ? "min-h-11 px-6 rounded-full text-sm font-extrabold text-white bg-[var(--sf-coral-deep)] shadow-[0_4px_0_0_#b85a4f] transition hover:-translate-y-0.5 cursor-pointer disabled:opacity-50" : "px-5 py-2 rounded-xl text-sm font-semibold font-body text-white transition-colors cursor-pointer disabled:opacity-50"}
+              style={g ? undefined : { backgroundColor: green }}
             >
               {joining ? "Joining..." : "Join to participate"}
             </button>

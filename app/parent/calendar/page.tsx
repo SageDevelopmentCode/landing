@@ -5,9 +5,9 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import Footer from "@/app/components/Footer";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import DashboardHeader from "@/app/parent/dashboard/DashboardHeader";
+import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import ParentCalendarClient from "./ParentCalendarClient";
 import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 
@@ -22,6 +22,18 @@ export default async function ParentCalendarPage() {
   }
 
   const adminClient = createAdminClient();
+
+  // Shared-access grantees see the primary parent's dashboard, so the enrolled check uses the owner.
+  const { data: grant } = await adminClient
+    .schema("parent_app")
+    .from("dashboard_access_grants")
+    .select("owner_id")
+    .eq("grantee_id", user.id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  const effectiveParentId = grant?.owner_id ?? user.id;
+  const isSharedAccess = !!grant;
 
   const [{ data: adminUser }, { data: eventsData }, { data: enrolledCheck }] = await Promise.all([
     adminClient
@@ -42,7 +54,7 @@ export default async function ParentCalendarPage() {
       .schema("parent_app")
       .from("applications")
       .select("id")
-      .eq("user_id", user.id)
+      .eq("user_id", effectiveParentId)
       .eq("status", "enrolled")
       .limit(1),
   ]);
@@ -52,6 +64,12 @@ export default async function ParentCalendarPage() {
   const events = eventsData ?? [];
 
   if ((enrolledCheck ?? []).length === 0) redirect("/parent/dashboard");
+
+  let primaryOwnerName: string | null = null;
+  if (isSharedAccess) {
+    const { data: ownerUser } = await adminClient.schema("admin").from("users").select("full_name").eq("id", effectiveParentId).single();
+    primaryOwnerName = ownerUser?.full_name ?? null;
+  }
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
@@ -73,7 +91,9 @@ export default async function ParentCalendarPage() {
         <ParentHeaderRight userId={user.id} email={user.email ?? ""} fullName={fullName} profileImageUrl={profileImageUrl} />
       </DashboardHeader>
 
-      <main className="flex-1 flex flex-col">
+      <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
+
+      <main className="flex-1">
         <ParentCalendarClient initialEvents={events} userId={user.id} />
       </main>
 

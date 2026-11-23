@@ -98,7 +98,7 @@ export default function ProfileDropdown({
           )}
         </span>
         {fullName && (
-          <span className="text-sm font-medium text-gray-700 font-body">
+          <span className="whitespace-nowrap text-sm font-medium text-gray-700 font-body">
             {fullName}
           </span>
         )}

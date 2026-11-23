@@ -213,12 +213,9 @@ export default async function ImpersonateFormsPage({
         </div>
         <ImpersonateNotificationBell parentId={parentId} />
       </header>
-      <main className="flex-1 max-w-4xl mx-auto px-6 py-12 w-full pointer-events-none select-none">
-        <div className="mb-10">
-          <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-            Forms &amp; Documents
-          </h1>
-        </div>
+      <main className="flex-1 pointer-events-none select-none">
+        {/* Admins can open documents (they're read-only); writes are blocked by readOnlyPreview. */}
+        <div className="pointer-events-auto select-text">
         <FormsPage
           apps={approvedApps}
           signaturesByStudent={signaturesByStudent}
@@ -229,9 +226,11 @@ export default async function ImpersonateFormsPage({
           authorizedPickupByStudent={authorizedPickupByStudent}
           healthStatementByStudent={healthStatementByStudent}
           religiousExemptionCountByStudent={religiousExemptionCountByStudent}
-          parentId={parentId}
-          parentName={fullName ?? ""}
+          parentId={effectiveParentId}
+          parentName={ownerName ?? fullName ?? ""}
+          readOnlyPreview
         />
+        </div>
       </main>
     </div>
   );

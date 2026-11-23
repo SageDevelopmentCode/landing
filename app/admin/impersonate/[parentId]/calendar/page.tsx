@@ -45,8 +45,8 @@ export default async function ImpersonateCalendarPage({
         </div>
         <ImpersonateNotificationBell parentId={parentId} />
       </header>
-      <main className="flex-1 flex flex-col pointer-events-none select-none">
-        <ParentCalendarClient initialEvents={events} />
+      <main className="flex-1 pointer-events-none select-none">
+        <ParentCalendarClient initialEvents={events} readOnlyPreview />
       </main>
     </div>
   );

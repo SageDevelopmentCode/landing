@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!,
   );
 
   const { data: caller } = await admin
@@ -144,9 +144,23 @@ Deno.serve(async (req) => {
 
   const allParents = parents ?? [];
 
-  if (!allParents.length || count_only) {
+  const withToken = allParents.filter(
+    (p: { push_token: string | null }) => p.push_token,
+  );
+  const withoutToken = allParents.filter(
+    (p: { push_token: string | null }) => !p.push_token,
+  );
+
+  if (count_only) {
     return new Response(
-      JSON.stringify({ ok: true, count: allParents.length, sent: 0 }),
+      JSON.stringify({ ok: true, count: withToken.length, sent: 0 }),
+      { headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  if (!allParents.length) {
+    return new Response(
+      JSON.stringify({ ok: true, count: 0, sent: 0 }),
       { headers: { "Content-Type": "application/json" } },
     );
   }
@@ -157,8 +171,6 @@ Deno.serve(async (req) => {
   const studentMap = await studentNamesByParentId(admin, parentIds);
 
   const deliveryRecipients: PushDeliveryRecipient[] = [];
-  const withToken = allParents.filter((p: { push_token: string | null }) => p.push_token);
-  const withoutToken = allParents.filter((p: { push_token: string | null }) => !p.push_token);
 
   for (const p of withoutToken as {
     id: string;

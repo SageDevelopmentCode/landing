@@ -5,6 +5,7 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { Suspense } from "react";
 import Footer from "@/app/components/Footer";
 import ChildTabs from "./ChildTabs";
 import DashboardNav from "./DashboardNav";
@@ -12,8 +13,6 @@ import ParentHeaderRight from "@/app/parent/components/ParentHeaderRight";
 import SharedAccessBanner from "./SharedAccessBanner";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import type { Database } from "@/app/types/database.types";
-import { getAllStudentAssignments } from "@/app/actions/teacherAssignments";
-import type { TeacherAssignment } from "@/app/actions/teacherAssignments";
 
 type StudentHealthInfo =
   Database["parent_app"]["Tables"]["student_health_info"]["Row"];
@@ -119,14 +118,6 @@ export default async function ParentDashboard() {
   > = {};
   const religiousExemptionCountByStudent: Record<string, number> = {};
   const profileImageByStudent: Record<string, string | null> = {};
-
-  const teachersByStudent: Record<string, TeacherAssignment[]> = {};
-  if (studentIds.length > 0) {
-    const allAssignments = await getAllStudentAssignments();
-    for (const sid of studentIds) {
-      teachersByStudent[sid] = allAssignments[sid] ?? [];
-    }
-  }
 
   if (studentIds.length > 0) {
     const [
@@ -284,7 +275,7 @@ export default async function ParentDashboard() {
     <div className="bg-welcome-bg">
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <header className="relative bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-5 py-3 grid grid-cols-[auto_1fr_auto] items-center">
           <div className="hidden md:flex items-center">
             <Link href="/">
               <Image
@@ -307,7 +298,8 @@ export default async function ParentDashboard() {
 
         <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-        <main className="flex-1 flex overflow-hidden">
+        <main className="flex-1">
+          <Suspense>
           <ChildTabs
             apps={approvedApps}
             pendingApps={pendingApps}
@@ -325,6 +317,7 @@ export default async function ParentDashboard() {
             religiousExemptionCountByStudent={religiousExemptionCountByStudent}
             profileImageByStudent={profileImageByStudent}
           />
+          </Suspense>
         </main>
       </div>
       <Footer />

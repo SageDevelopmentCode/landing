@@ -63,7 +63,7 @@ export default async function ParentAcademicCalendarPage() {
 
   return (
     <div className="bg-welcome-bg min-h-screen flex flex-col">
-      <DashboardHeader>
+      <DashboardHeader sticky>
         <div className="flex items-center">
           <Link href="/">
             <Image
@@ -88,7 +88,7 @@ export default async function ParentAcademicCalendarPage() {
 
       <SharedAccessBanner isSharedAccess={isSharedAccess} primaryOwnerName={primaryOwnerName} />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
+      <main className="flex-1">
         <ParentAcademicCalendarClient />
       </main>
     </div>

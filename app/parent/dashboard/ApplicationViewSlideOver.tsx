@@ -1,163 +1,140 @@
 "use client";
 
-import { motion } from "framer-motion";
 import type { Database } from "@/app/types/database.types";
+import GardenSheet from "./garden/EnrollmentSheet";
+import { InfoRow } from "@/app/parent/_garden/fields";
+import { cardBase } from "@/app/parent/_garden/ui";
+import { PROGRAM_LABELS } from "@/app/lib/application-programs";
 
 type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
-
-const PROGRAM_LABELS: Record<string, string> = {
-  summer_26: "Summer 2026",
-  school_year_26_27: "School Year 2026-2027",
-  both: "Both",
-  homeschool_drop_in: "Homeschool Drop-In",
-};
 
 function formatProgram(value: string | null | undefined) {
   if (!value) return null;
   return PROGRAM_LABELS[value] ?? value;
 }
 
-function field(label: string, value: string | null | boolean | undefined) {
-  if (value == null || value === false || value === "") return null;
-  const display = value === true ? "Yes" : value;
-  return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-xs text-gray-400 font-body">{label}</span>
-      <span className="text-sm text-gray-800 font-body">{display}</span>
-    </div>
-  );
+type Row = { label: string; value: string | null | boolean | undefined };
+
+/** Drops empty answers (as before) and shows `true` as "Yes". */
+function visible(rows: Row[]) {
+  return rows
+    .filter((r) => !(r.value == null || r.value === false || r.value === ""))
+    .map((r) => ({ label: r.label, value: r.value === true ? "Yes" : String(r.value) }));
 }
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  const kids = Array.isArray(children) ? children.filter(Boolean) : children;
-  if (!kids || (Array.isArray(kids) && kids.length === 0)) return null;
+function Group({ title, emoji, rows }: { title: string; emoji: string; rows: Row[] }) {
+  const shown = visible(rows);
+  if (shown.length === 0) return null;
   return (
-    <div className="mb-6">
-      <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400 font-body mb-3 border-b border-gray-100 pb-2">
+    <section className={`${cardBase} px-5 pb-2 pt-4`} aria-label={title}>
+      <h3 className="flex items-center gap-2 text-base font-extrabold">
+        <span aria-hidden="true">{emoji}</span>
         {title}
       </h3>
-      <div className="flex flex-col gap-3">{children}</div>
-    </div>
+      <dl>
+        {shown.map((r, i) => (
+          <InfoRow key={`${r.label}-${i}`} label={r.label} value={r.value} />
+        ))}
+      </dl>
+    </section>
   );
 }
 
 export default function ApplicationViewSlideOver({
   app,
   onClose,
+  open = true,
 }: {
   app: Application;
   onClose: () => void;
+  /** Defaults to open: callers that mount it only while showing can leave it out. */
+  open?: boolean;
 }) {
   const childName = app.preferred_name ?? app.child_legal_name ?? "—";
+  const dob = app.dob_month && app.dob_day && app.dob_year ? `${app.dob_month}/${app.dob_day}/${app.dob_year}` : null;
+  const address = [app.address_street, app.address_city, app.address_state, app.address_zip].filter(Boolean).join(", ") || null;
 
   return (
-    <>
-      {/* Backdrop */}
-      <motion.div
-        className="fixed inset-0 bg-black/30 z-40"
-        onClick={onClose}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-      />
-
-      {/* Panel */}
-      <motion.div
-        className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl flex flex-col"
-        initial={{ x: "100%" }}
-        animate={{ x: 0 }}
-        exit={{ x: "100%" }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div>
-            <p className="text-xs text-gray-400 font-body">Application</p>
-            <h2 className="text-base font-bold font-heading text-gray-800">
-              {childName}
-            </h2>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none px-2 py-1 rounded transition-colors"
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6">
-          <Section title="Child's Details">
-            {field("Program", formatProgram(app.program))}
-            {app.program === "homeschool_drop_in" && field("Drop-In Program", formatProgram(app.drop_in_program))}
-            {field("Legal Name", app.child_legal_name)}
-            {field("Preferred Name", app.preferred_name)}
-            {field("Date of Birth", app.dob_month && app.dob_day && app.dob_year ? `${app.dob_month}/${app.dob_day}/${app.dob_year}` : null)}
-            {field("Age", app.child_age != null ? String(app.child_age) : null)}
-            {field("Grade", app.child_grade)}
-            {field("Address", [app.address_street, app.address_city, app.address_state, app.address_zip].filter(Boolean).join(", ") || null)}
-            {field("Homeschooled", app.is_homeschooled)}
-            {field("Previous Schools", app.previous_schools)}
-            {field("Special Interests", app.special_interests)}
-          </Section>
-
-          <Section title="Guardian Info">
-            {field("Guardian 1 Name", app.g1_full_name)}
-            {field("Relationship", app.g1_relationship)}
-            {field("Email", app.g1_email)}
-            {field("Cell Phone", app.g1_cell_phone)}
-            {field("Work Phone", app.g1_work_phone)}
-            {field("Preferred Contact", app.g1_preferred_contact)}
-            {field("Lives with Child", app.g1_lives_with_child)}
-            {field("Has Custody", app.g1_has_custody)}
-            {app.g2_full_name ? (
-              <div className="pt-2 flex flex-col gap-3">
-                {field("Guardian 2 Name", app.g2_full_name)}
-                {field("Relationship", app.g2_relationship)}
-                {field("Email", app.g2_email)}
-                {field("Cell Phone", app.g2_cell_phone)}
-                {field("Work Phone", app.g2_work_phone)}
-                {field("Preferred Contact", app.g2_preferred_contact)}
-                {field("Lives with Child", app.g2_lives_with_child)}
-                {field("Has Custody", app.g2_has_custody)}
-              </div>
-            ) : null}
-            {field("Custody Orders", app.has_custody_orders)}
-          </Section>
-
-          <Section title="Health & Support">
-            {field("Medical Conditions", app.medical_conditions_description)}
-            {field("Allergies", app.allergies_description)}
-            {field("Emergency Medications", app.emergency_medications_description)}
-            {field("History Flags", app.history_flags)}
-            {field("Needs Aide", app.needs_aide)}
-          </Section>
-
-          <Section title="Learning Profile">
-            {field("Learning Style", app.learning_style)}
-            {field("Strengths & Interests", app.strengths_interests)}
-            {field("Current Challenges", app.current_challenges)}
-            {field("Dysregulation Response", app.dysregulation_response)}
-            {field("Regulation Strategies", app.regulation_strategies)}
-            {field("Activities to Avoid", app.activities_to_avoid)}
-          </Section>
-
-          <Section title="Signatures">
-            {field("Guardian 1 Signature", app.g1_signature_name)}
-            {field("Signature Date", app.g1_signature_date)}
-            {field("Guardian 2 Signature", app.g2_signature_name)}
-            {field("Signature Date (G2)", app.g2_signature_date)}
-          </Section>
-        </div>
-      </motion.div>
-    </>
+    <GardenSheet open={open} onClose={onClose} icon="📝" title={childName} note="Application">
+      <div className="flex flex-col gap-4 pt-2">
+        <Group
+          title="Child's Details"
+          emoji="🌱"
+          rows={[
+            { label: "Program", value: formatProgram(app.program) },
+            ...(app.program === "homeschool_drop_in" ? [{ label: "Drop-In Program", value: formatProgram(app.drop_in_program) }] : []),
+            { label: "Legal Name", value: app.child_legal_name },
+            { label: "Preferred Name", value: app.preferred_name },
+            { label: "Date of Birth", value: dob },
+            { label: "Age", value: app.child_age != null ? String(app.child_age) : null },
+            { label: "Grade", value: app.child_grade },
+            { label: "Address", value: address },
+            { label: "Homeschooled", value: app.is_homeschooled },
+            { label: "Previous Schools", value: app.previous_schools },
+            { label: "Special Interests", value: app.special_interests },
+          ]}
+        />
+        <Group
+          title="Guardian Info"
+          emoji="👪"
+          rows={[
+            { label: "Guardian 1 Name", value: app.g1_full_name },
+            { label: "Relationship", value: app.g1_relationship },
+            { label: "Email", value: app.g1_email },
+            { label: "Cell Phone", value: app.g1_cell_phone },
+            { label: "Work Phone", value: app.g1_work_phone },
+            { label: "Preferred Contact", value: app.g1_preferred_contact },
+            { label: "Lives with Child", value: app.g1_lives_with_child },
+            { label: "Has Custody", value: app.g1_has_custody },
+            ...(app.g2_full_name
+              ? [
+                  { label: "Guardian 2 Name", value: app.g2_full_name },
+                  { label: "Relationship", value: app.g2_relationship },
+                  { label: "Email", value: app.g2_email },
+                  { label: "Cell Phone", value: app.g2_cell_phone },
+                  { label: "Work Phone", value: app.g2_work_phone },
+                  { label: "Preferred Contact", value: app.g2_preferred_contact },
+                  { label: "Lives with Child", value: app.g2_lives_with_child },
+                  { label: "Has Custody", value: app.g2_has_custody },
+                ]
+              : []),
+            { label: "Custody Orders", value: app.has_custody_orders },
+          ]}
+        />
+        <Group
+          title="Health & Support"
+          emoji="❤️"
+          rows={[
+            { label: "Medical Conditions", value: app.medical_conditions_description },
+            { label: "Allergies", value: app.allergies_description },
+            { label: "Emergency Medications", value: app.emergency_medications_description },
+            { label: "History Flags", value: app.history_flags },
+            { label: "Needs Aide", value: app.needs_aide },
+          ]}
+        />
+        <Group
+          title="Learning Profile"
+          emoji="🧠"
+          rows={[
+            { label: "Learning Style", value: app.learning_style },
+            { label: "Strengths & Interests", value: app.strengths_interests },
+            { label: "Current Challenges", value: app.current_challenges },
+            { label: "Dysregulation Response", value: app.dysregulation_response },
+            { label: "Regulation Strategies", value: app.regulation_strategies },
+            { label: "Activities to Avoid", value: app.activities_to_avoid },
+          ]}
+        />
+        <Group
+          title="Signatures"
+          emoji="✍️"
+          rows={[
+            { label: "Guardian 1 Signature", value: app.g1_signature_name },
+            { label: "Signature Date", value: app.g1_signature_date },
+            { label: "Guardian 2 Signature", value: app.g2_signature_name },
+            { label: "Signature Date (G2)", value: app.g2_signature_date },
+          ]}
+        />
+      </div>
+    </GardenSheet>
   );
 }

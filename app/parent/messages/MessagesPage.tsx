@@ -1,20 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  Search,
-  Send,
-  ChevronLeft,
-  SquarePen,
-  X,
-  Loader2,
-  ImageIcon,
-  Paperclip,
-  FileText,
-  Download,
-  Hash,
-  Users,
-} from "lucide-react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { createClient } from "@/app/lib/supabase-browser";
 import {
   getConversations,
@@ -23,7 +10,6 @@ import {
   createConversation,
   findOrCreateHouseholdTeacherConversation,
   getConversationParticipants,
-  searchUsers,
   markMessagesRead,
   uploadMessageImage,
   uploadMessageFile,
@@ -32,1599 +18,1055 @@ import {
   type ConversationWithMeta,
   type ConversationParticipant,
   type MessageRow,
-  type UserSearchResult,
-  type EnrolledParent,
-  getEnrolledParents,
 } from "./actions";
-import {
-  getChannels,
-  ensureDefaultChannelMembership,
-  type ChannelWithMeta,
-} from "@/app/messages/channel-actions";
+import { getChannels, ensureDefaultChannelMembership, type ChannelWithMeta } from "@/app/messages/channel-actions";
 import ChannelChatArea from "@/app/messages/components/ChannelChatArea";
+import { conversationSubtitle, conversationTitle, isGroupConversation } from "@/app/messages/conversation-display";
+import PortalShell from "@/app/parent/_garden/PortalShell";
+import { usePortalFeedback } from "@/app/parent/_garden/feedback";
+import { PillTabs } from "@/app/parent/_garden/tabs";
+import { EmptyState, ErrorCard } from "@/app/parent/_garden/states";
+import { KidAvatar, btnGhostSm, btnInkSm, btnSageSm } from "@/app/parent/_garden/ui";
+import { formatDayHeading, useNow } from "@/app/parent/_garden/time";
+import { buildChatItems, toDisplayableImage, withLastMessage, type PendingPayload, type Recipient, type ThreadMessage } from "./garden/chat";
+import { ChannelRow, ConversationRow, RowSkeletons } from "./garden/InboxBits";
 import {
-  conversationTitle,
-  conversationSubtitle,
-  isGroupConversation,
-} from "@/app/messages/conversation-display";
+  Bubble,
+  ComposeIcon,
+  Composer,
+  DaySeparator,
+  HeaderAvatar,
+  MessageMeta,
+  SearchIcon,
+  ThreadHeader,
+  ThreadSkeleton,
+} from "./garden/ChatBits";
+import ComposePane from "./garden/ComposePane";
 
-// Renders images, converting HEIC/HEIF URLs on-the-fly for browsers that can't display them natively
-function HeicImage({
-  src,
-  className,
-  onClick,
-}: {
-  src: string;
-  className?: string;
-  onClick?: () => void;
-}) {
-  const [displaySrc, setDisplaySrc] = useState<string | null>(null);
-  const [error, setError] = useState(false);
-
-  const isHeic = /\.(heic|heif)(\?|$)/i.test(src);
-
-  useEffect(() => {
-    if (!isHeic) {
-      setDisplaySrc(src);
-      return;
-    }
-    let objectUrl: string | null = null;
-    (async () => {
-      try {
-        const res = await fetch(src);
-        const blob = await res.blob();
-        const heic2any = (await import("heic2any")).default;
-        const converted = await heic2any({
-          blob,
-          toType: "image/jpeg",
-          quality: 0.85,
-        });
-        const out = Array.isArray(converted) ? converted[0] : converted;
-        objectUrl = URL.createObjectURL(out);
-        setDisplaySrc(objectUrl);
-      } catch {
-        setError(true);
-      }
-    })();
-    return () => {
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [src, isHeic]);
-
-  if (error)
-    return (
-      <span className="text-xs text-gray-400">
-        Image could not be displayed
-      </span>
-    );
-  if (!displaySrc)
-    return <div className="h-20 w-20 rounded-xl bg-gray-100 animate-pulse" />;
-  // eslint-disable-next-line @next/next/no-img-element
-  return (
-    <img
-      src={displaySrc}
-      alt="attachment"
-      className={className}
-      onClick={onClick}
-    />
-  );
-}
-
-// Deterministic color from a string (user id)
-const AVATAR_COLORS = [
-  "bg-[#4a7c59]",
-  "bg-[#7c6b4a]",
-  "bg-[#5a6b8a]",
-  "bg-[#8a5a6b]",
-  "bg-[#6b7c4a]",
-  "bg-[#4a6b7c]",
-];
-
-function colorForId(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++)
-    hash = id.charCodeAt(i) + ((hash << 5) - hash);
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
-function roleLabel(role: string | null): string {
-  if (role === "teacher" || role === "super_admin") return "Teacher";
-  if (role === "parent") return "Parent";
-  return "";
-}
-
-function staffCardRoleLabel(role: string): string {
-  return "Teacher";
-}
-
-function initialsFor(name: string): string {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
-}
-
-function UserAvatar({
-  id,
-  name,
-  imageUrl,
-  size = "md",
-}: {
-  id: string;
-  name: string;
-  imageUrl: string | null;
-  size?: "sm" | "md" | "lg";
-}) {
-  const dim =
-    size === "sm" ? "w-9 h-9" : size === "lg" ? "w-14 h-14" : "w-10 h-10";
-  const textSize = size === "lg" ? "text-lg" : "text-xs";
-  const ring = size === "lg" ? "ring-2 ring-white shadow-sm" : "";
-  if (imageUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return (
-      <img
-        src={imageUrl}
-        alt={name}
-        className={`${dim} ${ring} rounded-full object-cover shrink-0`}
-      />
-    );
-  }
-  return (
-    <div
-      className={`${colorForId(id)} ${dim} ${ring} rounded-full flex items-center justify-center text-white ${textSize} font-semibold font-body shrink-0`}
-    >
-      {initialsFor(name)}
-    </div>
-  );
-}
-
-const URL_REGEX = /(https?:\/\/[^\s]+)/g;
-
-function renderMessageBody(body: string, fromMe: boolean) {
-  const parts = body.split(URL_REGEX);
-  return parts.map((part, i) =>
-    URL_REGEX.test(part) ? (
-      <a
-        key={i}
-        href={part}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`underline break-all ${fromMe ? "text-white/90 hover:text-white" : "text-[#4a7c59] hover:text-[#3d6849]"}`}
-      >
-        {part}
-      </a>
-    ) : (
-      part
-    ),
-  );
-}
-
-function sortByRecent(convos: ConversationWithMeta[]): ConversationWithMeta[] {
-  return [...convos].sort(
-    (a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-  );
-}
-
-function formatTime(iso: string): string {
-  const date = new Date(iso);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000);
-  if (diffDays === 0)
-    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return date.toLocaleDateString([], { weekday: "short" });
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-}
-
-export default function MessagesPage({
-  userId,
-  effectiveParentId,
-  initialRecipientId,
-  initialRecipientName,
-  initialStudentId,
-  initialTab,
-}: {
+type Props = {
   userId: string;
   effectiveParentId: string;
   initialRecipientId?: string | null;
   initialRecipientName?: string | null;
   initialStudentId?: string | null;
   initialTab?: "direct" | "community";
-}) {
-  const [conversations, setConversations] = useState<ConversationWithMeta[]>(
-    [],
-  );
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<MessageRow[]>([]);
-  const [search, setSearch] = useState("");
-  const [draft, setDraft] = useState("");
-  const [mobileShowChat, setMobileShowChat] = useState(false);
-  const [loadingConvos, setLoadingConvos] = useState(true);
-  const [loadingMessages, setLoadingMessages] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
-  const [sendError, setSendError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const attachmentInputRef = useRef<HTMLInputElement>(null);
+  /** Admin "view as parent": browse only. Writes show the Preview toast; nothing is marked read. */
+  readOnlyPreview?: boolean;
+};
 
-  // Community channels
-  const [activeTab, setActiveTab] = useState<"direct" | "community">(
-    initialTab ?? "direct",
+export default function MessagesPage(props: Props) {
+  return (
+    <PortalShell className="flex min-h-0 flex-1 flex-col">
+      <Messages {...props} />
+    </PortalShell>
   );
+}
+
+type LoadState = "loading" | "error" | "ready";
+type Tab = "direct" | "community";
+type Draft = { draft: string; imageFile: File | null; imagePreview: string | null; attachedFile: File | null };
+type View = { kind: "dm"; id: string } | { kind: "channel"; id: string } | { kind: "compose"; recipient?: Recipient | null; studentId?: string | null } | { kind: "none" };
+
+const EMPTY_DRAFT: Draft = { draft: "", imageFile: null, imagePreview: null, attachedFile: null };
+const clock = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
+
+// Panel ids for the inbox tabs (aria-controls).
+const DM_PANEL = "messages-panel-direct";
+const CHANNEL_PANEL = "messages-panel-community";
+
+/**
+ * Lets the shared ChannelChatArea pick up the Garden type and ink colours without changing it for teachers or admins.
+ * (Its accent colour and shapes switch through its own `gardenStyle` prop.)
+ */
+const CHANNEL_SKIN =
+  "[&_.font-body]:[font-family:inherit] [&_.text-gray-800]:text-[var(--sf-ink)] [&_.text-gray-500]:text-[var(--sf-soft)] [&_.text-gray-400]:text-[var(--sf-soft)]/80";
+
+function Messages({ userId, initialTab, readOnlyPreview }: Props) {
+  const { toast, blockedByPreview } = usePortalFeedback(readOnlyPreview);
+  const now = useNow(60_000);
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  // ─── Inbox ────────────────────────────────────────────────────────────────
+  const [conversations, setConversations] = useState<ConversationWithMeta[]>([]);
+  const [convosState, setConvosState] = useState<LoadState>("loading");
   const [channels, setChannels] = useState<ChannelWithMeta[]>([]);
-  const [loadingChannels, setLoadingChannels] = useState(true);
-  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
-
-  // Compose new message
-  const [isComposingNew, setIsComposingNew] = useState(false);
-  const [selectedRecipient, setSelectedRecipient] = useState<{
-    id: string;
-    full_name: string;
-    profile_image_url: string | null;
-    role?: string | null;
-  } | null>(null);
-  const [recipientSearch, setRecipientSearch] = useState("");
-  const [recipientResults, setRecipientResults] = useState<UserSearchResult[]>(
-    [],
-  );
-  const [searchingUsers, setSearchingUsers] = useState(false);
-  const [creatingConvo, setCreatingConvo] = useState(false);
+  const [channelsState, setChannelsState] = useState<LoadState>("loading");
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab ?? "direct");
+  const [search, setSearch] = useState("");
   const [suggestedStaff, setSuggestedStaff] = useState<TeacherOrAdmin[]>([]);
-  const [suggestedParents, setSuggestedParents] = useState<EnrolledParent[]>(
-    [],
-  );
-  const [participants, setParticipants] = useState<ConversationParticipant[]>([]);
-  const [showMembers, setShowMembers] = useState(false);
-  const [pendingHouseholdStudentId, setPendingHouseholdStudentId] = useState<
-    string | null
-  >(initialStudentId ?? null);
+  const [staffLoading, setStaffLoading] = useState(true);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ─── What the right pane shows ───────────────────────────────────────────
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
+  const [isComposingNew, setIsComposingNew] = useState(false);
+  const [mobileShowChat, setMobileShowChat] = useState(false);
+
+  // ─── Thread ───────────────────────────────────────────────────────────────
+  const [thread, setThread] = useState<{ id: string; state: LoadState; messages: MessageRow[] } | null>(null);
+  /** Messages still sending or failed, per conversation (so they survive switching threads). */
+  const [localByConvo, setLocalByConvo] = useState<Record<string, ThreadMessage[]>>({});
+  const [participants, setParticipants] = useState<{ id: string; list: ConversationParticipant[] } | null>(null);
+
+  // ─── Composer (shared by threads and New Message) ─────────────────────────
+  const [{ draft, imageFile, imagePreview, attachedFile }, setComposer] = useState<Draft>(EMPTY_DRAFT);
+  const [recipient, setRecipient] = useState<Recipient | null>(null);
+  const [pendingHouseholdStudentId, setPendingHouseholdStudentId] = useState<string | null>(null);
+  const [creatingConvo, setCreatingConvo] = useState(false);
+
+  // ─── Refs (read only in handlers / effects) ───────────────────────────────
+  const conversationsRef = useRef(conversations);
+  const localRef = useRef(localByConvo);
+  const participantsRef = useRef(participants);
+  const staffRef = useRef<{ list: TeacherOrAdmin[]; ready: Promise<TeacherOrAdmin[]> } | null>(null);
+  const activeIdRef = useRef(activeId);
+  const threadReq = useRef(0);
+  const creatingRef = useRef(false);
+  const drafts = useRef(new Map<string, Draft>());
+  const composerKeyRef = useRef("none");
+  const composerRef = useRef<Draft>(EMPTY_DRAFT);
+  const objectUrls = useRef(new Set<string>());
+  const tempSeq = useRef(0);
+  const lastQuietRefresh = useRef(0);
+  const handledDeepKey = useRef<string | null>(null);
+  const retrySendRef = useRef<(convoId: string, tempId: string) => void>(() => {});
+  const retryComposeRef = useRef<() => void>(() => {});
+  const retryDeepLinkRef = useRef<() => void>(() => {});
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+    localRef.current = localByConvo;
+    participantsRef.current = participants;
+    activeIdRef.current = activeId;
+    composerRef.current = { draft, imageFile, imagePreview, attachedFile };
+  });
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
   const activeChannel = channels.find((c) => c.id === activeChannelId) ?? null;
+  const activeIsGroup = active ? isGroupConversation(active) : false;
 
-  // Load conversations on mount
+  // ─── Object URLs: every preview is tracked and revoked when it goes away ──
+  const trackUrl = useCallback((file: File) => {
+    const url = URL.createObjectURL(file);
+    objectUrls.current.add(url);
+    return url;
+  }, []);
+  const releaseUrl = useCallback((url: string | null | undefined) => {
+    if (!url || !objectUrls.current.has(url)) return;
+    URL.revokeObjectURL(url);
+    objectUrls.current.delete(url);
+  }, []);
   useEffect(() => {
-    getConversations(userId).then((data) => {
-      setConversations(data);
-      setLoadingConvos(false);
-    });
-  }, [userId]);
-
-  // Load channels on mount (auto-join defaults first)
-  useEffect(() => {
-    ensureDefaultChannelMembership(userId).then(() => {
-      getChannels(userId).then((data) => {
-        setChannels(data);
-        setLoadingChannels(false);
-      });
-    });
-  }, [userId]);
-
-  // Fetch suggestions once for compose new message panel
-  useEffect(() => {
-    getTeachersAndAdmins().then(setSuggestedStaff);
-    getEnrolledParents(userId).then(setSuggestedParents);
-  }, [userId]);
-
-  // Handle deep-link to a specific recipient (e.g. from teacher card)
-  useEffect(() => {
-    if (!initialRecipientId || loadingConvos) return;
-
-    const openHouseholdThread = async () => {
-      if (!initialStudentId) return false;
-
-      const existingGroup = conversations.find(
-        (c) =>
-          c.isGroup &&
-          c.studentId === initialStudentId &&
-          c.teacherId === initialRecipientId,
-      );
-      if (existingGroup) {
-        setActiveId(existingGroup.id);
-        setMobileShowChat(true);
-        return true;
-      }
-
-      const convoId = await findOrCreateHouseholdTeacherConversation(
-        initialStudentId,
-        initialRecipientId,
-      );
-      if (!convoId) return false;
-
-      const updated = await getConversations(userId);
-      setConversations(updated);
-      setActiveId(convoId);
-      setIsComposingNew(false);
-      setSelectedRecipient(null);
-      setMobileShowChat(true);
-      return true;
+    const urls = objectUrls.current;
+    return () => {
+      urls.forEach((u) => URL.revokeObjectURL(u));
+      urls.clear();
     };
+  }, []);
 
-    void (async () => {
-      if (initialStudentId && (await openHouseholdThread())) return;
+  // ─── Loading ──────────────────────────────────────────────────────────────
+  const loadConversations = useCallback(async (): Promise<ConversationWithMeta[] | null> => {
+    try {
+      const data = await getConversations(userId);
+      // The open thread is being read, so it never shows as unread.
+      const open = activeIdRef.current;
+      const next = readOnlyPreview || !open ? data : data.map((c) => (c.id === open ? { ...c, unreadCount: 0 } : c));
+      setConversations(next);
+      setConvosState("ready");
+      conversationsRef.current = next;
+      return next;
+    } catch {
+      return null;
+    }
+  }, [userId, readOnlyPreview]);
 
-      const existing = conversations.find(
-        (c) =>
-          !c.isGroup && c.otherUser?.id === initialRecipientId,
-      );
-      if (existing) {
-        setActiveId(existing.id);
-        setMobileShowChat(true);
-      } else if (initialRecipientName) {
-        setIsComposingNew(true);
-        setPendingHouseholdStudentId(initialStudentId ?? null);
-        setSelectedRecipient({
-          id: initialRecipientId,
-          full_name: initialRecipientName,
-          profile_image_url: null,
-        });
-        setMobileShowChat(true);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loadingConvos]);
+  const loadChannels = useCallback(async (): Promise<boolean> => {
+    try {
+      const data = await getChannels(userId);
+      setChannels(data);
+      setChannelsState("ready");
+      return true;
+    } catch {
+      return false;
+    }
+  }, [userId]);
 
-  // Load participants for active group conversation
   useEffect(() => {
-    if (!activeId || !active || !isGroupConversation(active)) {
-      setParticipants([]);
-      setShowMembers(false);
+    let cancelled = false;
+    void (async () => {
+      const r = await loadConversations();
+      if (!r && !cancelled) setConvosState("error");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadConversations]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      // Auto-join the default channels first (skipped in admin preview: that's a write).
+      if (!readOnlyPreview) await ensureDefaultChannelMembership(userId).catch(() => {});
+      const ok = await loadChannels();
+      if (!ok && !cancelled) setChannelsState("error");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, readOnlyPreview, loadChannels]);
+
+  useEffect(() => {
+    const ready = getTeachersAndAdmins().catch(() => [] as TeacherOrAdmin[]);
+    staffRef.current = { list: [], ready };
+    void ready.then((list) => {
+      if (staffRef.current) staffRef.current.list = list;
+      setSuggestedStaff(list);
+      setStaffLoading(false);
+    });
+  }, []);
+
+  // Fresh unread counts when the parent comes back to the tab (at most every 10s).
+  useEffect(() => {
+    function refresh() {
+      if (Date.now() - lastQuietRefresh.current < 10_000) return;
+      lastQuietRefresh.current = Date.now();
+      void loadConversations();
+      void loadChannels();
+    }
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [loadConversations, loadChannels]);
+
+  // ─── Thread messages (stale responses are dropped) ───────────────────────
+  const loadThread = useCallback(
+    async (id: string) => {
+      const token = ++threadReq.current;
+      try {
+        const data = await getMessages(id);
+        if (token !== threadReq.current) return;
+        setThread({ id, state: "ready", messages: data });
+        if (!readOnlyPreview) {
+          void markMessagesRead(id, userId).catch(() => {});
+          setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, unreadCount: 0 } : c)));
+        }
+      } catch {
+        if (token === threadReq.current) setThread({ id, state: "error", messages: [] });
+      }
+    },
+    [userId, readOnlyPreview],
+  );
+
+  useEffect(() => {
+    if (!activeId) {
+      threadReq.current++;
       return;
     }
-    getConversationParticipants(activeId).then(setParticipants);
-  }, [activeId, active]);
+    void (async () => {
+      await loadThread(activeId);
+    })();
+  }, [activeId, loadThread]);
 
-  // Load messages when active conversation changes
+  // Participants for group chats, keyed on the conversation id (not the row object).
+  useEffect(() => {
+    if (!activeId || !activeIsGroup) return;
+    let cancelled = false;
+    getConversationParticipants(activeId)
+      .then((list) => !cancelled && setParticipants({ id: activeId, list }))
+      .catch(() => !cancelled && setParticipants({ id: activeId, list: [] }));
+    return () => {
+      cancelled = true;
+    };
+  }, [activeId, activeIsGroup]);
+
+  const senderNameFor = useCallback(
+    (convoId: string, senderId: string): string | null => {
+      if (senderId === userId) return null;
+      const p = participantsRef.current;
+      if (p?.id === convoId) {
+        const hit = p.list.find((m) => m.id === senderId);
+        if (hit) return hit.full_name;
+      }
+      const convo = conversationsRef.current.find((c) => c.id === convoId);
+      if (convo?.otherUser?.id === senderId) return convo.otherUser.full_name;
+      return null;
+    },
+    [userId],
+  );
+
+  // Real-time inserts for the open thread.
   useEffect(() => {
     if (!activeId) return;
-    setLoadingMessages(true);
-    getMessages(activeId).then((data) => {
-      setMessages(data);
-      setLoadingMessages(false);
-      markMessagesRead(activeId, userId);
-      // Clear unread count locally
-      setConversations((prev) =>
-        prev.map((c) => (c.id === activeId ? { ...c, unreadCount: 0 } : c)),
-      );
-    });
-  }, [activeId, userId]);
-
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Real-time subscription
-  useEffect(() => {
-    if (!activeId) return;
+    const convoId = activeId;
     const supabase = createClient();
     const channel = supabase
-      .channel(`messages:${activeId}`)
+      .channel(`messages:${convoId}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "messaging",
-          table: "messages",
-          filter: `conversation_id=eq.${activeId}`,
-        },
+        { event: "INSERT", schema: "messaging", table: "messages", filter: `conversation_id=eq.${convoId}` },
         (payload) => {
-          const newMsg = payload.new as MessageRow;
-          setMessages((prev) => {
-            // Avoid duplicate if we already optimistically added it
-            if (prev.find((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-          // Update last message in sidebar
-          setConversations((prev) =>
-            sortByRecent(
-              prev.map((c) =>
-                c.id === activeId
-                  ? {
-                      ...c,
-                      lastMessage: {
-                        body: newMsg.body,
-                        created_at: newMsg.created_at,
-                        sender_id: newMsg.sender_id,
-                      },
-                      updated_at: newMsg.created_at,
-                    }
-                  : c,
-              ),
-            ),
+          const raw = payload.new as MessageRow;
+          // Realtime rows don't carry sender_name: fill it from the participants we already have.
+          const row: MessageRow = { ...raw, sender_name: raw.sender_name ?? senderNameFor(convoId, raw.sender_id) };
+          setThread((prev) =>
+            prev && prev.id === convoId && !prev.messages.some((m) => m.id === row.id)
+              ? { ...prev, messages: [...prev.messages, row] }
+              : prev,
           );
-          // Mark read immediately if it's from the other person
-          if (newMsg.sender_id !== userId) {
-            markMessagesRead(activeId, userId);
-          }
+          setConversations((prev) => withLastMessage(prev, convoId, row));
+          if (row.sender_id !== userId && !readOnlyPreview) void markMessagesRead(convoId, userId).catch(() => {});
         },
       )
       .subscribe();
-
     return () => {
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
-  }, [activeId, userId]);
+  }, [activeId, userId, readOnlyPreview, senderNameFor]);
 
-  // Debounced user search
-  const handleRecipientSearch = useCallback((query: string) => {
-    setRecipientSearch(query);
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    if (!query.trim()) {
-      setRecipientResults([]);
-      return;
-    }
-    searchDebounceRef.current = setTimeout(async () => {
-      setSearchingUsers(true);
-      const results = await searchUsers(query, userId);
-      setRecipientResults(results);
-      setSearchingUsers(false);
-    }, 300);
+  // ─── Navigation (drafts are kept per conversation) ───────────────────────
+  const navigate = useCallback(
+    (view: View) => {
+      // Park the current draft under its key and bring back the one for where we're going.
+      const current = composerRef.current;
+      const key = composerKeyRef.current;
+      const nextKey = view.kind === "dm" ? view.id : view.kind === "compose" ? "compose" : "none";
+      if (key !== nextKey) {
+        if (current.draft || current.imageFile || current.attachedFile) drafts.current.set(key, current);
+        else drafts.current.delete(key);
+        const restored = drafts.current.get(nextKey) ?? EMPTY_DRAFT;
+        drafts.current.delete(nextKey);
+        composerKeyRef.current = nextKey;
+        composerRef.current = restored;
+        setComposer(restored);
+      }
+      stickToBottom.current = true;
+      setActiveId(view.kind === "dm" ? view.id : null);
+      setActiveChannelId(view.kind === "channel" ? view.id : null);
+      setIsComposingNew(view.kind === "compose");
+      if (view.kind === "compose") {
+        setRecipient(view.recipient ?? null);
+        setPendingHouseholdStudentId(view.studentId ?? null);
+      } else {
+        setRecipient(null);
+        setPendingHouseholdStudentId(null);
+      }
+      if (view.kind === "dm") setActiveTab("direct");
+      if (view.kind === "channel") setActiveTab("community");
+      setMobileShowChat(view.kind !== "none");
+    },
+    [],
+  );
+
+  // ─── Local (sending / failed) messages ────────────────────────────────────
+  const updateLocal = useCallback((convoId: string, fn: (list: ThreadMessage[]) => ThreadMessage[]) => {
+    const next = { ...localRef.current, [convoId]: fn(localRef.current[convoId] ?? []) };
+    localRef.current = next;
+    setLocalByConvo(next);
   }, []);
 
-  const handleSelectRecipient = (recipient: {
-    id: string;
-    full_name: string;
-    profile_image_url: string | null;
-    role?: string | null;
-  }) => {
-    setSelectedRecipient(recipient);
-    setRecipientSearch("");
-    setRecipientResults([]);
-  };
+  const deliver = useCallback(
+    async (convoId: string, tempId: string, isRetry: boolean) => {
+      const msg = localRef.current[convoId]?.find((m) => m.id === tempId);
+      if (!msg?.pending) return;
+      let p: PendingPayload = msg.pending;
+      const patch = (changes: Partial<ThreadMessage>) =>
+        updateLocal(convoId, (list) => list.map((m) => (m.id === tempId ? { ...m, ...changes } : m)));
+      patch({ status: "sending" });
 
-  const handleRemoveRecipient = () => {
-    setSelectedRecipient(null);
-    setRecipientSearch("");
-    setRecipientResults([]);
-  };
+      const fail = (title: string, message: string) => {
+        patch({ status: "failed", pending: p });
+        toast.show({
+          tone: "error",
+          title: isRetry && title === "Message didn't send" ? "Still couldn't send" : title,
+          message,
+          action: { label: "Try again", onClick: () => retrySendRef.current(convoId, tempId) },
+        });
+      };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    setAttachedFile(file);
+      try {
+        if (p.imageFile && !p.imageUrl) {
+          const fd = new FormData();
+          fd.append("file", p.imageFile);
+          fd.append("conversationId", convoId);
+          const r = await uploadMessageImage(fd);
+          if (!("url" in r)) return fail("Couldn't upload the photo", `Image upload failed: ${r.error}`);
+          p = { ...p, imageUrl: r.url };
+        }
+        if (p.attachedFile && !p.fileUrl) {
+          const fd = new FormData();
+          fd.append("file", p.attachedFile);
+          fd.append("conversationId", convoId);
+          const r = await uploadMessageFile(fd);
+          if (!("url" in r)) return fail("Couldn't upload the file", `File upload failed: ${r.error}`);
+          p = { ...p, fileUrl: r.url, fileName: r.name };
+        }
+        const saved = await sendMessage(convoId, p.body, p.imageUrl, p.fileUrl, p.fileName);
+        if (!saved) return fail("Message didn't send", "We kept it, so nothing is lost. Tap Try again to resend it.");
+
+        // Confirmed: swap the local bubble for the real row.
+        releaseUrl(p.imagePreview);
+        updateLocal(convoId, (list) => list.filter((m) => m.id !== tempId));
+        setThread((prev) =>
+          prev && prev.id === convoId && !prev.messages.some((m) => m.id === saved.id)
+            ? { ...prev, messages: [...prev.messages, saved] }
+            : prev,
+        );
+        setConversations((prev) => withLastMessage(prev, convoId, saved));
+      } catch {
+        fail("Message didn't send", "We kept it, so nothing is lost. Tap Try again to resend it.");
+      }
+    },
+    [releaseUrl, toast, updateLocal],
+  );
+
+  const retrySend = useCallback(
+    (convoId: string, tempId: string) => {
+      if (blockedByPreview()) return;
+      stickToBottom.current = true;
+      void deliver(convoId, tempId, true);
+    },
+    [blockedByPreview, deliver],
+  );
+
+  /** Moves what's in the composer into a "Sending…" bubble for `convoId` and returns its temp id. */
+  const queueFromComposer = useCallback(
+    (convoId: string, c: Draft) => {
+      const tempId = `temp-${Date.now()}-${tempSeq.current++}`;
+      const pending: PendingPayload = {
+        body: c.draft.trim(),
+        imageFile: c.imageFile,
+        imagePreview: c.imagePreview,
+        attachedFile: c.attachedFile,
+      };
+      const optimistic: ThreadMessage = {
+        id: tempId,
+        conversation_id: convoId,
+        sender_id: userId,
+        body: pending.body,
+        created_at: new Date().toISOString(),
+        read_at: null,
+        image_url: c.imagePreview,
+        file_url: null,
+        file_name: c.attachedFile?.name ?? null,
+        status: "sending",
+        pending,
+      };
+      updateLocal(convoId, (list) => [...list, optimistic]);
+      return tempId;
+    },
+    [updateLocal, userId],
+  );
+
+  const composerState: Draft = { draft, imageFile, imagePreview, attachedFile };
+  const hasContent = !!draft.trim() || !!imageFile || !!attachedFile;
+
+  const handleSend = () => {
+    if (!activeId || !hasContent) return;
+    if (blockedByPreview()) return;
+    const tempId = queueFromComposer(activeId, composerState);
+    // The bubble owns the draft and files now, so nothing is lost if the send fails.
+    setComposer(EMPTY_DRAFT);
+    stickToBottom.current = true;
+    void deliver(activeId, tempId, false);
+    textareaRef.current?.focus();
   };
 
   const handleSendNew = async () => {
-    if (
-      !selectedRecipient ||
-      (!draft.trim() && !imageFile && !attachedFile) ||
-      sending
-    )
-      return;
-    const body = draft.trim();
-    setDraft("");
-    setSendError(null);
+    if (!recipient || !hasContent) return;
+    if (creatingRef.current) return;
+    if (blockedByPreview()) return;
+    creatingRef.current = true;
     setCreatingConvo(true);
-
+    const to = recipient;
+    const household = !!pendingHouseholdStudentId && to.role !== "parent";
     let convoId: string | null = null;
-    if (
-      pendingHouseholdStudentId &&
-      selectedRecipient.role !== "parent"
-    ) {
-      convoId = await findOrCreateHouseholdTeacherConversation(
-        pendingHouseholdStudentId,
-        selectedRecipient.id,
-      );
-    } else {
-      convoId = await createConversation(userId, selectedRecipient.id);
+    try {
+      convoId = household
+        ? await findOrCreateHouseholdTeacherConversation(pendingHouseholdStudentId!, to.id)
+        : await createConversation(userId, to.id);
+    } catch {
+      convoId = null;
     }
+    creatingRef.current = false;
+    setCreatingConvo(false);
     if (!convoId) {
-      setSendError("Could not create conversation. Please try again.");
-      setCreatingConvo(false);
+      // The draft and files stay in the composer.
+      toast.show({
+        tone: "error",
+        title: "Couldn't open the chat",
+        message: "Could not create conversation. Please try again.",
+        action: { label: "Try again", onClick: () => retryComposeRef.current() },
+      });
       return;
     }
 
-    setSending(true);
-    setCreatingConvo(false);
-
-    let imageUrl: string | undefined;
-    if (imageFile) {
-      const fd = new FormData();
-      fd.append("file", imageFile);
-      fd.append("conversationId", convoId);
-      const result = await uploadMessageImage(fd);
-      if ("url" in result) {
-        imageUrl = result.url;
-      } else {
-        setSendError(`Image upload failed: ${result.error}`);
-        setSending(false);
-        return;
-      }
-      setImageFile(null);
-      setImagePreview(null);
+    const tempId = queueFromComposer(convoId, composerState);
+    setComposer(EMPTY_DRAFT);
+    drafts.current.delete("compose");
+    const fresh = (await loadConversations()) ?? conversationsRef.current;
+    if (!fresh.some((c) => c.id === convoId)) {
+      const stub: ConversationWithMeta = {
+        id: convoId,
+        updated_at: new Date().toISOString(),
+        otherUser: household ? null : { id: to.id, full_name: to.full_name, role: to.role ?? null, profile_image_url: to.profile_image_url },
+        lastMessage: null,
+        unreadCount: 0,
+        isGroup: household,
+        displayName: null,
+        studentId: household ? pendingHouseholdStudentId : null,
+        teacherId: household ? to.id : null,
+        participantCount: 0,
+      };
+      setConversations((prev) => [stub, ...prev]);
     }
-
-    let fileUrl: string | undefined;
-    let fileName: string | undefined;
-    if (attachedFile) {
-      const fd = new FormData();
-      fd.append("file", attachedFile);
-      fd.append("conversationId", convoId);
-      const result = await uploadMessageFile(fd);
-      if ("url" in result) {
-        fileUrl = result.url;
-        fileName = result.name;
-      } else {
-        setSendError(`File upload failed: ${result.error}`);
-        setSending(false);
-        return;
-      }
-      setAttachedFile(null);
-    }
-
-    const saved = await sendMessage(convoId, body, imageUrl, fileUrl, fileName);
-    const updated = await getConversations(userId);
-    setConversations(updated);
-    if (saved) setMessages([saved]);
-
+    composerKeyRef.current = convoId;
+    stickToBottom.current = true;
     setActiveId(convoId);
     setIsComposingNew(false);
-    setSelectedRecipient(null);
+    setRecipient(null);
     setPendingHouseholdStudentId(null);
-    setRecipientSearch("");
-    setRecipientResults([]);
-    setSending(false);
+    setMobileShowChat(true);
+    void deliver(convoId, tempId, false);
   };
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
+  useEffect(() => {
+    retrySendRef.current = retrySend;
+    retryComposeRef.current = () => void handleSendNew();
+  });
 
-    // Convert HEIC/HEIF → JPEG (browsers can't display HEIC natively)
-    const isHeic =
-      file.type === "image/heic" ||
-      file.type === "image/heif" ||
-      file.name.toLowerCase().endsWith(".heic") ||
-      file.name.toLowerCase().endsWith(".heif");
-    if (isHeic) {
-      try {
-        const heic2any = (await import("heic2any")).default;
-        const converted = await heic2any({
-          blob: file,
-          toType: "image/jpeg",
-          quality: 0.85,
-        });
-        const blob = Array.isArray(converted) ? converted[0] : converted;
-        const jpegName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
-        file = new File([blob], jpegName, { type: "image/jpeg" });
-      } catch (err) {
-        console.error("[handleImageSelect] HEIC conversion failed:", err);
-        setSendError("Failed to convert HEIC image. Please try a JPEG or PNG.");
-        return;
-      }
-    }
-
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleSend = async () => {
-    if ((!draft.trim() && !imageFile && !attachedFile) || !activeId || sending)
+  // ─── Attachments ──────────────────────────────────────────────────────────
+  const pickImage = async (picked: File) => {
+    let file: File;
+    try {
+      file = await toDisplayableImage(picked);
+    } catch {
+      toast.show({ tone: "error", title: "Couldn't add that photo", message: "Failed to convert HEIC image. Please try a JPEG or PNG." });
       return;
-    const body = draft.trim();
-    setDraft("");
-    setSendError(null);
-    setSending(true);
-
-    // Upload image first if selected
-    let imageUrl: string | undefined;
-    if (imageFile) {
-      const fd = new FormData();
-      fd.append("file", imageFile);
-      fd.append("conversationId", activeId);
-      const result = await uploadMessageImage(fd);
-      if ("url" in result) {
-        imageUrl = result.url;
-      } else {
-        console.error("[handleSend] image upload failed:", result.error);
-        setSendError(`Image upload failed: ${result.error}`);
-        setSending(false);
-        return;
-      }
-      setImageFile(null);
-      setImagePreview(null);
     }
-
-    let fileUrl: string | undefined;
-    let fileName: string | undefined;
-    if (attachedFile) {
-      const fd = new FormData();
-      fd.append("file", attachedFile);
-      fd.append("conversationId", activeId);
-      const result = await uploadMessageFile(fd);
-      if ("url" in result) {
-        fileUrl = result.url;
-        fileName = result.name;
-      } else {
-        setSendError(`File upload failed: ${result.error}`);
-        setSending(false);
-        return;
-      }
-      setAttachedFile(null);
-    }
-
-    // Optimistic message
-    const tempId = `temp-${Date.now()}`;
-    const optimistic: MessageRow = {
-      id: tempId,
-      conversation_id: activeId,
-      sender_id: userId,
-      body,
-      created_at: new Date().toISOString(),
-      read_at: null,
-      image_url: imageUrl ?? null,
-      file_url: fileUrl ?? null,
-      file_name: fileName ?? null,
-    };
-    setMessages((prev) => [...prev, optimistic]);
-
-    const saved = await sendMessage(
-      activeId,
-      body,
-      imageUrl,
-      fileUrl,
-      fileName,
-    );
-
-    // Replace optimistic with real row
-    if (saved) {
-      setMessages((prev) => {
-        const deduped = prev.filter((m) => m.id !== saved.id);
-        return deduped.map((m) => (m.id === tempId ? saved : m));
-      });
-      setConversations((prev) =>
-        sortByRecent(
-          prev.map((c) =>
-            c.id === activeId
-              ? {
-                  ...c,
-                  lastMessage: {
-                    body: saved.body,
-                    created_at: saved.created_at,
-                    sender_id: saved.sender_id,
-                  },
-                  updated_at: saved.created_at,
-                }
-              : c,
-          ),
-        ),
-      );
-    } else {
-      console.error("[handleSend] sendMessage returned null");
-      setSendError("Failed to send message. Please try again.");
-      setMessages((prev) => prev.filter((m) => m.id !== tempId));
-    }
-    setSending(false);
+    const url = trackUrl(file);
+    releaseUrl(composerRef.current.imagePreview);
+    setComposer((c) => ({ ...c, imageFile: file, imagePreview: url }));
+  };
+  const clearImage = () => {
+    releaseUrl(imagePreview);
+    setComposer((c) => ({ ...c, imageFile: null, imagePreview: null }));
   };
 
-  const filtered = conversations.filter((c) =>
-    conversationTitle(c).toLowerCase().includes(search.toLowerCase()),
+  // ─── Deep links (?recipientId, ?studentId, ?tab), including bell clicks while already here ──
+  const deepKey = searchParams.toString();
+  const handleDeepLink = useCallback(
+    async (q: { recipientId: string | null; recipientName: string | null; studentId: string | null; tab: string | null }) => {
+      const { recipientId, recipientName, studentId, tab } = q;
+      if (!recipientId) {
+        if (tab === "community") navigate({ kind: "none" });
+        if (tab === "community") setActiveTab("community");
+        return;
+      }
+      let convos = conversationsRef.current;
+      const household = (list: ConversationWithMeta[]) =>
+        studentId ? list.find((c) => c.isGroup && c.studentId === studentId && c.teacherId === recipientId)?.id ?? null : null;
+      // The notification bell passes the conversation id for group chats.
+      const direct = (list: ConversationWithMeta[]) =>
+        list.find((c) => c.id === recipientId)?.id ?? list.find((c) => !c.isGroup && c.otherUser?.id === recipientId)?.id ?? null;
+
+      let target = household(convos);
+      if (!target && studentId && !readOnlyPreview) {
+        try {
+          const id = await findOrCreateHouseholdTeacherConversation(studentId, recipientId);
+          if (id) {
+            convos = (await loadConversations()) ?? convos;
+            target = id;
+          }
+        } catch {
+          /* fall back to the direct chat / compose below, as before */
+        }
+      }
+      if (!target) target = direct(convos);
+      if (!target) {
+        // The inbox may be older than the notification that brought us here.
+        const fresh = await loadConversations();
+        if (fresh) target = household(fresh) ?? direct(fresh);
+      }
+      if (target) {
+        navigate({ kind: "dm", id: target });
+        return;
+      }
+      const staff = staffRef.current ? await staffRef.current.ready : [];
+      const known = staff.find((s) => s.id === recipientId);
+      const name = recipientName ?? known?.full_name ?? null;
+      if (name) {
+        navigate({
+          kind: "compose",
+          recipient: { id: recipientId, full_name: name, profile_image_url: known?.profile_image_url ?? null, role: known?.role ?? null },
+          studentId,
+        });
+        return;
+      }
+      toast.show({
+        tone: "error",
+        title: "Couldn't open the chat",
+        message: "Please try again in a moment.",
+        action: { label: "Try again", onClick: () => retryDeepLinkRef.current() },
+      });
+    },
+    [loadConversations, navigate, readOnlyPreview, toast],
   );
 
-  return (
-    <div className="flex flex-1 min-h-0 bg-white overflow-hidden">
-      {/* Conversation list */}
-      <div
-        className={`w-full md:w-80 md:min-w-[320px] bg-white border-r border-gray-100 flex flex-col min-h-0 overflow-hidden ${mobileShowChat ? "hidden md:flex" : "flex"}`}
-      >
-        {/* Tabs */}
-        <div className="flex border-b border-gray-100 shrink-0">
-          <button
-            onClick={() => setActiveTab("direct")}
-            className={`flex-1 py-2.5 text-xs font-semibold font-body transition-colors relative ${
-              activeTab === "direct"
-                ? "text-[#4a7c59]"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            Messages
-            {activeTab === "direct" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />
-            )}
-            {activeTab !== "direct" &&
-              conversations.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
-                  {conversations.reduce((s, c) => s + c.unreadCount, 0)}
-                </span>
-              )}
-          </button>
-          <button
-            onClick={() => setActiveTab("community")}
-            className={`flex-1 py-2.5 text-xs font-semibold font-body transition-colors relative ${
-              activeTab === "community"
-                ? "text-[#4a7c59]"
-                : "text-gray-400 hover:text-gray-600"
-            }`}
-          >
-            Community
-            <span className="ml-1 inline-flex items-center px-1 py-0.5 rounded text-[9px] font-bold bg-[#4a7c59] text-white leading-none">
-              New!
-            </span>
-            {activeTab === "community" && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#4a7c59]" />
-            )}
-            {activeTab !== "community" &&
-              channels.reduce((s, c) => s + c.unreadCount, 0) > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#4a7c59] text-white text-[9px] font-bold">
-                  {channels.reduce((s, c) => s + c.unreadCount, 0)}
-                </span>
-              )}
-          </button>
-        </div>
+  useEffect(() => {
+    if (convosState !== "ready" || handledDeepKey.current === deepKey) return;
+    handledDeepKey.current = deepKey;
+    const q = {
+      recipientId: searchParams.get("recipientId"),
+      recipientName: searchParams.get("recipientName"),
+      studentId: searchParams.get("studentId"),
+      tab: searchParams.get("tab"),
+    };
+    if (!q.recipientId && !q.tab) return;
+    // Drop the params so the same link (or bell item) works again later.
+    window.history.replaceState(null, "", pathname);
+    handledDeepKey.current = "";
+    retryDeepLinkRef.current = () => void handleDeepLink(q);
+    void (async () => {
+      await handleDeepLink(q);
+    })();
+  }, [convosState, deepKey, searchParams, pathname, handleDeepLink]);
 
-        {activeTab === "direct" ? (
-          <>
-            {/* Search + New Message */}
-            <div className="p-3 border-b border-gray-100 shrink-0">
-              <div className="relative mb-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+  // ─── Thread rendering data ────────────────────────────────────────────────
+  const threadView = activeId && thread?.id === activeId ? thread : null;
+  const threadState: LoadState = threadView?.state ?? "loading";
+  const threadMessages = useMemo<ThreadMessage[]>(() => {
+    if (!activeId) return [];
+    const server = threadView?.messages ?? [];
+    const local = localByConvo[activeId] ?? [];
+    return [...server, ...local].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [activeId, threadView, localByConvo]);
+  const chatItems = useMemo(() => buildChatItems(threadMessages), [threadMessages]);
+  const lastMineId = useMemo(() => {
+    for (let i = threadMessages.length - 1; i >= 0; i--) if (threadMessages[i].sender_id === userId && !threadMessages[i].status) return threadMessages[i].id;
+    return null;
+  }, [threadMessages, userId]);
+  const members = activeIsGroup ? { list: participants?.id === activeId ? participants.list : null, count: active?.participantCount ?? 0 } : null;
+  const nameById = useMemo(() => {
+    const map = new Map<string, string>();
+    if (participants && participants.id === activeId) participants.list.forEach((m) => map.set(m.id, m.full_name));
+    return map;
+  }, [participants, activeId]);
+
+  // Keep the newest message in view (unless the parent scrolled up to read).
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
+  }, [chatItems.length, threadState, activeId]);
+
+  // ─── Inbox data ───────────────────────────────────────────────────────────
+  const dmUnread = conversations.reduce((s, c) => s + c.unreadCount, 0);
+  const channelUnread = channels.reduce((s, c) => s + (c.isMember ? c.unreadCount : 0), 0);
+  const filtered = conversations.filter((c) => conversationTitle(c).toLowerCase().includes(search.toLowerCase()));
+  const noConversations = convosState === "ready" && conversations.length === 0 && !search;
+
+  const openCompose = (r?: Recipient | null) => navigate({ kind: "compose", recipient: r ?? null });
+  const browse = readOnlyPreview ? "pointer-events-auto" : "";
+
+  return (
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 overflow-hidden border-t border-[var(--sf-ink)]/[0.07] bg-[var(--sf-cream)]">
+        {/* ─── Inbox ─── */}
+        <section
+          aria-label="Inbox"
+          className={`${browse} min-h-0 w-full flex-col border-[var(--sf-ink)]/[0.07] bg-[#fbf4ea] md:flex md:w-[340px] md:shrink-0 md:border-r xl:w-[380px] ${
+            mobileShowChat ? "hidden" : "flex"
+          }`}
+        >
+          <div className="flex flex-col gap-3 px-4 pb-3 pt-5">
+            <div className="flex items-center gap-3">
+              <h1 className="sf-display min-w-0 flex-1 text-[1.8rem] leading-none">Messages</h1>
+              {activeTab === "direct" ? (
+                <button
+                  type="button"
+                  onClick={() => openCompose()}
+                  aria-pressed={isComposingNew}
+                  className={`${btnSageSm} shrink-0 gap-1.5 px-3.5`}
+                >
+                  <ComposeIcon />
+                  New Message
+                </button>
+              ) : null}
+            </div>
+            <PillTabs<Tab>
+              label="Message type"
+              size="sm"
+              className="mx-0! px-0!"
+              value={activeTab}
+              onChange={setActiveTab}
+              options={[
+                { value: "direct", label: "Messages", controls: DM_PANEL, badge: activeTab !== "direct" ? dmUnread : 0, badgeLabel: "unread" },
+                {
+                  value: "community",
+                  controls: CHANNEL_PANEL,
+                  label: (
+                    <>
+                      Community
+                      <span className="rounded-full bg-[var(--sf-butter)] px-1.5 py-px text-[10px] font-black text-[#7a5b00]">New!</span>
+                    </>
+                  ),
+                  badge: activeTab !== "community" ? channelUnread : 0,
+                  badgeLabel: "unread",
+                },
+              ]}
+            />
+            {activeTab === "direct" ? (
+              <label className="flex min-h-11 items-center gap-2 rounded-full bg-white px-4 ring-[1.5px] ring-[var(--sf-ink)]/10 focus-within:ring-[var(--sf-sage)]">
+                <span className="text-[var(--sf-soft)]">
+                  <SearchIcon />
+                </span>
+                <span className="sr-only">Search conversations</span>
                 <input
-                  type="text"
+                  type="search"
                   placeholder="Search conversations..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm font-body bg-gray-50 border border-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
+                  className="min-h-11 min-w-0 flex-1 bg-transparent text-[15px] font-semibold outline-none placeholder:text-[var(--sf-soft)]/70"
                 />
-              </div>
-              <button
-                onClick={() => {
-                  setIsComposingNew(true);
-                  setActiveId(null);
-                  setActiveChannelId(null);
-                  setMessages([]);
-                  setSelectedRecipient(null);
-                  setRecipientSearch("");
-                  setRecipientResults([]);
-                  setMobileShowChat(true);
-                }}
-                className={`w-full flex items-center justify-center gap-2 text-white text-sm font-medium py-2 rounded-lg transition-colors cursor-pointer ${
-                  isComposingNew
-                    ? "bg-[#3d6849]"
-                    : "bg-[#4a7c59] hover:bg-[#3d6849]"
-                }`}
-              >
-                <SquarePen className="w-4 h-4" />
-                New Message
-              </button>
-            </div>
-
-            {/* DM List */}
-            <div className="flex-1 overflow-y-auto">
-              {loadingConvos ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
-                </div>
-              ) : filtered.length === 0 ? (
-                <p className="text-sm text-gray-400 font-body text-center py-8">
-                  {search
-                    ? "No conversations found"
-                    : "No messages yet. Start one!"}
-                </p>
-              ) : (
-                filtered.map((convo) => (
-                  <button
-                    key={convo.id}
-                    onClick={() => {
-                      setActiveId(convo.id);
-                      setActiveChannelId(null);
-                      setIsComposingNew(false);
-                      setSelectedRecipient(null);
-                      setPendingHouseholdStudentId(null);
-                      setMobileShowChat(true);
-                    }}
-                    className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${
-                      convo.id === activeId
-                        ? "bg-[#4a7c59]/5 border-r-2 border-[#4a7c59]"
-                        : "hover:bg-gray-50"
-                    }`}
-                  >
-                    {isGroupConversation(convo) ? (
-                      <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
-                        <Users className="w-4 h-4" />
-                      </div>
-                    ) : convo.otherUser ? (
-                      <UserAvatar
-                        id={convo.otherUser.id}
-                        name={convo.otherUser.full_name}
-                        imageUrl={convo.otherUser.profile_image_url}
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
-                        <Users className="w-4 h-4" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold font-body text-gray-800 truncate">
-                          {conversationTitle(convo)}
-                        </span>
-                        {convo.lastMessage && (
-                          <span className="text-[11px] text-gray-400 font-body shrink-0 ml-2">
-                            {formatTime(convo.lastMessage.created_at)}
-                          </span>
-                        )}
-                      </div>
-                      {conversationSubtitle(convo) && (
-                        <p className="text-[11px] text-gray-400 font-body">
-                          {conversationSubtitle(convo)}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-xs text-gray-500 font-body truncate flex-1">
-                          {convo.lastMessage?.body ?? "No messages yet"}
-                        </p>
-                        {convo.unreadCount > 0 && (
-                          <span className="bg-[#4a7c59] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
-                            {convo.unreadCount}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </>
-        ) : (
-          /* Community tab */
-          <div className="flex-1 overflow-y-auto">
-            {loadingChannels ? (
-              <div className="flex items-center justify-center py-10">
-                <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
-              </div>
-            ) : channels.length === 0 ? (
-              <p className="text-sm text-gray-400 font-body text-center py-8">
-                No channels yet
-              </p>
-            ) : (
-              channels.map((ch) => (
-                <button
-                  key={ch.id}
-                  onClick={() => {
-                    setActiveChannelId(ch.id);
-                    setActiveId(null);
-                    setIsComposingNew(false);
-                    setMobileShowChat(true);
-                  }}
-                  className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer ${
-                    ch.id === activeChannelId
-                      ? "bg-[#4a7c59]/5 border-r-2 border-[#4a7c59]"
-                      : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-full bg-[#4a7c59] flex items-center justify-center text-white shrink-0">
-                    <Hash className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold font-body text-gray-800 truncate">
-                        {ch.name}
-                      </span>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        {ch.lastMessage && (
-                          <span className="text-[11px] text-gray-400 font-body">
-                            {formatTime(ch.lastMessage.created_at)}
-                          </span>
-                        )}
-                        {!ch.isMember && (
-                          <span className="text-[10px] font-semibold font-body text-[#4a7c59] border border-[#4a7c59]/30 px-1.5 py-0.5 rounded-full">
-                            Join
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-gray-400 font-body">
-                      {ch.memberCount} member{ch.memberCount !== 1 ? "s" : ""}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-gray-500 font-body truncate flex-1">
-                        {ch.lastMessage?.body ?? "No messages yet"}
-                      </p>
-                      {ch.isMember && ch.unreadCount > 0 && (
-                        <span className="bg-[#4a7c59] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
-                          {ch.unreadCount}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
+              </label>
+            ) : null}
           </div>
-        )}
-      </div>
 
-      {/* Chat area */}
-      <div
-        className={`flex-1 min-h-0 flex flex-col ${mobileShowChat ? "flex" : "hidden md:flex"}`}
-      >
-        {activeChannel ? (
-          <ChannelChatArea
-            channel={activeChannel}
-            userId={userId}
-            userRole="parent"
-            onBack={() => {
-              setActiveChannelId(null);
-              setMobileShowChat(false);
-            }}
-            onMembershipChange={(channelId, isMember) => {
-              setChannels((prev) =>
-                prev.map((c) => (c.id === channelId ? { ...c, isMember } : c)),
-              );
-            }}
-            onMessageSent={(channelId, lastMsg) => {
-              setChannels((prev) =>
-                prev.map((c) =>
-                  c.id === channelId
-                    ? { ...c, lastMessage: lastMsg, unreadCount: 0 }
-                    : c,
-                ),
-              );
-            }}
-          />
-        ) : isComposingNew ? (
-          <>
-            {/* Compose header */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0">
-              <button
-                onClick={() => {
-                  setIsComposingNew(false);
-                  setMobileShowChat(false);
-                }}
-                className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <p className="text-sm font-semibold font-body text-gray-800">
-                New Message
-              </p>
-            </div>
-
-            {/* To: row */}
-            <div className="px-5 py-3 border-b border-gray-100 shrink-0 relative">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-body text-gray-500 shrink-0">
-                  To:
-                </span>
-                {!selectedRecipient ? (
-                  <input
-                    autoFocus
-                    type="text"
-                    placeholder="Search by name..."
-                    value={recipientSearch}
-                    onChange={(e) => handleRecipientSearch(e.target.value)}
-                    className="flex-1 text-sm font-body bg-transparent border-none outline-none text-gray-800 placeholder:text-gray-400"
+          {activeTab === "direct" ? (
+            <div id={DM_PANEL} role="tabpanel" aria-label="Messages" className="min-h-0 flex-1 overflow-y-auto px-3 pb-6">
+              {convosState === "loading" ? (
+                <RowSkeletons />
+              ) : convosState === "error" ? (
+                <ErrorCard
+                  title="We couldn't load your messages"
+                  onRetry={() => {
+                    setConvosState("loading");
+                    void loadConversations().then((r) => !r && setConvosState("error"));
+                  }}
+                />
+              ) : filtered.length === 0 ? (
+                search ? (
+                  <EmptyState
+                    emoji="🔍"
+                    tint="sky"
+                    title="No conversations found"
+                    action={
+                      <button type="button" className={btnGhostSm} onClick={() => setSearch("")}>
+                        Clear
+                      </button>
+                    }
                   />
                 ) : (
-                  <div className="flex items-center gap-1.5 bg-[#4a7c59]/10 text-[#4a7c59] text-sm font-body px-3 py-1 rounded-full">
-                    <span>{selectedRecipient.full_name}</span>
-                    <button
-                      onClick={handleRemoveRecipient}
-                      className="text-[#4a7c59] hover:text-[#3d6849] cursor-pointer"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Dropdown results */}
-              {!selectedRecipient && recipientSearch.trim() && (
-                <div className="absolute left-0 right-0 top-full z-20 bg-white border border-gray-100 shadow-lg max-h-60 overflow-y-auto">
-                  {searchingUsers ? (
-                    <div className="flex items-center justify-center py-6">
-                      <Loader2 className="w-4 h-4 animate-spin text-gray-300" />
-                    </div>
-                  ) : recipientResults.length === 0 ? (
-                    <p className="text-sm text-gray-400 font-body text-center py-6">
-                      No users found
-                    </p>
-                  ) : (
-                    recipientResults.map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => handleSelectRecipient(user)}
-                        className="w-full flex items-center gap-3 px-5 py-2.5 hover:bg-gray-50 text-left transition-colors cursor-pointer"
-                      >
-                        <UserAvatar
-                          id={user.id}
-                          name={user.full_name}
-                          imageUrl={user.profile_image_url}
-                          size="sm"
-                        />
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-body text-gray-800">
-                            {user.full_name}
-                          </span>
-                          {roleLabel(user.role) && (
-                            <span className="text-xs text-gray-400 font-body">
-                              {roleLabel(user.role)}
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Compose suggestions / empty area */}
-            <div className="flex-1 overflow-y-auto px-5 py-6">
-              {!selectedRecipient &&
-                (() => {
-                  const EARLY_GRADES = ["Pre-K", "Kindergarten", "1st Grade"];
-                  const UPPER_GRADES = ["2nd Grade", "3rd Grade", "4th Grade"];
-                  const earlyParents = suggestedParents.filter((p) =>
-                    EARLY_GRADES.includes(p.child_grade ?? ""),
-                  );
-                  const upperParents = suggestedParents.filter((p) =>
-                    UPPER_GRADES.includes(p.child_grade ?? ""),
-                  );
-                  const otherParents = suggestedParents.filter(
-                    (p) =>
-                      !EARLY_GRADES.includes(p.child_grade ?? "") &&
-                      !UPPER_GRADES.includes(p.child_grade ?? ""),
-                  );
-
-                  const sectionHeading = (label: string) => (
-                    <div className="mb-4">
-                      <span className="inline-flex items-center bg-[#4a7c59]/10 text-[#4a7c59] text-xs font-semibold font-body px-3 py-1 rounded-full">
-                        {label}
-                      </span>
-                    </div>
-                  );
-
-                  const shortName = (full: string) => {
-                    const parts = full.trim().split(/\s+/);
-                    if (parts.length < 2) return full;
-                    return `${parts[0]} ${parts[parts.length - 1][0]}.`;
-                  };
-
-                  const parentCard = (person: EnrolledParent) => (
-                    <div
-                      key={person.id}
-                      className="bg-[#f8faf8] border border-[#e8f0ea] rounded-2xl p-5 flex flex-col items-center text-center gap-3"
-                    >
-                      <UserAvatar
-                        id={person.id}
-                        name={person.full_name}
-                        imageUrl={person.profile_image_url}
-                        size="lg"
-                      />
-                      <div className="min-w-0 w-full space-y-1">
-                        <p className="text-sm font-semibold font-body text-gray-800 truncate">
-                          {shortName(person.full_name)}
-                        </p>
-                        <span className="inline-flex items-center bg-[#4a7c59]/10 text-[#4a7c59] text-[10px] font-semibold font-body px-2 py-0.5 rounded-full">
-                          {person.child_names.length > 0
-                            ? person.child_names.join(", ")
-                            : "Parent"}
-                        </span>
+                  <>
+                    {suggestedStaff.length > 0 ? (
+                      <div className="md:hidden">
+                        <ReachOut staff={suggestedStaff} onMessage={openCompose} compact />
                       </div>
-                      <button
-                        onClick={() => handleSelectRecipient(person)}
-                        className="w-full py-2 rounded-xl text-sm font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6849] transition-colors cursor-pointer"
-                      >
-                        Message
-                      </button>
-                    </div>
-                  );
-
-                  return (
-                    <div className="space-y-8">
-                      {suggestedStaff.length > 0 && (
-                        <div>
-                          {sectionHeading("Teachers & Staff")}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                            {suggestedStaff.map((person) => (
-                              <div
-                                key={person.id}
-                                className="bg-[#f8faf8] border border-[#e8f0ea] rounded-2xl p-5 flex flex-col items-center text-center gap-3"
-                              >
-                                <UserAvatar
-                                  id={person.id}
-                                  name={person.full_name}
-                                  imageUrl={person.profile_image_url}
-                                  size="lg"
-                                />
-                                <div className="min-w-0 w-full space-y-1">
-                                  <p className="text-sm font-semibold font-body text-gray-800 truncate">
-                                    {person.full_name}
-                                  </p>
-                                  <span className="inline-flex items-center bg-[#4a7c59]/10 text-[#4a7c59] text-[10px] font-semibold font-body px-2 py-0.5 rounded-full">
-                                    Teacher
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={() => handleSelectRecipient(person)}
-                                  className="w-full py-2 rounded-xl text-sm font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6849] transition-colors cursor-pointer"
-                                >
-                                  Message
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* suggestedParents.length > 0 && (
-                        <div className="space-y-6">
-                          <p className="text-lg font-semibold font-body text-gray-700">
-                            Need a carpool or want to schedule a playdate?
-                          </p>
-
-                          {earlyParents.length > 0 && (
-                            <div>
-                              {sectionHeading("🌱 Primary")}
-                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                {earlyParents.map(parentCard)}
-                              </div>
-                            </div>
-                          )}
-
-                          {upperParents.length > 0 && (
-                            <div>
-                              {sectionHeading("🚀 Lower Elementary")}
-                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                {upperParents.map(parentCard)}
-                              </div>
-                            </div>
-                          )}
-
-                          {otherParents.length > 0 && (
-                            <div>
-                              {sectionHeading("✨ Other Families")}
-                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                                {otherParents.map(parentCard)}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) */}
-
-                      {suggestedStaff.length === 0 && (
-                          <p className="text-sm text-gray-400 font-body text-center py-8">
-                            Search for someone to start a conversation
-                          </p>
-                        )}
-                    </div>
-                  );
-                })()}
-            </div>
-
-            {/* Input */}
-            <div className="border-t border-gray-100 shrink-0">
-              {sendError && (
-                <p className="px-4 pt-2 text-xs text-red-500">{sendError}</p>
-              )}
-              {imagePreview && (
-                <div className="px-4 pt-2 flex items-center gap-2">
-                  <div className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imagePreview}
-                      alt="preview"
-                      className="h-16 w-16 object-cover rounded-lg border border-gray-200"
-                    />
-                    <button
-                      onClick={() => {
-                        setImageFile(null);
-                        setImagePreview(null);
-                      }}
-                      className="absolute -top-1.5 -right-1.5 bg-white rounded-full shadow p-0.5 cursor-pointer"
-                    >
-                      <X className="w-3 h-3 text-gray-500" />
-                    </button>
-                  </div>
-                </div>
-              )}
-              {attachedFile && (
-                <div className="px-4 pt-2 flex items-center gap-2">
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 max-w-xs">
-                    <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span className="text-xs font-body text-gray-700 truncate">
-                      {attachedFile.name}
-                    </span>
-                    <button
-                      onClick={() => setAttachedFile(null)}
-                      className="text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="px-4 py-3 flex items-center gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,.heic,.heif"
-                  className="hidden"
-                  onChange={handleImageSelect}
-                />
-                <input
-                  ref={attachmentInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!selectedRecipient}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Attach image"
-                >
-                  <ImageIcon className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => attachmentInputRef.current?.click()}
-                  disabled={!selectedRecipient}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Attach file"
-                >
-                  <Paperclip className="w-5 h-5" />
-                </button>
-                <input
-                  type="text"
-                  placeholder={
-                    selectedRecipient
-                      ? "Type a message..."
-                      : "Select a recipient first..."
-                  }
-                  value={draft}
-                  disabled={!selectedRecipient}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendNew();
-                    }
-                  }}
-                  className="flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400 disabled:opacity-60"
-                />
-                <button
-                  onClick={handleSendNew}
-                  disabled={
-                    !selectedRecipient ||
-                    (!draft.trim() && !imageFile && !attachedFile) ||
-                    sending ||
-                    creatingConvo
-                  }
-                  className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                >
-                  {sending || creatingConvo ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-          </>
-        ) : !active ? (
-          conversations.length === 0 && !loadingConvos && !search ? (
-            <div className="flex-1 overflow-y-auto px-6 py-10 flex flex-col items-center">
-              <div className="mb-8 text-center max-w-sm">
-                <h2 className="text-xl font-semibold font-body text-gray-800 mb-2">
-                  Who would you like to reach?
-                </h2>
-                <p className="text-sm text-gray-400 font-body leading-relaxed">
-                  Message your child&apos;s teachers and school staff directly
-                  from here.
-                </p>
-              </div>
-
-              {suggestedStaff.length > 0 && (
-                <div className="w-full max-w-2xl">
-                  <p className="text-xs font-semibold font-body text-gray-400 uppercase tracking-wider mb-4">
-                    Start a conversation
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {suggestedStaff.map((person) => (
-                      <div
-                        key={person.id}
-                        className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center text-center gap-3 shadow-sm"
-                      >
-                        <UserAvatar
-                          id={person.id}
-                          name={person.full_name}
-                          imageUrl={person.profile_image_url}
-                        />
-                        <div className="min-w-0 w-full">
-                          <p className="text-sm font-semibold font-body text-gray-800 truncate">
-                            {person.full_name}
-                          </p>
-                          <p className="text-xs text-gray-400 font-body mt-0.5">
-                            {staffCardRoleLabel(person.role)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setIsComposingNew(true);
-                            setActiveId(null);
-                            setMessages([]);
-                            handleSelectRecipient({
-                              id: person.id,
-                              full_name: person.full_name,
-                              profile_image_url: person.profile_image_url,
-                            });
-                            setMobileShowChat(true);
-                          }}
-                          className="w-full py-1.5 rounded-xl text-xs font-semibold font-body text-white bg-[#4a7c59] hover:bg-[#3d6849] transition-colors cursor-pointer"
-                        >
-                          Message
+                    ) : null}
+                    <EmptyState
+                      emoji="💬"
+                      tint="mint"
+                      title="No messages yet. Start one!"
+                      className={suggestedStaff.length > 0 ? "hidden md:block" : ""}
+                      action={
+                        <button type="button" className={btnInkSm} onClick={() => openCompose()}>
+                          New Message
                         </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                      }
+                    />
+                  </>
+                )
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {filtered.map((convo) => (
+                    <li key={convo.id}>
+                      <ConversationRow convo={convo} selected={convo.id === activeId} now={now} onOpen={(c) => navigate({ kind: "dm", id: c.id })} />
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-sm text-gray-400 font-body">
-                Select a conversation or start a new one
-              </p>
-            </div>
-          )
-        ) : (
-          <>
-            {/* Chat header */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-100 shrink-0 relative">
-              <button
-                onClick={() => setMobileShowChat(false)}
-                className="md:hidden text-gray-500 hover:text-gray-700 cursor-pointer"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              {isGroupConversation(active) ? (
-                <div className="w-9 h-9 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-              ) : active.otherUser ? (
-                <UserAvatar
-                  id={active.otherUser.id}
-                  name={active.otherUser.full_name}
-                  imageUrl={active.otherUser.profile_image_url}
-                  size="sm"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-[#4a7c59]/10 flex items-center justify-center text-[#4a7c59] shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => isGroupConversation(active) && setShowMembers((v) => !v)}
-                className={`text-left flex-1 min-w-0 ${isGroupConversation(active) ? "cursor-pointer" : ""}`}
-              >
-                <p className="text-sm font-semibold font-body text-gray-800 truncate">
-                  {conversationTitle(active)}
-                </p>
-                {conversationSubtitle(active) && (
-                  <p className="text-[11px] text-gray-400 font-body">
-                    {conversationSubtitle(active)}
-                  </p>
-                )}
-              </button>
-              {isGroupConversation(active) && showMembers && participants.length > 0 && (
-                <div className="absolute top-full left-0 right-0 z-20 bg-white border border-gray-100 shadow-lg max-h-60 overflow-y-auto">
-                  {participants.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center gap-3 px-5 py-2.5"
-                    >
-                      <UserAvatar
-                        id={member.id}
-                        name={member.full_name}
-                        imageUrl={member.profile_image_url}
-                        size="sm"
-                      />
-                      <div className="min-w-0">
-                        <p className="text-sm font-body text-gray-800 truncate">
-                          {member.full_name}
-                        </p>
-                        {roleLabel(member.role) && (
-                          <p className="text-[11px] text-gray-400 font-body">
-                            {roleLabel(member.role)}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-              {loadingMessages ? (
-                <div className="flex items-center justify-center py-10">
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-300" />
-                </div>
-              ) : messages.length === 0 ? (
-                <p className="text-sm text-gray-400 font-body text-center py-8">
-                  No messages yet. Say hello!
-                </p>
-              ) : (
-                messages.map((msg) => {
-                  const fromMe = msg.sender_id === userId;
-                  const showSenderName = isGroupConversation(active) && !fromMe;
-                  return (
-                    <div
-                      key={msg.id}
-                      className={`flex ${fromMe ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-body leading-relaxed ${
-                          fromMe
-                            ? "bg-[#4a7c59] text-white rounded-br-md"
-                            : "bg-gray-100 text-gray-800 rounded-bl-md"
-                        }`}
-                      >
-                        {showSenderName && msg.sender_name && (
-                          <p className="text-[11px] font-semibold text-[#4a7c59] mb-1">
-                            {msg.sender_name}
-                          </p>
-                        )}
-                        {msg.image_url && (
-                          <HeicImage
-                            src={msg.image_url}
-                            className="rounded-xl max-w-full max-h-60 object-cover cursor-pointer mb-1"
-                            onClick={() =>
-                              window.open(msg.image_url!, "_blank")
-                            }
-                          />
-                        )}
-                        {msg.file_url && msg.file_name && (
-                          <a
-                            href={msg.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`flex items-center gap-2 mb-1 px-3 py-2 rounded-xl border ${fromMe ? "border-white/20 bg-white/10 hover:bg-white/20" : "border-gray-200 bg-white hover:bg-gray-50"} transition-colors`}
-                          >
-                            <FileText
-                              className={`w-4 h-4 shrink-0 ${fromMe ? "text-white/80" : "text-gray-400"}`}
-                            />
-                            <span
-                              className={`text-xs font-body truncate max-w-[160px] ${fromMe ? "text-white" : "text-gray-700"}`}
-                            >
-                              {msg.file_name}
-                            </span>
-                            <Download
-                              className={`w-3.5 h-3.5 shrink-0 ${fromMe ? "text-white/70" : "text-gray-400"}`}
-                            />
-                          </a>
-                        )}
-                        {msg.body && (
-                          <p className="break-words">
-                            {renderMessageBody(msg.body, fromMe)}
-                          </p>
-                        )}
-                        <p
-                          className={`text-[10px] mt-1 ${fromMe ? "text-white/60" : "text-gray-400"}`}
-                        >
-                          {formatTime(msg.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input */}
-            <div className="border-t border-gray-100 shrink-0">
-              {sendError && (
-                <p className="px-4 pt-2 text-xs text-red-500">{sendError}</p>
-              )}
-              {imagePreview && (
-                <div className="px-4 pt-2 flex items-center gap-2">
-                  <div className="relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imagePreview}
-                      alt="preview"
-                      className="h-16 w-16 object-cover rounded-lg border border-gray-200"
-                    />
-                    <button
-                      onClick={() => {
-                        setImageFile(null);
-                        setImagePreview(null);
-                      }}
-                      className="absolute -top-1.5 -right-1.5 bg-white rounded-full shadow p-0.5 cursor-pointer"
-                    >
-                      <X className="w-3 h-3 text-gray-500" />
-                    </button>
-                  </div>
-                </div>
-              )}
-              {attachedFile && (
-                <div className="px-4 pt-2 flex items-center gap-2">
-                  <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 max-w-xs">
-                    <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                    <span className="text-xs font-body text-gray-700 truncate">
-                      {attachedFile.name}
-                    </span>
-                    <button
-                      onClick={() => setAttachedFile(null)}
-                      className="text-gray-400 hover:text-gray-600 cursor-pointer shrink-0"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                </div>
-              )}
-              <div className="px-4 py-3 flex items-center gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*,.heic,.heif"
-                  className="hidden"
-                  onChange={handleImageSelect}
-                />
-                <input
-                  ref={attachmentInputRef}
-                  type="file"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"
-                  title="Attach image"
-                >
-                  <ImageIcon className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => attachmentInputRef.current?.click()}
-                  className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#4a7c59] transition-colors cursor-pointer shrink-0"
-                  title="Attach file"
-                >
-                  <Paperclip className="w-5 h-5" />
-                </button>
-                <input
-                  type="text"
-                  placeholder="Type a message..."
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSend();
-                    }
+            <div id={CHANNEL_PANEL} role="tabpanel" aria-label="Community" className="min-h-0 flex-1 overflow-y-auto px-3 pb-6">
+              {channelsState === "loading" ? (
+                <RowSkeletons label="Loading channels…" />
+              ) : channelsState === "error" ? (
+                <ErrorCard
+                  title="We couldn't load channels"
+                  onRetry={() => {
+                    setChannelsState("loading");
+                    void loadChannels().then((ok) => !ok && setChannelsState("error"));
                   }}
-                  className="flex-1 px-4 py-2.5 text-sm font-body bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4a7c59]/20 focus:border-[#4a7c59]/40 text-gray-800 placeholder:text-gray-400"
                 />
-                <button
-                  onClick={handleSend}
-                  disabled={
-                    (!draft.trim() && !imageFile && !attachedFile) || sending
-                  }
-                  className="w-10 h-10 rounded-xl bg-[#4a7c59] hover:bg-[#3d6849] disabled:opacity-50 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
+              ) : channels.length === 0 ? (
+                <EmptyState emoji="🌻" tint="butter" title="No channels yet" body="Channels will appear here once they're created by your school." />
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {channels.map((ch) => (
+                    <li key={ch.id}>
+                      <ChannelRow channel={ch} selected={ch.id === activeChannelId} now={now} onOpen={(c) => navigate({ kind: "channel", id: c.id })} />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          </>
-        )}
+          )}
+        </section>
+
+        {/* ─── Right pane ─── */}
+        <section
+          aria-label={activeChannel ? `#${activeChannel.name}` : isComposingNew ? "New Message" : active ? conversationTitle(active) : "Conversation"}
+          className={`relative min-h-0 min-w-0 flex-1 flex-col bg-[var(--sf-cream)] md:flex ${mobileShowChat ? "flex" : "hidden"}`}
+        >
+          {activeChannel ? (
+            <div className={`${browse} flex min-h-0 flex-1 flex-col ${CHANNEL_SKIN}`}>
+              <ChannelChatArea
+                key={activeChannel.id}
+                channel={activeChannel}
+                userId={userId}
+                userRole="parent"
+                gardenStyle
+                readOnlyPreview={readOnlyPreview}
+                onReadOnlyAttempt={() => void blockedByPreview()}
+                onBack={() => navigate({ kind: "none" })}
+                onMembershipChange={(channelId, isMember) => {
+                  setChannels((prev) => prev.map((c) => (c.id === channelId ? { ...c, isMember } : c)));
+                }}
+                onMessageSent={(channelId, lastMsg) => {
+                  setChannels((prev) => prev.map((c) => (c.id === channelId ? { ...c, lastMessage: lastMsg, unreadCount: 0 } : c)));
+                }}
+              />
+            </div>
+          ) : isComposingNew ? (
+            <>
+              <div className={`${browse} flex min-h-0 flex-1 flex-col`}>
+                <ComposePane
+                  userId={userId}
+                  recipient={recipient}
+                  onSelect={(r) => {
+                    setRecipient(r);
+                    requestAnimationFrame(() => textareaRef.current?.focus());
+                  }}
+                  onRemove={() => {
+                    setRecipient(null);
+                    setPendingHouseholdStudentId(null);
+                  }}
+                  onBack={() => navigate({ kind: "none" })}
+                  suggestedStaff={suggestedStaff}
+                  staffLoading={staffLoading}
+                />
+              </div>
+              <Composer
+                textareaRef={textareaRef}
+                value={draft}
+                onChange={(v) => setComposer((c) => ({ ...c, draft: v }))}
+                onSend={() => void handleSendNew()}
+                placeholder={recipient ? "Type a message..." : "Select a recipient first..."}
+                disabled={!recipient}
+                busy={creatingConvo}
+                canSend={!!recipient && hasContent && !creatingConvo}
+                onPickImage={(f) => void pickImage(f)}
+                onPickFile={(f) => setComposer((c) => ({ ...c, attachedFile: f }))}
+                imagePreview={imagePreview}
+                fileName={attachedFile?.name ?? null}
+                onClearImage={clearImage}
+                onClearFile={() => setComposer((c) => ({ ...c, attachedFile: null }))}
+                status={creatingConvo ? "Opening the chat…" : null}
+              />
+            </>
+          ) : activeId ? (
+            <>
+              <div className={browse}>
+                <ThreadHeader
+                  title={active ? conversationTitle(active) : "Conversation"}
+                  subtitle={active ? conversationSubtitle(active) : null}
+                  avatar={
+                    <HeaderAvatar
+                      id={active?.otherUser?.id ?? activeId}
+                      name={active ? conversationTitle(active) : "Conversation"}
+                      imageUrl={active?.otherUser?.profile_image_url ?? null}
+                      group={!active || activeIsGroup}
+                    />
+                  }
+                  onBack={() => navigate({ kind: "none" })}
+                  members={members}
+                />
+              </div>
+              <div
+                ref={scrollRef}
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+                }}
+                onLoadCapture={() => {
+                  const el = scrollRef.current;
+                  if (el && stickToBottom.current) el.scrollTop = el.scrollHeight;
+                }}
+                className={`${browse} flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3 sm:px-5`}
+              >
+                {threadState === "loading" && threadMessages.length === 0 ? (
+                  <ThreadSkeleton />
+                ) : threadState === "error" ? (
+                  <div className="p-2">
+                    <ErrorCard
+                      title="We couldn't load this chat"
+                      onRetry={() => {
+                        setThread(null);
+                        void loadThread(activeId);
+                      }}
+                    />
+                  </div>
+                ) : threadMessages.length === 0 ? (
+                  <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center">
+                    <HeaderAvatar
+                      id={active?.otherUser?.id ?? activeId}
+                      name={active ? conversationTitle(active) : "Conversation"}
+                      imageUrl={active?.otherUser?.profile_image_url ?? null}
+                      group={!active || activeIsGroup}
+                    />
+                    <p className="mt-1 text-base font-extrabold">No messages yet. Say hello!</p>
+                    <p className="sf-hand text-lg text-[var(--sf-sage-deep)]">say hi 👋</p>
+                  </div>
+                ) : (
+                  <ol className="mx-auto flex w-full max-w-3xl flex-col" role="log" aria-live="polite" aria-label="Messages">
+                    {chatItems.map((item) => {
+                      if (item.type === "day")
+                        return (
+                          <li key={item.key}>
+                            <DaySeparator label={formatDayHeading(item.iso, now ?? new Date())} />
+                          </li>
+                        );
+                      const msg = item.msg;
+                      const mine = msg.sender_id === userId;
+                      const senderName = msg.sender_name ?? nameById.get(msg.sender_id) ?? (active ? conversationTitle(active) : "");
+                      const showName = activeIsGroup && !mine && item.groupStart;
+                      const failed = msg.status === "failed";
+                      const sending = msg.status === "sending";
+                      return (
+                        <li key={item.key} className={`flex flex-col ${item.groupStart ? "mt-3" : "mt-0.5"}`}>
+                          {showName && senderName ? (
+                            <span className="mb-1 ml-2 text-xs font-extrabold text-[var(--sf-sage-deep)]" aria-hidden="true">
+                              {senderName}
+                            </span>
+                          ) : null}
+                          <Bubble
+                            mine={mine}
+                            body={msg.body}
+                            imageUrl={msg.image_url}
+                            fileUrl={msg.file_url}
+                            fileName={msg.file_name}
+                            sending={sending}
+                            failed={failed}
+                            groupStart={item.groupStart}
+                            groupEnd={item.groupEnd}
+                            srPrefix={`${mine ? "You" : senderName || "They"} (${clock(msg.created_at)}):`}
+                          />
+                          {failed ? (
+                            <MessageMeta mine failed onRetry={() => retrySend(activeId, msg.id)} />
+                          ) : sending ? (
+                            <MessageMeta mine text="Sending…" />
+                          ) : item.groupEnd ? (
+                            <MessageMeta
+                              mine={mine}
+                              text={`${clock(msg.created_at)}${msg.id === lastMineId ? (msg.read_at ? " · Seen" : " · Sent") : ""}`}
+                            />
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+              <Composer
+                textareaRef={textareaRef}
+                value={draft}
+                onChange={(v) => setComposer((c) => ({ ...c, draft: v }))}
+                onSend={handleSend}
+                placeholder="Type a message..."
+                canSend={hasContent}
+                onPickImage={(f) => void pickImage(f)}
+                onPickFile={(f) => setComposer((c) => ({ ...c, attachedFile: f }))}
+                imagePreview={imagePreview}
+                fileName={attachedFile?.name ?? null}
+                onClearImage={clearImage}
+                onClearFile={() => setComposer((c) => ({ ...c, attachedFile: null }))}
+              />
+            </>
+          ) : noConversations ? (
+            <div className={`${browse} flex-1 overflow-y-auto px-6 py-10`}>
+              <ReachOut staff={suggestedStaff} onMessage={openCompose} />
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+              <span className="text-5xl" aria-hidden="true">
+                💌
+              </span>
+              <p className="text-base font-extrabold text-[var(--sf-soft)]">Select a conversation or start a new one</p>
+            </div>
+          )}
+        </section>
       </div>
+    </div>
+  );
+}
+
+/** "Who would you like to reach?" with teacher cards (shown when there are no conversations yet). */
+function ReachOut({ staff, onMessage, compact = false }: { staff: TeacherOrAdmin[]; onMessage: (r: Recipient) => void; compact?: boolean }) {
+  return (
+    <div className={`mx-auto flex w-full flex-col gap-4 ${compact ? "" : "max-w-2xl"}`}>
+      <div className="flex items-center gap-3 rounded-[24px] bg-[#fff3c4] p-4">
+        <span className="text-3xl" aria-hidden="true">
+          👋
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-base font-extrabold">Who would you like to reach?</h2>
+          <p className="text-sm font-semibold leading-snug text-[var(--sf-soft)]">
+            Message your child&apos;s teachers and school staff directly from here.
+          </p>
+        </div>
+      </div>
+      {staff.length > 0 ? (
+        <>
+          <p className="sf-hand text-lg leading-none text-[var(--sf-sage-deep)]">Start a conversation</p>
+          <ul
+            className={
+              compact
+                ? "-mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-2 scrollbar-hide"
+                : "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+            }
+          >
+            {staff.map((person) => (
+              <li
+                key={person.id}
+                className={`flex min-w-0 flex-col items-center gap-1 rounded-[24px] bg-white p-4 text-center shadow-[0_14px_36px_-28px_rgba(43,42,38,0.55)] ring-1 ring-[var(--sf-ink)]/[0.06] ${
+                  compact ? "w-[156px] shrink-0 snap-start" : ""
+                }`}
+              >
+                <KidAvatar id={person.id} name={person.full_name} imageUrl={person.profile_image_url} size="h-[72px] w-[72px] text-xl" />
+                <span className="mt-1.5 line-clamp-2 w-full text-[15px] font-extrabold">{person.full_name}</span>
+                <span className="sf-hand mb-1.5 text-base text-[var(--sf-sage-deep)]">Teacher</span>
+                <button
+                  type="button"
+                  onClick={() => onMessage({ id: person.id, full_name: person.full_name, profile_image_url: person.profile_image_url, role: person.role })}
+                  className={`${btnInkSm} w-full`}
+                  aria-label={`Message ${person.full_name}`}
+                >
+                  Message
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
     </div>
   );
 }

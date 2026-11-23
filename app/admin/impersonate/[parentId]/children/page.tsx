@@ -134,7 +134,7 @@ export default async function ImpersonateChildrenPage({
         </div>
         <ImpersonateNotificationBell parentId={parentId} />
       </header>
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 pointer-events-none select-none">
         <Suspense>
           <ChildrenPage
             students={children}
@@ -143,7 +143,9 @@ export default async function ImpersonateChildrenPage({
             studentProgramMap={studentProgramMap}
             pickupByStudent={pickupByStudent}
             notesByStudent={notesByStudent}
-            isSharedAccess
+            isSharedAccess={isSharedAccess}
+            readOnlyPreview
+            photosHref={`/admin/impersonate/${parentId}/photos`}
           />
         </Suspense>
       </main>
