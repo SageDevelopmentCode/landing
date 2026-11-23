@@ -21,7 +21,7 @@ import { useMediaQuery } from "@/app/_garden/motion";
 const PortalContext = createContext<HTMLElement | null>(null);
 export const SheetPortalProvider = PortalContext.Provider;
 
-function InPortal({ children }: { children: ReactNode }) {
+export function InPortal({ children }: { children: ReactNode }) {
   const container = useContext(PortalContext);
   return container ? createPortal(children, container) : <>{children}</>;
 }
@@ -107,6 +107,10 @@ type SheetProps = {
   footer?: ReactNode;
   onBack?: () => void;
   backLabel?: string;
+  /** `wide` (720px) for long reading: contracts, feed posts. Phones always get the bottom sheet. */
+  size?: "default" | "wide";
+  /** Ref to the scrolling body, e.g. to scroll to the next unsigned section. */
+  bodyRef?: RefObject<HTMLDivElement | null>;
   children: ReactNode;
 };
 
@@ -119,7 +123,7 @@ export default function GardenSheet(props: SheetProps) {
   );
 }
 
-function SheetPanel({ onClose, title, icon, note, toolbar, footer, onBack, backLabel = "Back", children }: SheetProps) {
+function SheetPanel({ onClose, title, icon, note, toolbar, footer, onBack, backLabel = "Back", size = "default", bodyRef, children }: SheetProps) {
   const reduce = useReducedMotion();
   const desktop = useMediaQuery("(min-width: 640px)");
   const panelRef = useRef<HTMLDivElement>(null);
@@ -151,7 +155,7 @@ function SheetPanel({ onClose, title, icon, note, toolbar, footer, onBack, backL
         animate={shown}
         exit={hidden}
         transition={{ type: "spring", damping: 32, stiffness: 320 }}
-        className="pointer-events-auto fixed inset-x-0 bottom-0 z-[60] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-[32px] bg-[var(--sf-cream)] text-[var(--sf-ink)] shadow-[0_-20px_60px_-30px_rgba(43,42,38,0.6)] outline-none sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[480px] sm:rounded-none sm:rounded-l-[36px]"
+        className={`pointer-events-auto fixed inset-x-0 bottom-0 z-[60] flex max-h-[92dvh] flex-col overflow-hidden rounded-t-[32px] bg-[var(--sf-cream)] text-[var(--sf-ink)] shadow-[0_-20px_60px_-30px_rgba(43,42,38,0.6)] outline-none sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none ${size === "wide" ? "sm:w-[min(720px,calc(100vw-3rem))]" : "sm:w-[480px]"} sm:rounded-none sm:rounded-l-[36px]`}
       >
         <div className="mx-auto mt-2.5 h-1.5 w-12 shrink-0 rounded-full bg-[var(--sf-ink)]/15 sm:hidden" aria-hidden="true" />
         <div className="flex shrink-0 items-start gap-3 px-5 pb-3 pt-3 sm:px-6 sm:pt-6">
@@ -180,7 +184,7 @@ function SheetPanel({ onClose, title, icon, note, toolbar, footer, onBack, backL
           <CloseButton onClick={onClose} />
         </div>
         {toolbar ? <div className="shrink-0 px-5 pb-3 sm:px-6">{toolbar}</div> : null}
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-1 sm:px-6" data-lenis-prevent>
+        <div ref={bodyRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-1 sm:px-6" data-lenis-prevent>
           {children}
         </div>
         {footer ? (

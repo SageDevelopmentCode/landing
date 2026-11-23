@@ -1,43 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
 import { Copy, Lock } from "lucide-react";
 import type { DBNewsletterListItem } from "@/app/actions/newsletter";
-import { useToast } from "@/app/_garden/toast";
+import { useCopy } from "@/app/parent/_garden/copy";
 import { Arrow, CheckIcon, SectionHeader, linkSoft } from "@/app/parent/_garden/ui";
 
 const TILTS = ["-1.5deg", "1deg", "-0.5deg", "1.5deg", "-1deg"];
 
 /** Latest published newsletters. Hidden when there are none (same as mobile). */
 export default function NewslettersRail({ newsletters }: { newsletters: DBNewsletterListItem[] }) {
-  const toast = useToast();
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const resetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => {
-    if (resetRef.current) clearTimeout(resetRef.current);
-  }, []);
+  const { copy, copiedKey: copiedId } = useCopy();
 
   if (newsletters.length === 0) return null;
 
   /** `opening`: copied on the way to the newsletter, so the parent can paste it when asked. */
   function copyPassword(id: string, password: string, opening: boolean) {
-    navigator.clipboard
-      .writeText(password)
-      .then(() => {
-        setCopiedId(id);
-        if (resetRef.current) clearTimeout(resetRef.current);
-        resetRef.current = setTimeout(() => setCopiedId(null), 2000);
-        toast.show({
-          tone: opening ? "info" : "success",
-          title: "Password copied",
-          message: opening ? "Paste it when the page asks." : undefined,
-        });
-      })
-      .catch(() =>
-        toast.show({ tone: "info", title: "Couldn't copy automatically", message: `Password: ${password}` }),
-      );
+    void copy(id, password, {
+      tone: opening ? "info" : "success",
+      title: "Password copied",
+      message: opening ? "Paste it when the page asks." : undefined,
+      failMessage: `Password: ${password}`,
+    });
   }
 
   return (
