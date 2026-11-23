@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { FileText, ChevronRight } from "lucide-react";
-import type { Database } from "@/app/types/database.types";
+import { useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import type { StudentSignatureMap } from "@/app/types/enrollment-signatures";
 import {
   isContractComplete,
@@ -12,6 +11,10 @@ import {
   CONTRACT_2_TOTAL_SECTIONS,
   CONTRACT_6_ID,
 } from "@/app/types/enrollment-signatures";
+import PortalShell from "@/app/parent/_garden/PortalShell";
+import ChildSwitcher from "@/app/parent/_garden/ChildSwitcher";
+import { EmptyState } from "@/app/parent/_garden/states";
+import { Arrow, CheckIcon, TINT_BG, type HomeTint } from "@/app/parent/_garden/ui";
 import ContractModal from "@/app/parent/dashboard/ContractModal";
 import HealthFormModal from "@/app/parent/dashboard/HealthFormModal";
 import HealthStatementModal from "@/app/parent/dashboard/HealthStatementModal";
@@ -20,38 +23,31 @@ import MedicationPlanModal from "@/app/parent/dashboard/MedicationPlanModal";
 import AssumptionOfRiskModal from "@/app/parent/dashboard/AssumptionOfRiskModal";
 import AuthorizedPickupModal from "@/app/parent/dashboard/AuthorizedPickupModal";
 import ImmunizationUploadModal from "@/app/parent/dashboard/ImmunizationUploadModal";
-
-type Application = Database["parent_app"]["Tables"]["applications"]["Row"];
-type StudentHealthInfo =
-  Database["parent_app"]["Tables"]["student_health_info"]["Row"];
-type StudentMedicationPlan =
-  Database["parent_app"]["Tables"]["student_medication_plan"]["Row"];
-type StudentMedication =
-  Database["parent_app"]["Tables"]["student_medications"]["Row"];
-type AuthorizedPickupPlan =
-  Database["parent_app"]["Tables"]["student_authorized_pickup_plan"]["Row"];
-type AuthorizedPickupPerson =
-  Database["parent_app"]["Tables"]["student_authorized_pickup_persons"]["Row"];
+import {
+  childNameOf,
+  hasHealthFormDetails,
+  type Application,
+  type AuthorizedPickupPerson,
+  type AuthorizedPickupPlan,
+  type StudentHealthInfo,
+  type StudentMedication,
+  type StudentMedicationPlan,
+} from "@/app/parent/dashboard/garden/checklist";
 
 interface Props {
   apps: Application[];
   signaturesByStudent: StudentSignatureMap;
   healthInfoByStudent: Record<string, StudentHealthInfo>;
-  medicationPlanByStudent: Record<
-    string,
-    { plan: StudentMedicationPlan | null; medications: StudentMedication[] }
-  >;
+  medicationPlanByStudent: Record<string, { plan: StudentMedicationPlan | null; medications: StudentMedication[] }>;
   immunizationFileCountByStudent: Record<string, number>;
   consentByStudent: Record<string, "FULL" | "LIMITED" | "NO">;
-  authorizedPickupByStudent: Record<
-    string,
-    { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }
-  >;
+  authorizedPickupByStudent: Record<string, { plan: AuthorizedPickupPlan | null; persons: AuthorizedPickupPerson[] }>;
   healthStatementByStudent: Record<string, { option_type: string } | null>;
   religiousExemptionCountByStudent: Record<string, number>;
   parentId: string;
   parentName: string;
-  isSharedAccess?: boolean;
+  /** Admin "view as parent": documents still open (they're read-only anyway). */
+  readOnlyPreview?: boolean;
 }
 
 type DocId =
@@ -65,12 +61,19 @@ type DocId =
   | "healthStatement"
   | "immunization";
 
-interface DocEntry {
-  id: DocId;
-  label: string;
+type DocEntry = { id: DocId; label: string; emoji: string; tint: HomeTint };
+
+const noOp = () => {};
+
+export default function FormsPage(props: Props) {
+  return (
+    <PortalShell>
+      <FormsContent {...props} />
+    </PortalShell>
+  );
 }
 
-export default function FormsPage({
+function FormsContent({
   apps,
   signaturesByStudent,
   healthInfoByStudent,
@@ -82,178 +85,149 @@ export default function FormsPage({
   religiousExemptionCountByStudent,
   parentId,
   parentName,
+  readOnlyPreview,
 }: Props) {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [openModal, setOpenModal] = useState<DocId | null>(null);
+  const reduce = useReducedMotion();
+  const [activeId, setActiveId] = useState<string | null>(apps[0]?.id ?? null);
+  const [open, setOpen] = useState<{ id: DocId; nonce: number } | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const nonce = useRef(0);
+
+  const openDoc = (id: DocId) => {
+    nonce.current += 1;
+    setOpen({ id, nonce: nonce.current });
+    setSheetOpen(true);
+  };
+  const closeDoc = () => {
+    setSheetOpen(false);
+    const closing = nonce.current;
+    window.setTimeout(() => {
+      if (nonce.current === closing) setOpen(null);
+    }, 450);
+  };
+
+  const header = (
+    <div className="mb-8">
+      <h1 className="sf-display text-[2.4rem] leading-none sm:text-[3rem]">Forms &amp; Documents</h1>
+    </div>
+  );
 
   if (apps.length === 0) {
     return (
-      <div className="text-center py-24">
-        <p className="text-gray-400 font-body text-lg">
-          No enrolled children found.
-        </p>
-        <p className="text-gray-300 font-body text-sm mt-1">
-          If you believe this is an error, please contact us.
-        </p>
+      <div className="mx-auto w-full max-w-3xl px-6 pb-20 pt-8 sm:pt-12">
+        {header}
+        <EmptyState emoji="📂" tint="sky" title="No enrolled children found." body="If you believe this is an error, please contact us." />
       </div>
     );
   }
 
-  const activeApp = apps[activeIndex];
+  const activeApp = apps.find((a) => a.id === activeId) ?? apps[0];
   const studentId = activeApp.student_id ?? "";
   const sigs = signaturesByStudent[studentId] ?? {};
   const healthInfo = healthInfoByStudent[studentId] ?? null;
-  const medicationPlan = medicationPlanByStudent[studentId] ?? {
-    plan: null,
-    medications: [],
-  };
+  const medicationPlan = medicationPlanByStudent[studentId] ?? { plan: null, medications: [] };
   const immunizationFileCount = immunizationFileCountByStudent[studentId] ?? 0;
   const consent = consentByStudent[studentId] ?? null;
-  const authorizedPickup = authorizedPickupByStudent[studentId] ?? {
-    plan: null,
-    persons: [],
-  };
+  const authorizedPickup = authorizedPickupByStudent[studentId] ?? { plan: null, persons: [] };
   const healthStatement = healthStatementByStudent[studentId] ?? null;
-  const religiousExemptionCount =
-    religiousExemptionCountByStudent[studentId] ?? 0;
-
+  const religiousExemptionCount = religiousExemptionCountByStudent[studentId] ?? 0;
   const hasHealthFormSig = Object.keys(sigs).some((k) => k.startsWith("3-"));
 
+  // Same documents, labels and order as before. The health form only counts when it
+  // has real health details (Emergency Contacts saves can create a bare row on their own).
   const visibleDocs: DocEntry[] = [
-    {
-      id: "contract1",
-      label: "Program Description, Parent Responsibilities & Key Policies",
-    },
-    {
-      id: "contract2",
-      label: "Community Agreement for Families and Staff",
-    },
-    {
-      id: "healthForm",
-      label: "Emergency Contact, Health, and Immunization Form",
-    },
-    { id: "medicationPlan", label: "Emergency Medication Plan" },
-    { id: "photoRelease", label: "Photo, Video, and Media Release" },
-    {
-      id: "assumptionOfRisk",
-      label: "Assumption of Risk and Liability Release",
-    },
-    {
-      id: "authorizedPickup",
-      label: "Additional Authorized Pickup Person",
-    },
-    { id: "healthStatement", label: "Health Information Form" },
-    { id: "immunization", label: "Proof of Immunizations" },
-  ].filter(({ id }) => {
-    switch (id) {
-      case "contract1":
-        return isContractComplete(sigs, CONTRACT_1_ID, CONTRACT_1_TOTAL_SECTIONS);
-      case "contract2":
-        return isContractComplete(sigs, CONTRACT_2_ID, CONTRACT_2_TOTAL_SECTIONS);
-      case "healthForm":
-        return !!healthInfo || hasHealthFormSig;
-      case "medicationPlan":
-        return !!medicationPlan.plan;
-      case "photoRelease":
-        return !!consent;
-      case "assumptionOfRisk":
-        return !!sigs[`${CONTRACT_6_ID}-1`];
-      case "authorizedPickup":
-        return !!authorizedPickup.plan;
-      case "healthStatement":
-        return !!healthStatement;
-      case "immunization":
-        return immunizationFileCount > 0;
-      default:
-        return false;
-    }
-  }) as DocEntry[];
+    { id: "contract1" as const, label: "Program Description, Parent Responsibilities & Key Policies", emoji: "📜", tint: "sky" as const, show: isContractComplete(sigs, CONTRACT_1_ID, CONTRACT_1_TOTAL_SECTIONS) },
+    { id: "contract2" as const, label: "Community Agreement for Families and Staff", emoji: "🤝", tint: "lav" as const, show: isContractComplete(sigs, CONTRACT_2_ID, CONTRACT_2_TOTAL_SECTIONS) },
+    { id: "healthForm" as const, label: "Emergency Contact, Health, and Immunization Form", emoji: "❤️", tint: "coral" as const, show: hasHealthFormDetails(healthInfo) || hasHealthFormSig },
+    { id: "medicationPlan" as const, label: "Emergency Medication Plan", emoji: "💊", tint: "peach" as const, show: !!medicationPlan.plan },
+    { id: "photoRelease" as const, label: "Photo, Video, and Media Release", emoji: "📸", tint: "butter" as const, show: !!consent },
+    { id: "assumptionOfRisk" as const, label: "Assumption of Risk and Liability Release", emoji: "⚠️", tint: "peach" as const, show: !!sigs[`${CONTRACT_6_ID}-1`] },
+    { id: "authorizedPickup" as const, label: "Additional Authorized Pickup Person", emoji: "🚗", tint: "lav" as const, show: !!authorizedPickup.plan },
+    { id: "healthStatement" as const, label: "Health Information Form", emoji: "📋", tint: "sky" as const, show: !!healthStatement },
+    { id: "immunization" as const, label: "Proof of Immunizations", emoji: "🛡️", tint: "mint" as const, show: immunizationFileCount > 0 },
+  ]
+    .filter((d) => d.show)
+    .map(({ id, label, emoji, tint }) => ({ id, label, emoji, tint }));
 
-  const noOp = () => {};
+  const childName = childNameOf(activeApp);
+  const panelId = "forms-panel";
 
   return (
-    <div>
-      {/* Child switcher */}
-      {apps.length > 1 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          {apps.map((app, i) => (
-            <button
-              key={app.student_id ?? i}
-              onClick={() => {
-                setActiveIndex(i);
-                setOpenModal(null);
-              }}
-              className={`px-4 py-1.5 text-sm rounded-full border transition-colors cursor-pointer whitespace-nowrap ${
-                i === activeIndex
-                  ? "bg-[#4a7c59] text-white border-[#4a7c59] font-semibold"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-[#4a7c59]"
-              }`}
-            >
-              {app.child_legal_name ?? `Child ${i + 1}`}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="mx-auto w-full max-w-3xl px-6 pb-20 pt-8 sm:pt-12">
+      {header}
 
-      {/* Document list */}
-      {visibleDocs.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <p className="text-base font-semibold font-heading text-gray-700 mb-1">
-            No completed documents yet
-          </p>
-          <p className="text-sm font-body text-gray-400">
-            Completed enrollment forms will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
-          {visibleDocs.map((doc) => (
-            <button
-              key={doc.id}
-              onClick={() => setOpenModal(doc.id)}
-              className="flex items-center gap-3 w-full px-5 py-4 text-left hover:bg-gray-50 transition-colors group first:rounded-t-2xl last:rounded-b-2xl cursor-pointer"
-            >
-              <FileText className="w-4 h-4 text-[#4a7c59] flex-shrink-0" />
-              <span className="flex-1 text-sm font-body text-gray-700 group-hover:text-gray-900">
-                {doc.label}
-              </span>
-              <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0" />
-            </button>
-          ))}
-        </div>
-      )}
+      <ChildSwitcher
+        items={apps.map((a, i) => ({ id: a.id, name: a.child_legal_name ?? `Child ${i + 1}` }))}
+        activeId={activeApp.id}
+        onChange={(id) => {
+          setActiveId(id);
+          closeDoc();
+        }}
+        label="Choose a child"
+        controls={panelId}
+        className="mb-6"
+      />
 
-      {/* Modals — all readOnly */}
-      {openModal === "contract1" && (
+      <section id={panelId} aria-labelledby="forms-list-heading" role={apps.length > 1 ? "tabpanel" : undefined}>
+        <h2 id="forms-list-heading" className="sr-only">
+          {childName}&apos;s documents
+        </h2>
+        {visibleDocs.length === 0 ? (
+          <EmptyState emoji="🗂️" tint="butter" title="No completed documents yet" body="Completed enrollment forms will appear here." />
+        ) : (
+          <>
+            <p className="sf-hand mb-3 text-lg text-[var(--sf-sage-deep)]">
+              {visibleDocs.length} document{visibleDocs.length !== 1 ? "s" : ""} on file for {childName.split(" ")[0]}
+            </p>
+            <ul className="flex flex-col gap-2.5">
+              {visibleDocs.map((doc, i) => (
+                <motion.li
+                  key={`${activeApp.id}-${doc.id}`}
+                  initial={reduce ? false : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: reduce ? 0 : i * 0.03 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => openDoc(doc.id)}
+                    className="group flex min-h-[64px] w-full items-center gap-3.5 rounded-[22px] bg-white px-4 py-3 text-left shadow-[0_14px_30px_-24px_rgba(43,42,38,0.5)] ring-1 ring-[var(--sf-ink)]/[0.07] transition hover:-translate-y-0.5 hover:ring-[var(--sf-ink)]/20 focus-visible:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--sf-sky)] sm:px-5 cursor-pointer"
+                  >
+                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${TINT_BG[doc.tint]}`} aria-hidden="true">
+                      {doc.emoji}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[15px] font-extrabold leading-snug">{doc.label}</span>
+                    <span className="inline-flex min-h-7 shrink-0 items-center gap-1 rounded-full bg-[var(--sf-mint)] px-2.5 text-xs font-extrabold text-[var(--sf-sage-deep)]">
+                      <CheckIcon className="h-3 w-3" /> On file
+                    </span>
+                    <Arrow className="hidden h-4 w-4 shrink-0 text-[var(--sf-soft)]/60 transition group-hover:translate-x-0.5 sm:block" />
+                  </button>
+                </motion.li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
+
+      {/* Read-only document sheets */}
+      {open?.id === "contract1" || open?.id === "contract2" ? (
         <ContractModal
-          isOpen
-          onClose={() => setOpenModal(null)}
-          contractId={CONTRACT_1_ID}
+          key={open.nonce}
+          isOpen={sheetOpen}
+          onClose={closeDoc}
+          contractId={open.id === "contract1" ? CONTRACT_1_ID : CONTRACT_2_ID}
           studentId={studentId}
           parentName={parentName}
           existingSignatures={sigs}
           onSignaturesSaved={noOp}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
-
-      {openModal === "contract2" && (
-        <ContractModal
-          isOpen
-          onClose={() => setOpenModal(null)}
-          contractId={CONTRACT_2_ID}
-          studentId={studentId}
-          parentName={parentName}
-          existingSignatures={sigs}
-          onSignaturesSaved={noOp}
-          readOnly
-        />
-      )}
-
-      {openModal === "healthForm" && (
+      ) : null}
+      {open?.id === "healthForm" ? (
         <HealthFormModal
-          isOpen
-          onClose={() => setOpenModal(null)}
+          key={open.nonce}
+          isOpen={sheetOpen}
+          onClose={closeDoc}
           studentId={studentId}
           parentName={parentName}
           app={activeApp}
@@ -262,13 +236,14 @@ export default function FormsPage({
           onSignaturesSaved={noOp}
           onHealthInfoSaved={noOp}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
-
-      {openModal === "medicationPlan" && (
+      ) : null}
+      {open?.id === "medicationPlan" ? (
         <MedicationPlanModal
-          isOpen
-          onClose={() => setOpenModal(null)}
+          key={open.nonce}
+          isOpen={sheetOpen}
+          onClose={closeDoc}
           studentId={studentId}
           parentName={parentName}
           app={activeApp}
@@ -277,15 +252,16 @@ export default function FormsPage({
           onSignaturesSaved={noOp}
           onPlanSaved={noOp}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
-
-      {openModal === "photoRelease" && (
+      ) : null}
+      {open?.id === "photoRelease" ? (
         <PhotoReleaseModal
-          open
-          onClose={() => setOpenModal(null)}
+          key={open.nonce}
+          open={sheetOpen}
+          onClose={closeDoc}
           studentId={studentId}
-          studentName={activeApp.child_legal_name ?? ""}
+          studentName={childName}
           parentId={parentId}
           parentName={parentName}
           signatures={sigs}
@@ -293,13 +269,14 @@ export default function FormsPage({
           existingConsent={consent}
           onConsentSaved={noOp}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
-
-      {openModal === "assumptionOfRisk" && (
+      ) : null}
+      {open?.id === "assumptionOfRisk" ? (
         <AssumptionOfRiskModal
-          open
-          onClose={() => setOpenModal(null)}
+          key={open.nonce}
+          open={sheetOpen}
+          onClose={closeDoc}
           studentId={studentId}
           parentId={parentId}
           parentName={parentName}
@@ -307,13 +284,14 @@ export default function FormsPage({
           signatures={sigs}
           onSectionSaved={noOp}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
-
-      {openModal === "authorizedPickup" && (
+      ) : null}
+      {open?.id === "authorizedPickup" ? (
         <AuthorizedPickupModal
-          open
-          onClose={() => setOpenModal(null)}
+          key={open.nonce}
+          open={sheetOpen}
+          onClose={closeDoc}
           studentId={studentId}
           parentId={parentId}
           parentName={parentName}
@@ -323,11 +301,13 @@ export default function FormsPage({
           existingPlan={authorizedPickup}
           onPlanSaved={noOp}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
-
-      {openModal === "healthStatement" && (
+      ) : null}
+      {open?.id === "healthStatement" ? (
         <HealthStatementModal
+          key={open.nonce}
+          isOpen={sheetOpen}
           app={activeApp}
           parentId={parentId}
           parentName={parentName}
@@ -335,22 +315,24 @@ export default function FormsPage({
           initialReligiousExemptionCount={religiousExemptionCount}
           existingSig={sigs["8-1"]}
           onSectionSaved={noOp}
-          onClose={() => setOpenModal(null)}
+          onClose={closeDoc}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
-
-      {openModal === "immunization" && (
+      ) : null}
+      {open?.id === "immunization" ? (
         <ImmunizationUploadModal
-          isOpen
-          onClose={() => setOpenModal(null)}
+          key={open.nonce}
+          isOpen={sheetOpen}
+          onClose={closeDoc}
           parentId={parentId}
           studentId={studentId}
-          studentName={activeApp.child_legal_name ?? ""}
+          studentName={childName}
           onUploadComplete={noOp}
           readOnly
+          readOnlyPreview={readOnlyPreview}
         />
-      )}
+      ) : null}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { resolveEffectiveParentId } from "../resolveEffectiveParentId";
 import SharedAccessBanner from "@/app/parent/dashboard/SharedAccessBanner";
 import ApplicationList from "@/app/apply/dashboard/ApplicationList";
+import { Suspense } from "react";
 import ChildTabs from "@/app/parent/dashboard/ChildTabs";
 import DashboardNav from "@/app/parent/dashboard/DashboardNav";
 import ImpersonateNotificationBell from "../ImpersonateNotificationBell";
@@ -235,20 +236,16 @@ export default async function ImpersonateParentPage({
           </div>
           <ImpersonateNotificationBell parentId={parentId} />
         </header>
-        <div className="max-w-4xl mx-auto px-6 py-12">
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold font-heading text-gray-800 mb-2">
-              Welcome, {fullName ?? "Parent"}.
-            </h1>
-          </div>
+        <div>
+          <Suspense>
           <ChildTabs
             apps={approvedApps}
             pendingApps={pendingApps}
             signaturesByStudent={signaturesByStudent}
             healthInfoByStudent={healthInfoByStudent}
             medicationPlanByStudent={medicationPlanByStudent}
-            parentName={fullName ?? ""}
-            parentId={parentId}
+            parentName={ownerName ?? fullName ?? ""}
+            parentId={effectiveParentId}
             parentEmail={email}
             immunizationFileCountByStudent={immunizationFileCountByStudent}
             consentByStudent={consentByStudent}
@@ -259,6 +256,7 @@ export default async function ImpersonateParentPage({
             profileImageByStudent={{}}
             readOnlyPreview
           />
+          </Suspense>
         </div>
       </div>
     );
