@@ -36,6 +36,7 @@ import {
   MapPin,
   Building2,
   FileText,
+  FileSignature,
 } from "lucide-react";
 import {
   cssColors as colors,
@@ -185,6 +186,11 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
         name: "Contract PDFs",
         href: "/admin/contract-downloads",
         icon: <FileText className="w-4 h-4" />,
+      },
+      {
+        name: "Contractor Agreements",
+        href: "/admin/contractor-agreements",
+        icon: <FileSignature className="w-4 h-4" />,
       },
     ],
   },

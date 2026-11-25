@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/"], // Don't index API routes
+      disallow: ["/api/", "/agreement/"], // Don't index API routes or private agreement links
     },
     sitemap: "https://sagefield.co/sitemap.xml",
   };
