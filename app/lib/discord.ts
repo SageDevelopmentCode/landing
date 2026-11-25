@@ -2654,3 +2654,54 @@ export function createCommunityChannelDigestSentEmbed(data: {
     timestamp: new Date().toISOString(),
   };
 }
+
+/**
+ * Creates a Discord embed when a teacher signs their contractor agreement
+ */
+export function createContractorAgreementSignedEmbed(data: {
+  teacherName: string;
+  email: string;
+  phone: string;
+  role: string;
+  startDate: string | null;
+  rate: string | null;
+  signedAt: string;
+  adminUrl: string;
+}): DiscordEmbed {
+  return {
+    title: "✍️ Contractor Agreement Signed",
+    description: `${data.teacherName} signed their Independent Contractor Agreement. It's waiting for the School's countersignature.\n[Open in admin](${data.adminUrl})`,
+    color: 0x6b9474,
+    fields: [
+      { name: "Teacher", value: data.teacherName || "N/A", inline: true },
+      { name: "Role", value: data.role || "N/A", inline: true },
+      { name: "Start Date", value: data.startDate || "N/A", inline: true },
+      { name: "Rate", value: data.rate || "N/A", inline: true },
+      { name: "Email", value: data.email || "N/A", inline: true },
+      { name: "Phone", value: data.phone || "N/A", inline: true },
+      { name: "Signed", value: data.signedAt, inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Creates a Discord embed when the School countersigns a contractor agreement
+ */
+export function createContractorAgreementCountersignedEmbed(data: {
+  teacherName: string;
+  role: string;
+  schoolSigner: string;
+  adminUrl: string;
+}): DiscordEmbed {
+  return {
+    title: "✅ Contractor Agreement Fully Executed",
+    description: `${data.teacherName}'s agreement was countersigned by ${data.schoolSigner}.\n[Open in admin](${data.adminUrl})`,
+    color: 0x2c5f2e,
+    fields: [
+      { name: "Teacher", value: data.teacherName || "N/A", inline: true },
+      { name: "Role", value: data.role || "N/A", inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+  };
+}
